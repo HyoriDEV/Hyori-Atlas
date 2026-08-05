@@ -61,5 +61,19 @@ Zero comments, in any file type (`//`, `/* */`, `<!-- -->`, `{/* */}`). Code mus
 
 Work in logical, self-contained iterations; keep foundational pieces (layout shell, auth, DB schema) stable before building features on top of them. Each iteration should end with a passing `npx tsc --noEmit` and `npm run build`.
 
-- Iteration 0 (Current state): app just scaffolded with Tailwind + shadcn/ui. `app/page.tsx` is empty; only the root layout (custom fonts + theme) exists.
-- Iteration 1: TODO.
+- Iteration 0: app just scaffolded with Tailwind + shadcn/ui. `app/page.tsx` is empty; only the root layout (custom fonts + theme) exists.
+- Iteration 1 (Current state): Foundation + full Public Site + dashboard shells.
+  - Docker Compose (`db`, `studio`, `app` services) + Prisma schema (`User`/`Account`/`Session`/`VerificationToken` for auth, plus `News`) + seed script.
+  - Discord OAuth2 via Auth.js v5 (`auth.ts`), JWT sessions carrying `role`/`registrationStatus`, `proxy.ts` protecting `/player/**` and `/dashboard/**`, `lib/dal.ts` for server-side authorization.
+  - Shared `AppShell` sidebar component (`components/app-shell/app-shell.tsx`) reused by both Espace Joueur (`app/player/`) and Staff Dashboard (`app/dashboard/`), with role/stage-gated nav (`lib/navigation.ts`).
+  - Public Site fully built (`app/(public)/`): Accueil, Actualités (dynamic, seeded), Galerie/Lore/Règlement placeholders.
+  - Espace Joueur: only "Premiers pas" (`/player/getting-started`) is a real data-driven feature; every other nav destination is a `<ComingSoonCard />`/`<LockedFeatureCard />` stub.
+  - Staff Dashboard: all four modules (Liste d'attente, Atlas des joueurs, Rapports BDA, Backlog) are stubs behind role checks.
+  - Not yet implemented: Tickets, Fiche Personnage, Entretien Whitelist, Écriture, Suivi RP, BDA reports, Staff Backlog, Minecraft account linking (automated), Waiting List admin UI — planned for later iterations.
+- Iteration 2 (Current state): Tickets + Waiting List management.
+  - `RegistrationStatus` gained a `REJECTED` terminal status; `User` gained `waitlistedAt`.
+  - Automatic `NEW → WAITLIST` promotion (`getPlayerState()` in `lib/dal.ts`) once `minecraftUuid` is set, detected via a fresh DB read on `/player` page loads (the JWT session only refreshes on sign-in).
+  - Tickets (`app/player/tickets/`): category-based creation (`lib/actions/ticket-actions.ts`), chat-style thread per ticket with follow-up messages. Player-side only — no staff reply UI yet (staff can inspect via Prisma Studio); archiving isn't reachable yet either, so the wireframe's archived-ticket toggle is deferred along with it.
+  - Waiting List (`app/dashboard/waitlist/`, Admin-only): table of waitlisted players with Accepter/Refuser actions (`lib/actions/waitlist-actions.ts`), confirmed via `AlertDialog`.
+  - Not yet implemented: Fiche Personnage, Entretien Whitelist, Écriture, Suivi RP, BDA reports, Staff Backlog, automated Minecraft linking, staff-side ticket handling, Player Atlas — planned for later iterations.
+- Iteration 3: TODO.

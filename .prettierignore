@@ -4,3 +4,13 @@ dist
 build
 public
 package-lock.json
+lib/generated
+
+# Design-tool DSL wireframes, not valid HTML
+docs/designs
+
+# Vendored skill docs installed by `prisma init`
+.agents
+.claude/skills
+.windsurf/skills
+skills-lock.json

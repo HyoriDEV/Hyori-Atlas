@@ -1,0 +1,58 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    # Must match DATABASE_URL in .env
+    environment:
+      POSTGRES_USER: hyori
+      POSTGRES_PASSWORD: hyori_dev
+      POSTGRES_DB: hyori_atlas
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hyori -d hyori_atlas"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  studio:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: npx prisma studio --port 5555 --browser none
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://hyori:hyori_dev@db:5432/hyori_atlas
+    ports:
+      - "5555:5555"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://hyori:hyori_dev@db:5432/hyori_atlas
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
