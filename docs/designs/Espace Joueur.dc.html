@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics="">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@500;600&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,500&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#121212;}
+::selection{background:rgba(233,209,92,0.35);color:#f8f5e8;}
+a{color:#e9d15c;text-decoration:none;}
+a:hover{color:#d4af35;}
+</style>
+</helmet>
+
+<div style="{{ rootStyle }}">
+
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 18px;border-bottom:1px solid rgba(248,245,232,0.08);flex:none;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="width:7px;height:7px;border-radius:50%;background:#e9d15c;display:inline-block;"></span>
+        <span style="font-family:'Lora',serif;font-weight:600;font-size:15px;color:#f8f5e8;">Hyori RP</span>
+      </div>
+      <div style="width:28px;height:28px;border-radius:50%;background:#323232;color:#f8f5e8;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">K</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ true }}">
+    <div style="width:260px;flex:none;display:flex;flex-direction:column;background:#161616;border-right:1px solid rgba(248,245,232,0.08);padding:24px 16px;">
+      <div style="display:flex;align-items:center;gap:8px;padding:0 8px 8px;">
+        <span style="width:8px;height:8px;border-radius:50%;background:#e9d15c;display:inline-block;"></span>
+        <span style="font-family:'Lora',serif;font-weight:600;font-size:17px;color:#f8f5e8;">Hyori RP</span>
+      </div>
+      <div style="font-size:12px;color:rgba(248,245,232,0.4);padding:0 8px 20px;text-transform:uppercase;letter-spacing:0.05em;">Espace Joueur</div>
+
+      <div style="display:flex;flex-direction:column;gap:2px;">
+        <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="6">
+          <div onClick="{{ item.onClick }}" style="{{ item.style }}">
+            <sc-if value="{{ item.iconFlag }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18M6 4h11l-3 4 3 4H6"></path></svg>
+            </sc-if>
+            <sc-if value="{{ item.iconCalendar }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M8 3v4M16 3v4"></path></svg>
+            </sc-if>
+            <sc-if value="{{ item.iconCard }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="11" r="1.6"></circle><path d="M6 16c0-1.7 1.1-2.8 2.5-2.8s2.5 1.1 2.5 2.8M13.5 10h4.5M13.5 13h4.5"></path></svg>
+            </sc-if>
+            <sc-if value="{{ item.iconTicket }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4V5z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ item.iconPen }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4z"></path></svg>
+            </sc-if>
+            <sc-if value="{{ item.iconChat }}" hint-placeholder-val="{{ false }}">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a7 7 0 01-7 7H8l-4 3V9a7 7 0 017-7h3a7 7 0 017 7z"></path></svg>
+            </sc-if>
+            <span style="flex:1;font-size:14.5px;">{{ item.label }}</span>
+            <sc-if value="{{ item.locked }}" hint-placeholder-val="{{ false }}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(248,245,232,0.32)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+            </sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px 0;border-top:1px solid rgba(248,245,232,0.08);">
+        <div style="width:34px;height:34px;border-radius:50%;background:#323232;color:#f8f5e8;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:none;">K</div>
+        <div style="display:flex;flex-direction:column;gap:1px;">
+          <span style="font-size:14px;color:#f8f5e8;">Kaelen</span>
+          <a href="#" style="font-size:12px;color:rgba(248,245,232,0.45);">Déconnexion</a>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <div style="{{ contentWrapperStyle }}">
+
+    <sc-if value="{{ isPremiersPas }}" hint-placeholder-val="{{ true }}">
+      <div style="{{ centeredStyle }}">
+        <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0;">Premiers pas</h1>
+
+        <div style="{{ premierPasRowStyle }}">
+          <div style="display: flex; flex-direction: column; gap: 18px">
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(248,245,232,0.45);">Compte Discord</span>
+                <span style="font-size:12px;font-weight:600;color:#e9d15c;background:rgba(233,209,92,0.12);padding:4px 10px;border-radius:999px;">Connecté</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div style="width:48px;height:48px;border-radius:50%;background:#323232;flex:none;"></div>
+                <div style="display:flex;flex-direction:column;">
+                  <span style="font-size:16px;color:#f8f5e8;">Kaelen Vt</span>
+                  <span style="font-size:13px;color:rgba(248,245,232,0.5);">kaelen_vt</span>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:22px;display:flex;flex-direction:column;gap:14px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(248,245,232,0.45);">Compte Minecraft</span>
+                <sc-if value="{{ minecraftLinked }}" hint-placeholder-val="{{ false }}">
+                  <span style="font-size:12px;font-weight:600;color:#e9d15c;background:rgba(233,209,92,0.12);padding:4px 10px;border-radius:999px;">Connecté</span>
+                </sc-if>
+                <sc-if value="{{ minecraftNotLinked }}" hint-placeholder-val="{{ true }}">
+                  <span style="font-size:12px;font-weight:600;color:rgba(248,245,232,0.45);background:rgba(248,245,232,0.08);padding:4px 10px;border-radius:999px;">Non lié</span>
+                </sc-if>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <sc-if value="{{ minecraftLinked }}" hint-placeholder-val="{{ false }}">
+                  <div style="width:48px;height:48px;border-radius:8px;background:#323232;flex:none;"></div>
+                </sc-if>
+                <sc-if value="{{ minecraftNotLinked }}" hint-placeholder-val="{{ true }}">
+                  <div style="width:48px;height:48px;border-radius:8px;border:1.5px dashed rgba(248,245,232,0.22);flex:none;"></div>
+                </sc-if>
+                <div style="display:flex;flex-direction:column;">
+                  <span style="font-size:16px;color:#f8f5e8;">{{ minecraftNameDisplay }}</span>
+                  <span style="font-size:13px;color:rgba(248,245,232,0.5);">UUID : {{ minecraftUuidDisplay }}</span>
+                </div>
+              </div>
+              <sc-if value="{{ minecraftNotLinked }}" hint-placeholder-val="{{ true }}">
+                <button onClick="{{ openMinecraftModal }}" style="align-self:flex-start;background:rgba(233,209,92,0.12);color:#e9d15c;border:1px solid rgba(233,209,92,0.3);font-weight:600;font-size:13px;padding:9px 16px;border-radius:8px;font-family:inherit;cursor:pointer;">Connexion Minecraft</button>
+              </sc-if>
+            </div>
+          </div>
+
+          <div style="{{ progressionPanelStyle }}">
+            <span style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(248,245,232,0.45);">Progression</span>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:11px;color:rgba(248,245,232,0.4);">Étape actuelle</span>
+              <span style="font-family:'Lora',serif;font-weight:600;font-size:20px;color:#f8f5e8;">{{ currentStepLabel }}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;">
+              <sc-for list="{{ progressSteps }}" as="step" hint-placeholder-count="4">
+                <div style="display:flex;gap:12px;">
+                  <div style="display:flex;flex-direction:column;align-items:center;">
+                    <div style="{{ step.dotStyle }}"></div>
+                    <sc-if value="{{ step.hasLine }}" hint-placeholder-val="{{ true }}">
+                      <div style="{{ step.lineStyle }}"></div>
+                    </sc-if>
+                  </div>
+                  <span style="{{ step.labelStyle }}">{{ step.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isEntretien }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ centeredStyle }}">
+        <div>
+          <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0 0 10px;">Choisis un créneau.</h1>
+          <p style="font-size:15px;line-height:1.65;color:rgba(248,245,232,0.6);margin:0;max-width:640px;">Un appel Discord sera organisé avec le staff à ce créneau, nous te prions d'être réactif et ponctuel. Durant cet appel, tu présenteras ton projet RP basé sur ta fiche personnage. Les règles du serveur te seront ensuite expliquées.</p>
+        </div>
+
+        <sc-if value="{{ entretienFicheLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(248,245,232,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+            <p style="font-size:15px;color:rgba(248,245,232,0.55);margin:0;max-width:400px;">Disponible une fois ta candidature acceptée depuis la Liste d'attente par un administrateur.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ entretienUnlocked }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ calendarRowStyle }}">
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:20px;flex:1 1 280px;min-width:280px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <span style="font-family:'Lora',serif;font-weight:600;font-size:16px;color:#f8f5e8;">Août 2026</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:6px;">
+                <sc-for list="{{ weekdayLabels }}" as="wd" hint-placeholder-count="7">
+                  <span style="font-size:11px;text-align:center;color:rgba(248,245,232,0.35);">{{ wd }}</span>
+                </sc-for>
+                <sc-for list="{{ calendarDays }}" as="d" hint-placeholder-count="31">
+                  <div onClick="{{ d.onClick }}" style="{{ d.style }}">{{ d.day }}</div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:20px;flex:1 1 260px;min-width:260px;display:flex;flex-direction:column;gap:12px;">
+              <span style="font-family:'Lora',serif;font-weight:600;font-size:15px;color:#f8f5e8;">Créneaux disponibles à cette date</span>
+              <sc-for list="{{ daySlots }}" as="slot" hint-placeholder-count="2">
+                <div style="{{ slot.style }}">{{ slot.fullLabel }}</div>
+              </sc-for>
+              <sc-if value="{{ noSlots }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size:13px;color:rgba(248,245,232,0.4);">Aucun créneau ce jour.</span>
+              </sc-if>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isFiche }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ centeredStyle }}">
+        <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0;">Fiche Personnage</h1>
+
+        <sc-if value="{{ entretienFicheLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(248,245,232,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+            <p style="font-size:15px;color:rgba(248,245,232,0.55);margin:0;max-width:400px;">Disponible une fois ta candidature acceptée depuis la Liste d'attente par un administrateur.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ entretienUnlocked }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;flex-direction:column;gap:24px;">
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+              <span style="font-family:'Lora',serif;font-weight:600;font-size:16px;color:#f8f5e8;">Informations civiles</span>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <sc-for list="{{ civilFieldsTop }}" as="field" hint-placeholder-count="2">
+                  <div style="display:flex;flex-direction:column;gap:6px;">
+                    <span style="font-size:12px;color:rgba(248,245,232,0.45);">{{ field.label }}</span>
+                    <div style="background:#121212;border:1px solid rgba(248,245,232,0.12);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;">{{ field.value }}</div>
+                  </div>
+                </sc-for>
+                <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;">
+                  <sc-for list="{{ civilFieldsBottom }}" as="field" hint-placeholder-count="4">
+                    <div style="display:flex;flex-direction:column;gap:6px;">
+                      <span style="font-size:12px;color:rgba(248,245,232,0.45);">{{ field.label }}</span>
+                      <div style="background:#121212;border:1px solid rgba(248,245,232,0.12);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;">{{ field.value }}</div>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-family:'Lora',serif;font-weight:600;font-size:16px;color:#f8f5e8;">Carte de compétences</span>
+                <span style="font-size:13px;color:rgba(248,245,232,0.5);">{{ totalSkillPoints }} / 50</span>
+              </div>
+              <div style="display:flex;flex-direction:column;">
+                <sc-for list="{{ physicalSkills }}" as="skill" hint-placeholder-count="4">
+                  <div style="display:flex;flex-direction:column;gap:6px;padding:10px 0;">
+                    <span style="font-size: 12px; color: #f8f5e8; text-transform: uppercase; text-align: center">{{ skill.name }}</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                      <span style="text-align: right; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.lowLabel }}</span>
+                      <div style="display:flex;gap:4px;flex:none;">
+                        <sc-for list="{{ skill.squares }}" as="sq" hint-placeholder-count="5">
+                          <sc-if value="{{ sq.filled }}" hint-placeholder-val="{{ false }}">
+                            <div style="width:13px;height:13px;border-radius:3px;background:#e9d15c;"></div>
+                          </sc-if>
+                          <sc-if value="{{ sq.empty }}" hint-placeholder-val="{{ true }}">
+                            <div style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(248,245,232,0.2);"></div>
+                          </sc-if>
+                        </sc-for>
+                      </div>
+                      <span style="text-align: left; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.highLabel }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="height:1px;background:rgba(248,245,232,0.1);margin:12px 0;"></div>
+                <sc-for list="{{ mentalSkills }}" as="skill" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;padding:10px 0;">
+                    <span style="font-size:14px;color:#f8f5e8;text-transform:uppercase;text-align:center;">{{ skill.name }}</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                      <span style="text-align: right; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.lowLabel }}</span>
+                      <div style="display:flex;gap:4px;flex:none;">
+                        <sc-for list="{{ skill.squares }}" as="sq" hint-placeholder-count="5">
+                          <sc-if value="{{ sq.filled }}" hint-placeholder-val="{{ false }}">
+                            <div style="width:13px;height:13px;border-radius:3px;background:#e9d15c;"></div>
+                          </sc-if>
+                          <sc-if value="{{ sq.empty }}" hint-placeholder-val="{{ true }}">
+                            <div style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(248,245,232,0.2);"></div>
+                          </sc-if>
+                        </sc-for>
+                      </div>
+                      <span style="text-align: left; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.highLabel }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+                <div style="height:1px;background:rgba(248,245,232,0.1);margin:12px 0;"></div>
+                <sc-for list="{{ socialSkills }}" as="skill" hint-placeholder-count="3">
+                  <div style="display:flex;flex-direction:column;gap:6px;padding:10px 0;">
+                    <span style="font-size:14px;color:#f8f5e8;text-transform:uppercase;text-align:center;">{{ skill.name }}</span>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                      <span style="text-align: right; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.lowLabel }}</span>
+                      <div style="display:flex;gap:4px;flex:none;">
+                        <sc-for list="{{ skill.squares }}" as="sq" hint-placeholder-count="5">
+                          <sc-if value="{{ sq.filled }}" hint-placeholder-val="{{ false }}">
+                            <div style="width:13px;height:13px;border-radius:3px;background:#e9d15c;"></div>
+                          </sc-if>
+                          <sc-if value="{{ sq.empty }}" hint-placeholder-val="{{ true }}">
+                            <div style="width:13px;height:13px;border-radius:3px;border:1px solid rgba(248,245,232,0.2);"></div>
+                          </sc-if>
+                        </sc-for>
+                      </div>
+                      <span style="text-align: left; font-size: 14px; color: rgba(248,245,232,0.4); width: 100%">{{ skill.highLabel }}</span>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+
+            <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:18px;">
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Description</span>
+                <textarea rows="4" defaultValue="Tempérament réservé, habitude de tenir un carnet de terrain et de parler bas près des étrangers." style="background:#121212;border:1px solid rgba(248,245,232,0.12);border-radius:8px;padding:12px;font-size:14px;line-height:1.6;color:rgba(248,245,232,0.85);font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;width:100%;"></textarea>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Histoire</span>
+                <textarea rows="4" defaultValue="Fils cadet d'un forgeron de province, parti après un différend avec le clan local pour offrir ses services ailleurs." style="background:#121212;border:1px solid rgba(248,245,232,0.12);border-radius:8px;padding:12px;font-size:14px;line-height:1.6;color:rgba(248,245,232,0.85);font-family:inherit;resize:vertical;min-height:64px;box-sizing:border-box;width:100%;"></textarea>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;">
+                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Commentaires additionnels (optionnel)</span>
+                <textarea rows="2" defaultValue="Aucun commentaire pour le moment." style="background:#121212;border:1px solid rgba(248,245,232,0.12);border-radius:8px;padding:12px;font-size:14px;line-height:1.6;color:rgba(248,245,232,0.6);font-family:inherit;resize:vertical;min-height:44px;box-sizing:border-box;width:100%;"></textarea>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isTickets }}" hint-placeholder-val="{{ false }}">
+      <sc-if value="{{ noSelectedTicket }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ centeredStyleTight }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0;">Tickets</h1>
+            <button onClick="{{ openTicketModal }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Nouveau ticket</button>
+          </div>
+          <div onClick="{{ toggleArchived }}" style="align-self:flex-start;font-size:13px;color:rgba(248,245,232,0.5);cursor:pointer;">{{ archivedToggleLabel }}</div>
+          <div style="display:flex;flex-direction:column;gap:12px;">
+            <sc-for list="{{ visibleTickets }}" as="t" hint-placeholder-count="4">
+              <div onClick="{{ t.onClick }}" style="{{ t.rowStyle }}">
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                  <span style="font-size:12px;color:rgba(248,245,232,0.45);">{{ t.category }} · {{ t.date }}</span>
+                  <span style="font-size:15px;color:#f8f5e8;">{{ t.title }}</span>
+                </div>
+                <span style="{{ t.statusStyle }}">{{ t.status }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasSelectedTicket }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ centeredStyleTight }}">
+          <div style="display:flex;align-items:center;gap:14px;">
+            <div onClick="{{ closeTicketDetail }}" style="cursor:pointer;width:34px;height:34px;border-radius:8px;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);display:flex;align-items:center;justify-content:center;flex:none;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:2px;">
+              <span style="font-size:12px;color:rgba(248,245,232,0.45);">{{ selectedTicket.category }} · {{ selectedTicket.date }}</span>
+              <span style="font-family:'Lora',serif;font-weight:600;font-size:19px;color:#f8f5e8;">{{ selectedTicket.title }}</span>
+            </div>
+          </div>
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <sc-for list="{{ ticketChatGroups }}" as="g" hint-placeholder-count="3">
+                <sc-if value="{{ g.isSystem }}" hint-placeholder-val="{{ false }}">
+                  <div style="align-self:center;font-size:12px;color:rgba(248,245,232,0.45);background:rgba(248,245,232,0.06);padding:6px 14px;border-radius:999px;">{{ g.text }}</div>
+                </sc-if>
+                <sc-if value="{{ g.messages }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:#323232;flex:none;"></div>
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;">
+                      <div style="display:flex;align-items:baseline;gap:8px;">
+                        <span style="font-size:14px;font-weight:600;color:#f8f5e8;">{{ g.author }}</span>
+                        <span style="font-size:12px;color:rgba(248,245,232,0.35);">{{ g.time }}</span>
+                      </div>
+                      <sc-for list="{{ g.messages }}" as="msg" hint-placeholder-count="1">
+                        <span style="font-size:14.5px;line-height:1.5;color:rgba(248,245,232,0.85);">{{ msg.text }}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+              <div style="width:38px;height:38px;border-radius:8px;background:#242424;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="M21 15l-5.5-5-6.5 6"></path></svg>
+              </div>
+              <div style="flex:1;background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:999px;padding:10px 16px;font-size:14px;color:rgba(248,245,232,0.4);">Écris un message...</div>
+              <div style="width:38px;height:38px;border-radius:50%;background:#e9d15c;display:flex;align-items:center;justify-content:center;flex:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l16-8L4 4l2 8-2 8z"></path></svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </sc-if>
+    </sc-if>
+
+    <sc-if value="{{ isEcriture }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0;">Écriture</h1>
+
+        <sc-if value="{{ ecritureSuiviLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(248,245,232,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+            <p style="font-size:15px;color:rgba(248,245,232,0.55);margin:0;max-width:420px;">Disponible une fois ton statut passé à « Inscrit à la whitelist » par l'administration.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ ecritureSuiviUnlocked }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ ecritureRowStyle }}">
+            <div style="width:220px;flex:none;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:6px;">
+              <span style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(248,245,232,0.4);margin-bottom:6px;">Chapitres</span>
+              <sc-for list="{{ chapters }}" as="ch" hint-placeholder-count="3">
+                <div onClick="{{ ch.onClick }}" style="{{ ch.style }}">
+                  <span>{{ ch.title }}</span>
+                  <span style="font-size:11px;color:rgba(248,245,232,0.4);">{{ ch.status }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="flex:1;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:16px;">
+              <div style="display:flex;gap:8px;padding-bottom:14px;border-bottom:1px solid rgba(248,245,232,0.08);">
+                <div style="width:30px;height:30px;border-radius:6px;background:#323232;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:#f8f5e8;">B</div>
+                <div style="width:30px;height:30px;border-radius:6px;background:#323232;display:flex;align-items:center;justify-content:center;font-style:italic;font-size:13px;color:#f8f5e8;">I</div>
+                <div style="width:30px;height:30px;border-radius:6px;background:#323232;display:flex;align-items:center;justify-content:center;text-decoration:underline;font-size:13px;color:#f8f5e8;">U</div>
+                <div style="width:30px;height:30px;border-radius:6px;background:#323232;display:flex;align-items:center;justify-content:center;text-decoration:line-through;font-size:13px;color:#f8f5e8;">S</div>
+                <div style="width:30px;height:30px;border-radius:6px;background:#323232;display:flex;align-items:center;justify-content:center;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="8" height="6" rx="2"></rect><rect x="13" y="9" width="8" height="6" rx="2"></rect></svg>
+                </div>
+              </div>
+              <span style="font-family:'Lora',serif;font-weight:600;font-size:18px;color:#f8f5e8;">{{ currentChapterTitle }}</span>
+              <div style="height:12px;width:92%;background:rgba(248,245,232,0.12);border-radius:3px;"></div>
+              <div style="height:12px;width:100%;background:rgba(248,245,232,0.12);border-radius:3px;"></div>
+              <div style="height:12px;width:76%;background:rgba(248,245,232,0.12);border-radius:3px;"></div>
+              <div style="width:100%;height:120px;border:1.5px dashed rgba(248,245,232,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:13px;color:rgba(248,245,232,0.4);">Image du chapitre</div>
+              <div style="height:12px;width:88%;background:rgba(248,245,232,0.12);border-radius:3px;"></div>
+              <div style="height:12px;width:60%;background:rgba(248,245,232,0.12);border-radius:3px;"></div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isSuiviRp }}" hint-placeholder-val="{{ false }}">
+      <div style="{{ centeredStyleSuivi }}">
+        <h1 style="font-family:'Lora',serif;font-weight:600;font-size:30px;color:#f8f5e8;margin:0;">Suivi RP</h1>
+
+        <sc-if value="{{ ecritureSuiviLocked }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:48px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="rgba(248,245,232,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="10" width="14" height="9" rx="2"></rect><path d="M8 10V7a4 4 0 018 0v3"></path></svg>
+            <p style="font-size:15px;color:rgba(248,245,232,0.55);margin:0;max-width:420px;">Disponible une fois ton statut passé à « Inscrit à la whitelist » par l'administration.</p>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ ecritureSuiviUnlocked }}" hint-placeholder-val="{{ true }}">
+          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+            <span style="font-size:13px;color:rgba(248,245,232,0.45);">Équipe Suivi RP</span>
+            <div style="display:flex;flex-direction:column;gap:16px;">
+              <sc-for list="{{ suiviChatGroups }}" as="g" hint-placeholder-count="4">
+                <sc-if value="{{ g.isSystem }}" hint-placeholder-val="{{ false }}">
+                  <div style="align-self:center;font-size:12px;color:rgba(248,245,232,0.45);background:rgba(248,245,232,0.06);padding:6px 14px;border-radius:999px;">{{ g.text }}</div>
+                </sc-if>
+                <sc-if value="{{ g.messages }}" hint-placeholder-val="{{ true }}">
+                  <div style="display:flex;gap:12px;align-items:flex-start;">
+                    <div style="width:36px;height:36px;border-radius:50%;background:#323232;flex:none;"></div>
+                    <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;">
+                      <div style="display:flex;align-items:baseline;gap:8px;">
+                        <span style="font-size:14px;font-weight:600;color:#f8f5e8;">{{ g.author }}</span>
+                        <span style="font-size:12px;color:rgba(248,245,232,0.35);">{{ g.time }}</span>
+                      </div>
+                      <sc-for list="{{ g.messages }}" as="msg" hint-placeholder-count="1">
+                        <span style="font-size:14.5px;line-height:1.5;color:rgba(248,245,232,0.85);">{{ msg.text }}</span>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-if>
+              </sc-for>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+              <div style="width:38px;height:38px;border-radius:8px;background:#242424;display:flex;align-items:center;justify-content:center;flex:none;cursor:pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="10" r="1.4"></circle><path d="M21 15l-5.5-5-6.5 6"></path></svg>
+              </div>
+              <div style="flex:1;background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:999px;padding:10px 16px;font-size:14px;color:rgba(248,245,232,0.4);">Écris un message...</div>
+              <div style="width:38px;height:38px;border-radius:50%;background:#e9d15c;display:flex;align-items:center;justify-content:center;flex:none;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#121212" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l16-8L4 4l2 8-2 8z"></path></svg>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+
+  <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;display:flex;border-top:1px solid rgba(248,245,232,0.08);background:#161616;">
+      <sc-for list="{{ navItems }}" as="item" hint-placeholder-count="6">
+        <div onClick="{{ item.onClick }}" style="{{ item.tabStyle }}">
+          <sc-if value="{{ item.iconFlag }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3v18M6 4h11l-3 4 3 4H6"></path></svg>
+          </sc-if>
+          <sc-if value="{{ item.iconCalendar }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2"></rect><path d="M4 10h16M8 3v4M16 3v4"></path></svg>
+          </sc-if>
+          <sc-if value="{{ item.iconCard }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"></rect><circle cx="8.5" cy="11" r="1.6"></circle></svg>
+          </sc-if>
+          <sc-if value="{{ item.iconTicket }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v11H8l-4 4V5z"></path></svg>
+          </sc-if>
+          <sc-if value="{{ item.iconPen }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16l-1 4z"></path></svg>
+          </sc-if>
+          <sc-if value="{{ item.iconChat }}" hint-placeholder-val="{{ false }}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a7 7 0 01-7 7H8l-4 3V9a7 7 0 017-7h3a7 7 0 017 7z"></path></svg>
+          </sc-if>
+          <span style="font-size:10px;">{{ item.label }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ ticketModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeTicketModal }}" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
+      <div onClick="{{ stopPropagation }}" style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.12);border-radius:14px;padding:28px;width:440px;max-width:100%;display:flex;flex-direction:column;gap:16px;">
+        <span style="font-family:'Lora',serif;font-weight:600;font-size:19px;color:#f8f5e8;">Nouveau ticket</span>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Catégorie</span>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;">
+            <sc-for list="{{ ticketCategories }}" as="cat" hint-placeholder-count="5">
+              <div onClick="{{ cat.onClick }}" style="{{ cat.style }}">{{ cat.name }}</div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Sujet</span>
+          <input value="{{ newTicketSubject }}" onChange="{{ setTicketSubject }}" placeholder="Résume ta demande en une phrase" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Description</span>
+          <textarea value="{{ newTicketDescription }}" onChange="{{ setTicketDescription }}" placeholder="Détaille ta demande" rows="4" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;resize:none;"></textarea>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px;">
+          <button onClick="{{ closeTicketModal }}" style="background:transparent;color:rgba(248,245,232,0.6);border:1px solid rgba(248,245,232,0.14);font-size:14px;padding:9px 16px;border-radius:8px;font-family:inherit;cursor:pointer;">Annuler</button>
+          <button onClick="{{ submitTicket }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Créer le ticket</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ minecraftModalOpen }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeMinecraftModal }}" style="position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px;">
+      <div onClick="{{ stopPropagation }}" style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.12);border-radius:14px;padding:28px;width:440px;max-width:100%;display:flex;flex-direction:column;gap:16px;">
+        <span style="font-family:'Lora',serif;font-weight:600;font-size:19px;color:#f8f5e8;">Connexion du compte Minecraft</span>
+        <p style="font-size:14px;line-height:1.6;color:rgba(248,245,232,0.6);margin:0;">Connecte-toi sur le serveur dédié ci-dessous, puis exécute la commande en jeu pour lier ton compte.</p>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Adresse du serveur</span>
+          <div style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;">mc-liaison.hyori-rp.fr</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Version</span>
+          <div style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;">Java 1.20.4</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <span style="font-size:12px;color:rgba(248,245,232,0.45);">Commande à exécuter en jeu</span>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:monospace;">/lier KAELEN-7F3D</div>
+            <div onClick="{{ copyCommand }}" style="width:38px;height:38px;flex:none;border-radius:8px;background:#323232;display:flex;align-items:center;justify-content:center;cursor:pointer;">
+              <sc-if value="{{ commandCopied }}" hint-placeholder-val="{{ false }}">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#e9d15c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"></path></svg>
+              </sc-if>
+              <sc-if value="{{ commandNotCopied }}" hint-placeholder-val="{{ true }}">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 012-2h10"></path></svg>
+              </sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+          <button onClick="{{ closeMinecraftModal }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{
+  &quot;$preview&quot;: {&quot;width&quot;: 1440, &quot;height&quot;: 960},
+  &quot;playerStage&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;whitelist_en_cours&quot;, &quot;options&quot;: [&quot;nouveau&quot;, &quot;liste_attente&quot;, &quot;whitelist_en_cours&quot;, &quot;inscrit&quot;], &quot;tsType&quot;: &quot;'nouveau'|'liste_attente'|'whitelist_en_cours'|'inscrit'&quot;, &quot;section&quot;: &quot;Progression joueur&quot;},
+  &quot;previewMode&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;desktop&quot;, &quot;options&quot;: [&quot;desktop&quot;, &quot;mobile&quot;], &quot;tsType&quot;: &quot;'desktop'|'mobile'&quot;, &quot;section&quot;: &quot;Aperçu&quot;}
+}">
+const STAFF_AUTHOR = 'Aoi';
+const PLAYER_AUTHOR = 'Kaelen';
+
+const NAV_META = {
+  premiers_pas: { label: 'Premiers pas', icon: 'flag' },
+  entretien: { label: 'Entretien Whitelist', icon: 'calendar' },
+  fiche: { label: 'Fiche Personnage', icon: 'card' },
+  tickets: { label: 'Tickets', icon: 'ticket' },
+  ecriture: { label: 'Écriture', icon: 'pen' },
+  suivi_rp: { label: 'Suivi RP', icon: 'chat' },
+};
+
+const DEFAULT_TICKETS = [
+  { id: 1, category: 'Whitelist', title: "Question sur les créneaux d'entretien", status: 'En attente du staff', date: '2 août 2026 à 11:40', thread: [
+    { type: 'system', text: 'Ticket créé par Kaelen.' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "Bonjour, je voulais savoir si je peux changer mon créneau d'entretien après l'avoir réservé ?", time: '2 août, 10:12' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "Je précise : j'ai déjà réservé le créneau du 6 août.", time: '2 août, 10:13' },
+    { type: 'staff', author: STAFF_AUTHOR, text: "Oui, tu peux annuler et re-réserver un nouveau créneau tant qu'il reste des places disponibles.", time: '2 août, 11:40' },
+  ] },
+  { id: 2, category: 'Demande RP', title: 'Autorisation pour une intrigue de clan', status: 'En attente du joueur', date: '30 juillet 2026 à 18:15', thread: [
+    { type: 'system', text: 'Ticket créé par Kaelen.' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "Je souhaite lancer une intrigue impliquant le clan Takeda, ça nécessite une validation ?", time: '30 juillet, 16:02' },
+    { type: 'staff', author: STAFF_AUTHOR, text: "On regarde ça avec l'équipe Suivi RP et on revient vers toi rapidement.", time: '30 juillet, 18:15' },
+  ] },
+  { id: 3, category: 'Report de bug', title: 'La carte de compétences ne sauvegarde pas', status: 'En attente du staff', date: '28 juillet 2026 à 09:30', thread: [
+    { type: 'system', text: 'Ticket créé par Kaelen.' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "La carte de compétences ne sauvegarde plus au-delà de 45 points répartis, le total revient à 0.", time: '28 juillet, 09:30' },
+  ] },
+  { id: 4, category: 'Question générale', title: "Délai de traitement de la liste d'attente", status: 'Archivé', date: '10 juillet 2026 à 15:20', thread: [
+    { type: 'system', text: 'Ticket créé par Kaelen.' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "Combien de temps prend en moyenne le traitement de la liste d'attente ?", time: '10 juillet, 14:00' },
+    { type: 'staff', author: STAFF_AUTHOR, text: "Actuellement entre une et deux semaines selon l'affluence.", time: '10 juillet, 15:20' },
+    { type: 'system', text: 'Ticket archivé par le staff.' },
+  ] },
+  { id: 5, category: 'Plainte contre un joueur', title: 'Comportement en combat RP', status: 'Archivé', date: '2 juillet 2026 à 09:05', thread: [
+    { type: 'system', text: 'Ticket créé par Kaelen.' },
+    { type: 'player', author: PLAYER_AUTHOR, text: "Un joueur a été très agressif hors RP pendant un combat, voici les détails...", time: '2 juillet, 20:11' },
+    { type: 'staff', author: STAFF_AUTHOR, text: "Merci pour ton signalement, une sanction a été appliquée.", time: '3 juillet, 09:05' },
+    { type: 'system', text: 'Ticket archivé par le staff.' },
+  ] },
+];
+
+const SLOTS_BY_DAY = {
+  6: [{ time: '18:00', available: true }, { time: '19:00', available: false }, { time: '20:00', available: true }],
+  13: [{ time: '17:00', available: true }, { time: '18:00', available: true }],
+  20: [{ time: '19:00', available: false }],
+  27: [{ time: '16:00', available: true }, { time: '17:00', available: true }, { time: '18:00', available: false }],
+};
+
+const WEEKDAYS_FR = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+function augustWeekday(day) { return WEEKDAYS_FR[(4 + (day - 1)) % 7]; }
+function formatSlotFull(day, time) { return augustWeekday(day) + ' ' + day + ' août 2026 à ' + time; }
+
+const MINECRAFT_UUID = 'e29b41d4-a716-4466-8f21-9c3d21b8';
+
+const SKILL_EXTREMES = {
+  'Force': ['Chétif', 'Colosse'],
+  'Endurance': ['Fragile', 'Increvable'],
+  'Discrétion': ['Éléphant', 'Ombre'],
+  'Dextérité': ['Maladroit', 'Virtuose'],
+  'Intelligence': ['Ignare', 'Génie'],
+  'Sang-froid': ['Fébrile', 'Imperturbable'],
+  'Maîtrise des armes et outils': ['Danger public', 'Maître'],
+  'Charisme': ['Insignifiant', 'Magnétique'],
+  'Persuasion': ['Bafouilleur', "Langue d'argent"],
+  'Violence': ['Pacifiste', 'Sanguinaire'],
+};
+
+const SKILLS = {
+  physical: [{ name: 'Force', points: 3 }, { name: 'Endurance', points: 4 }, { name: 'Discrétion', points: 2 }, { name: 'Dextérité', points: 3 }],
+  mental: [{ name: 'Intelligence', points: 4 }, { name: 'Sang-froid', points: 3 }, { name: 'Maîtrise des armes et outils', points: 5 }],
+  social: [{ name: 'Charisme', points: 3 }, { name: 'Persuasion', points: 2 }, { name: 'Violence', points: 1 }],
+};
+
+const CHAPTERS = [
+  { title: "Chapitre 1 — L'arrivée à Himeji", status: 'Publié' },
+  { title: 'Chapitre 2 — Le serment du clan', status: 'Publié' },
+  { title: 'Chapitre 3 — La trahison', status: 'Brouillon' },
+];
+
+const MESSAGES = [
+  { type: 'system', text: 'Ticket #129 « Autorisation pour une intrigue de clan » créé.' },
+  { type: 'staff', author: STAFF_AUTHOR, text: 'Bonjour ! On regarde ta demande de RP, on te répond avant ce soir.', time: '14:02' },
+  { type: 'player', author: PLAYER_AUTHOR, text: 'Merci beaucoup, je reste disponible.', time: '14:05' },
+  { type: 'staff', author: STAFF_AUTHOR, text: "C'est validé, tu peux lancer l'intrigue avec le clan Takeda.", time: '16:30' },
+  { type: 'staff', author: STAFF_AUTHOR, text: "N'hésite pas si tu as d'autres questions sur la mise en place.", time: '16:31' },
+];
+
+function navItemStyle(active, locked) {
+  return {
+    display: 'flex', alignItems: 'center', gap: '12px',
+    padding: '10px 14px', borderRadius: '8px',
+    background: active ? 'rgba(233,209,92,0.12)' : 'transparent',
+    color: locked ? 'rgba(248,245,232,0.32)' : (active ? '#f8f5e8' : 'rgba(248,245,232,0.68)'),
+    cursor: locked ? 'default' : 'pointer',
+    fontWeight: active ? 600 : 500,
+  };
+}
+function navTabStyle(active, locked) {
+  return {
+    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+    padding: '8px 2px 10px', color: locked ? 'rgba(248,245,232,0.25)' : (active ? '#e9d15c' : 'rgba(248,245,232,0.55)'),
+    cursor: locked ? 'default' : 'pointer',
+  };
+}
+function ticketStatusStyle(status) {
+  const base = { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '999px', flex: 'none' };
+  if (status === 'Archivé') return { ...base, background: 'rgba(248,245,232,0.06)', color: 'rgba(248,245,232,0.4)' };
+  if (status === 'En attente du joueur') return { ...base, background: 'rgba(233,209,92,0.14)', color: '#e9d15c' };
+  return { ...base, background: 'rgba(248,245,232,0.08)', color: 'rgba(248,245,232,0.7)' };
+}
+function chipStyle(selected) {
+  return {
+    fontSize: '13px', padding: '7px 13px', borderRadius: '999px', cursor: 'pointer',
+    background: selected ? '#e9d15c' : 'rgba(248,245,232,0.06)',
+    color: selected ? '#121212' : 'rgba(248,245,232,0.65)',
+    fontWeight: selected ? 600 : 500,
+  };
+}
+function dayStyle(hasSlots, selected) {
+  return {
+    width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px',
+    cursor: hasSlots ? 'pointer' : 'default',
+    background: selected ? '#e9d15c' : (hasSlots ? 'rgba(233,209,92,0.12)' : 'transparent'),
+    color: selected ? '#121212' : (hasSlots ? '#f8f5e8' : 'rgba(248,245,232,0.25)'),
+    fontWeight: selected ? 600 : 500,
+  };
+}
+function chapterItemStyle(active) {
+  return {
+    display: 'flex', flexDirection: 'column', gap: '2px', padding: '9px 10px', borderRadius: '8px', cursor: 'pointer',
+    background: active ? 'rgba(233,209,92,0.12)' : 'transparent',
+    color: active ? '#f8f5e8' : 'rgba(248,245,232,0.6)',
+    fontSize: '13px',
+  };
+}
+function messageStyle(type) {
+  const isPlayer = type === 'player';
+  return {
+    alignSelf: isPlayer ? 'flex-end' : 'flex-start',
+    background: isPlayer ? 'rgba(233,209,92,0.16)' : '#242424',
+    color: '#f8f5e8', maxWidth: '78%', padding: '10px 14px', borderRadius: '14px', fontSize: '14.5px', lineHeight: '1.5',
+  };
+}
+function slotStyle(available) {
+  return {
+    fontSize: '14px', padding: '10px 12px', borderRadius: '8px',
+    background: available ? 'rgba(233,209,92,0.1)' : 'rgba(248,245,232,0.04)',
+    color: available ? '#f8f5e8' : 'rgba(248,245,232,0.35)',
+    border: available ? '1px solid rgba(233,209,92,0.3)' : '1px solid transparent',
+    cursor: available ? 'pointer' : 'default',
+  };
+}
+function ticketRowStyle(status) {
+  return {
+    background: '#1a1a1a', border: '1px solid rgba(248,245,232,0.08)', borderRadius: '10px',
+    borderLeft: status === 'En attente du joueur' ? '3px solid #e9d15c' : '3px solid transparent',
+    boxSizing: 'border-box',
+    padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', cursor: 'pointer',
+  };
+}
+function buildChatGroups(thread) {
+  const groups = [];
+  thread.forEach(m => {
+    if (m.type === 'system') { groups.push({ isSystem: true, text: m.text }); return; }
+    const last = groups[groups.length - 1];
+    if (last && !last.isSystem && last.type === m.type && last.author === m.author) {
+      last.messages.push({ text: m.text });
+    } else {
+      groups.push({ isSystem: false, type: m.type, author: m.author, initial: (m.author || '?')[0], time: m.time, messages: [{ text: m.text }] });
+    }
+  });
+  return groups;
+}
+
+class Component extends DCLogic {
+  ticketCounter = 100;
+  state = {
+    activeView: null,
+    ticketModalOpen: false,
+    minecraftModalOpen: false,
+    commandCopied: false,
+    newTicketCategory: null,
+    newTicketSubject: '',
+    newTicketDescription: '',
+    showArchivedTickets: false,
+    selectedDay: 6,
+    activeChapter: 0,
+    selectedTicketId: null,
+    tickets: DEFAULT_TICKETS,
+  };
+
+  selectView = (id, locked) => { if (!locked) this.setState({ activeView: id }); };
+  openTicketModal = () => this.setState({ ticketModalOpen: true, newTicketCategory: null, newTicketSubject: '', newTicketDescription: '' });
+  closeTicketModal = () => this.setState({ ticketModalOpen: false });
+  openMinecraftModal = () => this.setState({ minecraftModalOpen: true, commandCopied: false });
+  closeMinecraftModal = () => this.setState({ minecraftModalOpen: false });
+  copyCommand = () => {
+    try { navigator.clipboard.writeText('/lier KAELEN-7F3D'); } catch (e) {}
+    this.setState({ commandCopied: true });
+    setTimeout(() => this.setState({ commandCopied: false }), 1500);
+  };
+  setTicketCategory = (cat) => this.setState({ newTicketCategory: cat });
+  setTicketSubject = (e) => this.setState({ newTicketSubject: e.target.value });
+  setTicketDescription = (e) => this.setState({ newTicketDescription: e.target.value });
+  stopPropagation = (e) => e.stopPropagation();
+  submitTicket = () => {
+    const { newTicketCategory, newTicketSubject, newTicketDescription, tickets } = this.state;
+    if (!newTicketCategory || !newTicketSubject.trim()) return;
+    const newTicket = {
+      id: this.ticketCounter++, category: newTicketCategory, title: newTicketSubject.trim(), status: 'En attente du staff', date: "Aujourd'hui",
+      thread: [
+        { type: 'system', text: 'Ticket créé par Kaelen.' },
+        { type: 'player', text: newTicketDescription.trim() || newTicketSubject.trim(), time: "Aujourd'hui" },
+      ],
+    };
+    this.setState({ tickets: [newTicket, ...tickets], ticketModalOpen: false });
+  };
+  toggleArchived = () => this.setState(s => ({ showArchivedTickets: !s.showArchivedTickets }));
+  selectDay = (day, hasSlots) => { if (hasSlots) this.setState({ selectedDay: day }); };
+  selectChapter = (i) => this.setState({ activeChapter: i });
+  selectTicket = (id) => this.setState({ selectedTicketId: id });
+  closeTicketDetail = () => this.setState({ selectedTicketId: null });
+
+  renderVals() {
+    const stage = this.props.playerStage ?? 'whitelist_en_cours';
+    const isMobile = (this.props.previewMode ?? 'desktop') === 'mobile';
+    const isDesktop = !isMobile;
+
+    const stepIndexByStage = { nouveau: 1, liste_attente: 3, whitelist_en_cours: 4, inscrit: 4 };
+    const stepIndex = stepIndexByStage[stage] ?? 1;
+    const minecraftLinked = stepIndex >= 2;
+
+    const entretienFicheLocked = stage === 'nouveau' || stage === 'liste_attente';
+    const ecritureSuiviLocked = stage !== 'inscrit';
+    const showPremiersPas = stage !== 'inscrit';
+
+    const navIds = ['premiers_pas', 'entretien', 'fiche', 'tickets', 'ecriture', 'suivi_rp'].filter(id => id !== 'premiers_pas' || showPremiersPas);
+    const lockedMap = { entretien: entretienFicheLocked, fiche: entretienFicheLocked, ecriture: ecritureSuiviLocked, suivi_rp: ecritureSuiviLocked, premiers_pas: false, tickets: false };
+
+    const defaultView = navIds.find(id => !lockedMap[id]) || navIds[0];
+    const activeView = this.state.activeView && navIds.includes(this.state.activeView) && !lockedMap[this.state.activeView] ? this.state.activeView : defaultView;
+
+    const navItems = navIds.map(id => {
+      const meta = NAV_META[id];
+      const locked = lockedMap[id];
+      const active = activeView === id;
+      return {
+        id, label: meta.label,
+        iconFlag: meta.icon === 'flag', iconCalendar: meta.icon === 'calendar', iconCard: meta.icon === 'card',
+        iconTicket: meta.icon === 'ticket', iconPen: meta.icon === 'pen', iconChat: meta.icon === 'chat',
+        locked, active,
+        style: navItemStyle(active, locked),
+        tabStyle: navTabStyle(active, locked),
+        onClick: () => this.selectView(id, locked),
+      };
+    });
+
+    const rootStyle = {
+      display: 'flex', flexDirection: isMobile ? 'column' : 'row',
+      width: isMobile ? '390px' : '100%', margin: isMobile ? '0 auto' : '0',
+      minHeight: isMobile ? '844px' : '100vh', maxHeight: isMobile ? '844px' : 'none',
+      border: isMobile ? '1px solid rgba(248,245,232,0.14)' : 'none',
+      background: '#121212', color: '#f8f5e8', fontFamily: "'Source Serif 4',Georgia,serif",
+      overflow: isMobile ? 'hidden' : 'visible', position: 'relative',
+    };
+    const contentWrapperStyle = {
+      flex: 1, overflowY: 'auto', padding: isMobile ? '20px' : '40px 48px',
+      display: 'flex', flexDirection: 'column',
+    };
+    const premierPasRowStyle = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: '20px', alignItems: 'flex-start', minWidth: 0 };
+    const accountsColStyle = { flex: isMobile ? 'none' : '1.6 1 480px', minWidth: isMobile ? 'auto' : '420px', width: isMobile ? '100%' : 'auto', display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)', gap: '18px', boxSizing: 'border-box' };
+    const progressionPanelStyle = { flex: isMobile ? 'none' : '1 1 300px', minWidth: isMobile ? 'auto' : '260px', maxWidth: isMobile ? 'none' : '320px', width: isMobile ? '100%' : 'auto', background: '#1a1a1a', border: '1px solid rgba(248,245,232,0.08)', borderRadius: '12px', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', boxSizing: 'border-box' };
+    const calendarRowStyle = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', flexWrap: 'wrap', gap: '18px' };
+    const ecritureRowStyle = { display: 'flex', flexDirection: isMobile ? 'column' : 'row', gap: '18px' };
+    const centeredWrap = (gap, extra) => Object.assign({ display: 'flex', flexDirection: 'column', gap: gap + 'px', width: '100%', boxSizing: 'border-box', maxWidth: isMobile ? 'none' : '960px', margin: isMobile ? '0' : '0 auto' }, extra || {});
+    const centeredStyle = centeredWrap(24);
+    const centeredStyleTight = centeredWrap(20);
+    const centeredStyleSuivi = centeredWrap(20, { height: '100%' });
+
+    const progressLabels = ['Discord lié', 'Minecraft lié', "Liste d'attente", 'Accepté'];
+    const progressSteps = progressLabels.map((label, i) => {
+      const done = i < stepIndex;
+      const current = i === stepIndex - 1;
+      return {
+        label,
+        hasLine: i < progressLabels.length - 1,
+        dotStyle: { width: '10px', height: '10px', borderRadius: '50%', background: done ? '#e9d15c' : 'rgba(248,245,232,0.18)', flex: 'none' },
+        lineStyle: { width: '2px', flex: 1, minHeight: '18px', background: i < stepIndex - 1 ? '#e9d15c' : 'rgba(248,245,232,0.18)' },
+        labelStyle: { fontSize: '13.5px', color: done ? '#f8f5e8' : 'rgba(248,245,232,0.4)', fontWeight: current ? 600 : 500, paddingBottom: '18px' },
+      };
+    });
+    const currentStepLabel = progressLabels[Math.max(0, Math.min(stepIndex, 4) - 1)];
+
+    const weekdayLabels = ['L', 'M', 'M', 'J', 'V', 'S', 'D'];
+    const calendarDays = [];
+    for (let d = 1; d <= 31; d++) {
+      const hasSlots = SLOTS_BY_DAY[d] != null;
+      const selected = this.state.selectedDay === d;
+      calendarDays.push({ day: d, style: dayStyle(hasSlots, selected), onClick: () => this.selectDay(d, hasSlots) });
+    }
+    const rawSlots = SLOTS_BY_DAY[this.state.selectedDay] || [];
+    const daySlots = rawSlots.map(s => ({ fullLabel: formatSlotFull(this.state.selectedDay, s.time), style: slotStyle(s.available) }));
+
+    const allTickets = this.state.tickets.map(t => ({ ...t, statusStyle: ticketStatusStyle(t.status), rowStyle: ticketRowStyle(t.status), onClick: () => this.selectTicket(t.id) }));
+    const visibleTickets = allTickets.filter(t => this.state.showArchivedTickets || t.status !== 'Archivé');
+    const archivedToggleLabel = this.state.showArchivedTickets ? 'Masquer les tickets archivés' : 'Afficher les tickets archivés';
+    const selectedTicket = allTickets.find(t => t.id === this.state.selectedTicketId) || null;
+    const hasSelectedTicket = !!selectedTicket;
+    const ticketChatGroups = selectedTicket ? buildChatGroups(selectedTicket.thread) : [];
+
+    const ticketCategories = ['Question générale', 'Whitelist', 'Demande RP', 'Plainte contre un joueur', 'Report de bug'].map(c => ({
+      name: c, style: chipStyle(this.state.newTicketCategory === c), onClick: () => this.setTicketCategory(c),
+    }));
+
+    const buildSkills = (list) => list.map(s => {
+      const extremes = SKILL_EXTREMES[s.name] || ['', ''];
+      return {
+        name: s.name, lowLabel: extremes[0], highLabel: extremes[1],
+        squares: [1, 2, 3, 4, 5].map(i => ({ filled: i <= s.points, empty: i > s.points })),
+      };
+    });
+    const physicalSkills = buildSkills(SKILLS.physical);
+    const mentalSkills = buildSkills(SKILLS.mental);
+    const socialSkills = buildSkills(SKILLS.social);
+    const totalSkillPoints = [...SKILLS.physical, ...SKILLS.mental, ...SKILLS.social].reduce((a, s) => a + s.points, 0);
+
+    const civilFieldsTop = [
+      { label: 'Nom', value: 'Kaelen Vt' }, { label: 'Surnom', value: 'Le Forgeron' },
+    ];
+    const civilFieldsBottom = [
+      { label: 'Âge', value: '27' }, { label: 'Genre', value: 'Homme' },
+      { label: 'Statut', value: 'Roturier' }, { label: 'Taille', value: '1.78m' },
+    ];
+    const minecraftNameDisplay = minecraftLinked ? 'Kaelen_Edo' : '—';
+    const minecraftUuidDisplay = minecraftLinked ? MINECRAFT_UUID : '—';
+
+    const chapters = CHAPTERS.map((c, i) => ({ ...c, active: this.state.activeChapter === i, style: chapterItemStyle(this.state.activeChapter === i), onClick: () => this.selectChapter(i) }));
+    const currentChapterTitle = CHAPTERS[this.state.activeChapter].title;
+
+    const suiviChatGroups = buildChatGroups(MESSAGES);
+
+    return {
+      isMobile, isDesktop, rootStyle, contentWrapperStyle, premierPasRowStyle, accountsColStyle, progressionPanelStyle, calendarRowStyle, ecritureRowStyle,
+      centeredStyle, centeredStyleTight, centeredStyleSuivi,
+      navItems,
+      isPremiersPas: activeView === 'premiers_pas', isEntretien: activeView === 'entretien', isFiche: activeView === 'fiche',
+      isTickets: activeView === 'tickets', isEcriture: activeView === 'ecriture', isSuiviRp: activeView === 'suivi_rp',
+      minecraftLinked, minecraftNotLinked: !minecraftLinked, minecraftNameDisplay, minecraftUuidDisplay,
+      progressSteps, currentStepLabel,
+      entretienFicheLocked, entretienUnlocked: !entretienFicheLocked,
+      ecritureSuiviLocked, ecritureSuiviUnlocked: !ecritureSuiviLocked,
+      weekdayLabels, calendarDays, daySlots, noSlots: daySlots.length === 0,
+      visibleTickets, archivedToggleLabel, hasSelectedTicket, noSelectedTicket: !hasSelectedTicket, selectedTicket, ticketChatGroups,
+      openTicketModal: this.openTicketModal, closeTicketModal: this.closeTicketModal, ticketModalOpen: this.state.ticketModalOpen,
+      openMinecraftModal: this.openMinecraftModal, closeMinecraftModal: this.closeMinecraftModal, minecraftModalOpen: this.state.minecraftModalOpen,
+      commandCopied: this.state.commandCopied, commandNotCopied: !this.state.commandCopied, copyCommand: this.copyCommand,
+      toggleArchived: this.toggleArchived, stopPropagation: this.stopPropagation, closeTicketDetail: this.closeTicketDetail,
+      ticketCategories, newTicketSubject: this.state.newTicketSubject, setTicketSubject: this.setTicketSubject,
+      newTicketDescription: this.state.newTicketDescription, setTicketDescription: this.setTicketDescription,
+      submitTicket: this.submitTicket,
+      civilFieldsTop, civilFieldsBottom, totalSkillPoints, physicalSkills, mentalSkills, socialSkills,
+      chapters, currentChapterTitle,
+      suiviChatGroups,
+    };
+  }
+}
+
+</script>
+</body>
+</html>
