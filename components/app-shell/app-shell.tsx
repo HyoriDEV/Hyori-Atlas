@@ -54,6 +54,7 @@ export interface AppShellNavEntry {
   href: string;
   iconKey: NavIconKey;
   locked?: boolean;
+  fullWidth?: boolean;
 }
 
 export interface AppShellUser {
@@ -76,6 +77,9 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const initial = user.name.charAt(0).toUpperCase();
+  const isFullWidth = navItems.some(
+    (item) => item.fullWidth && (pathname === item.href || pathname?.startsWith(`${item.href}/`))
+  );
 
   return (
     <SidebarProvider>
@@ -159,7 +163,7 @@ export function AppShell({
           <span className={cn("text-muted-foreground text-sm")}>{sectionLabel}</span>
         </header>
         <div className="flex-1 p-4 sm:p-6">
-          <div className="mx-auto w-full max-w-[960px]">{children}</div>
+          <div className={cn("mx-auto w-full", !isFullWidth && "max-w-[960px]")}>{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

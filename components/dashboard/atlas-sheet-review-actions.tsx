@@ -3,11 +3,10 @@
 import { useState, useTransition } from "react";
 
 import {
-  promoteToWhitelisted,
   requestCharacterSheetChanges,
   validateCharacterSheet,
 } from "@/lib/actions/staff-review-actions";
-import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -20,48 +19,35 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-type PendingAction = "validate" | "request-changes" | "promote" | null;
+type PendingAction = "validate" | "request-changes" | null;
 
-export function AtlasReviewPanel({
-  playerId,
-  pseudo,
+export function AtlasSheetReviewActions({
   sheetId,
+  pseudo,
   reviewStatus,
-  registrationStatus,
 }: {
-  playerId: string;
+  sheetId: string;
   pseudo: string;
-  sheetId: string | null;
-  reviewStatus: CharacterSheetStatus | null;
-  registrationStatus: RegistrationStatus;
+  reviewStatus: CharacterSheetStatus;
 }) {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [isPending, startTransition] = useTransition();
 
-  const canValidate = Boolean(sheetId) && reviewStatus !== CharacterSheetStatus.VALIDATED;
-  const canRequestChanges = Boolean(sheetId);
-  const canPromote =
-    reviewStatus === CharacterSheetStatus.VALIDATED &&
-    registrationStatus !== RegistrationStatus.WHITELISTED;
+  const canValidate = reviewStatus !== CharacterSheetStatus.VALIDATED;
 
   function handleConfirm() {
     if (!pendingAction) return;
     startTransition(async () => {
-      if (pendingAction === "validate" && sheetId) {
+      if (pendingAction === "validate") {
         await validateCharacterSheet(sheetId);
-      } else if (pendingAction === "request-changes" && sheetId) {
+      } else {
         await requestCharacterSheetChanges(sheetId);
-      } else if (pendingAction === "promote") {
-        await promoteToWhitelisted(playerId);
       }
       setPendingAction(null);
     });
   }
 
-  const dialogCopy: Record<
-    Exclude<PendingAction, null>,
-    { title: string; description: string }
-  > = {
+  const dialogCopy: Record<Exclude<PendingAction, null>, { title: string; description: string }> = {
     validate: {
       title: "Valider la fiche personnage",
       description: `La fiche de ${pseudo} sera verrouillée et ne pourra plus être modifiée.`,
@@ -70,27 +56,25 @@ export function AtlasReviewPanel({
       title: "Demander des modifications",
       description: `${pseudo} devra modifier sa fiche et réserver un nouveau créneau d'entretien.`,
     },
-    promote: {
-      title: "Promouvoir en Inscrit",
-      description: `${pseudo} sera inscrit à la whitelist et débloquera l'Écriture et le Suivi RP.`,
-    },
   };
 
   return (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Button
         type="button"
         variant="outline"
-        disabled={!canRequestChanges}
+        size="sm"
         onClick={() => setPendingAction("request-changes")}
       >
         Demander des modifications
       </Button>
-      <Button type="button" disabled={!canValidate} onClick={() => setPendingAction("validate")}>
+      <Button
+        type="button"
+        size="sm"
+        disabled={!canValidate}
+        onClick={() => setPendingAction("validate")}
+      >
         Marquer comme validée
-      </Button>
-      <Button type="button" disabled={!canPromote} onClick={() => setPendingAction("promote")}>
-        Promouvoir en Inscrit
       </Button>
 
       <AlertDialog

@@ -36,7 +36,6 @@ export default async function GettingStartedPage() {
     latestBooking?.status === InterviewBookingStatus.ACCEPTED || isWhitelisted;
 
   const steps = [
-    { label: "Création de compte", done: true },
     { label: "Connexion Minecraft", done: minecraftLinked },
     {
       label: "Liste d'attente",
@@ -82,7 +81,7 @@ export default async function GettingStartedPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold">Premiers pas</h1>
+      <h1 className="font-heading text-2xl font-semibold">Premier pas</h1>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Card>
@@ -150,7 +149,7 @@ export default async function GettingStartedPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Progression de l'inscription</CardTitle>
+            <CardTitle>Progression de l&apos;inscription</CardTitle>
             <CardDescription>{statusDescription}</CardDescription>
           </CardHeader>
           <CardContent>

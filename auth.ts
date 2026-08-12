@@ -108,10 +108,12 @@ const adapter: Adapter = {
     const updateData: Record<string, unknown> = {};
     if (user.discordId !== undefined) updateData.discordId = user.discordId;
     if (user.discordUsername !== undefined) updateData.discordUsername = user.discordUsername;
-    if (user.discordDisplayName !== undefined) updateData.discordDisplayName = user.discordDisplayName;
+    if (user.discordDisplayName !== undefined)
+      updateData.discordDisplayName = user.discordDisplayName;
     if (user.discordAvatarUrl !== undefined) updateData.discordAvatarUrl = user.discordAvatarUrl;
     if (user.role !== undefined) updateData.role = user.role;
-    if (user.registrationStatus !== undefined) updateData.registrationStatus = user.registrationStatus;
+    if (user.registrationStatus !== undefined)
+      updateData.registrationStatus = user.registrationStatus;
     if (user.minecraftUuid !== undefined) updateData.minecraftUuid = user.minecraftUuid;
     if (user.minecraftUsername !== undefined) updateData.minecraftUsername = user.minecraftUsername;
 
@@ -280,4 +282,3 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
-

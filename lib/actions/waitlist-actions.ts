@@ -62,4 +62,3 @@ export async function restoreWaitlistPlayer(userId: string) {
 
   revalidatePath("/dashboard/waitlist");
 }
-

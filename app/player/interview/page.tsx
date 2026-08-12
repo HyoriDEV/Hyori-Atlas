@@ -1,6 +1,10 @@
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, InterviewBookingStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  InterviewBookingStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import { interviewBookingStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { Badge } from "@/components/ui/badge";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
@@ -68,8 +72,9 @@ export default async function InterviewPage() {
         {latestBooking && <Badge>{interviewBookingStatusLabels[latestBooking.status]}</Badge>}
       </div>
       {latestBooking?.status === InterviewBookingStatus.CHANGES_REQUESTED && (
-        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-amber-500 text-sm font-medium">
-          Un administrateur a demandé un nouvel entretien. Veuillez réserver un autre créneau ci-dessous.
+        <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm font-medium text-amber-500">
+          Un administrateur a demandé un nouvel entretien. Veuillez réserver un autre créneau
+          ci-dessous.
         </div>
       )}
       <p className="text-muted-foreground max-w-2xl text-sm">
@@ -81,4 +86,3 @@ export default async function InterviewPage() {
     </div>
   );
 }
-

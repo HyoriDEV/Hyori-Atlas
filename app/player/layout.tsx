@@ -1,11 +1,7 @@
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
-import {
-  isRegistrationStatusAtLeast,
-  playerNavItems,
-  roleLabels,
-} from "@/lib/navigation";
+import { isRegistrationStatusAtLeast, playerNavItems, roleLabels } from "@/lib/navigation";
 import { AppShell, type AppShellNavEntry } from "@/components/app-shell/app-shell";
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
@@ -35,6 +31,7 @@ export default async function PlayerLayout({ children }: { children: React.React
         href: item.href,
         iconKey: item.iconKey,
         locked,
+        fullWidth: item.fullWidth,
       };
     });
 
@@ -53,4 +50,3 @@ export default async function PlayerLayout({ children }: { children: React.React
     </AppShell>
   );
 }
-

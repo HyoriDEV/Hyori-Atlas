@@ -2,7 +2,11 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { characterSheetStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
-import { SKILL_DEFINITIONS, isCharacterSheetEditable, type SkillValues } from "@/lib/character-sheet";
+import {
+  SKILL_DEFINITIONS,
+  isCharacterSheetEditable,
+  type SkillValues,
+} from "@/lib/character-sheet";
 import { Badge } from "@/components/ui/badge";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { CharacterSheetForm } from "@/components/player/character-sheet-form";

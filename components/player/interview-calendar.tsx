@@ -4,6 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { fr } from "date-fns/locale";
 
 import { bookInterviewSlot } from "@/lib/actions/interview-actions";
+import { formatDate } from "@/lib/date";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -102,7 +103,7 @@ export function InterviewCalendar({
               onClick={() => setPendingSlot(slot)}
               className="justify-start"
             >
-              {slot.startsAt.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+              {formatDate(slot.startsAt, { style: "compact", withTime: true })}
               {slot.isBooked ? " · Réservé" : ""}
             </Button>
           ))}
@@ -115,9 +116,9 @@ export function InterviewCalendar({
             <AlertDialogTitle>Réserver ce créneau</AlertDialogTitle>
             <AlertDialogDescription>
               {pendingSlot &&
-                `Confirmer la réservation du ${pendingSlot.startsAt.toLocaleString("fr-FR", {
-                  dateStyle: "long",
-                  timeStyle: "short",
+                `Confirmer la réservation : ${formatDate(pendingSlot.startsAt, {
+                  style: "prefix-long",
+                  withTime: true,
                 })} ?`}
             </AlertDialogDescription>
           </AlertDialogHeader>

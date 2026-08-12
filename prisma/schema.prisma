@@ -91,6 +91,8 @@ model User {
   registrationHistory RegistrationStatusHistory[]
   characterSheet      CharacterSheet?
   interviewBookings   InterviewBooking[]
+  staffNotes          StaffNote[]                 @relation("StaffNotePlayer")
+  authoredStaffNotes  StaffNote[]                 @relation("StaffNoteAuthor")
 
   @@map("users")
 }
@@ -250,4 +252,18 @@ model InterviewBooking {
 
   @@index([playerId])
   @@map("interview_bookings")
+}
+
+model StaffNote {
+  id        String   @id @default(cuid())
+  playerId  String
+  authorId  String?
+  body      String   @db.VarChar(1000)
+  createdAt DateTime @default(now())
+
+  player User  @relation("StaffNotePlayer", fields: [playerId], references: [id], onDelete: Cascade)
+  author User? @relation("StaffNoteAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([playerId])
+  @@map("staff_notes")
 }

@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
+import { formatDate } from "@/lib/date";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { NewTicketDialog } from "@/components/player/new-ticket-dialog";
@@ -32,9 +33,10 @@ export default async function TicketsPage() {
       {tickets.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center gap-1 py-16 text-center">
-            <p className="text-base font-medium">Rien à voir pour l'instant !</p>
+            <p className="text-base font-medium">Rien à voir pour l&apos;instant !</p>
             <p className="text-muted-foreground max-w-sm text-sm">
-              Créé un ticket pour poser une question ou signaler un problème à l'équipe du staff.
+              Créé un ticket pour poser une question ou signaler un problème à l&apos;équipe du
+              staff.
             </p>
           </CardContent>
         </Card>
@@ -47,7 +49,7 @@ export default async function TicketsPage() {
                   <div className="flex flex-col gap-1">
                     <span className="text-muted-foreground text-xs">
                       {ticketCategoryLabels[ticket.category]} ·{" "}
-                      {ticket.createdAt.toLocaleDateString("fr-FR")}
+                      {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
                     </span>
                     <span className="text-sm font-medium">{ticket.subject}</span>
                   </div>

@@ -10,7 +10,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const navItems: AppShellNavEntry[] = staffNavItems
     .filter((item) => item.roles.includes(user.role))
-    .map((item) => ({ label: item.label, href: item.href, iconKey: item.iconKey }));
+    .map((item) => ({
+      label: item.label,
+      href: item.href,
+      iconKey: item.iconKey,
+      fullWidth: item.fullWidth,
+    }));
 
   return (
     <AppShell

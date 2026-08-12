@@ -2,23 +2,40 @@ import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@/lib/generated/prisma/enums";
+import { formatPlaytime, getMockServerActivity } from "@/lib/mock-server-data";
+import { formatDate } from "@/lib/date";
+import { registrationStatusBadgeVariant } from "@/lib/atlas-status";
 import {
-  characterSheetStatusLabels,
-  interviewBookingStatusLabels,
-  registrationStatusLabels,
-  staffNavItems,
-} from "@/lib/navigation";
-import { SKILL_DEFINITIONS, type SkillValues } from "@/lib/character-sheet";
+  CharacterSheetStatus,
+  InterviewBookingStatus,
+  RegistrationStatus,
+  Role,
+} from "@/lib/generated/prisma/enums";
+import { registrationStatusLabels, staffNavItems, ticketCategoryLabels } from "@/lib/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { SkinHead } from "@/components/ui/skin-head";
+import { CopyButton } from "@/components/player/copy-button";
+import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
+import { AtlasPromoteButton } from "@/components/dashboard/atlas-promote-button";
+import { AtlasCharacterSheetSummary } from "@/components/dashboard/atlas-character-sheet-summary";
+import { AtlasStaffNotes } from "@/components/dashboard/atlas-staff-notes";
 import {
-  CharacterSheetFields,
-  type CharacterSheetFieldValues,
-} from "@/components/character-sheet/character-sheet-fields";
-import { SkillMap } from "@/components/character-sheet/skill-map";
-import { AtlasReviewPanel } from "@/components/dashboard/atlas-review-panel";
+  AtlasTimelineTabs,
+  type AtlasActionHistoryItem,
+} from "@/components/dashboard/atlas-timeline-tabs";
+
+function interviewBookingActionText(status: InterviewBookingStatus): string {
+  switch (status) {
+    case InterviewBookingStatus.ACCEPTED:
+      return "Entretien accepté";
+    case InterviewBookingStatus.CHANGES_REQUESTED:
+      return "Modifications demandées sur l'entretien";
+    case InterviewBookingStatus.REGISTERED:
+      return "Entretien réservé";
+  }
+}
 
 export default async function AtlasPlayerPage({
   params,
@@ -34,6 +51,9 @@ export default async function AtlasPlayerPage({
     include: {
       characterSheet: true,
       interviewBookings: { orderBy: { createdAt: "desc" }, include: { slot: true } },
+      registrationHistory: { orderBy: { createdAt: "asc" } },
+      tickets: { orderBy: { createdAt: "desc" } },
+      staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
     },
   });
 
@@ -43,97 +63,151 @@ export default async function AtlasPlayerPage({
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
   const sheet = player.characterSheet;
+  const activity = getMockServerActivity(player.id, player.createdAt);
 
-  const fieldValues: CharacterSheetFieldValues = {
-    name: sheet?.name ?? "",
-    nickname: sheet?.nickname ?? "",
-    age: sheet ? String(sheet.age) : "",
-    gender: sheet?.gender ?? "",
-    civilStatus: sheet?.civilStatus ?? "",
-    heightCm: sheet
-      ? String(
-          sheet.heightMeters > 10
-            ? Math.round(sheet.heightMeters)
-            : Math.round(sheet.heightMeters * 100)
-        )
-      : "",
-    description: sheet?.description ?? "",
-    background: sheet?.background ?? "",
-    additionalComments: sheet?.additionalComments ?? "",
-  };
+  const whitelistInProgressAt = player.registrationHistory.find(
+    (entry) => entry.status === RegistrationStatus.WHITELIST_IN_PROGRESS
+  )?.createdAt;
+  const whitelistedAt = player.registrationHistory.find(
+    (entry) => entry.status === RegistrationStatus.WHITELISTED
+  )?.createdAt;
 
-  const skillValues = Object.fromEntries(
-    SKILL_DEFINITIONS.map((skill) => [skill.field, sheet ? sheet[skill.field] : 1])
-  ) as SkillValues;
+  const canPromote =
+    sheet?.reviewStatus === CharacterSheetStatus.VALIDATED &&
+    player.registrationStatus !== RegistrationStatus.WHITELISTED;
+  const isAdmin = staffUser.role === Role.ADMIN;
+
+  const actionHistory: AtlasActionHistoryItem[] = [
+    ...player.registrationHistory.map((entry) => ({
+      date: entry.createdAt,
+      text: `Statut changé en ${registrationStatusLabels[entry.status]}`,
+    })),
+    ...player.tickets.map((ticket) => ({
+      date: ticket.createdAt,
+      text: `Ticket créé — ${ticketCategoryLabels[ticket.category]} : ${ticket.subject}`,
+    })),
+    ...player.interviewBookings.map((booking) => ({
+      date: booking.createdAt,
+      text: interviewBookingActionText(booking.status),
+    })),
+    ...activity.sanctions.map((sanction) => ({
+      date: sanction.date,
+      text: `${sanction.type} — ${sanction.text}`,
+    })),
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <Avatar size="lg">
-          <AvatarImage src={player.discordAvatarUrl ?? undefined} alt={playerName} />
-          <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="flex flex-1 flex-col gap-0.5">
-          <span className="font-heading text-lg font-semibold">{playerName}</span>
-          <span className="text-muted-foreground text-xs">
-            {player.discordUsername} · {player.minecraftUuid ?? "Minecraft non lié"}
-          </span>
-        </div>
-        <Badge variant="outline">{registrationStatusLabels[player.registrationStatus]}</Badge>
+        <AtlasBackButton />
+        <h1 className="font-heading flex-1 text-lg font-semibold">{playerName}</h1>
+        <Badge variant={registrationStatusBadgeVariant(player.registrationStatus)}>
+          {registrationStatusLabels[player.registrationStatus]}
+        </Badge>
+        {isAdmin && canPromote && <AtlasPromoteButton playerId={player.id} pseudo={playerName} />}
       </div>
 
-      {staffUser.role === Role.ADMIN && (
-        <AtlasReviewPanel
-          playerId={player.id}
-          pseudo={playerName}
-          sheetId={sheet?.id ?? null}
-          reviewStatus={sheet?.reviewStatus ?? null}
-          registrationStatus={player.registrationStatus}
-        />
-      )}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[3fr_minmax(300px,1fr)]">
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Card className="flex flex-row items-center gap-3.5">
+              <SkinHead size="2xl" username={player.minecraftUsername ?? undefined} />
+              <div className="flex flex-col justify-center gap-1">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Minecraft
+                </span>
+                <div className="flex flex-col justify-center">
+                  <span className="text-sm font-medium">{player.minecraftUsername ?? "—"}</span>
+                  <div className="text-muted-foreground flex items-center text-xs">
+                    <span>UUID: {player.minecraftUuid ?? "—"}</span>
+                    {player.minecraftUuid && <CopyButton value={player.minecraftUuid} />}
+                  </div>
+                </div>
+              </div>
+            </Card>
 
-      {sheet ? (
-        <>
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-sm">Fiche personnage</span>
-            <Badge>{characterSheetStatusLabels[sheet.reviewStatus]}</Badge>
-          </div>
-          <CharacterSheetFields values={fieldValues} interactive={false} />
-          <Card>
-            <CardContent>
-              <SkillMap values={skillValues} interactive={false} />
-            </CardContent>
-          </Card>
-        </>
-      ) : (
-        <Card className="border-dashed">
-          <CardContent className="text-muted-foreground py-10 text-center text-sm">
-            Ce joueur n&apos;a pas encore rempli sa fiche personnage.
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="flex flex-col gap-2">
-        <span className="text-muted-foreground text-sm">Historique des entretiens</span>
-        {player.interviewBookings.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Aucun entretien réservé.</p>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {player.interviewBookings.map((booking) => (
-              <Card key={booking.id}>
-                <CardContent className="flex items-center justify-between py-3">
-                  <span className="text-sm">
-                    {booking.slot.startsAt.toLocaleString("fr-FR", {
-                      dateStyle: "long",
-                      timeStyle: "short",
-                    })}
+            <Card className="flex-row items-center gap-3.5">
+              <Avatar size="2xl">
+                <AvatarImage
+                  src={player.discordAvatarUrl ?? undefined}
+                  alt={player.discordDisplayName}
+                />
+                <AvatarFallback>{player.discordDisplayName.charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col justify-center gap-1">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Discord
+                </span>
+                <div className="flex flex-col justify-center">
+                  <span className="text-sm font-medium">
+                    {player.discordDisplayName} ({player.discordUsername})
                   </span>
-                  <Badge variant="outline">{interviewBookingStatusLabels[booking.status]}</Badge>
-                </CardContent>
-              </Card>
-            ))}
+                  <div className="text-muted-foreground flex items-center text-xs">
+                    <span>ID: {player.discordId}</span>
+                    {player.discordId && <CopyButton value={player.discordId} />}
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
-        )}
+
+          <Card className="flex flex-col gap-4">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Statistiques
+            </span>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Inscription site</span>
+                <p className="text-sm">
+                  {formatDate(player.createdAt, { style: "prefix-long", withTime: true })}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Inscription whitelist</span>
+                <p className="text-sm">
+                  {formatDate(whitelistInProgressAt, { style: "prefix-long", withTime: true })}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Acceptation whitelist</span>
+                <p className="text-sm">
+                  {formatDate(whitelistedAt, { style: "prefix-long", withTime: true })}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">1ère connexion serveur</span>
+                <p className="text-sm">
+                  {formatDate(activity.firstServerLoginAt, {
+                    style: "prefix-long",
+                    withTime: true,
+                  })}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Temps de jeu total</span>
+                <p className="text-sm">
+                  {activity.lastLoginAt ? formatPlaytime(activity.totalPlaytimeMinutes) : "—"}
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="text-muted-foreground text-xs">Dernière connexion</span>
+                <p className="text-sm">
+                  {formatDate(activity.lastLoginAt, { style: "prefix-long", withTime: true })}
+                </p>
+              </div>
+            </div>
+          </Card>
+
+          <AtlasCharacterSheetSummary sheet={sheet} pseudo={playerName} canReview={isAdmin} />
+
+          <AtlasStaffNotes
+            playerId={player.id}
+            notes={player.staffNotes}
+            currentUserId={staffUser.id}
+          />
+        </div>
+
+        <AtlasTimelineTabs actionHistory={actionHistory} sessionBlocks={activity.sessionBlocks} />
       </div>
     </div>
   );

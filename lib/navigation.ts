@@ -45,15 +45,15 @@ export interface PlayerNavItem {
   iconKey: NavIconKey;
   requiredStatus: RegistrationStatus;
   hiddenFromStatus?: RegistrationStatus;
+  fullWidth?: boolean;
 }
 
 export const playerNavItems: PlayerNavItem[] = [
   {
-    label: "Premiers pas",
+    label: "Premier pas",
     href: "/player/getting-started",
     iconKey: "flag",
     requiredStatus: RegistrationStatus.NEW,
-    hiddenFromStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
   },
   {
     label: "Fiche personnage",
@@ -92,20 +92,16 @@ export interface StaffNavItem {
   href: string;
   iconKey: NavIconKey;
   roles: Role[];
+  fullWidth?: boolean;
 }
 
 export const staffNavItems: StaffNavItem[] = [
-  {
-    label: "Liste d'attente",
-    href: "/dashboard/waitlist",
-    iconKey: "clock",
-    roles: [Role.ADMIN],
-  },
   {
     label: "Atlas des joueurs",
     href: "/dashboard/atlas",
     iconKey: "users",
     roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
+    fullWidth: true,
   },
   {
     label: "Rapports BDA",
@@ -118,6 +114,12 @@ export const staffNavItems: StaffNavItem[] = [
     href: "/dashboard/backlog",
     iconKey: "kanban",
     roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.DEVELOPER],
+  },
+  {
+    label: "Liste d'attente",
+    href: "/dashboard/waitlist",
+    iconKey: "clock",
+    roles: [Role.ADMIN],
   },
   {
     label: "Créneaux d'entretien",

@@ -38,20 +38,20 @@ export function SkillMap({
           {total} / {MAX_TOTAL_SKILL_POINTS} points
         </span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
         {SKILL_DEFINITIONS.map((skill) => (
           <div
             key={skill.field}
-            className="flex flex-col gap-2 rounded-lg border bg-card/50 p-3 text-card-foreground transition-colors"
+            className="bg-card/50 text-card-foreground flex flex-col gap-2 rounded-lg border p-3 transition-colors"
           >
-            <span className="text-center text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <span className="text-muted-foreground text-center text-xs font-semibold tracking-wider uppercase">
               {skill.label}
             </span>
             <div className="flex items-center justify-between gap-2">
-              <span className="flex-1 text-right text-[11px] text-muted-foreground/80 font-medium truncate">
+              <span className="text-muted-foreground/80 flex-1 truncate text-right text-[11px] font-medium">
                 {skill.lowLabel}
               </span>
-              <div className="flex items-center justify-center gap-1 shrink-0">
+              <div className="flex shrink-0 items-center justify-center gap-1">
                 {points.map((point) => {
                   const filled = point <= values[skill.field];
                   return (
@@ -63,14 +63,16 @@ export function SkillMap({
                       aria-label={`${skill.label}: ${point}`}
                       className={cn(
                         "size-4 rounded-sm border transition-colors",
-                        filled ? "bg-primary border-primary" : "border-border hover:border-primary/50",
+                        filled
+                          ? "bg-primary border-primary"
+                          : "border-border hover:border-primary/50",
                         interactive ? "cursor-pointer" : "cursor-default"
                       )}
                     />
                   );
                 })}
               </div>
-              <span className="flex-1 text-left text-[11px] text-muted-foreground/80 font-medium truncate">
+              <span className="text-muted-foreground/80 flex-1 truncate text-left text-[11px] font-medium">
                 {skill.highLabel}
               </span>
             </div>

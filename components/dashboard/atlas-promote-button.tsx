@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 
-import { restoreWaitlistPlayer } from "@/lib/actions/waitlist-actions";
+import { promoteToWhitelisted } from "@/lib/actions/staff-review-actions";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -13,31 +13,30 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function RejectedRowActions({ userId, pseudo }: { userId: string; pseudo: string }) {
+export function AtlasPromoteButton({ playerId, pseudo }: { playerId: string; pseudo: string }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   function handleConfirm() {
     startTransition(async () => {
-      await restoreWaitlistPlayer(userId);
+      await promoteToWhitelisted(playerId);
       setOpen(false);
     });
   }
 
   return (
-    <div className="flex justify-end gap-2">
+    <>
+      <Button type="button" onClick={() => setOpen(true)}>
+        Promouvoir en Inscrit
+      </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogTrigger render={<Button size="sm" variant="outline" />}>
-          Revenir sur la décision
-        </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation</AlertDialogTitle>
+            <AlertDialogTitle>Promouvoir en Inscrit</AlertDialogTitle>
             <AlertDialogDescription>
-              Remettre {pseudo} sur la liste d&apos;attente ?
+              {pseudo} sera inscrit à la whitelist et débloquera l&apos;Écriture et le Suivi RP.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -48,6 +47,6 @@ export function RejectedRowActions({ userId, pseudo }: { userId: string; pseudo:
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
+    </>
   );
 }

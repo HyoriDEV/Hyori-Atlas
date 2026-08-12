@@ -3,14 +3,7 @@ import { NewsType } from "@/lib/generated/prisma/enums";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-function formatDate(date: Date) {
-  return new Intl.DateTimeFormat("fr-FR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
+import { formatDate } from "@/lib/date";
 
 function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
   if (items.length === 0) {
@@ -23,7 +16,13 @@ function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
         <Card key={item.id}>
           <CardHeader className="flex flex-row items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">{formatDate(item.publishedAt)}</span>
+              <span className="text-muted-foreground text-sm">
+                {formatDate(item.publishedAt, {
+                  style: "prefix-long",
+                  withTime: false,
+                  withYear: true,
+                })}
+              </span>
               <Badge variant="secondary">{item.authorLabel}</Badge>
             </div>
           </CardHeader>

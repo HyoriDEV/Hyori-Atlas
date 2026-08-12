@@ -23,9 +23,9 @@ export function PlayerSpaceCta({ user }: { user: PublicNavUser | null }) {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
         {isDevAuthEnabled() && <DevUserSwitcher currentUserId={user.id} />}
-        <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs font-medium text-muted-foreground border border-border/50">
-          <User className="size-3.5 text-primary shrink-0" />
-          <span className="truncate max-w-[120px] text-foreground">{user.name}</span>
+        <div className="bg-muted/60 text-muted-foreground border-border/50 hidden items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium sm:flex">
+          <User className="text-primary size-3.5 shrink-0" />
+          <span className="text-foreground max-w-[120px] truncate">{user.name}</span>
         </div>
         <Button render={<Link href={targetUrl} />}>
           {user.role === Role.PLAYER ? "Espace Joueur" : "Back-Office"}

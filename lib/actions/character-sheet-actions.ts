@@ -77,11 +77,12 @@ export async function upsertCharacterSheet(input: CharacterSheetInput) {
     );
   }
   if (nickname.length > NICKNAME_MAX_LENGTH) {
-    throw new Error(
-      `Le surnom ne peut pas dépasser ${NICKNAME_MAX_LENGTH} caractères.`
-    );
+    throw new Error(`Le surnom ne peut pas dépasser ${NICKNAME_MAX_LENGTH} caractères.`);
   }
-  if (civilStatus.length < CIVIL_STATUS_MIN_LENGTH || civilStatus.length > CIVIL_STATUS_MAX_LENGTH) {
+  if (
+    civilStatus.length < CIVIL_STATUS_MIN_LENGTH ||
+    civilStatus.length > CIVIL_STATUS_MAX_LENGTH
+  ) {
     throw new Error(
       `Le statut doit contenir entre ${CIVIL_STATUS_MIN_LENGTH} et ${CIVIL_STATUS_MAX_LENGTH} caractères.`
     );
@@ -104,7 +105,11 @@ export async function upsertCharacterSheet(input: CharacterSheetInput) {
   if (!Number.isInteger(input.age) || input.age < AGE_MIN || input.age > AGE_MAX) {
     throw new Error(`L'âge doit être compris entre ${AGE_MIN} et ${AGE_MAX} ans.`);
   }
-  if (!Number.isInteger(input.heightCm) || input.heightCm < HEIGHT_MIN || input.heightCm > HEIGHT_MAX) {
+  if (
+    !Number.isInteger(input.heightCm) ||
+    input.heightCm < HEIGHT_MIN ||
+    input.heightCm > HEIGHT_MAX
+  ) {
     throw new Error(`La taille doit être comprise entre ${HEIGHT_MIN}cm et ${HEIGHT_MAX}cm.`);
   }
   for (const skill of SKILL_DEFINITIONS) {

@@ -9,7 +9,13 @@ import {
 import { InterviewBookingStatus } from "@/lib/generated/prisma/enums";
 import { interviewBookingStatusLabels } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,

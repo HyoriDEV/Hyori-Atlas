@@ -38,17 +38,17 @@ export function TablePagination({
   }
 
   return (
-    <div className="flex items-center justify-between border-t px-4 py-3 text-xs text-muted-foreground">
+    <div className="text-muted-foreground flex items-center justify-between border-t px-4 py-3 text-xs">
       <div>
-        Affichage de <span className="font-medium text-foreground">{startItem}</span> à{" "}
-        <span className="font-medium text-foreground">{endItem}</span> sur{" "}
-        <span className="font-medium text-foreground">{totalCount}</span>
+        Affichage de <span className="text-foreground font-medium">{startItem}</span> à{" "}
+        <span className="text-foreground font-medium">{endItem}</span> sur{" "}
+        <span className="text-foreground font-medium">{totalCount}</span>
       </div>
 
       <div className="flex items-center gap-2">
         <span className="mr-2">
-          Page <span className="font-medium text-foreground">{currentPage}</span> sur{" "}
-          <span className="font-medium text-foreground">{totalPages}</span>
+          Page <span className="text-foreground font-medium">{currentPage}</span> sur{" "}
+          <span className="text-foreground font-medium">{totalPages}</span>
         </span>
         <Button
           variant="outline"

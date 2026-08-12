@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { TicketMessageAuthorType } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
+import { formatDate } from "@/lib/date";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +32,8 @@ export default async function TicketDetailPage({
         <TicketBackLink />
         <div className="flex flex-1 flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">
-            {ticketCategoryLabels[ticket.category]} · {ticket.createdAt.toLocaleDateString("fr-FR")}
+            {ticketCategoryLabels[ticket.category]} ·{" "}
+            {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
           <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
         </div>
@@ -56,7 +58,9 @@ export default async function TicketDetailPage({
                     alt={user.minecraftUsername ?? user.discordUsername ?? ""}
                   />
                   <AvatarFallback>
-                    {(user.minecraftUsername ?? user.discordUsername ?? "?").charAt(0).toUpperCase()}
+                    {(user.minecraftUsername ?? user.discordUsername ?? "?")
+                      .charAt(0)
+                      .toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex flex-1 flex-col gap-1">
@@ -65,7 +69,7 @@ export default async function TicketDetailPage({
                       {user.minecraftUsername ?? user.discordUsername}
                     </span>
                     <span className="text-muted-foreground text-xs">
-                      {message.createdAt.toLocaleString("fr-FR")}
+                      {formatDate(message.createdAt, { style: "prefix-short", withTime: true })}
                     </span>
                   </div>
                   <p className="text-sm whitespace-pre-wrap">{message.body}</p>

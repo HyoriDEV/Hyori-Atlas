@@ -61,7 +61,7 @@ export function DevUserSwitcher({
               variant="outline"
               size="sm"
               disabled={isPending}
-              className="border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 h-8 gap-2 px-2.5 text-xs font-medium"
+              className="h-8 gap-2 border-amber-500/30 bg-amber-500/10 px-2.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20"
             >
               <UserSwitch className="size-4" />
               <span>{activeUser ? `Test : ${activeUser.roleLabel}` : "Comptes de test (DEV)"}</span>
@@ -69,11 +69,11 @@ export function DevUserSwitcher({
           )
         }
       />
-      <DropdownMenuContent align="end" className="w-64 z-50">
+      <DropdownMenuContent align="end" className="z-50 w-64">
         <DropdownMenuGroup>
           <DropdownMenuLabel className="flex items-center justify-between text-xs font-semibold">
             <span>Connexion compte de test</span>
-            <Badge variant="outline" className="border-amber-500/40 text-amber-400 text-[10px]">
+            <Badge variant="outline" className="border-amber-500/40 text-[10px] text-amber-400">
               DEV ONLY
             </Badge>
           </DropdownMenuLabel>
@@ -86,21 +86,21 @@ export function DevUserSwitcher({
               <DropdownMenuItem
                 key={user.id}
                 onClick={() => handleSelectUser(user)}
-                className="flex items-center justify-between gap-2 py-2 cursor-pointer"
+                className="flex cursor-pointer items-center justify-between gap-2 py-2"
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex min-w-0 items-center gap-2.5">
                   <Avatar className="size-6">
                     <AvatarImage src={user.discordAvatarUrl} alt={user.discordDisplayName} />
                     <AvatarFallback>{user.discordDisplayName.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-xs font-medium truncate">{user.discordDisplayName}</span>
-                    <span className="text-[11px] text-muted-foreground truncate">
+                  <div className="flex min-w-0 flex-col">
+                    <span className="truncate text-xs font-medium">{user.discordDisplayName}</span>
+                    <span className="text-muted-foreground truncate text-[11px]">
                       {user.roleLabel}
                     </span>
                   </div>
                 </div>
-                {isSelected && <Check className="size-3.5 text-amber-400 shrink-0" />}
+                {isSelected && <Check className="size-3.5 shrink-0 text-amber-400" />}
               </DropdownMenuItem>
             );
           })}

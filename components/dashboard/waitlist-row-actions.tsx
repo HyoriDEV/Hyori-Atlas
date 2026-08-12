@@ -42,7 +42,7 @@ export function WaitlistRowActions({ userId, pseudo }: { userId: string; pseudo:
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmation</AlertDialogTitle>
             <AlertDialogDescription>
-              Accepter la demande d'inscription de {pseudo} ?
+              Accepter la demande d&apos;inscription de {pseudo} ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -65,7 +65,7 @@ export function WaitlistRowActions({ userId, pseudo }: { userId: string; pseudo:
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmation</AlertDialogTitle>
             <AlertDialogDescription>
-              Refuser la demande d'inscription de {pseudo} ?
+              Refuser la demande d&apos;inscription de {pseudo} ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

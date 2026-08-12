@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { staffNavItems } from "@/lib/navigation";
+import { formatDate } from "@/lib/date";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
@@ -81,13 +82,13 @@ export default async function WaitlistPage(props: PageProps) {
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
           <h1 className="font-heading text-2xl font-semibold">
-            Liste d'attente{" "}
+            Liste d&apos;attente{" "}
             <span className="text-muted-foreground text-base">({waitlistCount})</span>
           </h1>
           <SortToggle currentSort={sortOrder} />
         </div>
 
-        <Card className="overflow-hidden py-0">
+        <Card className="gap-0 overflow-hidden py-0">
           <Table>
             <TableHeader>
               <TableRow>
@@ -142,7 +143,7 @@ export default async function WaitlistPage(props: PageProps) {
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {waitlistedDate ? waitlistedDate.toLocaleString("fr-FR") : "—"}
+                        {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}
                       </TableCell>
                       <TableCell>
                         <WaitlistRowActions userId={player.id} pseudo={playerName} />
@@ -173,7 +174,7 @@ export default async function WaitlistPage(props: PageProps) {
               <span className="text-muted-foreground text-base">({rejectedCount})</span>
             </h2>
 
-            <Card className="overflow-hidden py-0">
+            <Card className="gap-0 overflow-hidden py-0">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -230,7 +231,7 @@ export default async function WaitlistPage(props: PageProps) {
                             </div>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
-                            {waitlistedDate ? waitlistedDate.toLocaleString("fr-FR") : "—"}
+                            {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}
                           </TableCell>
                           <TableCell>
                             <RejectedRowActions userId={player.id} pseudo={playerName} />
