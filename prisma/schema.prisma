@@ -51,6 +51,24 @@ enum TicketMessageAuthorType {
   SYSTEM
 }
 
+enum Gender {
+  Homme
+  Femme
+  Autre
+}
+
+enum CharacterSheetStatus {
+  PENDING_REVIEW
+  CHANGES_REQUESTED
+  VALIDATED
+}
+
+enum InterviewBookingStatus {
+  REGISTERED
+  CHANGES_REQUESTED
+  ACCEPTED
+}
+
 model User {
   id String @id @default(cuid())
 
@@ -71,6 +89,8 @@ model User {
   tickets             Ticket[]
   ticketMessages      TicketMessage[]
   registrationHistory RegistrationStatusHistory[]
+  characterSheet      CharacterSheet?
+  interviewBookings   InterviewBooking[]
 
   @@map("users")
 }
@@ -171,4 +191,63 @@ model TicketMessage {
   author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
 
   @@map("ticket_messages")
+}
+
+model CharacterSheet {
+  id       String @id @default(cuid())
+  playerId String @unique
+
+  name               String   @db.VarChar(50)
+  nickname           String?  @db.VarChar(50)
+  age                Int
+  gender             Gender
+  civilStatus        String   @db.VarChar(50)
+  heightMeters       Float
+  description        String   @db.VarChar(2000)
+  background         String   @db.VarChar(2000)
+  additionalComments String?  @db.VarChar(300)
+
+  physicalForce        Int @default(1)
+  physicalEndurance    Int @default(1)
+  physicalStealth      Int @default(1)
+  physicalDexterity    Int @default(1)
+  mentalIntelligence   Int @default(1)
+  mentalComposure      Int @default(1)
+  mentalWeaponsMastery Int @default(1)
+  socialCharisma       Int @default(1)
+  socialPersuasion     Int @default(1)
+  socialViolence       Int @default(1)
+
+  reviewStatus CharacterSheetStatus @default(PENDING_REVIEW)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  player User @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@map("character_sheets")
+}
+
+model InterviewSlot {
+  id        String   @id @default(cuid())
+  startsAt  DateTime
+  createdAt DateTime @default(now())
+
+  booking InterviewBooking?
+
+  @@map("interview_slots")
+}
+
+model InterviewBooking {
+  id        String                 @id @default(cuid())
+  slotId    String                 @unique
+  playerId  String
+  status    InterviewBookingStatus @default(REGISTERED)
+  createdAt DateTime               @default(now())
+  updatedAt DateTime               @updatedAt
+
+  slot   InterviewSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  player User          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@map("interview_bookings")
 }

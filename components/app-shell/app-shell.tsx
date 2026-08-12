@@ -57,6 +57,7 @@ export interface AppShellNavEntry {
 }
 
 export interface AppShellUser {
+  id?: string;
   name: string;
   secondaryLabel: string;
   avatarUrl?: string | null;

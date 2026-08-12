@@ -1,5 +1,10 @@
 import { getPlayerState } from "@/lib/dal";
-import { RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { prisma } from "@/lib/prisma";
+import {
+  CharacterSheetStatus,
+  InterviewBookingStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -10,51 +15,74 @@ import { MinecraftLinkDialog } from "@/components/player/minecraft-link-dialog";
 import { StepIcon } from "@/components/player/step-icon";
 import { cn } from "@/lib/utils";
 
-const steps = [
-  { label: "Création de compte", done: () => true },
-  { label: "Connexion Minecraft", done: (minecraftLinked: boolean) => minecraftLinked },
-  {
-    label: "Liste d'attente",
-    done: (_: boolean, status: RegistrationStatus) =>
-      isRegistrationStatusAtLeast(status, RegistrationStatus.WAITLIST),
-  },
-  {
-    label: "Inscription à la whitelist",
-    done: (_: boolean, status: RegistrationStatus) =>
-      isRegistrationStatusAtLeast(status, RegistrationStatus.WHITELIST_IN_PROGRESS),
-  },
-];
-
-const statusDescriptions: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.NEW]: "Connecte-toi à Minecraft pour confirmer ton identité.",
-  [RegistrationStatus.WAITLIST]:
-    "Tu es inscrit sur la liste d'attente pour la whitelist Hyori. Tu seras notifié sur Discord dès la mise à jour de ton statut.",
-  [RegistrationStatus.WHITELIST_IN_PROGRESS]:
-    "Remplis ta fiche personnage et réserve un créneau pour passer l'entretien de whitelist.",
-  [RegistrationStatus.WHITELISTED]: "Inscription terminée.",
-  [RegistrationStatus.REJECTED]: "Inscription terminée.",
-};
-
 export default async function GettingStartedPage() {
   const user = await getPlayerState();
   const minecraftLinked = Boolean(user.minecraftUuid);
-  const isRejected = user.registrationStatus === RegistrationStatus.REJECTED;
+
+  const [characterSheet, latestBooking] = await Promise.all([
+    prisma.characterSheet.findUnique({
+      where: { playerId: user.id },
+    }),
+    prisma.interviewBooking.findFirst({
+      where: { playerId: user.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const isWhitelisted = user.registrationStatus === RegistrationStatus.WHITELISTED;
+  const isSheetValidated =
+    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED || isWhitelisted;
+  const isInterviewAccepted =
+    latestBooking?.status === InterviewBookingStatus.ACCEPTED || isWhitelisted;
+
+  const steps = [
+    { label: "Création de compte", done: true },
+    { label: "Connexion Minecraft", done: minecraftLinked },
+    {
+      label: "Liste d'attente",
+      done:
+        isRegistrationStatusAtLeast(user.registrationStatus, RegistrationStatus.WAITLIST) &&
+        user.registrationStatus !== RegistrationStatus.REJECTED,
+    },
+    {
+      label: "Fiche personnage",
+      done: isSheetValidated,
+    },
+    {
+      label: "Entretien whitelist",
+      done: isInterviewAccepted,
+    },
+    {
+      label: "Inscription terminée",
+      done: isWhitelisted,
+    },
+  ];
+
+  let statusDescription = "Connecte-toi à Minecraft pour confirmer ton identité.";
+  if (
+    user.registrationStatus === RegistrationStatus.WAITLIST ||
+    user.registrationStatus === RegistrationStatus.REJECTED
+  ) {
+    statusDescription =
+      "Tu es inscrit·e sur la liste d'attente pour la whitelist Hyori. Tu seras notifié·e sur Discord dès la mise à jour de ton statut.";
+  } else if (user.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS) {
+    if (!isSheetValidated) {
+      statusDescription =
+        "Tu as passé la liste d'attente ! Remplis ta fiche personnage pour la soumettre à la validation de l'équipe RP.";
+    } else if (!isInterviewAccepted) {
+      statusDescription =
+        "Ta fiche personnage est validée ! Réserve un créneau pour passer ton entretien de whitelist.";
+    } else {
+      statusDescription =
+        "Ton entretien a été validé ! Un administrateur va finaliser ta whitelist.";
+    }
+  } else if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
+    statusDescription = "Inscription terminée. Bienvenue sur Hyori !";
+  }
 
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-heading text-2xl font-semibold">Premiers pas</h1>
-      {isRejected && (
-        <Card className="border-destructive/40">
-          <CardHeader>
-            <CardTitle className="text-destructive">Candidature refusée</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground text-sm">
-              Votre candidature à la liste d'attente a été refusée par le staff.
-            </p>
-          </CardContent>
-        </Card>
-      )}
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Card>
@@ -123,22 +151,23 @@ export default async function GettingStartedPage() {
         <Card>
           <CardHeader>
             <CardTitle>Progression de l'inscription</CardTitle>
-            <CardDescription>{statusDescriptions[user.registrationStatus]}</CardDescription>
+            <CardDescription>{statusDescription}</CardDescription>
           </CardHeader>
           <CardContent>
             <ol className="flex flex-col gap-1">
               {steps.map((step, index) => {
-                const isDone = step.done(minecraftLinked, user.registrationStatus);
                 return (
                   <li key={step.label} className="flex items-start gap-3">
                     <div className="flex flex-col items-center">
-                      <StepIcon done={isDone} />
+                      <StepIcon done={step.done} />
                       {index < steps.length - 1 && (
-                        <div className={cn("mt-1 h-4 w-px", isDone ? "bg-primary" : "bg-border")} />
+                        <div
+                          className={cn("mt-1 h-4 w-px", step.done ? "bg-primary" : "bg-border")}
+                        />
                       )}
                     </div>
                     <span
-                      className={cn("text-sm", isDone ? "font-medium" : "text-muted-foreground")}
+                      className={cn("text-sm", step.done ? "font-medium" : "text-muted-foreground")}
                     >
                       {step.label}
                     </span>

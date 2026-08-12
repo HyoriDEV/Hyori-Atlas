@@ -17,6 +17,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       sectionLabel="Back-Office"
       navItems={navItems}
       user={{
+        id: user.id,
         name: user.minecraftUsername ?? user.discordUsername ?? "Staff",
         secondaryLabel: staffRoleLabels[user.role],
         avatarUrl: user.discordAvatarUrl,

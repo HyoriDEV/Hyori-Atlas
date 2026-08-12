@@ -13,6 +13,15 @@ const navLinks = [
 export async function PublicNav() {
   const session = await auth();
 
+  const user = session?.user
+    ? {
+        id: session.user.id,
+        name: session.user.discordUsername ?? session.user.name ?? "Joueur",
+        role: session.user.role,
+        avatarUrl: session.user.discordAvatarUrl,
+      }
+    : null;
+
   return (
     <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-18 max-w-[960px] items-center justify-between px-4 sm:px-6">
@@ -29,7 +38,7 @@ export async function PublicNav() {
               {link.label}
             </Link>
           ))}
-          <PlayerSpaceCta isAuthenticated={Boolean(session?.user)} />
+          <PlayerSpaceCta user={user} />
         </nav>
       </div>
     </header>

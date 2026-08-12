@@ -1,4 +1,6 @@
 import {
+  CharacterSheetStatus,
+  InterviewBookingStatus,
   RegistrationStatus,
   Role,
   TicketCategory,
@@ -24,7 +26,7 @@ export type NavIconKey =
 
 const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.NEW]: 0,
-  [RegistrationStatus.REJECTED]: 0,
+  [RegistrationStatus.REJECTED]: 1,
   [RegistrationStatus.WAITLIST]: 1,
   [RegistrationStatus.WHITELIST_IN_PROGRESS]: 2,
   [RegistrationStatus.WHITELISTED]: 3,
@@ -54,15 +56,15 @@ export const playerNavItems: PlayerNavItem[] = [
     hiddenFromStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
   },
   {
-    label: "Entretien whitelist",
-    href: "/player/interview",
-    iconKey: "calendar",
-    requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-  },
-  {
     label: "Fiche personnage",
     href: "/player/character-sheet",
     iconKey: "id-card",
+    requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+  },
+  {
+    label: "Entretien whitelist",
+    href: "/player/interview",
+    iconKey: "calendar",
     requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
   },
   {
@@ -117,6 +119,12 @@ export const staffNavItems: StaffNavItem[] = [
     iconKey: "kanban",
     roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.DEVELOPER],
   },
+  {
+    label: "Créneaux d'entretien",
+    href: "/dashboard/interview-slots",
+    iconKey: "calendar",
+    roles: [Role.ADMIN],
+  },
 ];
 
 export const staffRoleLabels: Record<Role, string> = {
@@ -150,4 +158,16 @@ export const ticketStatusLabels: Record<TicketStatus, string> = {
   [TicketStatus.PENDING_STAFF]: "En attente du staff",
   [TicketStatus.PENDING_PLAYER]: "En attente du joueur",
   [TicketStatus.ARCHIVED]: "Archivé",
+};
+
+export const characterSheetStatusLabels: Record<CharacterSheetStatus, string> = {
+  [CharacterSheetStatus.PENDING_REVIEW]: "En attente de validation",
+  [CharacterSheetStatus.CHANGES_REQUESTED]: "Modifications demandées",
+  [CharacterSheetStatus.VALIDATED]: "Validée",
+};
+
+export const interviewBookingStatusLabels: Record<InterviewBookingStatus, string> = {
+  [InterviewBookingStatus.REGISTERED]: "Inscrit",
+  [InterviewBookingStatus.CHANGES_REQUESTED]: "Modifications demandées",
+  [InterviewBookingStatus.ACCEPTED]: "Accepté",
 };

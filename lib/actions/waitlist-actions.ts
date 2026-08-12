@@ -44,3 +44,22 @@ export async function rejectWaitlistPlayer(userId: string) {
   revalidatePath("/dashboard/waitlist");
 }
 
+export async function restoreWaitlistPlayer(userId: string) {
+  await requireRole([Role.ADMIN]);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId, registrationStatus: RegistrationStatus.REJECTED },
+      data: { registrationStatus: RegistrationStatus.WAITLIST },
+    }),
+    prisma.registrationStatusHistory.create({
+      data: {
+        userId,
+        status: RegistrationStatus.WAITLIST,
+      },
+    }),
+  ]);
+
+  revalidatePath("/dashboard/waitlist");
+}
+
