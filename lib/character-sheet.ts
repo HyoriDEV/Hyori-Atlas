@@ -127,7 +127,7 @@ export function isSkillValueValid(value: number): boolean {
 }
 
 export function isCharacterSheetEditable(status: CharacterSheetStatus): boolean {
-  return status === CharacterSheetStatus.PENDING_PLAYER;
+  return status === CharacterSheetStatus.DRAFT || status === CharacterSheetStatus.PENDING_PLAYER;
 }
 
 export function truncateAtWordBoundary(text: string, maxLength: number): string {

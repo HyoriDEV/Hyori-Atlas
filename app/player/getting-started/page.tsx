@@ -20,7 +20,7 @@ export default async function GettingStartedPage() {
   const user = await requireActivePlayer();
 
   if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
-    redirect("/player/character-sheet");
+    redirect("/player");
   }
 
   const minecraftLinked = Boolean(user.minecraftUuid);

@@ -23,7 +23,7 @@ export async function acceptWaitlistPlayer(userId: string) {
     }),
   ]);
 
-  revalidatePath("/dashboard/waitlist");
+  revalidatePath("/staff/waitlist");
 }
 
 export async function rejectWaitlistPlayer(userId: string) {
@@ -43,7 +43,7 @@ export async function rejectWaitlistPlayer(userId: string) {
     }),
   ]);
 
-  revalidatePath("/dashboard/waitlist");
+  revalidatePath("/staff/waitlist");
 }
 
 export async function restoreWaitlistPlayer(userId: string) {
@@ -63,5 +63,5 @@ export async function restoreWaitlistPlayer(userId: string) {
     }),
   ]);
 
-  revalidatePath("/dashboard/waitlist");
+  revalidatePath("/staff/waitlist");
 }

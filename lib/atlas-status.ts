@@ -32,6 +32,8 @@ export function characterSheetStatusBadgeVariant(status: CharacterSheetStatus): 
       return "default";
     case CharacterSheetStatus.PENDING_PLAYER:
       return "secondary";
+    case CharacterSheetStatus.DRAFT:
+      return "outline";
   }
 }
 

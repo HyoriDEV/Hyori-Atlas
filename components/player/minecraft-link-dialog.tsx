@@ -38,7 +38,7 @@ export function MinecraftLinkDialog({ linked }: { linked: boolean }) {
       <DialogContent>
         <form onSubmit={(e) => e.preventDefault()} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Lier votre compte Minecraft</DialogTitle>
+            <DialogTitle>Lier ton compte Minecraft</DialogTitle>
             <DialogDescription>
               Connecte-toi au serveur et exécute la commande en jeu pour confirmer ton compte.
             </DialogDescription>

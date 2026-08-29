@@ -110,8 +110,8 @@ export function ConversationChat({
   }, [body]);
 
   function resolveLinkHref(linkHref: string) {
-    if (!viewerIsStaff && linkHref.startsWith("/dashboard/tickets/")) {
-      return linkHref.replace("/dashboard/tickets/", "/player/tickets/");
+    if (!viewerIsStaff && linkHref.startsWith("/staff/tickets/")) {
+      return linkHref.replace("/staff/tickets/", "/player/tickets/");
     }
     return linkHref;
   }
@@ -250,7 +250,7 @@ export function ConversationChat({
   }
 
   function handleDeleteMessage(messageId: string) {
-    if (!confirm("Voulez-vous vraiment supprimer ce message ?")) return;
+    if (!confirm("Veux-tu vraiment supprimer ce message ?")) return;
     setError(null);
     startTransition(async () => {
       try {
@@ -399,7 +399,12 @@ export function ConversationChat({
                       )}
                     >
                       {/* Avatar column or hover timestamp */}
-                      <div className={cn("flex w-8 shrink-0 items-center justify-center", !isFirst && "my-auto self-center")}>
+                      <div
+                        className={cn(
+                          "flex w-8 shrink-0 items-center justify-center",
+                          !isFirst && "my-auto self-center"
+                        )}
+                      >
                         {isFirst ? (
                           group.authorType === MessageAuthorType.STAFF ? (
                             <Avatar size="sm">
@@ -412,10 +417,7 @@ export function ConversationChat({
                               </AvatarFallback>
                             </Avatar>
                           ) : group.minecraftUsername ? (
-                            <SkinHead
-                              size="sm"
-                              username={group.minecraftUsername}
-                            />
+                            <SkinHead size="sm" username={group.minecraftUsername} />
                           ) : (
                             <Avatar size="sm">
                               <AvatarImage
@@ -475,7 +477,7 @@ export function ConversationChat({
                           )}
                         >
                           {isEditing ? (
-                            <div className="bg-card flex max-w-full min-w-[280px] flex-col rounded-xl border shadow-xs overflow-hidden">
+                            <div className="bg-card flex max-w-full min-w-[280px] flex-col overflow-hidden rounded-xl border shadow-xs">
                               <div className="p-3 pb-2">
                                 <textarea
                                   value={editBody}
@@ -567,9 +569,7 @@ export function ConversationChat({
                                     sideOffset={4}
                                   >
                                     {message.body && (
-                                      <DropdownMenuItem
-                                        onClick={() => handleCopy(message.body)}
-                                      >
+                                      <DropdownMenuItem onClick={() => handleCopy(message.body)}>
                                         <Copy className="size-3.5" />
                                         <span>Copier</span>
                                       </DropdownMenuItem>
@@ -625,7 +625,7 @@ export function ConversationChat({
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
           className={cn(
-            "bg-card relative flex shrink-0 flex-col rounded-xl border shadow-xs transition-all overflow-hidden",
+            "bg-card relative flex shrink-0 flex-col overflow-hidden rounded-xl border shadow-xs transition-all",
             isDragOver && "border-primary/80 ring-primary/30 bg-primary/5 ring-2"
           )}
         >

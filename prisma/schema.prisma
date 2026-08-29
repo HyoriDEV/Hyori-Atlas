@@ -64,6 +64,7 @@ enum Gender {
 }
 
 enum CharacterSheetStatus {
+  DRAFT
   PENDING_PLAYER
   PENDING_STAFF
   VALIDATED
@@ -238,7 +239,7 @@ model CharacterSheet {
   socialPersuasion     Int @default(1)
   socialViolence       Int @default(1)
 
-  reviewStatus      CharacterSheetStatus @default(PENDING_PLAYER)
+  reviewStatus      CharacterSheetStatus @default(DRAFT)
   hasUnreadFeedback Boolean              @default(false)
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt

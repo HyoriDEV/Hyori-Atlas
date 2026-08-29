@@ -17,8 +17,8 @@ export type NavIconKey =
   | "clock"
   | "users"
   | "shield"
-  | "kanban"
-  | "info";
+  | "info"
+  | "squares-four";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -35,6 +35,11 @@ export function isRegistrationStatusAtLeast(
   return registrationStatusRank[current] >= registrationStatusRank[required];
 }
 
+export interface NavGroup<T> {
+  title?: string;
+  items: T[];
+}
+
 export interface PlayerNavItem {
   label: string;
   href: string;
@@ -44,6 +49,8 @@ export interface PlayerNavItem {
   fullWidth?: boolean;
 }
 
+export type PlayerNavGroup = NavGroup<PlayerNavItem>;
+
 export const playerRejectedNavItem: PlayerNavItem = {
   label: "Statut d'inscription",
   href: "/player/rejection",
@@ -51,85 +58,100 @@ export const playerRejectedNavItem: PlayerNavItem = {
   requiredStatus: RegistrationStatus.REJECTED,
 };
 
-export const playerNavGroups: PlayerNavItem[][] = [
-  [
-    {
-      label: "Premiers pas",
-      href: "/player/getting-started",
-      iconKey: "flag",
-      requiredStatus: RegistrationStatus.NEW,
-      hiddenFromStatus: RegistrationStatus.WHITELISTED,
-    },
-    {
-      label: "Tickets",
-      href: "/player/tickets",
-      iconKey: "ticket",
-      requiredStatus: RegistrationStatus.NEW,
-    },
-  ],
-  [
-    {
-      label: "Fiche personnage",
-      href: "/player/character-sheet",
-      iconKey: "id-card",
-      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-    },
-    {
-      label: "Entretien whitelist",
-      href: "/player/interview",
-      iconKey: "calendar",
-      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-      hiddenFromStatus: RegistrationStatus.WHITELISTED,
-    },
-  ],
-  [
-    {
-      label: "Suivi RP",
-      href: "/player/rp-tracking",
-      iconKey: "chat",
-      requiredStatus: RegistrationStatus.WHITELISTED,
-    },
-    {
-      label: "Écriture de trame",
-      href: "/player/writing",
-      iconKey: "pen",
-      requiredStatus: RegistrationStatus.WHITELISTED,
-    },
-  ],
+export const playerPendingNavGroups: PlayerNavGroup[] = [
+  {
+    title: "Inscription",
+    items: [
+      {
+        label: "Premiers pas",
+        href: "/player/getting-started",
+        iconKey: "flag",
+        requiredStatus: RegistrationStatus.NEW,
+      },
+      {
+        label: "Fiche personnage",
+        href: "/player/character-sheet",
+        iconKey: "id-card",
+        requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+      },
+      {
+        label: "Entretien whitelist",
+        href: "/player/interview",
+        iconKey: "calendar",
+        requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+      },
+      {
+        label: "Tickets",
+        href: "/player/tickets",
+        iconKey: "ticket",
+        requiredStatus: RegistrationStatus.NEW,
+      },
+    ],
+  },
 ];
 
-export const playerWhitelistedNavGroups: PlayerNavItem[][] = [
-  [
-    {
-      label: "Tickets",
-      href: "/player/tickets",
-      iconKey: "ticket",
-      requiredStatus: RegistrationStatus.NEW,
-    },
-  ],
-  [
-    {
-      label: "Fiche personnage",
-      href: "/player/character-sheet",
-      iconKey: "id-card",
-      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-    },
-    {
-      label: "Suivi RP",
-      href: "/player/rp-tracking",
-      iconKey: "chat",
-      requiredStatus: RegistrationStatus.WHITELISTED,
-    },
-    {
-      label: "Écriture de trame",
-      href: "/player/writing",
-      iconKey: "pen",
-      requiredStatus: RegistrationStatus.WHITELISTED,
-    },
-  ],
+export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
+  {
+    items: [
+      {
+        label: "Tableau de bord",
+        href: "/player",
+        iconKey: "squares-four",
+        requiredStatus: RegistrationStatus.NEW,
+        fullWidth: true,
+      },
+    ],
+  },
+  {
+    title: "Roleplay",
+    items: [
+      {
+        label: "Fiche personnage",
+        href: "/player/character-sheet",
+        iconKey: "id-card",
+        requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+      },
+      {
+        label: "Écriture de trame",
+        href: "/player/writing",
+        iconKey: "pen",
+        requiredStatus: RegistrationStatus.WHITELISTED,
+      },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      {
+        label: "Suivi RP",
+        href: "/player/rp-tracking",
+        iconKey: "chat",
+        requiredStatus: RegistrationStatus.WHITELISTED,
+      },
+      {
+        label: "Tickets",
+        href: "/player/tickets",
+        iconKey: "ticket",
+        requiredStatus: RegistrationStatus.NEW,
+      },
+    ],
+  },
 ];
 
-export const playerNavItems: PlayerNavItem[] = playerNavGroups.flat();
+export const playerNavGroups: PlayerNavGroup[] = playerPendingNavGroups;
+
+export const playerNavItems: PlayerNavItem[] = [
+  ...playerPendingNavGroups.flatMap((group) => group.items),
+  ...playerWhitelistedNavGroups.flatMap((group) => group.items),
+].filter((item, index, self) => index === self.findIndex((t) => t.href === item.href));
+
+export const allStaffRoles: Role[] = [
+  Role.ADMIN,
+  Role.COMMUNICATION,
+  Role.CONFLICT_MANAGEMENT,
+  Role.RP_TRACKING,
+  Role.DEVELOPER,
+];
 
 export interface StaffNavItem {
   label: string;
@@ -139,65 +161,134 @@ export interface StaffNavItem {
   fullWidth?: boolean;
 }
 
-export const staffNavGroups: StaffNavItem[][] = [
-  [
-    {
-      label: "Backlog",
-      href: "/dashboard/backlog",
-      iconKey: "kanban",
-      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.DEVELOPER],
-    },
-    {
-      label: "Tickets",
-      href: "/dashboard/tickets",
-      iconKey: "ticket",
-      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT],
-    },
-    {
-      label: "Rapports BDA",
-      href: "/dashboard/bda-reports",
-      iconKey: "shield",
-      roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
-    },
-  ],
-  [
-    {
-      label: "Atlas des joueurs",
-      href: "/dashboard/atlas",
-      iconKey: "users",
-      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
-      fullWidth: true,
-    },
-    {
-      label: "Lore des joueurs",
-      href: "/dashboard/writing",
-      iconKey: "pen",
-      roles: [Role.ADMIN, Role.RP_TRACKING],
-    },
-    {
-      label: "Suivi RP",
-      href: "/dashboard/rp-tracking",
-      iconKey: "chat",
-      roles: [Role.ADMIN, Role.RP_TRACKING],
-    },
-  ],
-  [
-    {
-      label: "Liste d'attente",
-      href: "/dashboard/waitlist",
-      iconKey: "clock",
-      roles: [Role.ADMIN],
-    },
-    {
-      label: "Créneaux d'entretien",
-      href: "/dashboard/interview-slots",
-      iconKey: "calendar",
-      roles: [Role.ADMIN],
-    },
-  ],
+export type StaffNavGroup = NavGroup<StaffNavItem>;
+
+export const staffDashboardItem: StaffNavItem = {
+  label: "Tableau de bord",
+  href: "/staff",
+  iconKey: "squares-four",
+  roles: allStaffRoles,
+  fullWidth: true,
+};
+
+export const staffTicketsItem: StaffNavItem = {
+  label: "Tickets",
+  href: "/staff/tickets",
+  iconKey: "ticket",
+  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT],
+};
+
+export const staffBdaReportsItem: StaffNavItem = {
+  label: "Rapports BDA",
+  href: "/staff/bda-reports",
+  iconKey: "shield",
+  roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
+};
+
+export const staffAtlasItem: StaffNavItem = {
+  label: "Atlas des joueurs",
+  href: "/staff/atlas",
+  iconKey: "users",
+  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
+  fullWidth: true,
+};
+
+export const staffWritingItem: StaffNavItem = {
+  label: "Lore des joueurs",
+  href: "/staff/writing",
+  iconKey: "pen",
+  roles: [Role.ADMIN, Role.RP_TRACKING],
+};
+
+export const staffRpTrackingItem: StaffNavItem = {
+  label: "Suivi RP",
+  href: "/staff/rp-tracking",
+  iconKey: "chat",
+  roles: [Role.ADMIN, Role.RP_TRACKING],
+};
+
+export const staffWaitlistItem: StaffNavItem = {
+  label: "Liste d'attente",
+  href: "/staff/waitlist",
+  iconKey: "clock",
+  roles: [Role.ADMIN],
+};
+
+export const staffInterviewSlotsItem: StaffNavItem = {
+  label: "Créneaux d'entretien",
+  href: "/staff/interview-slots",
+  iconKey: "calendar",
+  roles: [Role.ADMIN],
+};
+
+export const staffNavItems: StaffNavItem[] = [
+  staffDashboardItem,
+  staffTicketsItem,
+  staffBdaReportsItem,
+  staffAtlasItem,
+  staffWritingItem,
+  staffRpTrackingItem,
+  staffWaitlistItem,
+  staffInterviewSlotsItem,
 ];
 
-export const staffNavItems: StaffNavItem[] = staffNavGroups.flat();
+export function getStaffNavGroups(role: Role): StaffNavGroup[] {
+  const overviewGroup: StaffNavGroup = {
+    items: [staffDashboardItem],
+  };
+
+  if (role === Role.ADMIN) {
+    return [
+      overviewGroup,
+      {
+        title: "Modération",
+        items: [staffTicketsItem, staffBdaReportsItem],
+      },
+      {
+        title: "Gestion RP",
+        items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
+      },
+      {
+        title: "Admission",
+        items: [staffWaitlistItem, staffInterviewSlotsItem],
+      },
+    ];
+  }
+
+  if (role === Role.CONFLICT_MANAGEMENT) {
+    return [
+      overviewGroup,
+      {
+        title: "Modération",
+        items: [staffTicketsItem, staffBdaReportsItem, staffAtlasItem],
+      },
+    ];
+  }
+
+  if (role === Role.COMMUNICATION) {
+    return [
+      overviewGroup,
+      {
+        title: "Modération",
+        items: [staffTicketsItem, staffAtlasItem],
+      },
+    ];
+  }
+
+  if (role === Role.RP_TRACKING) {
+    return [
+      overviewGroup,
+      {
+        title: "Gestion RP",
+        items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
+      },
+    ];
+  }
+
+  return [overviewGroup];
+}
+
+export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
 
 export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 export const writingReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
@@ -238,6 +329,7 @@ export const ticketStatusLabels: Record<TicketStatus, string> = {
 };
 
 export const characterSheetStatusLabels: Record<CharacterSheetStatus, string> = {
+  [CharacterSheetStatus.DRAFT]: "Brouillon",
   [CharacterSheetStatus.PENDING_STAFF]: "À évaluer (staff)",
   [CharacterSheetStatus.PENDING_PLAYER]: "En rédaction (joueur)",
   [CharacterSheetStatus.VALIDATED]: "Validée",

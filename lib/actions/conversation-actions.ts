@@ -35,7 +35,7 @@ export async function editConversationMessage(messageId: string, body: string): 
   }
 
   if (message.authorId !== user.id) {
-    throw new Error("Vous ne pouvez modifier que vos propres messages.");
+    throw new Error("Tu ne peux modifier que tes propres messages.");
   }
 
   if (message.conversation.ticket?.status === TicketStatus.ARCHIVED) {
@@ -77,7 +77,7 @@ export async function deleteConversationMessage(messageId: string): Promise<void
   }
 
   if (message.authorId !== user.id) {
-    throw new Error("Vous ne pouvez supprimer que vos propres messages.");
+    throw new Error("Tu ne peux supprimer que tes propres messages.");
   }
 
   if (message.conversation.ticket?.status === TicketStatus.ARCHIVED) {

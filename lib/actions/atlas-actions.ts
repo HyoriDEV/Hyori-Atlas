@@ -11,7 +11,7 @@ import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 const STAFF_NOTE_MAX_LENGTH = 1000;
 
 export async function addStaffNote(playerId: string, body: string) {
-  const atlasItem = staffNavItems.find((item) => item.href === "/dashboard/atlas")!;
+  const atlasItem = staffNavItems.find((item) => item.href === "/staff/atlas")!;
   const staffUser = await requireRole(atlasItem.roles);
 
   const player = await prisma.user.findUnique({
@@ -35,11 +35,11 @@ export async function addStaffNote(playerId: string, body: string) {
     data: { playerId, authorId: staffUser.id, body: trimmedBody },
   });
 
-  revalidatePath(`/dashboard/atlas/${playerId}`);
+  revalidatePath(`/staff/atlas/${playerId}`);
 }
 
 export async function updateStaffNote(noteId: string, body: string) {
-  const atlasItem = staffNavItems.find((item) => item.href === "/dashboard/atlas")!;
+  const atlasItem = staffNavItems.find((item) => item.href === "/staff/atlas")!;
   const staffUser = await requireRole(atlasItem.roles);
 
   const note = await prisma.staffNote.findUnique({
@@ -51,7 +51,7 @@ export async function updateStaffNote(noteId: string, body: string) {
   }
 
   if (note.authorId !== staffUser.id) {
-    throw new Error("Vous ne pouvez modifier que vos propres notes.");
+    throw new Error("Tu ne peux modifier que tes propres notes.");
   }
 
   const trimmedBody = body.trim();
@@ -67,11 +67,11 @@ export async function updateStaffNote(noteId: string, body: string) {
     data: { body: trimmedBody },
   });
 
-  revalidatePath(`/dashboard/atlas/${note.playerId}`);
+  revalidatePath(`/staff/atlas/${note.playerId}`);
 }
 
 export async function deleteStaffNote(noteId: string) {
-  const atlasItem = staffNavItems.find((item) => item.href === "/dashboard/atlas")!;
+  const atlasItem = staffNavItems.find((item) => item.href === "/staff/atlas")!;
   const staffUser = await requireRole(atlasItem.roles);
 
   const note = await prisma.staffNote.findUnique({
@@ -83,12 +83,12 @@ export async function deleteStaffNote(noteId: string) {
   }
 
   if (note.authorId !== staffUser.id) {
-    throw new Error("Vous ne pouvez supprimer que vos propres notes.");
+    throw new Error("Tu ne peux supprimer que tes propres notes.");
   }
 
   await prisma.staffNote.delete({
     where: { id: noteId },
   });
 
-  revalidatePath(`/dashboard/atlas/${note.playerId}`);
+  revalidatePath(`/staff/atlas/${note.playerId}`);
 }

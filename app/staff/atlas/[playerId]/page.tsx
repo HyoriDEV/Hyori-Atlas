@@ -43,7 +43,7 @@ export default async function AtlasPlayerPage({
   params: Promise<{ playerId: string }>;
 }) {
   const { playerId } = await params;
-  const item = staffNavItems.find((i) => i.href === "/dashboard/atlas")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
   const player = await prisma.user.findUnique({
@@ -145,7 +145,7 @@ export default async function AtlasPlayerPage({
       date: ticket.createdAt,
       title: "Ticket créé :",
       link: {
-        href: `/dashboard/tickets/${ticket.id}`,
+        href: `/staff/tickets/${ticket.id}`,
         label: ticket.subject,
         targetBlank: true,
       },

@@ -23,7 +23,7 @@ const PAGE_SIZE = 10;
 export default async function TicketsStaffListPage(props: {
   searchParams: Promise<{ category?: string; status?: string; page?: string }>;
 }) {
-  const item = staffNavItems.find((i) => i.href === "/dashboard/tickets")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   await requireRole(item.roles);
 
   const searchParams = await props.searchParams;
@@ -81,7 +81,7 @@ export default async function TicketsStaffListPage(props: {
               tickets.map((ticket) => (
                 <TicketTableRow
                   key={ticket.id}
-                  href={`/dashboard/tickets/${ticket.id}`}
+                  href={`/staff/tickets/${ticket.id}`}
                   className={
                     ticket.status === TicketStatus.PENDING_STAFF
                       ? "bg-primary/[0.07] hover:bg-primary/[0.12]"

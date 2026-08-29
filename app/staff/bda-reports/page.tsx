@@ -3,7 +3,7 @@ import { staffNavItems } from "@/lib/navigation";
 import { ComingSoonCard } from "@/components/coming-soon-card";
 
 export default async function BdaReportsPage() {
-  const item = staffNavItems.find((i) => i.href === "/dashboard/bda-reports")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/bda-reports")!;
   await requireRole(item.roles);
 
   return (

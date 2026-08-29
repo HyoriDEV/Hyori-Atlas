@@ -38,9 +38,7 @@ export default async function TicketDetailPage({
   });
 
   const isStaff = user.role !== Role.PLAYER;
-  const isMember =
-    ticket &&
-    ticket.conversation.members.some((m) => m.userId === user.id);
+  const isMember = ticket && ticket.conversation.members.some((m) => m.userId === user.id);
 
   if (!ticket || (!isStaff && !isMember)) {
     notFound();
@@ -56,7 +54,7 @@ export default async function TicketDetailPage({
   }));
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
         <TicketBackLink />
         <div className="flex flex-1 flex-col gap-0.5">
@@ -71,8 +69,8 @@ export default async function TicketDetailPage({
         </Badge>
       </div>
 
-      <div className="grid flex-1 min-h-0 gap-6 lg:grid-cols-7">
-        <div className="flex flex-1 min-h-0 flex-col lg:col-span-5">
+      <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
+        <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
             conversationId={ticket.conversationId}
             initialMessages={messages.map(serializeConversationMessage)}
@@ -83,15 +81,11 @@ export default async function TicketDetailPage({
               await sendTicketMessage(ticket.id, body, imageUrl);
             }}
             disabled={ticket.status === TicketStatus.ARCHIVED}
-            className="flex-1 min-h-0"
+            className="min-h-0 flex-1"
           />
         </div>
-        <div className="lg:col-span-2 min-h-0 overflow-y-auto">
-          <TicketMembersManager
-            ticketId={ticket.id}
-            members={membersData}
-            readOnly
-          />
+        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+          <TicketMembersManager ticketId={ticket.id} members={membersData} readOnly />
         </div>
       </div>
     </div>

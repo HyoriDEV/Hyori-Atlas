@@ -10,7 +10,7 @@ export function AtlasEvaluateSheetButton({
   label?: string;
 }) {
   return (
-    <Button size="sm" render={<Link href={`/dashboard/atlas/${playerId}/evaluation`} />}>
+    <Button size="sm" render={<Link href={`/staff/atlas/${playerId}/evaluation`} />}>
       {label}
     </Button>
   );

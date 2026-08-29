@@ -2,22 +2,11 @@
 
 import * as React from "react";
 import { useMemo, useState } from "react";
-import {
-  CaretUpDown,
-  Check,
-  User,
-  Users,
-  X,
-} from "@phosphor-icons/react";
+import { CaretUpDown, Check, User, Users, X } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
-import {
-  RegistrationStatus,
-  Role,
-} from "@/lib/generated/prisma/enums";
-import {
-  registrationStatusLabels,
-} from "@/lib/navigation";
+import { RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
+import { registrationStatusLabels } from "@/lib/navigation";
 import { registrationStatusBadgeVariant } from "@/lib/atlas-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -30,11 +19,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SkinHead } from "@/components/ui/skin-head";
 
 export interface PlayerOption {
@@ -281,13 +266,13 @@ export function PlayerSelectItem({
       disabled={isDisabled}
       onSelect={onSelect}
       className={cn(
-        "flex items-center gap-2 px-2 py-1 min-h-7 rounded-md cursor-pointer transition-colors text-xs",
+        "flex min-h-7 cursor-pointer items-center gap-2 rounded-md px-2 py-1 text-xs transition-colors",
         isSelected && "bg-accent/70 text-accent-foreground font-medium",
         isDisabled && "cursor-not-allowed opacity-50"
       )}
     >
       {/* Minecraft 2D Skin Head with Discord avatar fallback */}
-      <div className="relative shrink-0 flex items-center">
+      <div className="relative flex shrink-0 items-center">
         {player.minecraftUsername ? (
           <SkinHead size="sm" username={player.minecraftUsername} className="size-5 rounded-md" />
         ) : player.discordAvatarUrl ? (
@@ -298,33 +283,30 @@ export function PlayerSelectItem({
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="flex size-5 items-center justify-center rounded-md bg-muted text-[9px] font-semibold text-muted-foreground">
+          <div className="bg-muted text-muted-foreground flex size-5 items-center justify-center rounded-md text-[9px] font-semibold">
             {displayName.charAt(0).toUpperCase()}
           </div>
         )}
       </div>
 
       {/* Player Names & Info */}
-      <div className="flex flex-1 min-w-0 flex-col leading-tight">
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="truncate text-xs font-medium text-foreground">
-            {displayName}
-          </span>
+      <div className="flex min-w-0 flex-1 flex-col leading-tight">
+        <div className="flex min-w-0 items-center gap-1.5">
+          <span className="text-foreground truncate text-xs font-medium">{displayName}</span>
           {showStatusBadge && player.registrationStatus && (
             <Badge
               variant={registrationStatusBadgeVariant(
                 player.registrationStatus as RegistrationStatus
               )}
-              className="text-[8px] px-1 py-0 h-3.5 uppercase shrink-0"
+              className="h-3.5 shrink-0 px-1 py-0 text-[8px] uppercase"
             >
-              {registrationStatusLabels[
-                player.registrationStatus as RegistrationStatus
-              ] ?? player.registrationStatus}
+              {registrationStatusLabels[player.registrationStatus as RegistrationStatus] ??
+                player.registrationStatus}
             </Badge>
           )}
         </div>
         {secondaryName && (
-          <span className="truncate text-[10px] text-muted-foreground leading-none mt-0.5">
+          <span className="text-muted-foreground mt-0.5 truncate text-[10px] leading-none">
             {secondaryName}
           </span>
         )}
@@ -332,14 +314,14 @@ export function PlayerSelectItem({
 
       {/* Disabled reason or checkmark */}
       {isDisabled && disabledReason ? (
-        <span className="ml-auto text-[10px] font-normal text-muted-foreground italic shrink-0">
+        <span className="text-muted-foreground ml-auto shrink-0 text-[10px] font-normal italic">
           {disabledReason}
         </span>
       ) : showCheck ? (
         <Check
           className={cn(
             "ml-auto size-3.5 shrink-0 transition-opacity",
-            isSelected ? "text-primary opacity-100 font-bold" : "opacity-0"
+            isSelected ? "text-primary font-bold opacity-100" : "opacity-0"
           )}
         />
       ) : null}
@@ -400,10 +382,10 @@ export function PlayerSelect(props: PlayerSelectProps) {
 
   // Selection state handling (controlled & uncontrolled)
   const [internalSingleValue, setInternalSingleValue] = useState<string | null>(
-    props.multiple ? null : props.defaultValue ?? null
+    props.multiple ? null : (props.defaultValue ?? null)
   );
   const [internalMultiValue, setInternalMultiValue] = useState<string[]>(
-    props.multiple ? props.defaultValue ?? [] : []
+    props.multiple ? (props.defaultValue ?? []) : []
   );
 
   const selectedSingleId = props.multiple
@@ -650,15 +632,19 @@ export function PlayerSelect(props: PlayerSelectProps) {
           variant="outline"
           disabled={disabled}
           className={cn(
-            "w-full justify-between font-normal h-8 px-2.5 text-xs gap-1.5",
+            "h-8 w-full justify-between gap-1.5 px-2.5 text-xs font-normal",
             !selectedPlayer && "text-muted-foreground",
             triggerClassName
           )}
         >
           {selectedPlayer ? (
-            <div className="flex items-center gap-1.5 min-w-0">
+            <div className="flex min-w-0 items-center gap-1.5">
               {selectedPlayer.minecraftUsername ? (
-                <SkinHead size="sm" username={selectedPlayer.minecraftUsername} className="size-4.5 rounded-md" />
+                <SkinHead
+                  size="sm"
+                  username={selectedPlayer.minecraftUsername}
+                  className="size-4.5 rounded-md"
+                />
               ) : selectedPlayer.discordAvatarUrl ? (
                 <Avatar size="sm" className="size-4.5 rounded-md">
                   <AvatarImage
@@ -670,27 +656,25 @@ export function PlayerSelect(props: PlayerSelectProps) {
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <User className="size-3.5 text-muted-foreground shrink-0" />
+                <User className="text-muted-foreground size-3.5 shrink-0" />
               )}
-              <span className="truncate text-xs font-medium text-foreground">
-                {displayName}
-              </span>
+              <span className="text-foreground truncate text-xs font-medium">{displayName}</span>
             </div>
           ) : (
-            <span className="text-xs truncate">{placeholder}</span>
+            <span className="truncate text-xs">{placeholder}</span>
           )}
-          <div className="flex items-center gap-1 shrink-0 ml-auto">
+          <div className="ml-auto flex shrink-0 items-center gap-1">
             {clearable && selectedPlayer && (
               <span
                 role="button"
                 tabIndex={0}
                 onClick={handleClearAll}
-                className="text-muted-foreground hover:text-foreground p-0.5 rounded-sm"
+                className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
               >
                 <X className="size-3" />
               </span>
             )}
-            <CaretUpDown className="size-3 text-muted-foreground opacity-60" />
+            <CaretUpDown className="text-muted-foreground size-3 opacity-60" />
           </div>
         </Button>
       );
@@ -704,30 +688,34 @@ export function PlayerSelect(props: PlayerSelectProps) {
         variant="outline"
         disabled={disabled}
         className={cn(
-          "w-full justify-between font-normal h-8 px-2.5 text-xs gap-1.5",
+          "h-8 w-full justify-between gap-1.5 px-2.5 text-xs font-normal",
           count === 0 && "text-muted-foreground",
           triggerClassName
         )}
       >
         {count === 0 ? (
-          <span className="text-xs truncate">{placeholder}</span>
+          <span className="truncate text-xs">{placeholder}</span>
         ) : count === 1 ? (
-          <div className="flex items-center gap-1.5 min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
             {selectedPlayers[0].minecraftUsername ? (
-              <SkinHead size="sm" username={selectedPlayers[0].minecraftUsername} className="size-4.5 rounded-md" />
+              <SkinHead
+                size="sm"
+                username={selectedPlayers[0].minecraftUsername}
+                className="size-4.5 rounded-md"
+              />
             ) : (
-              <Users className="size-3.5 text-muted-foreground shrink-0" />
+              <Users className="text-muted-foreground size-3.5 shrink-0" />
             )}
-            <span className="truncate text-xs font-medium text-foreground">
+            <span className="text-foreground truncate text-xs font-medium">
               {getPlayerDisplayName(selectedPlayers[0])}
             </span>
           </div>
         ) : (
-          <div className="flex items-center gap-1 min-w-0">
-            <Badge variant="secondary" className="px-1 py-0 text-[10px] font-medium h-4">
+          <div className="flex min-w-0 items-center gap-1">
+            <Badge variant="secondary" className="h-4 px-1 py-0 text-[10px] font-medium">
               {count}
             </Badge>
-            <span className="truncate text-xs text-muted-foreground">
+            <span className="text-muted-foreground truncate text-xs">
               {selectedPlayers
                 .slice(0, 2)
                 .map((p) => getPlayerDisplayName(p))
@@ -736,18 +724,18 @@ export function PlayerSelect(props: PlayerSelectProps) {
             </span>
           </div>
         )}
-        <div className="flex items-center gap-1 shrink-0 ml-auto">
+        <div className="ml-auto flex shrink-0 items-center gap-1">
           {clearable && count > 0 && (
             <span
               role="button"
               tabIndex={0}
               onClick={handleClearAll}
-              className="text-muted-foreground hover:text-foreground p-0.5 rounded-sm"
+              className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
             >
               <X className="size-3" />
             </span>
           )}
-          <CaretUpDown className="size-3 text-muted-foreground opacity-60" />
+          <CaretUpDown className="text-muted-foreground size-3 opacity-60" />
         </div>
       </Button>
     );
@@ -772,23 +760,21 @@ export function PlayerSelect(props: PlayerSelectProps) {
       <PopoverContent
         align={align}
         side={side}
-        className={cn("w-[280px] p-0 shadow-lg text-xs", popoverClassName)}
+        className={cn("w-[280px] p-0 text-xs shadow-lg", popoverClassName)}
       >
         <Command className="w-full">
           <CommandInput placeholder={searchPlaceholder} />
           {isMultiple && showSummaryBar && selectedPlayers.length > 0 && (
-            <div className="flex items-center justify-between px-2.5 py-1 bg-muted/40 border-b text-[10px] text-muted-foreground">
+            <div className="bg-muted/40 text-muted-foreground flex items-center justify-between border-b px-2.5 py-1 text-[10px]">
               <span>
-                <strong className="text-foreground font-semibold">
-                  {selectedPlayers.length}
-                </strong>{" "}
+                <strong className="text-foreground font-semibold">{selectedPlayers.length}</strong>{" "}
                 {selectedPlayers.length > 1 ? "sélectionnés" : "sélectionné"}
               </span>
               {showClearAll && (
                 <button
                   type="button"
                   onClick={handleClearAll}
-                  className="text-destructive hover:underline font-medium text-[10px]"
+                  className="text-destructive text-[10px] font-medium hover:underline"
                 >
                   Tout désélectionner
                 </button>
@@ -796,7 +782,7 @@ export function PlayerSelect(props: PlayerSelectProps) {
             </div>
           )}
           <CommandList className="max-h-56 overflow-y-auto p-1">
-            <CommandEmpty className="py-4 text-center text-xs text-muted-foreground">
+            <CommandEmpty className="text-muted-foreground py-4 text-center text-xs">
               {emptyText}
             </CommandEmpty>
             <CommandGroup>

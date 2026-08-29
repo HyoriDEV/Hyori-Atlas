@@ -5,7 +5,7 @@ import { LockSimple } from "@phosphor-icons/react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function LockedFeatureCard({
-  description = "Cette section n'est pas encore accessible en fonction de votre statut d'inscription.",
+  description = "Cette section n'est pas encore accessible en fonction de ton statut d'inscription.",
 }: {
   description?: string;
 }) {

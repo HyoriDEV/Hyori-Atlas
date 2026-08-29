@@ -30,7 +30,7 @@ export async function sendConversationMessage(
   });
 
   if (!membership) {
-    throw new Error("Vous n'avez pas accès à cette conversation.");
+    throw new Error("Tu n'as pas accès à cette conversation.");
   }
 
   assertHasContent(body, imageUrl);

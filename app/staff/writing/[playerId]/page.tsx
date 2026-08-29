@@ -28,7 +28,7 @@ export default async function WritingStaffDetailPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <AtlasBackButton href="/dashboard/writing" />
+        <AtlasBackButton href="/staff/writing" />
         <h1 className="font-heading flex-1 text-lg font-semibold">{playerName}</h1>
       </div>
 

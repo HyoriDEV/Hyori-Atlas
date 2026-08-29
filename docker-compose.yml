@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: npx prisma studio --port 5555 --browser none
+    command: sh -c "npx prisma generate && npx prisma studio --port 5555 --browser none"
     env_file:
       - .env
     environment:

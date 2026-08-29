@@ -50,6 +50,10 @@ const sheetStatusItems = [
     label: characterSheetStatusLabels[CharacterSheetStatus.PENDING_PLAYER],
   },
   {
+    value: CharacterSheetStatus.DRAFT,
+    label: characterSheetStatusLabels[CharacterSheetStatus.DRAFT],
+  },
+  {
     value: CharacterSheetStatus.VALIDATED,
     label: characterSheetStatusLabels[CharacterSheetStatus.VALIDATED],
   },

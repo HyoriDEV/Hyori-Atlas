@@ -65,7 +65,7 @@ export function TicketMembersManager({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 text-card-foreground">
+    <div className="bg-card text-card-foreground flex flex-col gap-4 rounded-xl border p-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold">Membres du ticket</h3>
         {!readOnly && (
@@ -94,14 +94,17 @@ export function TicketMembersManager({
 
       <div className="flex flex-col gap-2">
         {members.length === 0 ? (
-          <p className="text-muted-foreground text-center py-4 text-xs">
+          <p className="text-muted-foreground py-4 text-center text-xs">
             Aucun membre dans ce ticket.
           </p>
         ) : (
           members.map((member) => {
             const name = member.minecraftUsername ?? member.discordDisplayName;
             return (
-              <div key={member.userId} className="flex items-center justify-between rounded-lg border p-2">
+              <div
+                key={member.userId}
+                className="flex items-center justify-between rounded-lg border p-2"
+              >
                 <div className="flex items-center gap-3">
                   {member.minecraftUsername ? (
                     <SkinHead size="sm" username={member.minecraftUsername} />
@@ -119,7 +122,7 @@ export function TicketMembersManager({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8"
                     onClick={() => handleRemove(member.userId)}
                     disabled={loadingId === member.userId}
                     title="Retirer du ticket"

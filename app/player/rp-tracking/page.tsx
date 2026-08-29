@@ -51,8 +51,8 @@ export default async function RpTrackingPage() {
   const messages = conversation?.messages || [];
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
-      <h1 className="shrink-0 font-heading text-2xl font-semibold">Suivi RP</h1>
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
+      <h1 className="font-heading shrink-0 text-2xl font-semibold">Suivi RP</h1>
       {unlocked && conversation ? (
         <ConversationChat
           conversationId={conversation.id}
@@ -61,7 +61,7 @@ export default async function RpTrackingPage() {
           viewerIsStaff={false}
           sendAction={sendConversationMessage}
           emptyBadge="Début du suivi RP."
-          className="flex-1 min-h-0"
+          className="min-h-0 flex-1"
         />
       ) : (
         <LockedFeatureCard />

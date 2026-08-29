@@ -1,28 +1,30 @@
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
 import {
   isRegistrationStatusAtLeast,
-  playerNavGroups,
+  playerPendingNavGroups,
   playerWhitelistedNavGroups,
   playerRejectedNavItem,
   roleLabels,
 } from "@/lib/navigation";
-import { AppShell, type AppShellNavEntry } from "@/components/app-shell/app-shell";
+import { AppShell, type AppShellNavGroup } from "@/components/app-shell/app-shell";
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
   const user = await getPlayerState();
 
   if (user.registrationStatus === RegistrationStatus.REJECTED) {
-    const rejectedNavGroups: AppShellNavEntry[][] = [
-      [
-        {
-          label: playerRejectedNavItem.label,
-          href: playerRejectedNavItem.href,
-          iconKey: playerRejectedNavItem.iconKey,
-          locked: false,
-        },
-      ],
+    const rejectedNavGroups: AppShellNavGroup[] = [
+      {
+        items: [
+          {
+            label: playerRejectedNavItem.label,
+            href: playerRejectedNavItem.href,
+            iconKey: playerRejectedNavItem.iconKey,
+            locked: false,
+          },
+        ],
+      },
     ];
 
     return (
@@ -34,6 +36,7 @@ export default async function PlayerLayout({ children }: { children: React.React
           name: user.minecraftUsername ?? user.discordUsername ?? "Joueur",
           secondaryLabel: roleLabels[user.role],
           avatarUrl: user.discordAvatarUrl,
+          isStaff: user.role !== Role.PLAYER,
         }}
       >
         {children}
@@ -52,11 +55,12 @@ export default async function PlayerLayout({ children }: { children: React.React
   const baseGroups =
     user.registrationStatus === RegistrationStatus.WHITELISTED
       ? playerWhitelistedNavGroups
-      : playerNavGroups;
+      : playerPendingNavGroups;
 
-  const navGroups: AppShellNavEntry[][] = baseGroups
-    .map((group) =>
-      group
+  const navGroups: AppShellNavGroup[] = baseGroups
+    .map((group) => ({
+      title: group.title,
+      items: group.items
         .filter(
           (item) =>
             !item.hiddenFromStatus ||
@@ -85,9 +89,9 @@ export default async function PlayerLayout({ children }: { children: React.React
               item.href === "/player/character-sheet" &&
               (characterSheet?.hasUnreadFeedback ?? false),
           };
-        })
-    )
-    .filter((group) => group.length > 0);
+        }),
+    }))
+    .filter((group) => group.items.length > 0);
 
   return (
     <AppShell
@@ -98,6 +102,7 @@ export default async function PlayerLayout({ children }: { children: React.React
         name: user.minecraftUsername ?? user.discordUsername ?? "Joueur",
         secondaryLabel: roleLabels[user.role],
         avatarUrl: user.discordAvatarUrl,
+        isStaff: user.role !== Role.PLAYER,
       }}
     >
       {children}

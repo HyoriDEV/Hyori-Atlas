@@ -116,7 +116,7 @@ export function CharacterSheetForm({
     if (nicknameLength > NICKNAME_MAX_LENGTH)
       return `Le surnom dépasse ${NICKNAME_MAX_LENGTH} caractères.`;
 
-    if (fields.gender.trim().length === 0) return "Veuillez sélectionner un genre.";
+    if (fields.gender.trim().length === 0) return "Choisis un genre.";
 
     if (civilStatusLength === 0) return "Le statut civil est requis.";
     if (civilStatusLength < CIVIL_STATUS_MIN_LENGTH)

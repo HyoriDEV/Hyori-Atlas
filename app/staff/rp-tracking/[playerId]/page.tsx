@@ -58,9 +58,9 @@ export default async function RpTrackingStaffDetailPage({
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
-        <AtlasBackButton href="/dashboard/rp-tracking" />
+        <AtlasBackButton href="/staff/rp-tracking" />
         <h1 className="font-heading flex-1 text-lg font-semibold">{playerName}</h1>
       </div>
 
@@ -71,7 +71,7 @@ export default async function RpTrackingStaffDetailPage({
         viewerIsStaff
         sendAction={sendStaffConversationMessage}
         emptyBadge="Début du suivi RP."
-        className="flex-1 min-h-0"
+        className="min-h-0 flex-1"
       />
     </div>
   );

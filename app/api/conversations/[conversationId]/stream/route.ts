@@ -6,7 +6,10 @@ import { rpTrackingStaffRoles, ticketStaffRoles } from "@/lib/navigation";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(request: Request, { params }: { params: Promise<{ conversationId: string }> }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ conversationId: string }> }
+) {
   const { conversationId } = await params;
   const user = await getCurrentUser();
 
@@ -31,10 +34,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ conv
 
   let hasStaffAccess = false;
   if (!isMember) {
-    if (
-      conversation.type === ConversationType.TICKET &&
-      ticketStaffRoles.includes(user.role)
-    ) {
+    if (conversation.type === ConversationType.TICKET && ticketStaffRoles.includes(user.role)) {
       hasStaffAccess = true;
     } else if (
       conversation.type === ConversationType.RP_TRACKING &&

@@ -130,7 +130,7 @@ export function SheetEvaluationWorkspace({
           })),
           sheetUpdatedAt
         );
-        router.push(`/dashboard/atlas/${playerId}`);
+        router.push(`/staff/atlas/${playerId}`);
       } catch (submitError) {
         setIsApprovalDialogOpen(false);
         setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");

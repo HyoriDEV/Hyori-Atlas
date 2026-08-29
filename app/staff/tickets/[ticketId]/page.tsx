@@ -20,7 +20,7 @@ export default async function TicketStaffDetailPage({
   params: Promise<{ ticketId: string }>;
 }) {
   const { ticketId } = await params;
-  const item = staffNavItems.find((i) => i.href === "/dashboard/tickets")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   const staffUser = await requireRole(item.roles);
 
   const ticket = await prisma.ticket.findUnique({
@@ -40,7 +40,6 @@ export default async function TicketStaffDetailPage({
     notFound();
   }
 
-  // Tous les joueurs existants (tous statuts confondus) peuvent être ajoutés
   const allPlayers = await prisma.user.findMany({
     select: {
       id: true,
@@ -70,9 +69,9 @@ export default async function TicketStaffDetailPage({
   }));
 
   return (
-    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
-        <AtlasBackButton href="/dashboard/tickets" />
+        <AtlasBackButton href="/staff/tickets" />
         <div className="flex flex-1 flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">
             {playerName} · {ticketCategoryLabels[ticket.category]} ·{" "}
@@ -86,8 +85,8 @@ export default async function TicketStaffDetailPage({
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>
 
-      <div className="grid flex-1 min-h-0 gap-6 lg:grid-cols-7">
-        <div className="flex flex-1 min-h-0 flex-col lg:col-span-5">
+      <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
+        <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
             conversationId={ticket.conversationId}
             initialMessages={messages.map(serializeConversationMessage)}
@@ -98,10 +97,10 @@ export default async function TicketStaffDetailPage({
               await sendStaffTicketMessage(ticket.id, body, imageUrl);
             }}
             disabled={ticket.status === TicketStatus.ARCHIVED}
-            className="flex-1 min-h-0"
+            className="min-h-0 flex-1"
           />
         </div>
-        <div className="lg:col-span-2 min-h-0 overflow-y-auto">
+        <div className="min-h-0 overflow-y-auto lg:col-span-2">
           <TicketMembersManager
             ticketId={ticket.id}
             members={membersData}

@@ -66,7 +66,7 @@ function parseEnumParam<T extends string>(
 }
 
 export default async function AtlasPage(props: PageProps) {
-  const item = staffNavItems.find((i) => i.href === "/dashboard/atlas")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   await requireRole(item.roles);
 
   const searchParams = await props.searchParams;
@@ -155,8 +155,9 @@ export default async function AtlasPage(props: PageProps) {
         else comparison = statA.localeCompare(statB, "fr", { sensitivity: "base" });
       } else if (sortKey === "sheetStatus") {
         const rankMap: Record<CharacterSheetStatus, number> = {
-          [CharacterSheetStatus.PENDING_STAFF]: 3,
-          [CharacterSheetStatus.PENDING_PLAYER]: 2,
+          [CharacterSheetStatus.PENDING_STAFF]: 4,
+          [CharacterSheetStatus.PENDING_PLAYER]: 3,
+          [CharacterSheetStatus.DRAFT]: 2,
           [CharacterSheetStatus.VALIDATED]: 1,
         };
         const rankA = a.player.characterSheet
@@ -289,7 +290,7 @@ export default async function AtlasPage(props: PageProps) {
                 const sheet = player.characterSheet;
 
                 return (
-                  <AtlasTableRow key={player.id} href={`/dashboard/atlas/${player.id}`}>
+                  <AtlasTableRow key={player.id} href={`/staff/atlas/${player.id}`}>
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <SkinHead size="sm" username={player.minecraftUsername ?? undefined} />

@@ -203,7 +203,7 @@ export function AtlasStaffNotes({
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer la note</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer cette note ? Cette action est irréversible.
+              Es-tu sûr de vouloir supprimer cette note ? Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

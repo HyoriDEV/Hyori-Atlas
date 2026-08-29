@@ -64,7 +64,7 @@ export async function uploadConversationImage(
   });
 
   if (!membership) {
-    throw new Error("Vous n'avez pas accès à cette conversation.");
+    throw new Error("Tu n'as pas accès à cette conversation.");
   }
 
   const file = formData.get("file");

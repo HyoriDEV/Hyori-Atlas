@@ -18,9 +18,9 @@ import {
 } from "@/lib/character-sheet-comments";
 
 function revalidateSheetSurfaces(playerId: string) {
-  revalidatePath("/dashboard/atlas");
-  revalidatePath(`/dashboard/atlas/${playerId}`);
-  revalidatePath(`/dashboard/atlas/${playerId}/evaluation`);
+  revalidatePath("/staff/atlas");
+  revalidatePath(`/staff/atlas/${playerId}`);
+  revalidatePath(`/staff/atlas/${playerId}/evaluation`);
   revalidatePath("/player/character-sheet");
   revalidatePath("/player", "layout");
 }
@@ -47,7 +47,7 @@ export async function submitCharacterSheetEvaluation(
 
   if (expectedUpdatedAt && sheet.updatedAt.toISOString() !== expectedUpdatedAt) {
     throw new Error(
-      "Cette fiche ou son évaluation a été modifiée par un autre utilisateur entre-temps. Veuillez rafraîchir la page pour voir les derniers changements."
+      "Cette fiche ou son évaluation a été modifiée par un autre utilisateur entre-temps. Rafraîchis la page pour voir les derniers changements."
     );
   }
 

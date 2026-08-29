@@ -40,9 +40,6 @@ textarea, input{outline:none;}
           <sc-if value="{{ item.iconBda }}" hint-placeholder-val="{{ false }}">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4v5c0 5-3.4 8.4-8 9-4.6-.6-8-4-8-9V7l8-4z"></path><path d="M12 8v5"></path><circle cx="12" cy="16" r="0.6" fill="currentColor"></circle></svg>
           </sc-if>
-          <sc-if value="{{ item.iconBacklog }}" hint-placeholder-val="{{ false }}">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M9 4v16M15 4v16"></path></svg>
-          </sc-if>
           <span style="flex:1;font-size:14.5px;">{{ item.label }}</span>
         </div>
       </sc-for>
@@ -415,190 +412,6 @@ textarea, input{outline:none;}
       </sc-if>
     </sc-if>
 
-    <sc-if value="{{ isBacklog }}" hint-placeholder-val="{{ false }}">
-
-      <sc-if value="{{ isBacklogList }}" hint-placeholder-val="{{ true }}">
-        <div style="display:flex;flex-direction:column;gap:18px;height:100%;">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
-            <h1 style="font-family:'Lora',serif;font-weight:600;font-size:28px;color:#f8f5e8;margin:0;">Backlog</h1>
-            <div style="display:flex;gap:10px;align-items:center;">
-              <select value="{{ backlogSort }}" onChange="{{ setBacklogSort }}" style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:9px 12px;font-size:13.5px;color:#f8f5e8;font-family:inherit;cursor:pointer;">
-                <option value="none">Trier par...</option>
-                <option value="priority">Priorité</option>
-                <option value="deadline">Échéance</option>
-              </select>
-              <select value="{{ backlogFilterAssignee }}" onChange="{{ setBacklogFilterAssignee }}" style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:9px 12px;font-size:13.5px;color:#f8f5e8;font-family:inherit;cursor:pointer;">
-                <sc-for list="{{ assigneeOptions }}" as="opt" hint-placeholder-count="3">
-                  <option value="{{ opt }}">{{ opt }}</option>
-                </sc-for>
-              </select>
-              <button onClick="{{ openTaskCreateView }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Nouvelle tâche</button>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:start;">
-            <sc-for list="{{ boardColumns }}" as="col" hint-placeholder-count="4">
-              <div onDragOver="{{ col.onDragOver }}" onDrop="{{ col.onDrop }}" style="display:flex;flex-direction:column;gap:10px;background:#161616;border:1px solid rgba(248,245,232,0.06);border-radius:12px;padding:14px;min-width:0;">
-                <div style="display:flex;align-items:center;justify-content:space-between;padding:0 4px;">
-                  <span style="font-size:13px;font-weight:600;color:#f8f5e8;">{{ col.label }}</span>
-                  <span style="font-size:12px;color:rgba(248,245,232,0.4);">{{ col.count }}</span>
-                </div>
-                <sc-for list="{{ col.tasks }}" as="t" hint-placeholder-count="2">
-                  <div onClick="{{ t.onClick }}" draggable="true" onDragStart="{{ t.onDragStart }}" style="background:#1e1e1e;border:1px solid rgba(248,245,232,0.08);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;cursor:pointer;min-width:0;">
-                    <div style="display:flex;flex-direction:column;gap:8px;">
-                      <span style="{{ t.priorityStyle }}">{{ t.priority }}</span>
-                      <span style="font-size:13.5px;color:#f8f5e8;line-height:1.4;">{{ t.title }}</span>
-                    </div>
-                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                      <div style="width:24px;height:24px;border-radius:50%;background:#323232;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#f8f5e8;">{{ t.assigneeInitial }}</div>
-                      <sc-if value="{{ t.hasDeadline }}" hint-placeholder-val="{{ false }}">
-                        <span style="font-size:11px;color:rgba(248,245,232,0.45);">{{ t.deadline }}</span>
-                      </sc-if>
-                    </div>
-                  </div>
-                </sc-for>
-              </div>
-            </sc-for>
-          </div>
-        </div>
-      </sc-if>
-
-      <sc-if value="{{ isBacklogDetail }}" hint-placeholder-val="{{ false }}">
-        <div style="{{ centeredStyleTight }}">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div onClick="{{ backToBacklogList }}" style="cursor:pointer;width:34px;height:34px;border-radius:8px;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);display:flex;align-items:center;justify-content:center;flex:none;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-            </div>
-            <span style="font-family:'Lora',serif;font-weight:600;font-size:22px;color:#f8f5e8;flex:1;">{{ selectedTask.title }}</span>
-            <span style="{{ selectedTask.priorityStyle }}">{{ selectedTask.priority }}</span>
-            <button onClick="{{ openTaskEdit }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:13px;padding:9px 16px;border-radius:8px;font-family:inherit;cursor:pointer;white-space:nowrap;">Modifier</button>
-          </div>
-          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:20px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Description</span>
-              <p style="font-size:14px;line-height:1.6;color:rgba(248,245,232,0.75);margin:0;">{{ selectedTask.description }}</p>
-            </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;">
-              <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:rgba(248,245,232,0.4);">Statut</span><span style="font-size:13px;color:#f8f5e8;">{{ selectedTask.status }}</span></div>
-              <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:rgba(248,245,232,0.4);">Assigné à</span><span style="font-size:13px;color:#f8f5e8;">{{ selectedTask.assignee }}</span></div>
-              <sc-if value="{{ selectedTask.hasDeadline }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:rgba(248,245,232,0.4);">Échéance</span><span style="font-size:13px;color:#f8f5e8;">{{ selectedTask.deadline }}</span></div>
-              </sc-if>
-              <sc-if value="{{ selectedTask.hasTicket }}" hint-placeholder-val="{{ false }}">
-                <div style="display:flex;flex-direction:column;gap:2px;"><span style="font-size:11px;color:rgba(248,245,232,0.4);">Ticket lié</span><span style="font-size:13px;color:#e9d15c;">{{ selectedTask.ticket }}</span></div>
-              </sc-if>
-            </div>
-          </div>
-          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:8px;">
-            <span style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:rgba(248,245,232,0.45);">Historique</span>
-            <sc-for list="{{ selectedTask.history }}" as="h" hint-placeholder-count="3">
-              <div style="display:flex;gap:10px;">
-                <div style="width:6px;height:6px;border-radius:50%;background:#e9d15c;flex:none;margin-top:6px;"></div>
-                <div style="display:flex;flex-direction:column;">
-                  <span style="font-size:11px;color:rgba(248,245,232,0.4);">{{ h.date }}</span>
-                  <span style="font-size:13px;color:rgba(248,245,232,0.7);">{{ h.text }}</span>
-                </div>
-              </div>
-            </sc-for>
-          </div>
-        </div>
-      </sc-if>
-
-      <sc-if value="{{ isBacklogEdit }}" hint-placeholder-val="{{ false }}">
-        <div style="{{ centeredStyleTight }}">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div onClick="{{ cancelTaskEdit }}" style="cursor:pointer;width:34px;height:34px;border-radius:8px;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);display:flex;align-items:center;justify-content:center;flex:none;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-            </div>
-            <span style="font-family:'Lora',serif;font-weight:600;font-size:22px;color:#f8f5e8;">Modifier la tâche</span>
-          </div>
-          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Titre</span>
-              <input value="{{ editTitle }}" onChange="{{ setEditTitle }}" placeholder="Ex : Corriger le bug de la carte de compétences" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Description</span>
-              <textarea value="{{ editDescription }}" onChange="{{ setEditDescription }}" placeholder="Détaille la tâche" rows="4" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;resize:vertical;"></textarea>
-            </div>
-            <div style="display:flex;gap:12px;">
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Priorité</span>
-                <div style="display:flex;gap:6px;">
-                  <sc-for list="{{ editPriorityChoices }}" as="pr" hint-placeholder-count="3">
-                    <div onClick="{{ pr.onClick }}" style="{{ pr.style }}">{{ pr.label }}</div>
-                  </sc-for>
-                </div>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Échéance (optionnel)</span>
-                <input value="{{ editDeadline }}" onChange="{{ setEditDeadline }}" placeholder="jj/mm/aaaa" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Assigné à</span>
-              <input value="{{ editAssignee }}" onChange="{{ setEditAssignee }}" placeholder="Nom du membre" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Statut</span>
-              <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                <sc-for list="{{ editStatusChoices }}" as="st" hint-placeholder-count="4">
-                  <div onClick="{{ st.onClick }}" style="{{ st.style }}">{{ st.label }}</div>
-                </sc-for>
-              </div>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
-              <button onClick="{{ cancelTaskEdit }}" style="background:transparent;color:rgba(248,245,232,0.6);border:1px solid rgba(248,245,232,0.14);font-size:14px;padding:9px 16px;border-radius:8px;font-family:inherit;cursor:pointer;">Annuler</button>
-              <button onClick="{{ saveTaskEdit }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Enregistrer</button>
-            </div>
-          </div>
-        </div>
-      </sc-if>
-
-      <sc-if value="{{ isBacklogCreate }}" hint-placeholder-val="{{ false }}">
-        <div style="{{ centeredStyleTight }}">
-          <div style="display:flex;align-items:center;gap:14px;">
-            <div onClick="{{ cancelTaskCreate }}" style="cursor:pointer;width:34px;height:34px;border-radius:8px;background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);display:flex;align-items:center;justify-content:center;flex:none;">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f8f5e8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg>
-            </div>
-            <span style="font-family:'Lora',serif;font-weight:600;font-size:22px;color:#f8f5e8;">Nouvelle tâche</span>
-          </div>
-          <div style="background:#1a1a1a;border:1px solid rgba(248,245,232,0.08);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:16px;">
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Titre</span>
-              <input value="{{ createTitle }}" onChange="{{ setCreateTitle }}" placeholder="Ex : Corriger le bug de la carte de compétences" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Description</span>
-              <textarea value="{{ createDescription }}" onChange="{{ setCreateDescription }}" placeholder="Détaille la tâche" rows="4" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;resize:vertical;"></textarea>
-            </div>
-            <div style="display:flex;gap:12px;">
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Priorité</span>
-                <div style="display:flex;gap:6px;">
-                  <sc-for list="{{ createPriorityChoices }}" as="pr" hint-placeholder-count="3">
-                    <div onClick="{{ pr.onClick }}" style="{{ pr.style }}">{{ pr.label }}</div>
-                  </sc-for>
-                </div>
-              </div>
-              <div style="flex:1;display:flex;flex-direction:column;gap:6px;">
-                <span style="font-size:12px;color:rgba(248,245,232,0.45);">Échéance (optionnel)</span>
-                <input value="{{ createDeadline }}" onChange="{{ setCreateDeadline }}" placeholder="jj/mm/aaaa" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-              </div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-              <span style="font-size:12px;color:rgba(248,245,232,0.45);">Assigné à</span>
-              <input value="{{ createAssignee }}" onChange="{{ setCreateAssignee }}" placeholder="Nom du membre" style="background:#121212;border:1px solid rgba(248,245,232,0.14);border-radius:8px;padding:10px 12px;font-size:14px;color:#f8f5e8;font-family:inherit;"></input>
-            </div>
-            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:4px;">
-              <button onClick="{{ cancelTaskCreate }}" style="background:transparent;color:rgba(248,245,232,0.6);border:1px solid rgba(248,245,232,0.14);font-size:14px;padding:9px 16px;border-radius:8px;font-family:inherit;cursor:pointer;">Annuler</button>
-              <button onClick="{{ submitTaskCreate }}" style="background:#e9d15c;color:#121212;border:none;font-weight:600;font-size:14px;padding:9px 18px;border-radius:8px;font-family:inherit;cursor:pointer;">Créer la tâche</button>
-            </div>
-          </div>
-        </div>
-      </sc-if>
-
-    </sc-if>
-
   </div>
 
 </div>
@@ -610,17 +423,16 @@ textarea, input{outline:none;}
 }">
 const ROLE_LABELS = { administrateur: 'Administrateur', communication: 'Équipe Communication', gc: 'Gestion des conflits', suivi_rp: 'Équipe Suivi RP', developpeur: 'Développeur' };
 const ROLE_NAV = {
-  administrateur: ['liste_attente', 'atlas', 'bda', 'backlog'],
-  communication: ['atlas', 'backlog'],
-  gc: ['atlas', 'bda', 'backlog'],
+  administrateur: ['liste_attente', 'atlas', 'bda'],
+  communication: ['atlas'],
+  gc: ['atlas', 'bda'],
   suivi_rp: ['atlas'],
-  developpeur: ['backlog'],
+  developpeur: [],
 };
 const NAV_META = {
   liste_attente: { label: "Liste d'attente", icon: 'waitlist' },
   atlas: { label: 'Atlas des joueurs', icon: 'atlas' },
   bda: { label: 'Rapports BDA', icon: 'bda' },
-  backlog: { label: 'Backlog', icon: 'backlog' },
 };
 
 const WAITLIST = [
@@ -722,49 +534,10 @@ const BDA_REPORTS = [
     description: "Signalement de propos déplacés tenus hors RP durant un appel de guilde.", ticket: null },
 ];
 
-const BACKLOG_TASKS = [
-  { id: 1, title: 'Ajouter la pagination à l’Atlas des joueurs', description: "Implémenter une pagination côté serveur pour la table de l'Atlas des joueurs, avec tri persistant.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Haute', deadline: '10 août 2026', ticket: null, status: 'À faire',
-    history: [['31 juillet 2026', 'Tâche créée par Aoi.']] },
-  { id: 2, title: 'Rédiger le changelog v0.9.3', description: "Compiler les changements techniques du sprint pour publication sur la page Actualités.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Moyenne', deadline: null, ticket: null, status: 'À faire',
-    history: [['1 août 2026', 'Tâche créée par Aoi.']] },
-  { id: 3, title: 'Corriger le bug de sauvegarde des compétences', description: "La carte de compétences ne sauvegarde plus au-delà de 45 points répartis, le total revient à 0.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Haute', deadline: '6 août 2026', ticket: '#3 — Report de bug', status: 'En cours',
-    history: [['28 juillet 2026', 'Tâche créée par Aoi.'], ['29 juillet 2026', 'Assignée à Léo.'], ['30 juillet 2026', 'Statut changé en En cours.']] },
-  { id: 4, title: 'Modérer la file d’attente hebdomadaire', description: "Passer en revue les nouvelles candidatures de la semaine et préparer les décisions pour l'Administration.", assignee: 'Aoi', assigneeInitial: 'A', priority: 'Basse', deadline: null, ticket: null, status: 'En cours',
-    history: [['2 août 2026', 'Tâche créée par Aoi.']] },
-  { id: 5, title: 'Nouveau design de la fiche personnage', description: "Proposer une nouvelle disposition pour la carte de compétences avec les valeurs extrêmes affichées.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Moyenne', deadline: null, ticket: null, status: 'En validation',
-    history: [['20 juillet 2026', 'Tâche créée par Aoi.'], ['29 juillet 2026', 'Statut changé en En validation.']] },
-  { id: 6, title: 'Script de migration Prisma', description: "Écrire le script de migration pour les nouveaux champs de statut whitelist.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Haute', deadline: null, ticket: null, status: 'En validation',
-    history: [['15 juillet 2026', 'Tâche créée par Léo.']] },
-  { id: 7, title: 'Mise en place de l’authentification Discord', description: "Intégrer Discord OAuth2 pour la connexion des joueurs.", assignee: 'Léo', assigneeInitial: 'L', priority: 'Haute', deadline: null, ticket: null, status: 'Terminé',
-    history: [['1 juin 2026', 'Tâche créée par Aoi.'], ['15 juin 2026', 'Statut changé en Terminé.']] },
-  { id: 8, title: 'Rédaction du règlement RP v2', description: "Clarifier les sanctions liées aux conflits inter-joueurs et au powergaming.", assignee: 'Aoi', assigneeInitial: 'A', priority: 'Moyenne', deadline: null, ticket: null, status: 'Terminé',
-    history: [['5 juillet 2026', 'Tâche créée par Aoi.'], ['14 juillet 2026', 'Statut changé en Terminé.']] },
-];
-
-function statutStyle(statut) {
-  const base = { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '999px', width: 'fit-content', whiteSpace: 'nowrap' };
-  if (statut === 'Inscrit') return { ...base, background: '#e9d15c', color: '#121212' };
-  if (statut === 'Whitelist en cours') return { ...base, background: 'rgba(233,209,92,0.16)', color: '#e9d15c' };
-  if (statut === "Liste d'attente") return { ...base, background: 'rgba(233,209,92,0.1)', color: '#e9d15c', border: '1px dashed rgba(233,209,92,0.4)' };
-  return { ...base, background: 'rgba(248,245,232,0.06)', color: 'rgba(248,245,232,0.55)' };
-}
-function ficheStatutStyle(statut) {
-  const base = { fontSize: '11px', fontWeight: 600, padding: '4px 10px', borderRadius: '999px', whiteSpace: 'nowrap' };
-  if (statut === 'Validée') return { ...base, background: '#e9d15c', color: '#121212' };
-  if (statut === 'Modifications demandées') return { ...base, background: 'rgba(233,209,92,0.12)', color: '#e9d15c', border: '1px dashed rgba(233,209,92,0.4)' };
-  if (statut === 'En attente de validation') return { ...base, background: 'rgba(233,209,92,0.14)', color: '#e9d15c' };
-  return { ...base, background: 'rgba(248,245,232,0.06)', color: 'rgba(248,245,232,0.45)' };
-}
 function bdaStatusStyle(status) {
   const base = { fontSize: '12px', fontWeight: 600, padding: '5px 12px', borderRadius: '999px', flex: 'none', whiteSpace: 'nowrap' };
   if (status === 'Non lu') return { ...base, background: 'rgba(233,209,92,0.16)', color: '#e9d15c' };
   if (status === 'Résolu') return { ...base, background: 'rgba(248,245,232,0.08)', color: 'rgba(248,245,232,0.7)' };
-  return { ...base, background: 'rgba(248,245,232,0.05)', color: 'rgba(248,245,232,0.4)' };
-}
-function priorityStyle(priority) {
-  const base = { fontSize: '11px', fontWeight: 600, padding: '3px 9px', borderRadius: '999px', flex: 'none', whiteSpace: 'nowrap', width: 'fit-content', alignSelf: 'flex-start' };
-  if (priority === 'Haute') return { ...base, background: 'rgba(233,209,92,0.18)', color: '#e9d15c' };
-  if (priority === 'Moyenne') return { ...base, background: 'rgba(248,245,232,0.08)', color: 'rgba(248,245,232,0.7)' };
   return { ...base, background: 'rgba(248,245,232,0.05)', color: 'rgba(248,245,232,0.4)' };
 }
 function navItemStyle(active) {
@@ -787,9 +560,6 @@ function withMcPseudo(name) {
   return mc ? name + ' - ' + mc : name;
 }
 
-const STATUSES = ['À faire', 'En cours', 'En validation', 'Terminé'];
-const PRIORITIES = ['Basse', 'Moyenne', 'Haute'];
-
 class Component extends DCLogic {
   state = {
     activeView: null, searchQuery: '', currentPage: 1, sortField: null, sortDir: 'asc',
@@ -797,9 +567,6 @@ class Component extends DCLogic {
     selectedPlayerId: null, atlasTab: 'actions',
     players: PLAYERS, newNoteText: '',
     waitlist: WAITLIST, waitlistConfirm: null,
-    tasks: BACKLOG_TASKS, selectedTaskId: null, backlogView: 'list', draggedTaskId: null, backlogSort: 'none', backlogFilterAssignee: 'Tous',
-    editTitle: '', editDescription: '', editPriority: 'Moyenne', editAssignee: '', editDeadline: '', editStatus: 'À faire',
-    createTitle: '', createDescription: '', createPriority: 'Moyenne', createAssignee: '', createDeadline: '',
     bdaReports: BDA_REPORTS, showBdaArchived: false, selectedBdaId: null, bdaView: 'list',
   };
 
@@ -831,55 +598,6 @@ class Component extends DCLogic {
     waitlistConfirm: null,
   }));
 
-  openTaskDetail = (id) => this.setState({ selectedTaskId: id, backlogView: 'detail' });
-  backToBacklogList = () => this.setState({ selectedTaskId: null, backlogView: 'list' });
-  changeTaskStatus = (id, status) => this.setState(s => ({ tasks: s.tasks.map(t => t.id === id ? { ...t, status, history: [...t.history, [ "Aujourd'hui", 'Statut changé en ' + status + '.' ]] } : t) }));
-  setDraggedTask = (id) => this.setState({ draggedTaskId: id });
-  dropOnColumn = (status) => { if (this.state.draggedTaskId != null) this.changeTaskStatus(this.state.draggedTaskId, status); this.setState({ draggedTaskId: null }); };
-  setBacklogSort = (e) => this.setState({ backlogSort: e.target.value });
-  setBacklogFilterAssignee = (e) => this.setState({ backlogFilterAssignee: e.target.value });
-
-  openTaskEdit = () => {
-    const t = this.state.tasks.find(t => t.id === this.state.selectedTaskId);
-    if (!t) return;
-    this.setState({ backlogView: 'edit', editTitle: t.title, editDescription: t.description, editPriority: t.priority, editAssignee: t.assignee, editDeadline: t.deadline || '', editStatus: t.status });
-  };
-  cancelTaskEdit = () => this.setState({ backlogView: 'detail' });
-  setEditTitle = (e) => this.setState({ editTitle: e.target.value });
-  setEditDescription = (e) => this.setState({ editDescription: e.target.value });
-  setEditAssignee = (e) => this.setState({ editAssignee: e.target.value });
-  setEditDeadline = (e) => this.setState({ editDeadline: e.target.value });
-  setEditPriority = (p) => this.setState({ editPriority: p });
-  setEditStatus = (s) => this.setState({ editStatus: s });
-  saveTaskEdit = () => {
-    const id = this.state.selectedTaskId;
-    this.setState(s => ({
-      tasks: s.tasks.map(t => t.id === id ? {
-        ...t, title: s.editTitle, description: s.editDescription, priority: s.editPriority, assignee: s.editAssignee, deadline: s.editDeadline || null, status: s.editStatus,
-        history: [...t.history, ["Aujourd'hui", 'Tâche modifiée.']],
-      } : t),
-      backlogView: 'detail',
-    }));
-  };
-
-  openTaskCreateView = () => this.setState({ backlogView: 'create', createTitle: '', createDescription: '', createPriority: 'Moyenne', createAssignee: '', createDeadline: '' });
-  cancelTaskCreate = () => this.setState({ backlogView: 'list' });
-  setCreateTitle = (e) => this.setState({ createTitle: e.target.value });
-  setCreateDescription = (e) => this.setState({ createDescription: e.target.value });
-  setCreateAssignee = (e) => this.setState({ createAssignee: e.target.value });
-  setCreateDeadline = (e) => this.setState({ createDeadline: e.target.value });
-  setCreatePriority = (p) => this.setState({ createPriority: p });
-  submitTaskCreate = () => {
-    const title = this.state.createTitle.trim();
-    if (!title) return;
-    this.setState(s => {
-      const id = Math.max(0, ...s.tasks.map(t => t.id)) + 1;
-      const assignee = s.createAssignee.trim() || 'Non assigné';
-      const newTask = { id, title, description: s.createDescription, assignee, assigneeInitial: assignee.charAt(0).toUpperCase(), priority: s.createPriority, deadline: s.createDeadline || null, ticket: null, status: 'À faire', history: [["Aujourd'hui", 'Tâche créée par Aoi.']] };
-      return { tasks: [...s.tasks, newTask], backlogView: 'list' };
-    });
-  };
-
   toggleBdaArchived = () => this.setState(s => ({ showBdaArchived: !s.showBdaArchived }));
   openBdaDetail = (id) => this.setState({ selectedBdaId: id, bdaView: 'detail' });
   backToBdaList = () => this.setState({ bdaView: 'list' });
@@ -893,7 +611,7 @@ class Component extends DCLogic {
     const navItems = navIds.map(id => {
       const meta = NAV_META[id];
       const active = activeView === id;
-      return { id, label: meta.label, iconWaitlist: meta.icon === 'waitlist', iconAtlas: meta.icon === 'atlas', iconBda: meta.icon === 'bda', iconBacklog: meta.icon === 'backlog', style: navItemStyle(active), onClick: () => this.selectView(id) };
+      return { id, label: meta.label, iconWaitlist: meta.icon === 'waitlist', iconAtlas: meta.icon === 'atlas', iconBda: meta.icon === 'bda', style: navItemStyle(active), onClick: () => this.selectView(id) };
     });
 
     const waitlistRows = this.state.waitlist.map(p => ({ ...p, onAccept: () => this.openWaitlistConfirm(p, 'Accepter ce joueur'), onReject: () => this.openWaitlistConfirm(p, 'Refuser ce joueur') }));
@@ -935,32 +653,6 @@ class Component extends DCLogic {
       };
     }
 
-    const assigneeOptions = ['Tous', ...Array.from(new Set(this.state.tasks.map(t => t.assignee)))];
-    let backlogTasks = this.state.tasks;
-    if (this.state.backlogFilterAssignee !== 'Tous') backlogTasks = backlogTasks.filter(t => t.assignee === this.state.backlogFilterAssignee);
-    if (this.state.backlogSort === 'priority') {
-      const rank = { 'Haute': 0, 'Moyenne': 1, 'Basse': 2 };
-      backlogTasks = [...backlogTasks].sort((a, b) => rank[a.priority] - rank[b.priority]);
-    } else if (this.state.backlogSort === 'deadline') {
-      backlogTasks = [...backlogTasks].sort((a, b) => (a.deadline ? 0 : 1) - (b.deadline ? 0 : 1));
-    }
-    const boardColumns = STATUSES.map(status => {
-      const tasks = backlogTasks.filter(t => t.status === status).map(t => ({
-        ...t, priorityStyle: priorityStyle(t.priority), hasDeadline: !!t.deadline, hasTicket: !!t.ticket,
-        onClick: () => this.openTaskDetail(t.id), onDragStart: () => this.setDraggedTask(t.id),
-      }));
-      return { label: status, count: tasks.length, tasks, onDragOver: (e) => e.preventDefault(), onDrop: () => this.dropOnColumn(status) };
-    });
-
-    const rawSelectedTask = this.state.tasks.find(t => t.id === this.state.selectedTaskId);
-    const selectedTask = rawSelectedTask ? {
-      ...rawSelectedTask, priorityStyle: priorityStyle(rawSelectedTask.priority), hasDeadline: !!rawSelectedTask.deadline, hasTicket: !!rawSelectedTask.ticket,
-      history: rawSelectedTask.history.map(([date, text]) => ({ date, text })),
-    } : { title: '', description: '', priority: 'Moyenne', priorityStyle: priorityStyle('Moyenne'), assignee: '', history: [], hasDeadline: false, hasTicket: false };
-    const editPriorityChoices = PRIORITIES.map(p => ({ label: p, style: statusChipStyle(this.state.editPriority === p), onClick: () => this.setEditPriority(p) }));
-    const editStatusChoices = STATUSES.map(s => ({ label: s, style: statusChipStyle(this.state.editStatus === s), onClick: () => this.setEditStatus(s) }));
-    const createPriorityChoices = PRIORITIES.map(p => ({ label: p, style: statusChipStyle(this.state.createPriority === p), onClick: () => this.setCreatePriority(p) }));
-
     const visibleBda = this.state.bdaReports.filter(r => this.state.showBdaArchived || r.status !== 'Archivé').map(r => ({
       ...r, statusStyle: bdaStatusStyle(r.status),
       partiesDetailed: r.parties.map(p => ({ label: p.label, membersLine: p.members.map(withMcPseudo).join(', ') })),
@@ -974,7 +666,7 @@ class Component extends DCLogic {
 
     return {
       roleLabel: ROLE_LABELS[role], navItems, centeredStyle: centeredWrap(20),
-      isListeAttente: activeView === 'liste_attente', isBda: activeView === 'bda', isBacklog: activeView === 'backlog',
+      isListeAttente: activeView === 'liste_attente', isBda: activeView === 'bda',
       isAtlasList: activeView === 'atlas' && !selectedPlayer, isAtlasDetail: activeView === 'atlas' && !!selectedPlayer,
       waitlistRows, waitlistCount: this.state.waitlist.length, waitlistEmpty: this.state.waitlist.length === 0,
       waitlistConfirm, waitlistConfirmOpen: !!waitlistConfirm, closeWaitlistConfirm: this.closeWaitlistConfirm, confirmWaitlistAction: this.confirmWaitlistAction,
@@ -993,19 +685,7 @@ class Component extends DCLogic {
       isTabActions: this.state.atlasTab === 'actions', isTabSessions: this.state.atlasTab === 'sessions',
       tabActionsStyle: tabStyle(this.state.atlasTab === 'actions'), tabSessionsStyle: tabStyle(this.state.atlasTab === 'sessions'),
       setTabActions: () => this.setAtlasTab('actions'), setTabSessions: () => this.setAtlasTab('sessions'),
-      boardColumns, selectedTask,
-      isBacklogList: this.state.backlogView === 'list', isBacklogDetail: this.state.backlogView === 'detail', isBacklogEdit: this.state.backlogView === 'edit', isBacklogCreate: this.state.backlogView === 'create',
-      openTaskDetail: this.openTaskDetail, backToBacklogList: this.backToBacklogList,
-      openTaskEdit: this.openTaskEdit, cancelTaskEdit: this.cancelTaskEdit, saveTaskEdit: this.saveTaskEdit,
-      editTitle: this.state.editTitle, setEditTitle: this.setEditTitle, editDescription: this.state.editDescription, setEditDescription: this.setEditDescription,
-      editAssignee: this.state.editAssignee, setEditAssignee: this.setEditAssignee, editDeadline: this.state.editDeadline, setEditDeadline: this.setEditDeadline,
-      editPriorityChoices, editStatusChoices,
-      openTaskCreateView: this.openTaskCreateView, cancelTaskCreate: this.cancelTaskCreate, submitTaskCreate: this.submitTaskCreate,
-      createTitle: this.state.createTitle, setCreateTitle: this.setCreateTitle, createDescription: this.state.createDescription, setCreateDescription: this.setCreateDescription,
-      createAssignee: this.state.createAssignee, setCreateAssignee: this.setCreateAssignee, createDeadline: this.state.createDeadline, setCreateDeadline: this.setCreateDeadline,
       centeredStyleTight: centeredWrap(20, { maxWidth: '640px' }),
-      backlogSort: this.state.backlogSort, setBacklogSort: this.setBacklogSort,
-      backlogFilterAssignee: this.state.backlogFilterAssignee, setBacklogFilterAssignee: this.setBacklogFilterAssignee, assigneeOptions, createPriorityChoices,
       visibleBdaReports: visibleBda, bdaArchivedToggleLabel: this.state.showBdaArchived ? 'Masquer les rapports archivés' : 'Afficher les rapports archivés', toggleBdaArchived: this.toggleBdaArchived,
       selectedBda, isBdaList: this.state.bdaView === 'list', isBdaDetail: this.state.bdaView === 'detail', isBdaCreate: this.state.bdaView === 'create',
       openBdaDetail: this.openBdaDetail, backToBdaList: this.backToBdaList, openBdaCreate: this.openBdaCreate,

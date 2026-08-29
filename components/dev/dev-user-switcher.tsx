@@ -33,7 +33,7 @@ export function DevUserSwitcher({
 
   const handleSelectUser = (user: DevTestUser) => {
     startTransition(async () => {
-      const targetRedirect = redirectTo ?? (user.role === "PLAYER" ? "/player" : "/dashboard");
+      const targetRedirect = redirectTo ?? (user.role === "PLAYER" ? "/player" : "/staff");
       await devSignInAction(user.id, targetRedirect);
     });
   };

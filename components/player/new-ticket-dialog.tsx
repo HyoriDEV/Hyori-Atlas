@@ -56,7 +56,7 @@ export function NewTicketDialog() {
         <DialogHeader>
           <DialogTitle>Nouveau ticket</DialogTitle>
           <DialogDescription>
-            Décrivez votre demande, le staff vous répondra dès que possible.
+            Décris ta demande, le staff te répondra dès que possible.
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-3">

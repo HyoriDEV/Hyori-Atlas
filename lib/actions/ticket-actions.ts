@@ -35,9 +35,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
         create: {
           type: ConversationType.TICKET,
           members: {
-            create: [
-              { userId: user.id },
-            ],
+            create: [{ userId: user.id }],
           },
           messages: {
             create: [
@@ -84,7 +82,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
         conversationId: rpConversation.id,
         authorType: MessageAuthorType.SYSTEM,
         body: `${user.minecraftUsername ?? user.discordUsername ?? "Le joueur"} a créé une demande RP.`,
-        linkHref: `/dashboard/tickets/${ticket.id}`,
+        linkHref: `/staff/tickets/${ticket.id}`,
         linkLabel: trimmedSubject,
       },
       include: { author: true },
@@ -112,7 +110,7 @@ export async function sendTicketMessage(ticketId: string, body?: string, imageUr
   const isMember = ticket.conversation.members.some((m) => m.userId === user.id);
 
   if (!isMember) {
-    throw new Error("Vous n'avez pas accès à ce ticket.");
+    throw new Error("Tu n'as pas accès à ce ticket.");
   }
   if (ticket.status === TicketStatus.ARCHIVED) {
     throw new Error("Ce ticket est archivé.");
@@ -141,7 +139,7 @@ export async function sendTicketMessage(ticketId: string, body?: string, imageUr
   publish(ticket.conversationId, serializeConversationMessage(message));
 
   revalidatePath("/player/tickets");
-  revalidatePath("/dashboard/tickets");
+  revalidatePath("/staff/tickets");
 }
 
 export async function sendStaffTicketMessage(ticketId: string, body?: string, imageUrl?: string) {
@@ -180,7 +178,7 @@ export async function sendStaffTicketMessage(ticketId: string, body?: string, im
   publish(ticket.conversationId, serializeConversationMessage(message));
 
   revalidatePath("/player/tickets");
-  revalidatePath("/dashboard/tickets");
+  revalidatePath("/staff/tickets");
 }
 
 export async function archiveTicket(ticketId: string) {
@@ -191,8 +189,8 @@ export async function archiveTicket(ticketId: string) {
     data: { status: TicketStatus.ARCHIVED },
   });
 
-  revalidatePath(`/dashboard/tickets/${ticketId}`);
-  revalidatePath("/dashboard/tickets");
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
   revalidatePath(`/player/tickets/${ticketId}`);
   revalidatePath("/player/tickets");
 }
@@ -205,8 +203,8 @@ export async function reopenTicket(ticketId: string) {
     data: { status: TicketStatus.PENDING_STAFF },
   });
 
-  revalidatePath(`/dashboard/tickets/${ticketId}`);
-  revalidatePath("/dashboard/tickets");
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
   revalidatePath(`/player/tickets/${ticketId}`);
   revalidatePath("/player/tickets");
 }
@@ -230,7 +228,7 @@ export async function addTicketMember(ticketId: string, playerId: string) {
     },
   });
 
-  revalidatePath(`/dashboard/tickets/${ticketId}`);
+  revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath(`/player/tickets/${ticketId}`);
   revalidatePath("/player/tickets");
 }
@@ -247,7 +245,7 @@ export async function removeTicketMember(ticketId: string, playerId: string) {
     },
   });
 
-  revalidatePath(`/dashboard/tickets/${ticketId}`);
+  revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath(`/player/tickets/${ticketId}`);
   revalidatePath("/player/tickets");
 }

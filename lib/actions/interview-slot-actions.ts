@@ -15,7 +15,7 @@ export async function createInterviewSlot(startsAt: Date) {
 
   await prisma.interviewSlot.create({ data: { startsAt } });
 
-  revalidatePath("/dashboard/interview-slots");
+  revalidatePath("/staff/interview-slots");
 }
 
 export async function deleteInterviewSlot(slotId: string) {
@@ -34,7 +34,7 @@ export async function deleteInterviewSlot(slotId: string) {
 
   await prisma.interviewSlot.delete({ where: { id: slotId } });
 
-  revalidatePath("/dashboard/interview-slots");
+  revalidatePath("/staff/interview-slots");
 }
 
 export async function updateInterviewBookingStatus(
@@ -48,8 +48,8 @@ export async function updateInterviewBookingStatus(
     data: { status, reviewedById: staffUser.id },
   });
 
-  revalidatePath("/dashboard/interview-slots");
-  revalidatePath("/dashboard/atlas");
-  revalidatePath(`/dashboard/atlas/${booking.playerId}`);
+  revalidatePath("/staff/interview-slots");
+  revalidatePath("/staff/atlas");
+  revalidatePath(`/staff/atlas/${booking.playerId}`);
   revalidatePath("/player/interview");
 }

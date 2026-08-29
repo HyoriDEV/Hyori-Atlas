@@ -31,7 +31,7 @@ type PageProps = {
 };
 
 export default async function WaitlistPage(props: PageProps) {
-  const item = staffNavItems.find((i) => i.href === "/dashboard/waitlist")!;
+  const item = staffNavItems.find((i) => i.href === "/staff/waitlist")!;
   await requireRole(item.roles);
 
   const searchParams = await props.searchParams;

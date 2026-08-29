@@ -160,21 +160,11 @@ A dedicated module for the GC team to handle player disputes objectively.
   - Optional dropdown to link an existing player complaint ticket.
 - Statuses: Non lu (default), Résolu, Archivé.
 
-### 5.4. Staff Backlog
-
-An internal Kanban-style task management system.
-
-- Task Creation (Comms Team primary): Title, detailed description, file/image attachments, and optional linking of specific player tickets.
-- Properties: Assignee (or self-assign), Status, Priority, Optional Deadline.
-- Board View: Standard drag-and-drop or status-update Kanban board with filters/sorts.
-- Statuses: À faire, En cours, En validation, Terminé.
-- Task History: A vertical timeline inside each task logging every modification (creation, status changes, assignments).
-
 ## 6. Role-Based Access Control (RBAC) Matrix
 
 - Administrator: Full access to all features below. Manages User Accounts. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs).
-- Communication: Reads Player Atlas. Manages Player Tickets. Writes to Staff Backlog.
-- Gestion des conflits (GC): Reads Player Atlas. Manages Player Tickets. Writes/Manages BDA Reports. Writes to Staff Backlog.
+- Communication: Reads Player Atlas. Manages Player Tickets.
+- Gestion des conflits (GC): Reads Player Atlas. Manages Player Tickets. Writes/Manages BDA Reports.
 - Suivi RP: Reads Player Atlas. Manages Player RP Tracking chats & Lore Writing validation.
-- Développeur: Writes to Staff Backlog. Publishes News (Changelogs only).
+- Développeur: Publishes News (Changelogs only).
 - Joueur: Access restricted entirely to the Frontend and the Espace Joueur dashboard.

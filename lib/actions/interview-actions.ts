@@ -17,7 +17,7 @@ export async function bookInterviewSlot(slotId: string) {
   }
 
   if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
-    throw new Error("Vous êtes déjà whitelisté.");
+    throw new Error("Tu es déjà whitelisté.");
   }
 
   const slot = await prisma.interviewSlot.findUnique({
@@ -34,16 +34,15 @@ export async function bookInterviewSlot(slotId: string) {
     throw new Error("Ce créneau est déjà passé.");
   }
 
-  const latestBooking = await prisma.interviewBooking.findFirst({
-    where: { playerId: user.id },
-    orderBy: { createdAt: "desc" },
+  const existingBooking = await prisma.interviewBooking.findFirst({
+    where: {
+      playerId: user.id,
+      status: { in: [InterviewBookingStatus.REGISTERED, InterviewBookingStatus.ACCEPTED] },
+    },
   });
-  if (
-    latestBooking &&
-    (latestBooking.status === InterviewBookingStatus.REGISTERED ||
-      latestBooking.status === InterviewBookingStatus.ACCEPTED)
-  ) {
-    throw new Error("Vous avez déjà un entretien réservé.");
+
+  if (existingBooking) {
+    throw new Error("Tu as déjà un entretien réservé.");
   }
 
   await prisma.interviewBooking.create({

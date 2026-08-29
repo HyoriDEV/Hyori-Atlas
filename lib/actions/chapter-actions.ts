@@ -7,12 +7,16 @@ import { prisma } from "@/lib/prisma";
 
 const TITLE_MAX_LENGTH = 120;
 
-async function requireOwnedChapter(chapterId: string, userId: string) {
-  const chapter = await prisma.chapter.findUniqueOrThrow({ where: { id: chapterId } });
-  if (chapter.playerId !== userId) {
-    throw new Error("Ce chapitre ne vous appartient pas.");
+function assertOwnsChapter(chapter: { playerId: string } | null, userId: string) {
+  if (!chapter || chapter.playerId !== userId) {
+    throw new Error("Ce chapitre ne t'appartient pas.");
   }
-  return chapter;
+}
+
+async function requireOwnedChapter(chapterId: string, userId: string) {
+  const chapter = await prisma.chapter.findUnique({ where: { id: chapterId } });
+  assertOwnsChapter(chapter, userId);
+  return chapter!;
 }
 
 export async function createChapter(title: string) {

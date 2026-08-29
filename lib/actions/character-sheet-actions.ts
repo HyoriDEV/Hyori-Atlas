@@ -46,9 +46,9 @@ export interface CharacterSheetInput {
 function revalidateSheetSurfaces(playerId: string) {
   revalidatePath("/player/character-sheet");
   revalidatePath("/player", "layout");
-  revalidatePath("/dashboard/atlas");
-  revalidatePath(`/dashboard/atlas/${playerId}`);
-  revalidatePath(`/dashboard/atlas/${playerId}/evaluation`);
+  revalidatePath("/staff/atlas");
+  revalidatePath(`/staff/atlas/${playerId}`);
+  revalidatePath(`/staff/atlas/${playerId}/evaluation`);
 }
 
 function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) {
@@ -65,7 +65,7 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
       throw new Error("Tous les champs obligatoires doivent être remplis.");
     }
     if (!Object.values(Gender).includes(gender as Gender)) {
-      throw new Error("Veuillez sélectionner un genre valide.");
+      throw new Error("Choisis un genre valide.");
     }
     if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
       throw new Error(
@@ -160,18 +160,22 @@ export async function saveCharacterSheetDraft(input: CharacterSheetInput) {
   }
 
   const data = parseAndValidateSheetData(input, false);
+  const targetStatus =
+    existing?.reviewStatus === CharacterSheetStatus.PENDING_PLAYER
+      ? CharacterSheetStatus.PENDING_PLAYER
+      : CharacterSheetStatus.DRAFT;
 
   await prisma.characterSheet.upsert({
     where: { playerId: user.id },
     create: {
       player: { connect: { id: user.id } },
       ...data,
-      reviewStatus: CharacterSheetStatus.PENDING_PLAYER,
+      reviewStatus: targetStatus,
       hasUnreadFeedback: false,
     },
     update: {
       ...data,
-      reviewStatus: CharacterSheetStatus.PENDING_PLAYER,
+      reviewStatus: targetStatus,
       hasUnreadFeedback: false,
     },
   });

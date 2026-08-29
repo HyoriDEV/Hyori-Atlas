@@ -47,8 +47,7 @@ export default async function InterviewPage() {
     }),
   ]);
 
-  const isSheetValidated =
-    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
+  const isSheetValidated = characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
   if (!isSheetValidated) {
     return (
@@ -78,8 +77,7 @@ export default async function InterviewPage() {
       </div>
       {latestBooking?.status === InterviewBookingStatus.CHANGES_REQUESTED && (
         <div className="rounded-lg border border-amber-500/50 bg-amber-500/10 p-4 text-sm font-medium text-amber-500">
-          Un administrateur a demandé un nouvel entretien. Veuillez réserver un autre créneau
-          ci-dessous.
+          Un administrateur a demandé un nouvel entretien. Réserve un autre créneau ci-dessous.
         </div>
       )}
       <p className="text-muted-foreground max-w-2xl text-sm">
