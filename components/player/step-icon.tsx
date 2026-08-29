@@ -2,10 +2,19 @@
 
 import { CheckCircle, Circle } from "@phosphor-icons/react";
 
-export function StepIcon({ done }: { done: boolean }) {
-  return done ? (
-    <CheckCircle weight="fill" className="text-primary size-5" />
-  ) : (
-    <Circle className="text-muted-foreground size-5" />
-  );
+interface StepIconProps {
+  done: boolean;
+  current?: boolean;
+}
+
+export function StepIcon({ done, current }: StepIconProps) {
+  if (done) {
+    return <CheckCircle weight="fill" className="text-primary size-5" />;
+  }
+
+  if (current) {
+    return <Circle weight="bold" className="text-primary size-5" />;
+  }
+
+  return <Circle className="text-muted-foreground size-5" />;
 }

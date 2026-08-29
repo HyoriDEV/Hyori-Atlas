@@ -41,11 +41,11 @@ export async function updateInterviewBookingStatus(
   bookingId: string,
   status: InterviewBookingStatus
 ) {
-  await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole([Role.ADMIN]);
 
   const booking = await prisma.interviewBooking.update({
     where: { id: bookingId },
-    data: { status },
+    data: { status, reviewedById: staffUser.id },
   });
 
   revalidatePath("/dashboard/interview-slots");

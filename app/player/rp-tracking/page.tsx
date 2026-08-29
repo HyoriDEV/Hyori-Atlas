@@ -1,20 +1,71 @@
-import { requireUser } from "@/lib/dal";
-import { RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { requireActivePlayer } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
+import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
-import { ComingSoonCard } from "@/components/coming-soon-card";
+import { serializeConversationMessage } from "@/lib/conversation";
+import { sendConversationMessage } from "@/lib/actions/rp-tracking-actions";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
+import { ConversationChat } from "@/components/conversations/conversation-chat";
 
 export default async function RpTrackingPage() {
-  const user = await requireUser();
+  const user = await requireActivePlayer();
   const unlocked = isRegistrationStatusAtLeast(
     user.registrationStatus,
     RegistrationStatus.WHITELISTED
   );
 
+  let conversation = null;
+
+  if (unlocked) {
+    conversation = await prisma.conversation.findFirst({
+      where: {
+        type: ConversationType.RP_TRACKING,
+        members: { some: { userId: user.id } },
+      },
+      include: {
+        messages: {
+          include: { author: true },
+          orderBy: { createdAt: "desc" },
+          take: 50,
+        },
+      },
+    });
+
+    if (!conversation) {
+      conversation = await prisma.conversation.create({
+        data: {
+          type: ConversationType.RP_TRACKING,
+          members: {
+            create: [{ userId: user.id }],
+          },
+        },
+        include: {
+          messages: {
+            include: { author: true },
+          },
+        },
+      });
+    }
+  }
+
+  const messages = conversation?.messages || [];
+
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold">Suivi RP</h1>
-      {unlocked ? <ComingSoonCard title="Bientôt disponible" /> : <LockedFeatureCard />}
+    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
+      <h1 className="shrink-0 font-heading text-2xl font-semibold">Suivi RP</h1>
+      {unlocked && conversation ? (
+        <ConversationChat
+          conversationId={conversation.id}
+          initialMessages={messages.reverse().map(serializeConversationMessage)}
+          viewerId={user.id}
+          viewerIsStaff={false}
+          sendAction={sendConversationMessage}
+          emptyBadge="Début du suivi RP."
+          className="flex-1 min-h-0"
+        />
+      ) : (
+        <LockedFeatureCard />
+      )}
     </div>
   );
 }

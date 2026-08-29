@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { syncDiscordUserIfNeeded } from "@/lib/services/discord-sync";
 import { RegistrationStatus, type Role } from "@/lib/generated/prisma/enums";
 
 export const getCurrentUser = cache(async () => {
@@ -20,6 +21,8 @@ export const getCurrentUser = cache(async () => {
     return null;
   }
 
+  syncDiscordUserIfNeeded(dbUser.id, dbUser.updatedAt).catch(() => {});
+
   if (dbUser.registrationStatus === RegistrationStatus.NEW && dbUser.minecraftUuid) {
     const [promoted] = await prisma.$transaction([
       prisma.user.update({
@@ -29,6 +32,7 @@ export const getCurrentUser = cache(async () => {
       prisma.registrationStatusHistory.create({
         data: {
           userId: dbUser.id,
+          authorId: dbUser.id,
           status: RegistrationStatus.WAITLIST,
         },
       }),
@@ -42,7 +46,7 @@ export const getCurrentUser = cache(async () => {
 export async function requireUser() {
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/api/auth/signin?callbackUrl=/player");
+    redirect("/");
   }
   return user;
 }
@@ -58,3 +62,11 @@ export async function requireRole(roles: Role[]) {
 export const getPlayerState = cache(async () => {
   return requireUser();
 });
+
+export async function requireActivePlayer() {
+  const user = await requireUser();
+  if (user.registrationStatus === RegistrationStatus.REJECTED) {
+    redirect("/player/rejection");
+  }
+  return user;
+}

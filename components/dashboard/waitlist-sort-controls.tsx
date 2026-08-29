@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CaretDown, CaretUp, ArrowsDownUp } from "@phosphor-icons/react";
+import { CaretDown, CaretUp, ArrowsDownUp, ArrowCounterClockwise } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,6 +14,7 @@ interface SortControlBaseProps {
   dirParamName?: string;
   keyParamName?: string;
   resetParamNames?: string[];
+  defaultDirection?: SortDirection;
 }
 
 function buildNextSortParams(
@@ -50,13 +51,18 @@ function useSortNavigation({
   dirParamName = "sort",
   keyParamName = "sortBy",
   resetParamNames = ["page", "rejectedPage"],
+  defaultDirection = "asc",
 }: SortControlBaseProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   const isActive = sortKey === undefined || activeSortKey === sortKey;
-  const nextDir: SortDirection = isActive && currentSort === "desc" ? "asc" : "desc";
+  const nextDir: SortDirection = isActive
+    ? currentSort === "desc"
+      ? "asc"
+      : "desc"
+    : defaultDirection;
 
   function toggleSort() {
     const params = buildNextSortParams(searchParams, {
@@ -103,7 +109,7 @@ export function SortHeader({ label = "Date d'entrée", ...props }: SortHeaderPro
       type="button"
       onClick={toggleSort}
       className="group/sort text-foreground/90 hover:text-foreground flex cursor-pointer items-center gap-1.5 font-semibold transition-colors select-none"
-      title={`Trier (${showingDesc ? "Plus récents d'abord" : "Plus anciens d'abord"})`}
+      title={`Trier (${showingDesc ? "Décroissant" : "Croissant"})`}
     >
       <span>{label}</span>
       {isActive ? (
@@ -116,5 +122,47 @@ export function SortHeader({ label = "Date d'entrée", ...props }: SortHeaderPro
         <CaretDown className="text-foreground/30 size-3.5" />
       )}
     </button>
+  );
+}
+
+export function ResetSortButton({
+  dirParamName = "dir",
+  keyParamName = "sort",
+  resetParamNames = ["page"],
+  label = "Réinitialiser le tri",
+  className,
+}: {
+  dirParamName?: string;
+  keyParamName?: string;
+  resetParamNames?: string[];
+  label?: string;
+  className?: string;
+}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  function handleReset() {
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete(dirParamName);
+    params.delete(keyParamName);
+    for (const paramName of resetParamNames) {
+      params.set(paramName, "1");
+    }
+    router.push(`${pathname}?${params.toString()}`);
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={handleReset}
+      className={className ?? "gap-1.5 text-xs"}
+      title={label}
+    >
+      <ArrowCounterClockwise className="size-3.5" />
+      <span>{label}</span>
+    </Button>
   );
 }

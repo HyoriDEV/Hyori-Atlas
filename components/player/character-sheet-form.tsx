@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
-import { upsertCharacterSheet } from "@/lib/actions/character-sheet-actions";
+import {
+  saveCharacterSheetDraft,
+  submitCharacterSheet,
+} from "@/lib/actions/character-sheet-actions";
+import type { SheetComment } from "@/lib/character-sheet-comments";
+import { CharacterSheetCommentTarget, CharacterSheetStatus } from "@/lib/generated/prisma/enums";
+import { resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
   AGE_MAX,
@@ -29,58 +35,99 @@ import {
   CharacterSheetFields,
   type CharacterSheetFieldValues,
 } from "@/components/character-sheet/character-sheet-fields";
+import { HighlightedTextarea } from "@/components/character-sheet/highlighted-textarea";
 import { SkillMap } from "@/components/character-sheet/skill-map";
+import {
+  commentTargetElementId,
+  useCommentTargetScroll,
+} from "@/components/character-sheet/use-comment-target-scroll";
+import { CharacterSheetFeedbackSidebar } from "@/components/player/character-sheet-feedback-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export function CharacterSheetForm({
   initialValues,
   initialSkills,
   editable,
+  status,
+  comments,
 }: {
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
   editable: boolean;
+  status: CharacterSheetStatus;
+  comments: SheetComment[];
 }) {
-  const [fields, setFields] = useState(initialValues);
-  const [skills, setSkills] = useState(initialSkills);
+  const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
+  const [skills, setSkills] = useState<SkillValues>(initialSkills);
+  const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const total = sumSkillPoints(skills);
-  const age = Number(fields.age);
-  const heightCm = Number(fields.heightCm);
+  const activeComment = comments.find((comment) => comment.id === activeCommentId) ?? null;
+  useCommentTargetScroll(activeComment?.target ?? null);
 
-  const nameLength = fields.name.trim().length;
-  const nicknameLength = fields.nickname.trim().length;
-  const civilStatusLength = fields.civilStatus.trim().length;
-  const descriptionLength = fields.description.trim().length;
-  const backgroundLength = fields.background.trim().length;
-  const additionalCommentsLength = fields.additionalComments.trim().length;
+  const { rangesByTarget, orphanedCommentIds } = useMemo(() => {
+    const ranges: Partial<Record<CharacterSheetCommentTarget, HighlightRange[]>> = {};
+    const orphaned: string[] = [];
+
+    for (const comment of comments) {
+      if (!comment.anchor) continue;
+
+      const text =
+        comment.target === CharacterSheetCommentTarget.description
+          ? fields.description
+          : fields.background;
+      const resolved = resolveTextAnchor(text, comment.anchor);
+
+      if (!resolved) {
+        orphaned.push(comment.id);
+        continue;
+      }
+
+      ranges[comment.target] = [
+        ...(ranges[comment.target] ?? []),
+        { commentId: comment.id, ...resolved },
+      ];
+    }
+
+    return { rangesByTarget: ranges, orphanedCommentIds: orphaned };
+  }, [comments, fields.description, fields.background]);
+
+  const age = parseInt(fields.age, 10);
+  const heightCm = parseInt(fields.heightCm, 10);
+  const total = sumSkillPoints(skills);
 
   function getValidationError(): string | null {
-    if (nameLength === 0) return "Le nom RP est requis.";
-    if (nameLength < NAME_MIN_LENGTH || nameLength > NAME_MAX_LENGTH)
-      return `Le nom RP doit contenir entre ${NAME_MIN_LENGTH} et ${NAME_MAX_LENGTH} caractères.`;
+    const nameLength = fields.name.trim().length;
+    const nicknameLength = fields.nickname.trim().length;
+    const civilStatusLength = fields.civilStatus.trim().length;
+    const descriptionLength = fields.description.trim().length;
+    const backgroundLength = fields.background.trim().length;
+    const additionalCommentsLength = fields.additionalComments.trim().length;
+
+    if (nameLength === 0) return "Le nom est requis.";
+    if (nameLength < NAME_MIN_LENGTH)
+      return `Le nom doit contenir au moins ${NAME_MIN_LENGTH} caractères.`;
+    if (nameLength > NAME_MAX_LENGTH) return `Le nom dépasse ${NAME_MAX_LENGTH} caractères.`;
 
     if (nicknameLength > NICKNAME_MAX_LENGTH)
       return `Le surnom dépasse ${NICKNAME_MAX_LENGTH} caractères.`;
 
-    if (!fields.gender.trim()) return "Veuillez sélectionner un genre.";
+    if (fields.gender.trim().length === 0) return "Veuillez sélectionner un genre.";
 
-    if (civilStatusLength === 0) return "Le statut est requis.";
-    if (civilStatusLength < CIVIL_STATUS_MIN_LENGTH || civilStatusLength > CIVIL_STATUS_MAX_LENGTH)
-      return `Le statut doit contenir entre ${CIVIL_STATUS_MIN_LENGTH} et ${CIVIL_STATUS_MAX_LENGTH} caractères.`;
+    if (civilStatusLength === 0) return "Le statut civil est requis.";
+    if (civilStatusLength < CIVIL_STATUS_MIN_LENGTH)
+      return `Le statut civil doit contenir au moins ${CIVIL_STATUS_MIN_LENGTH} caractères.`;
+    if (civilStatusLength > CIVIL_STATUS_MAX_LENGTH)
+      return `Le statut civil dépasse ${CIVIL_STATUS_MAX_LENGTH} caractères.`;
 
-    if (!fields.age || !Number.isInteger(age) || age < AGE_MIN || age > AGE_MAX)
+    if (!Number.isInteger(age) || age < AGE_MIN || age > AGE_MAX)
       return `L'âge doit être compris entre ${AGE_MIN} et ${AGE_MAX} ans.`;
 
-    if (
-      !fields.heightCm ||
-      !Number.isInteger(heightCm) ||
-      heightCm < HEIGHT_MIN ||
-      heightCm > HEIGHT_MAX
-    )
+    if (!Number.isInteger(heightCm) || heightCm < HEIGHT_MIN || heightCm > HEIGHT_MAX)
       return `La taille doit être comprise entre ${HEIGHT_MIN}cm et ${HEIGHT_MAX}cm.`;
 
     if (descriptionLength === 0) return "La description est requise.";
@@ -114,38 +161,108 @@ export function CharacterSheetForm({
 
   const validationError = getValidationError();
   const isValid = validationError === null;
+  const hasFeedback = comments.length > 0;
 
-  function handleSubmit() {
-    if (!isValid) return;
+  function buildPayload() {
+    return {
+      name: fields.name,
+      nickname: fields.nickname,
+      age: Number.isInteger(age) ? age : 25,
+      gender: fields.gender,
+      civilStatus: fields.civilStatus,
+      heightCm: Number.isInteger(heightCm) ? heightCm : 175,
+      description: fields.description,
+      background: fields.background,
+      additionalComments: fields.additionalComments,
+      skills,
+    };
+  }
+
+  function handleSaveDraft() {
     setError(null);
+    setSuccessMessage(null);
     startTransition(async () => {
       try {
-        await upsertCharacterSheet({
-          name: fields.name,
-          nickname: fields.nickname,
-          age,
-          gender: fields.gender,
-          civilStatus: fields.civilStatus,
-          heightCm,
-          description: fields.description,
-          background: fields.background,
-          additionalComments: fields.additionalComments,
-          skills,
-        });
+        await saveCharacterSheetDraft(buildPayload());
+        setSuccessMessage("Brouillon enregistré avec succès.");
       } catch (submitError) {
         setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
       }
     });
   }
 
-  return (
+  function handleSubmit() {
+    if (!isValid) return;
+    setError(null);
+    setSuccessMessage(null);
+    startTransition(async () => {
+      try {
+        await submitCharacterSheet(buildPayload());
+      } catch (submitError) {
+        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+      }
+    });
+  }
+
+  const pendingStaffNotice = !editable && status === CharacterSheetStatus.PENDING_STAFF && (
+    <Card className="bg-primary/10 border-primary/20 text-foreground gap-1 p-4">
+      <p>
+        Ta fiche personnage a été transmise à l&apos;équipe, et est en relecture. Tu pourras la
+        modifier si des changements sont demandés.
+      </p>
+    </Card>
+  );
+
+  const showSidebar = hasFeedback || (!editable && status === CharacterSheetStatus.PENDING_STAFF);
+
+  const sheet = (
     <div className="flex flex-col gap-6">
+      {!editable &&
+        status === CharacterSheetStatus.PENDING_STAFF &&
+        !showSidebar &&
+        pendingStaffNotice}
+
+      {!editable && status === CharacterSheetStatus.VALIDATED && (
+        <Card className="border-border bg-card p-4">
+          <p className="text-muted-foreground text-sm">
+            Ta fiche personnage est validée et verrouillée.
+          </p>
+        </Card>
+      )}
+
       <CharacterSheetFields
         values={fields}
         interactive={editable}
         onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
+        commentedTargets={comments.map((comment) => comment.target)}
+        activeTarget={activeComment?.target ?? null}
+        narrativeSlot={
+          hasFeedback && editable
+            ? (target, field) => (
+                <HighlightedTextarea
+                  id={field.key}
+                  rows={field.rows}
+                  className={field.className}
+                  placeholder={field.placeholder}
+                  minLength={field.minLength}
+                  maxLength={field.maxLength}
+                  value={fields[field.key]}
+                  ranges={rangesByTarget[target] ?? []}
+                  activeCommentId={activeCommentId}
+                  onChange={(event) =>
+                    setFields((prev) => ({ ...prev, [field.key]: event.target.value }))
+                  }
+                />
+              )
+            : undefined
+        }
       />
-      <Card>
+      <Card
+        id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
+        className={cn(
+          activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
+        )}
+      >
         <CardContent>
           <SkillMap
             values={skills}
@@ -155,20 +272,42 @@ export function CharacterSheetForm({
         </CardContent>
       </Card>
       {editable && (
-        <div className="flex flex-col items-end gap-2">
+        <div className="flex flex-col items-end justify-end gap-3 sm:flex-row sm:items-center">
+          {!isValid && validationError && (
+            <p className="text-muted-foreground text-right text-xs sm:text-sm">{validationError}</p>
+          )}
           {error && <p className="text-destructive text-right text-sm">{error}</p>}
-          <div className="flex flex-col items-end justify-end gap-3 sm:flex-row sm:items-center">
-            {!isValid && validationError && (
-              <p className="text-muted-foreground text-right text-xs sm:text-sm">
-                {validationError}
-              </p>
-            )}
-            <Button type="button" onClick={handleSubmit} disabled={isPending || !isValid}>
-              Enregistrer
-            </Button>
-          </div>
+          {successMessage && <p className="text-primary text-right text-sm">{successMessage}</p>}
+          <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isPending}>
+            Enregistrer le brouillon
+          </Button>
+          <Button type="button" onClick={handleSubmit} disabled={isPending || !isValid}>
+            Soumettre la fiche pour relecture
+          </Button>
         </div>
       )}
+    </div>
+  );
+
+  if (!showSidebar) {
+    return sheet;
+  }
+
+  return (
+    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_minmax(300px,22rem)]">
+      {sheet}
+      <div className="flex flex-col gap-6 lg:sticky lg:top-6">
+        {pendingStaffNotice}
+        {hasFeedback && (
+          <CharacterSheetFeedbackSidebar
+            comments={comments}
+            orphanedCommentIds={orphanedCommentIds}
+            activeCommentId={activeCommentId}
+            onSelectComment={setActiveCommentId}
+            editable={editable}
+          />
+        )}
+      </div>
     </div>
   );
 }

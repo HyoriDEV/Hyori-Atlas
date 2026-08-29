@@ -5,6 +5,7 @@ import type { Adapter, AdapterUser, AdapterAccount } from "next-auth/adapters";
 
 import { prisma } from "@/lib/prisma";
 import { isDevAuthEnabled } from "@/lib/dev-auth";
+import { buildDiscordAvatarUrl, type DiscordProfileData } from "@/lib/services/discord-sync";
 import type { RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
 
 declare module "next-auth" {
@@ -29,27 +30,6 @@ interface AppTokenFields {
   minecraftUsername?: string | null;
   discordUsername?: string;
   discordAvatarUrl?: string | null;
-}
-
-interface DiscordProfile {
-  id: string;
-  username: string;
-  global_name: string | null;
-  avatar: string | null;
-  discriminator: string;
-}
-
-function buildDiscordAvatarUrl(profile: DiscordProfile) {
-  if (!profile.avatar) {
-    const defaultAvatarNumber =
-      profile.discriminator === "0"
-        ? Number(BigInt(profile.id) >> BigInt(22)) % 6
-        : parseInt(profile.discriminator, 10) % 5;
-    return `https://cdn.discordapp.com/embed/avatars/${defaultAvatarNumber}.png`;
-  }
-
-  const format = profile.avatar.startsWith("a_") ? "gif" : "png";
-  return `https://cdn.discordapp.com/avatars/${profile.id}/${profile.avatar}.${format}`;
 }
 
 const adapter: Adapter = {
@@ -167,6 +147,10 @@ const adapter: Adapter = {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter,
+  pages: {
+    signIn: "/",
+    error: "/",
+  },
   providers: [
     ...(isDevAuthEnabled()
       ? [
@@ -203,7 +187,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
-      profile(profile: DiscordProfile) {
+      profile(profile: DiscordProfileData) {
         const avatarUrl = buildDiscordAvatarUrl(profile);
         const displayName = profile.global_name ?? profile.username;
 
@@ -233,14 +217,76 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user, account, profile, trigger }) {
       const appToken = token as typeof token & AppTokenFields;
 
       if (user) {
         appToken.userId = user.id;
       }
 
-      if (trigger === "signIn" || trigger === "signUp" || !appToken.role) {
+      if (account?.provider === "discord" && profile) {
+        const discordProfile = profile as unknown as DiscordProfileData;
+        const avatarUrl = buildDiscordAvatarUrl(discordProfile);
+        const displayName = discordProfile.global_name ?? discordProfile.username;
+        const userId = user?.id ?? appToken.userId;
+
+        if (userId) {
+          await prisma.user.update({
+            where: { id: userId },
+            data: {
+              discordAvatarUrl: avatarUrl,
+              discordUsername: discordProfile.username,
+              discordDisplayName: displayName,
+            },
+          });
+
+          await prisma.account.upsert({
+            where: {
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            create: {
+              userId,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              refresh_token: account.refresh_token,
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state:
+                typeof account.session_state === "string" ? account.session_state : null,
+              refresh_token_expires_in:
+                typeof (account as Record<string, unknown>).refresh_token_expires_in === "number"
+                  ? ((account as Record<string, unknown>).refresh_token_expires_in as number)
+                  : null,
+            },
+            update: {
+              refresh_token: account.refresh_token ?? undefined,
+              access_token: account.access_token ?? undefined,
+              expires_at: account.expires_at ?? undefined,
+              token_type: account.token_type ?? undefined,
+              scope: account.scope ?? undefined,
+              id_token: account.id_token ?? undefined,
+              session_state:
+                typeof account.session_state === "string" ? account.session_state : undefined,
+              refresh_token_expires_in:
+                typeof (account as Record<string, unknown>).refresh_token_expires_in === "number"
+                  ? ((account as Record<string, unknown>).refresh_token_expires_in as number)
+                  : undefined,
+            },
+          });
+
+          appToken.discordUsername = discordProfile.username;
+          appToken.discordAvatarUrl = avatarUrl;
+        }
+      }
+
+      if (trigger === "signIn" || trigger === "signUp" || trigger === "update" || !appToken.role) {
         const dbUser = appToken.userId
           ? await prisma.user.findUnique({
               where: { id: appToken.userId },

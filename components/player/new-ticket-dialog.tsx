@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus } from "@phosphor-icons/react";
 
 import { TicketCategory } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels } from "@/lib/navigation";

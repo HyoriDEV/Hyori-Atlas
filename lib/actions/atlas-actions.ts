@@ -6,11 +6,22 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { staffNavItems } from "@/lib/navigation";
 
+import { RegistrationStatus } from "@/lib/generated/prisma/enums";
+
 const STAFF_NOTE_MAX_LENGTH = 1000;
 
 export async function addStaffNote(playerId: string, body: string) {
   const atlasItem = staffNavItems.find((item) => item.href === "/dashboard/atlas")!;
   const staffUser = await requireRole(atlasItem.roles);
+
+  const player = await prisma.user.findUnique({
+    where: { id: playerId },
+    select: { registrationStatus: true },
+  });
+
+  if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
+    throw new Error("Joueur introuvable.");
+  }
 
   const trimmedBody = body.trim();
   if (!trimmedBody) {

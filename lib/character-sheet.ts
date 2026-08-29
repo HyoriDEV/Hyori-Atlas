@@ -127,5 +127,14 @@ export function isSkillValueValid(value: number): boolean {
 }
 
 export function isCharacterSheetEditable(status: CharacterSheetStatus): boolean {
-  return status !== CharacterSheetStatus.VALIDATED;
+  return status === CharacterSheetStatus.PENDING_PLAYER;
+}
+
+export function truncateAtWordBoundary(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+
+  const clipped = text.slice(0, maxLength);
+  const lastSpaceIndex = clipped.lastIndexOf(" ");
+
+  return `${(lastSpaceIndex > maxLength * 0.6 ? clipped.slice(0, lastSpaceIndex) : clipped).trimEnd()}…`;
 }

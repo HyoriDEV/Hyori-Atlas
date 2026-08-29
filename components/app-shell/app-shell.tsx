@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LockSimple,
@@ -15,6 +16,7 @@ import {
   UsersThree,
   ShieldWarning,
   Kanban,
+  Info,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarProvider,
@@ -47,6 +50,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   users: UsersThree,
   shield: ShieldWarning,
   kanban: Kanban,
+  info: Info,
 };
 
 export interface AppShellNavEntry {
@@ -55,6 +59,7 @@ export interface AppShellNavEntry {
   iconKey: NavIconKey;
   locked?: boolean;
   fullWidth?: boolean;
+  hasNotification?: boolean;
 }
 
 export interface AppShellUser {
@@ -67,17 +72,25 @@ export interface AppShellUser {
 export function AppShell({
   sectionLabel,
   navItems,
+  navGroups,
   user,
   children,
 }: {
   sectionLabel: string;
-  navItems: AppShellNavEntry[];
+  navItems?: AppShellNavEntry[];
+  navGroups?: AppShellNavEntry[][];
   user: AppShellUser;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
   const initial = user.name.charAt(0).toUpperCase();
-  const isFullWidth = navItems.some(
+
+  const groups: AppShellNavEntry[][] = (
+    navGroups ?? (navItems ? [navItems] : [])
+  ).filter((group) => group.length > 0);
+
+  const allNavItems = groups.flat();
+  const isFullWidth = allNavItems.some(
     (item) => item.fullWidth && (pathname === item.href || pathname?.startsWith(`${item.href}/`))
   );
 
@@ -85,17 +98,26 @@ export function AppShell({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="flex flex-col gap-3 px-3 pt-3 pb-0">
-          <div className="flex flex-col gap-0.5 px-2">
-            <Link
-              href="/"
-              className="font-heading text-xl font-normal transition-opacity hover:opacity-80"
-            >
-              Hyori RP
-            </Link>
-            <span className="text-sidebar-foreground/60 text-xs tracking-wide uppercase">
-              {sectionLabel}
-            </span>
-          </div>
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-2 transition-opacity hover:opacity-85"
+          >
+            <Image
+              src="/HYORI-LOGO-COMPRESSED.jpg"
+              alt="Logo Hyori RP"
+              width={36}
+              height={36}
+              className="size-9 rounded-full object-cover shrink-0 shadow-xs"
+            />
+            <div className="flex flex-col min-w-0">
+              <span className="font-heading text-lg font-normal leading-tight">
+                Hyori RP
+              </span>
+              <span className="text-sidebar-foreground/60 text-xs tracking-wide uppercase">
+                {sectionLabel}
+              </span>
+            </div>
+          </Link>
           <Separator />
           <div className="flex items-center gap-2 px-2">
             <Avatar className="size-8">
@@ -120,50 +142,60 @@ export function AppShell({
           </div>
         </SidebarHeader>
         <SidebarContent className="px-3 pt-0 pb-3">
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {navItems.map((item) => {
-                  const isActive = pathname?.startsWith(item.href) ?? false;
-                  const Icon = iconMap[item.iconKey];
+          {groups.map((group, groupIndex) => (
+            <div key={groupIndex} className="flex flex-col">
+              {groupIndex > 0 && <Separator className="my-2" />}
+              <SidebarGroup className="p-0">
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {group.map((item) => {
+                      const isActive = pathname?.startsWith(item.href) ?? false;
+                      const Icon = iconMap[item.iconKey];
 
-                  if (item.locked) {
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          aria-disabled
-                          tooltip="Verrouillé pour le moment"
-                          className="pointer-events-none opacity-50"
-                        >
-                          <Icon className="size-4" />
-                          <span>{item.label}</span>
-                          <LockSimple className="ml-auto size-3.5" />
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  }
+                      if (item.locked) {
+                        return (
+                          <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton
+                              aria-disabled
+                              tooltip="Verrouillé pour le moment"
+                              className="pointer-events-none opacity-50"
+                            >
+                              <Icon className="size-4" />
+                              <span>{item.label}</span>
+                              <LockSimple className="ml-auto size-3.5" />
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      }
 
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton isActive={isActive} render={<Link href={item.href} />}>
-                        <Icon className="size-4" />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton isActive={isActive} render={<Link href={item.href} />}>
+                            <Icon className="size-4" />
+                            <span>{item.label}</span>
+                          </SidebarMenuButton>
+                          {item.hasNotification && (
+                            <SidebarMenuBadge>
+                              <span className="bg-primary size-2 rounded-full" />
+                            </SidebarMenuBadge>
+                          )}
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </div>
+          ))}
         </SidebarContent>
       </Sidebar>
-      <SidebarInset>
-        <header className="border-border flex h-12 items-center gap-2 border-b px-4">
+      <SidebarInset className="h-svh max-h-svh flex flex-col overflow-hidden">
+        <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger />
           <span className={cn("text-muted-foreground text-sm")}>{sectionLabel}</span>
         </header>
-        <div className="flex-1 p-4 sm:p-6">
-          <div className={cn("mx-auto w-full", !isFullWidth && "max-w-[960px]")}>{children}</div>
+        <div className="flex-1 min-h-0 p-4 sm:p-6 flex flex-col overflow-y-auto">
+          <div className={cn("mx-auto w-full flex-1 min-h-0 flex flex-col", !isFullWidth && "max-w-[960px]")}>{children}</div>
         </div>
       </SidebarInset>
     </SidebarProvider>

@@ -7,11 +7,6 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 
-// Icons are resolved to actual components only inside the client-side
-// AppShell (components/app-shell/app-shell.tsx). @phosphor-icons/react
-// calls React.createContext at module scope without a "use client" guard,
-// which crashes if pulled into the server/RSC module graph — so this data
-// module (imported by Server Component layouts) must never import icons.
 export type NavIconKey =
   | "flag"
   | "calendar"
@@ -22,11 +17,12 @@ export type NavIconKey =
   | "clock"
   | "users"
   | "shield"
-  | "kanban";
+  | "kanban"
+  | "info";
 
-const registrationStatusRank: Record<RegistrationStatus, number> = {
+export const registrationStatusRank: Record<RegistrationStatus, number> = {
+  [RegistrationStatus.REJECTED]: -1,
   [RegistrationStatus.NEW]: 0,
-  [RegistrationStatus.REJECTED]: 1,
   [RegistrationStatus.WAITLIST]: 1,
   [RegistrationStatus.WHITELIST_IN_PROGRESS]: 2,
   [RegistrationStatus.WHITELISTED]: 3,
@@ -48,44 +44,92 @@ export interface PlayerNavItem {
   fullWidth?: boolean;
 }
 
-export const playerNavItems: PlayerNavItem[] = [
-  {
-    label: "Premier pas",
-    href: "/player/getting-started",
-    iconKey: "flag",
-    requiredStatus: RegistrationStatus.NEW,
-  },
-  {
-    label: "Fiche personnage",
-    href: "/player/character-sheet",
-    iconKey: "id-card",
-    requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-  },
-  {
-    label: "Entretien whitelist",
-    href: "/player/interview",
-    iconKey: "calendar",
-    requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-  },
-  {
-    label: "Écriture de trame",
-    href: "/player/writing",
-    iconKey: "pen",
-    requiredStatus: RegistrationStatus.WHITELISTED,
-  },
-  {
-    label: "Suivi RP",
-    href: "/player/rp-tracking",
-    iconKey: "chat",
-    requiredStatus: RegistrationStatus.WHITELISTED,
-  },
-  {
-    label: "Tickets",
-    href: "/player/tickets",
-    iconKey: "ticket",
-    requiredStatus: RegistrationStatus.NEW,
-  },
+export const playerRejectedNavItem: PlayerNavItem = {
+  label: "Statut d'inscription",
+  href: "/player/rejection",
+  iconKey: "info",
+  requiredStatus: RegistrationStatus.REJECTED,
+};
+
+export const playerNavGroups: PlayerNavItem[][] = [
+  [
+    {
+      label: "Premiers pas",
+      href: "/player/getting-started",
+      iconKey: "flag",
+      requiredStatus: RegistrationStatus.NEW,
+      hiddenFromStatus: RegistrationStatus.WHITELISTED,
+    },
+    {
+      label: "Tickets",
+      href: "/player/tickets",
+      iconKey: "ticket",
+      requiredStatus: RegistrationStatus.NEW,
+    },
+  ],
+  [
+    {
+      label: "Fiche personnage",
+      href: "/player/character-sheet",
+      iconKey: "id-card",
+      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+    },
+    {
+      label: "Entretien whitelist",
+      href: "/player/interview",
+      iconKey: "calendar",
+      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+      hiddenFromStatus: RegistrationStatus.WHITELISTED,
+    },
+  ],
+  [
+    {
+      label: "Suivi RP",
+      href: "/player/rp-tracking",
+      iconKey: "chat",
+      requiredStatus: RegistrationStatus.WHITELISTED,
+    },
+    {
+      label: "Écriture de trame",
+      href: "/player/writing",
+      iconKey: "pen",
+      requiredStatus: RegistrationStatus.WHITELISTED,
+    },
+  ],
 ];
+
+export const playerWhitelistedNavGroups: PlayerNavItem[][] = [
+  [
+    {
+      label: "Tickets",
+      href: "/player/tickets",
+      iconKey: "ticket",
+      requiredStatus: RegistrationStatus.NEW,
+    },
+  ],
+  [
+    {
+      label: "Fiche personnage",
+      href: "/player/character-sheet",
+      iconKey: "id-card",
+      requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+    },
+    {
+      label: "Suivi RP",
+      href: "/player/rp-tracking",
+      iconKey: "chat",
+      requiredStatus: RegistrationStatus.WHITELISTED,
+    },
+    {
+      label: "Écriture de trame",
+      href: "/player/writing",
+      iconKey: "pen",
+      requiredStatus: RegistrationStatus.WHITELISTED,
+    },
+  ],
+];
+
+export const playerNavItems: PlayerNavItem[] = playerNavGroups.flat();
 
 export interface StaffNavItem {
   label: string;
@@ -95,39 +139,70 @@ export interface StaffNavItem {
   fullWidth?: boolean;
 }
 
-export const staffNavItems: StaffNavItem[] = [
-  {
-    label: "Atlas des joueurs",
-    href: "/dashboard/atlas",
-    iconKey: "users",
-    roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
-    fullWidth: true,
-  },
-  {
-    label: "Rapports BDA",
-    href: "/dashboard/bda-reports",
-    iconKey: "shield",
-    roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
-  },
-  {
-    label: "Backlog",
-    href: "/dashboard/backlog",
-    iconKey: "kanban",
-    roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.DEVELOPER],
-  },
-  {
-    label: "Liste d'attente",
-    href: "/dashboard/waitlist",
-    iconKey: "clock",
-    roles: [Role.ADMIN],
-  },
-  {
-    label: "Créneaux d'entretien",
-    href: "/dashboard/interview-slots",
-    iconKey: "calendar",
-    roles: [Role.ADMIN],
-  },
+export const staffNavGroups: StaffNavItem[][] = [
+  [
+    {
+      label: "Backlog",
+      href: "/dashboard/backlog",
+      iconKey: "kanban",
+      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.DEVELOPER],
+    },
+    {
+      label: "Tickets",
+      href: "/dashboard/tickets",
+      iconKey: "ticket",
+      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT],
+    },
+    {
+      label: "Rapports BDA",
+      href: "/dashboard/bda-reports",
+      iconKey: "shield",
+      roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
+    },
+  ],
+  [
+    {
+      label: "Atlas des joueurs",
+      href: "/dashboard/atlas",
+      iconKey: "users",
+      roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
+      fullWidth: true,
+    },
+    {
+      label: "Lore des joueurs",
+      href: "/dashboard/writing",
+      iconKey: "pen",
+      roles: [Role.ADMIN, Role.RP_TRACKING],
+    },
+    {
+      label: "Suivi RP",
+      href: "/dashboard/rp-tracking",
+      iconKey: "chat",
+      roles: [Role.ADMIN, Role.RP_TRACKING],
+    },
+  ],
+  [
+    {
+      label: "Liste d'attente",
+      href: "/dashboard/waitlist",
+      iconKey: "clock",
+      roles: [Role.ADMIN],
+    },
+    {
+      label: "Créneaux d'entretien",
+      href: "/dashboard/interview-slots",
+      iconKey: "calendar",
+      roles: [Role.ADMIN],
+    },
+  ],
 ];
+
+export const staffNavItems: StaffNavItem[] = staffNavGroups.flat();
+
+export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const writingReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const ticketStaffRoles: Role[] = [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT];
 
 export const staffRoleLabels: Record<Role, string> = {
   [Role.ADMIN]: "Administrateur",
@@ -141,11 +216,11 @@ export const staffRoleLabels: Record<Role, string> = {
 export const roleLabels = staffRoleLabels;
 
 export const registrationStatusLabels: Record<RegistrationStatus, string> = {
-  [RegistrationStatus.NEW]: "Nouveau",
+  [RegistrationStatus.NEW]: "Nouvel inscrit",
   [RegistrationStatus.WAITLIST]: "Liste d'attente",
-  [RegistrationStatus.WHITELIST_IN_PROGRESS]: "Whitelist en cours",
-  [RegistrationStatus.WHITELISTED]: "Inscrit à la whitelist",
-  [RegistrationStatus.REJECTED]: "Refusé",
+  [RegistrationStatus.WHITELIST_IN_PROGRESS]: "En whitelist",
+  [RegistrationStatus.WHITELISTED]: "Whitelisté·e",
+  [RegistrationStatus.REJECTED]: "Non retenu·e",
 };
 
 export const ticketCategoryLabels: Record<TicketCategory, string> = {
@@ -163,8 +238,8 @@ export const ticketStatusLabels: Record<TicketStatus, string> = {
 };
 
 export const characterSheetStatusLabels: Record<CharacterSheetStatus, string> = {
-  [CharacterSheetStatus.PENDING_REVIEW]: "En attente de validation",
-  [CharacterSheetStatus.CHANGES_REQUESTED]: "Modifications demandées",
+  [CharacterSheetStatus.PENDING_STAFF]: "À évaluer (staff)",
+  [CharacterSheetStatus.PENDING_PLAYER]: "En rédaction (joueur)",
   [CharacterSheetStatus.VALIDATED]: "Validée",
 };
 

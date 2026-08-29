@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 import { auth } from "@/auth";
 import { PlayerSpaceCta } from "@/components/player-space-cta";
@@ -25,8 +26,18 @@ export async function PublicNav() {
   return (
     <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
       <div className="mx-auto flex h-18 max-w-[960px] items-center justify-between px-4 sm:px-6">
-        <Link href="/" className="font-heading flex h-full items-center text-base font-normal">
-          Hyori RP
+        <Link
+          href="/"
+          className="font-heading flex h-full items-center gap-2.5 text-base font-normal transition-opacity hover:opacity-85"
+        >
+          <Image
+            src="/HYORI-LOGO-COMPRESSED.jpg"
+            alt="Logo Hyori RP"
+            width={32}
+            height={32}
+            className="size-8 rounded-full object-cover shrink-0 shadow-xs"
+          />
+          <span>Hyori RP</span>
         </Link>
         <nav className="flex h-full items-center gap-4 sm:gap-10">
           {navLinks.map((link) => (

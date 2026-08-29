@@ -1,4 +1,5 @@
-import { requireUser } from "@/lib/dal";
+import { redirect } from "next/navigation";
+import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
@@ -11,7 +12,12 @@ import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { InterviewCalendar, type InterviewSlotInfo } from "@/components/player/interview-calendar";
 
 export default async function InterviewPage() {
-  const user = await requireUser();
+  const user = await requireActivePlayer();
+
+  if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
+    redirect("/player/character-sheet");
+  }
+
   const waitlistUnlocked = isRegistrationStatusAtLeast(
     user.registrationStatus,
     RegistrationStatus.WHITELIST_IN_PROGRESS
@@ -42,8 +48,7 @@ export default async function InterviewPage() {
   ]);
 
   const isSheetValidated =
-    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED ||
-    user.registrationStatus === RegistrationStatus.WHITELISTED;
+    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
   if (!isSheetValidated) {
     return (

@@ -123,3 +123,32 @@
     font-family: var(--font-heading), serif;
   }
 }
+
+.chapter-content {
+  @apply flex flex-col gap-3 text-sm leading-relaxed;
+}
+.chapter-content p {
+  @apply leading-relaxed;
+}
+.chapter-content a {
+  @apply text-primary underline underline-offset-2;
+}
+.chapter-content img {
+  @apply max-w-full rounded-lg;
+}
+.chapter-content strong {
+  @apply font-semibold;
+}
+.chapter-content ul,
+.chapter-content ol {
+  @apply flex flex-col gap-1 pl-5;
+}
+.chapter-content ul {
+  @apply list-disc;
+}
+.chapter-content ol {
+  @apply list-decimal;
+}
+.chapter-content blockquote {
+  @apply border-border text-muted-foreground border-l-2 pl-3 italic;
+}

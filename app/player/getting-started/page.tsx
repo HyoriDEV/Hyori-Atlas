@@ -1,4 +1,5 @@
-import { getPlayerState } from "@/lib/dal";
+import { redirect } from "next/navigation";
+import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
@@ -16,7 +17,12 @@ import { StepIcon } from "@/components/player/step-icon";
 import { cn } from "@/lib/utils";
 
 export default async function GettingStartedPage() {
-  const user = await getPlayerState();
+  const user = await requireActivePlayer();
+
+  if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
+    redirect("/player/character-sheet");
+  }
+
   const minecraftLinked = Boolean(user.minecraftUuid);
 
   const [characterSheet, latestBooking] = await Promise.all([
@@ -29,19 +35,20 @@ export default async function GettingStartedPage() {
     }),
   ]);
 
-  const isWhitelisted = user.registrationStatus === RegistrationStatus.WHITELISTED;
+  const isWaitlistPassed = isRegistrationStatusAtLeast(
+    user.registrationStatus,
+    RegistrationStatus.WHITELIST_IN_PROGRESS
+  );
   const isSheetValidated =
-    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED || isWhitelisted;
+    isWaitlistPassed && characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
   const isInterviewAccepted =
-    latestBooking?.status === InterviewBookingStatus.ACCEPTED || isWhitelisted;
+    isSheetValidated && latestBooking?.status === InterviewBookingStatus.ACCEPTED;
 
   const steps = [
     { label: "Connexion Minecraft", done: minecraftLinked },
     {
       label: "Liste d'attente",
-      done:
-        isRegistrationStatusAtLeast(user.registrationStatus, RegistrationStatus.WAITLIST) &&
-        user.registrationStatus !== RegistrationStatus.REJECTED,
+      done: isWaitlistPassed,
     },
     {
       label: "Fiche personnage",
@@ -53,15 +60,12 @@ export default async function GettingStartedPage() {
     },
     {
       label: "Inscription terminée",
-      done: isWhitelisted,
+      done: false,
     },
   ];
 
   let statusDescription = "Connecte-toi à Minecraft pour confirmer ton identité.";
-  if (
-    user.registrationStatus === RegistrationStatus.WAITLIST ||
-    user.registrationStatus === RegistrationStatus.REJECTED
-  ) {
+  if (user.registrationStatus === RegistrationStatus.WAITLIST) {
     statusDescription =
       "Tu es inscrit·e sur la liste d'attente pour la whitelist Hyori. Tu seras notifié·e sur Discord dès la mise à jour de ton statut.";
   } else if (user.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS) {
@@ -75,8 +79,6 @@ export default async function GettingStartedPage() {
       statusDescription =
         "Ton entretien a été validé ! Un administrateur va finaliser ta whitelist.";
     }
-  } else if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
-    statusDescription = "Inscription terminée. Bienvenue sur Hyori !";
   }
 
   return (
@@ -154,25 +156,32 @@ export default async function GettingStartedPage() {
           </CardHeader>
           <CardContent>
             <ol className="flex flex-col gap-1">
-              {steps.map((step, index) => {
-                return (
-                  <li key={step.label} className="flex items-start gap-3">
-                    <div className="flex flex-col items-center">
-                      <StepIcon done={step.done} />
-                      {index < steps.length - 1 && (
-                        <div
-                          className={cn("mt-1 h-4 w-px", step.done ? "bg-primary" : "bg-border")}
-                        />
-                      )}
-                    </div>
-                    <span
-                      className={cn("text-sm", step.done ? "font-medium" : "text-muted-foreground")}
-                    >
-                      {step.label}
-                    </span>
-                  </li>
-                );
-              })}
+              {(() => {
+                const currentStepIndex = steps.findIndex((step) => !step.done);
+                return steps.map((step, index) => {
+                  const isCurrent = index === currentStepIndex;
+                  return (
+                    <li key={step.label} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <StepIcon done={step.done} current={isCurrent} />
+                        {index < steps.length - 1 && (
+                          <div
+                            className={cn("mt-1 h-4 w-px", step.done ? "bg-primary" : "bg-border")}
+                          />
+                        )}
+                      </div>
+                      <span
+                        className={cn(
+                          "text-sm",
+                          step.done || isCurrent ? "font-medium" : "text-muted-foreground"
+                        )}
+                      >
+                        {step.label}
+                      </span>
+                    </li>
+                  );
+                });
+              })()}
             </ol>
           </CardContent>
         </Card>

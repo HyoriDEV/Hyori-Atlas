@@ -7,7 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { Role, RegistrationStatus } from "@/lib/generated/prisma/enums";
 
 export async function acceptWaitlistPlayer(userId: string) {
-  await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole([Role.ADMIN]);
 
   await prisma.$transaction([
     prisma.user.update({
@@ -17,6 +17,7 @@ export async function acceptWaitlistPlayer(userId: string) {
     prisma.registrationStatusHistory.create({
       data: {
         userId,
+        authorId: staffUser.id,
         status: RegistrationStatus.WHITELIST_IN_PROGRESS,
       },
     }),
@@ -26,7 +27,7 @@ export async function acceptWaitlistPlayer(userId: string) {
 }
 
 export async function rejectWaitlistPlayer(userId: string) {
-  await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole([Role.ADMIN]);
 
   await prisma.$transaction([
     prisma.user.update({
@@ -36,6 +37,7 @@ export async function rejectWaitlistPlayer(userId: string) {
     prisma.registrationStatusHistory.create({
       data: {
         userId,
+        authorId: staffUser.id,
         status: RegistrationStatus.REJECTED,
       },
     }),
@@ -45,7 +47,7 @@ export async function rejectWaitlistPlayer(userId: string) {
 }
 
 export async function restoreWaitlistPlayer(userId: string) {
-  await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole([Role.ADMIN]);
 
   await prisma.$transaction([
     prisma.user.update({
@@ -55,6 +57,7 @@ export async function restoreWaitlistPlayer(userId: string) {
     prisma.registrationStatusHistory.create({
       data: {
         userId,
+        authorId: staffUser.id,
         status: RegistrationStatus.WAITLIST,
       },
     }),

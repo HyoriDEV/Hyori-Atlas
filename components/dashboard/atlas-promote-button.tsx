@@ -29,14 +29,15 @@ export function AtlasPromoteButton({ playerId, pseudo }: { playerId: string; pse
   return (
     <>
       <Button type="button" onClick={() => setOpen(true)}>
-        Promouvoir en Inscrit
+        Valider la whitelist
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Promouvoir en Inscrit</AlertDialogTitle>
+            <AlertDialogTitle>Valider la whitelist du joueur</AlertDialogTitle>
             <AlertDialogDescription>
-              {pseudo} sera inscrit à la whitelist et débloquera l&apos;Écriture et le Suivi RP.
+              <span className="text-foreground">{pseudo} </span>sera inscrit à la whitelist et
+              débloquera automatiquement l&apos;accès au serveur Minecraft.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

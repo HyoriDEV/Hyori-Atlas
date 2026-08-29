@@ -4,14 +4,23 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { formatPlaytime, getMockServerActivity } from "@/lib/mock-server-data";
 import { formatDate } from "@/lib/date";
-import { registrationStatusBadgeVariant } from "@/lib/atlas-status";
+import {
+  characterSheetStatusBadgeVariant,
+  registrationStatusBadgeVariant,
+} from "@/lib/atlas-status";
 import {
   CharacterSheetStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
-import { registrationStatusLabels, staffNavItems, ticketCategoryLabels } from "@/lib/navigation";
+import {
+  characterSheetReviewerRoles,
+  characterSheetStatusLabels,
+  interviewBookingStatusLabels,
+  registrationStatusLabels,
+  staffNavItems,
+} from "@/lib/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -23,19 +32,10 @@ import { AtlasCharacterSheetSummary } from "@/components/dashboard/atlas-charact
 import { AtlasStaffNotes } from "@/components/dashboard/atlas-staff-notes";
 import {
   AtlasTimelineTabs,
-  type AtlasActionHistoryItem,
+  type AtlasLogActor,
+  type AtlasLogItem,
+  type AtlasSanctionHistoryItem,
 } from "@/components/dashboard/atlas-timeline-tabs";
-
-function interviewBookingActionText(status: InterviewBookingStatus): string {
-  switch (status) {
-    case InterviewBookingStatus.ACCEPTED:
-      return "Entretien accepté";
-    case InterviewBookingStatus.CHANGES_REQUESTED:
-      return "Modifications demandées sur l'entretien";
-    case InterviewBookingStatus.REGISTERED:
-      return "Entretien réservé";
-  }
-}
 
 export default async function AtlasPlayerPage({
   params,
@@ -49,15 +49,28 @@ export default async function AtlasPlayerPage({
   const player = await prisma.user.findUnique({
     where: { id: playerId },
     include: {
-      characterSheet: true,
-      interviewBookings: { orderBy: { createdAt: "desc" }, include: { slot: true } },
-      registrationHistory: { orderBy: { createdAt: "asc" } },
+      characterSheet: {
+        include: {
+          reviewHistory: {
+            orderBy: { createdAt: "desc" },
+            include: { author: true },
+          },
+        },
+      },
+      interviewBookings: {
+        orderBy: { createdAt: "desc" },
+        include: { slot: true, reviewer: true },
+      },
+      registrationHistory: {
+        orderBy: { createdAt: "asc" },
+        include: { author: true },
+      },
       tickets: { orderBy: { createdAt: "desc" } },
       staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
     },
   });
 
-  if (!player) {
+  if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
     notFound();
   }
 
@@ -76,25 +89,106 @@ export default async function AtlasPlayerPage({
     sheet?.reviewStatus === CharacterSheetStatus.VALIDATED &&
     player.registrationStatus !== RegistrationStatus.WHITELISTED;
   const isAdmin = staffUser.role === Role.ADMIN;
+  const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
 
-  const actionHistory: AtlasActionHistoryItem[] = [
-    ...player.registrationHistory.map((entry) => ({
-      date: entry.createdAt,
-      text: `Statut changé en ${registrationStatusLabels[entry.status]}`,
-    })),
+  const logItems: AtlasLogItem[] = [
+    ...player.registrationHistory.map((entry) => {
+      let actor: AtlasLogActor;
+      if (entry.authorId === player.id) {
+        actor = { type: "player" };
+      } else if (entry.author) {
+        actor = {
+          type: "staff",
+          name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
+        };
+      } else {
+        actor = { type: "system" };
+      }
+
+      return {
+        id: `status-${entry.id}`,
+        date: entry.createdAt,
+        title: `Statut d'inscription :`,
+        actor,
+        badge: {
+          label: registrationStatusLabels[entry.status],
+          variant: registrationStatusBadgeVariant(entry.status),
+        },
+      };
+    }),
+    ...(player.characterSheet?.reviewHistory ?? []).map((entry) => {
+      let actor: AtlasLogActor;
+      if (entry.authorId === player.id) {
+        actor = { type: "player" };
+      } else if (entry.author) {
+        actor = {
+          type: "staff",
+          name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
+        };
+      } else {
+        actor = { type: "system" };
+      }
+
+      return {
+        id: `sheet-review-${entry.id}`,
+        date: entry.createdAt,
+        title: "Fiche personnage :",
+        actor,
+        badge: {
+          label: characterSheetStatusLabels[entry.status],
+          variant: characterSheetStatusBadgeVariant(entry.status),
+        },
+      };
+    }),
     ...player.tickets.map((ticket) => ({
+      id: `ticket-${ticket.id}`,
       date: ticket.createdAt,
-      text: `Ticket créé — ${ticketCategoryLabels[ticket.category]} : ${ticket.subject}`,
+      title: "Ticket créé :",
+      link: {
+        href: `/dashboard/tickets/${ticket.id}`,
+        label: ticket.subject,
+        targetBlank: true,
+      },
     })),
     ...player.interviewBookings.map((booking) => ({
+      id: `booking-${booking.id}`,
       date: booking.createdAt,
-      text: interviewBookingActionText(booking.status),
+      title: "Entretien oral réservé",
+      metadata: `Créneau : ${formatDate(booking.slot.startsAt, { style: "prefix-long", withTime: true })}`,
     })),
-    ...activity.sanctions.map((sanction) => ({
-      date: sanction.date,
-      text: `${sanction.type} — ${sanction.text}`,
-    })),
+    ...player.interviewBookings
+      .filter((booking) => booking.status !== InterviewBookingStatus.REGISTERED)
+      .map((booking) => ({
+        id: `booking-review-${booking.id}`,
+        date: booking.updatedAt,
+        title:
+          booking.status === InterviewBookingStatus.ACCEPTED
+            ? "Entretien oral validé"
+            : "Modifications demandées sur l'entretien",
+        actor: booking.reviewer
+          ? {
+              type: "staff" as const,
+              name: booking.reviewer.minecraftUsername ?? booking.reviewer.discordDisplayName,
+            }
+          : { type: "staff" as const, name: "Staff" },
+        badge: {
+          label: interviewBookingStatusLabels[booking.status],
+          variant:
+            booking.status === InterviewBookingStatus.ACCEPTED
+              ? ("default" as const)
+              : ("outline" as const),
+        },
+        metadata: `Créneau : ${formatDate(booking.slot.startsAt, { style: "prefix-long", withTime: true })}`,
+      })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
+
+  const sanctionHistory: AtlasSanctionHistoryItem[] = activity.sanctions
+    .map((sanction) => ({
+      date: sanction.date,
+      title: sanction.title,
+      reason: sanction.reason,
+    }))
+    .sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
     <div className="flex flex-col gap-6">
@@ -107,7 +201,7 @@ export default async function AtlasPlayerPage({
         {isAdmin && canPromote && <AtlasPromoteButton playerId={player.id} pseudo={playerName} />}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[3fr_minmax(300px,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[2fr_minmax(300px,1fr)]">
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Card className="flex flex-row items-center gap-3.5">
@@ -198,7 +292,12 @@ export default async function AtlasPlayerPage({
             </div>
           </Card>
 
-          <AtlasCharacterSheetSummary sheet={sheet} pseudo={playerName} canReview={isAdmin} />
+          <AtlasCharacterSheetSummary
+            sheet={sheet}
+            playerId={player.id}
+            pseudo={playerName}
+            canReview={canReviewSheet}
+          />
 
           <AtlasStaffNotes
             playerId={player.id}
@@ -207,7 +306,11 @@ export default async function AtlasPlayerPage({
           />
         </div>
 
-        <AtlasTimelineTabs actionHistory={actionHistory} sessionBlocks={activity.sessionBlocks} />
+        <AtlasTimelineTabs
+          logItems={logItems}
+          sanctionHistory={sanctionHistory}
+          sessionBlocks={activity.sessionBlocks}
+        />
       </div>
     </div>
   );

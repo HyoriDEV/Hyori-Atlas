@@ -60,9 +60,9 @@ export function formatDate(
   const monthName = MONTH_NAMES_FR[monthNum - 1] ?? "";
   const year = parseInt(partsMap.year ?? "1970", 10);
 
-  const hoursPadded = (partsMap.hour === "24" ? "00" : (partsMap.hour ?? "00")).padStart(2, "0");
+  const hourNum = parseInt(partsMap.hour === "24" ? "0" : (partsMap.hour ?? "0"), 10);
   const minutesPadded = (partsMap.minute ?? "00").padStart(2, "0");
-  const timeStr = `${hoursPadded}h${minutesPadded}`;
+  const timeStr = `${hourNum}h${minutesPadded}`;
 
   const { style = "prefix-long", withTime = true, withYear = false } = options;
 
@@ -94,4 +94,28 @@ export function formatDate(
   }
 
   return datePart;
+}
+
+export function formatShortTime(dateInput: Date | string | number | null | undefined): string {
+  if (dateInput === null || dateInput === undefined) return "";
+  const date = dateInput instanceof Date ? dateInput : new Date(dateInput);
+  if (isNaN(date.getTime())) return "";
+
+  const formatter = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+
+  const partsMap: Record<string, string> = {};
+  for (const part of formatter.formatToParts(date)) {
+    if (part.type !== "literal") {
+      partsMap[part.type] = part.value;
+    }
+  }
+
+  const hourPadded = (partsMap.hour === "24" ? "00" : (partsMap.hour ?? "00")).padStart(2, "0");
+  const minutesPadded = (partsMap.minute ?? "00").padStart(2, "0");
+  return `${hourPadded}h${minutesPadded}`;
 }

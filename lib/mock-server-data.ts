@@ -9,7 +9,8 @@ export type MockSanctionType = "Ban" | "Mute" | "Kick";
 export interface MockSanction {
   date: Date;
   type: MockSanctionType;
-  text: string;
+  title: string;
+  reason: string;
 }
 
 export interface MockServerActivity {
@@ -22,18 +23,22 @@ export interface MockServerActivity {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const MOCK_SANCTION_TEXT_POOL: Record<MockSanctionType, string[]> = {
+const MOCK_SANCTION_POOL: Record<MockSanctionType, Array<{ title: string; reason: string }>> = {
   Ban: [
-    "Ban de 3 jours pour non-respect du règlement RP",
-    "Ban de 7 jours pour propos déplacés en chat",
-    "Ban permanent pour triche avérée",
+    { title: "Bannissement de 3 jours", reason: "Non-respect du règlement RP" },
+    { title: "Bannissement de 7 jours", reason: "Propos déplacés en chat" },
+    { title: "Bannissement de 7 jours", reason: "Comportement perturbateur" },
+    { title: "Bannissement permanent", reason: "Triche avérée" },
   ],
   Mute: [
-    "Mute de 24h pour spam en chat général",
-    "Mute de 3h pour propos déplacés en chat RP",
-    "Mute de 12h pour hors-sujet répété",
+    { title: "Mute de 24h", reason: "Spam en chat général" },
+    { title: "Mute de 3h", reason: "Propos déplacés en chat RP" },
+    { title: "Mute de 12h", reason: "Hors-sujet répété" },
   ],
-  Kick: ["Kick pour AFK prolongé en zone RP", "Kick pour comportement perturbateur"],
+  Kick: [
+    { title: "Expulsion du serveur", reason: "AFK prolongé en zone RP" },
+    { title: "Expulsion du serveur", reason: "Comportement perturbateur" },
+  ],
 };
 
 const MOCK_SANCTION_TYPES: MockSanctionType[] = ["Ban", "Mute", "Kick"];
@@ -105,10 +110,10 @@ export function getMockServerActivity(
   const sanctionCount = Math.floor(rng() * 4);
   const sanctions: MockSanction[] = Array.from({ length: sanctionCount }, () => {
     const type = MOCK_SANCTION_TYPES[Math.floor(rng() * MOCK_SANCTION_TYPES.length)];
-    const pool = MOCK_SANCTION_TEXT_POOL[type];
-    const text = pool[Math.floor(rng() * pool.length)];
+    const pool = MOCK_SANCTION_POOL[type];
+    const item = pool[Math.floor(rng() * pool.length)];
     const date = new Date(firstServerLoginAt.getTime() + rng() * spanMs);
-    return { date, type, text };
+    return { date, type, title: item.title, reason: item.reason };
   }).sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return {

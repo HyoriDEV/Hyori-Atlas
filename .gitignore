@@ -43,6 +43,9 @@ next-env.d.ts
 # prisma
 /lib/generated/prisma
 
+# uploads
+/public/uploads
+
 # agents
 .agents
 .claude

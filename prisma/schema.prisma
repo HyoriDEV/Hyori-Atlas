@@ -46,8 +46,14 @@ enum TicketStatus {
   ARCHIVED
 }
 
-enum TicketMessageAuthorType {
+enum ConversationType {
+  TICKET
+  RP_TRACKING
+}
+
+enum MessageAuthorType {
   PLAYER
+  STAFF
   SYSTEM
 }
 
@@ -58,9 +64,22 @@ enum Gender {
 }
 
 enum CharacterSheetStatus {
-  PENDING_REVIEW
-  CHANGES_REQUESTED
+  PENDING_PLAYER
+  PENDING_STAFF
   VALIDATED
+}
+
+enum CharacterSheetCommentTarget {
+  name
+  nickname
+  age
+  gender
+  civilStatus
+  heightCm
+  description
+  background
+  additionalComments
+  skillMap
 }
 
 enum InterviewBookingStatus {
@@ -86,13 +105,22 @@ model User {
   accounts            Account[]
   sessions            Session[]
   news                News[]
-  tickets             Ticket[]
-  ticketMessages      TicketMessage[]
-  registrationHistory RegistrationStatusHistory[]
+  tickets               Ticket[]
+  registrationHistory   RegistrationStatusHistory[]
+  conversationMemberships ConversationMember[]
+  conversationMessages    ConversationMessage[]
   characterSheet      CharacterSheet?
   interviewBookings   InterviewBooking[]
   staffNotes          StaffNote[]                 @relation("StaffNotePlayer")
   authoredStaffNotes  StaffNote[]                 @relation("StaffNoteAuthor")
+  chapters            Chapter[]
+
+  authoredStatusChanges     RegistrationStatusHistory[] @relation("RegistrationStatusHistoryAuthor")
+  reviewedInterviewBookings InterviewBooking[]          @relation("InterviewBookingReviewer")
+
+  authoredSheetComments CharacterSheetComment[]       @relation("CharacterSheetCommentAuthor")
+  authoredSheetReviews  CharacterSheetReviewHistory[] @relation("CharacterSheetReviewAuthor")
+
 
   @@map("users")
 }
@@ -100,10 +128,12 @@ model User {
 model RegistrationStatusHistory {
   id        String             @id @default(cuid())
   userId    String
+  authorId  String?
   status    RegistrationStatus
   createdAt DateTime           @default(now())
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  author User? @relation("RegistrationStatusHistoryAuthor", fields: [authorId], references: [id], onDelete: SetNull)
 
   @@map("registration_status_history")
 }
@@ -172,42 +202,30 @@ model Ticket {
   category  TicketCategory
   subject   String
   status    TicketStatus   @default(PENDING_STAFF)
-  createdAt DateTime       @default(now())
-  updatedAt DateTime       @updatedAt
+  conversationId String         @unique
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
 
-  player   User            @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  messages TicketMessage[]
+  player       User           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  conversation Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
 
   @@map("tickets")
 }
 
-model TicketMessage {
-  id         String                  @id @default(cuid())
-  ticketId   String
-  authorType TicketMessageAuthorType
-  authorId   String?
-  body       String
-  createdAt  DateTime                @default(now())
-
-  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  author User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
-
-  @@map("ticket_messages")
-}
 
 model CharacterSheet {
   id       String @id @default(cuid())
   playerId String @unique
 
-  name               String   @db.VarChar(50)
-  nickname           String?  @db.VarChar(50)
+  name               String  @db.VarChar(50)
+  nickname           String? @db.VarChar(50)
   age                Int
   gender             Gender
-  civilStatus        String   @db.VarChar(50)
+  civilStatus        String  @db.VarChar(50)
   heightMeters       Float
-  description        String   @db.VarChar(2000)
-  background         String   @db.VarChar(2000)
-  additionalComments String?  @db.VarChar(300)
+  description        String  @db.VarChar(2000)
+  background         String  @db.VarChar(2000)
+  additionalComments String? @db.VarChar(300)
 
   physicalForce        Int @default(1)
   physicalEndurance    Int @default(1)
@@ -220,13 +238,54 @@ model CharacterSheet {
   socialPersuasion     Int @default(1)
   socialViolence       Int @default(1)
 
-  reviewStatus CharacterSheetStatus @default(PENDING_REVIEW)
-  createdAt    DateTime             @default(now())
-  updatedAt    DateTime             @updatedAt
+  reviewStatus      CharacterSheetStatus @default(PENDING_PLAYER)
+  hasUnreadFeedback Boolean              @default(false)
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
 
-  player User @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player        User                          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  comments      CharacterSheetComment[]
+  reviewHistory CharacterSheetReviewHistory[]
 
   @@map("character_sheets")
+}
+
+model CharacterSheetComment {
+  id       String  @id @default(cuid())
+  sheetId  String
+  authorId String?
+
+  target CharacterSheetCommentTarget
+  body   String                      @db.VarChar(1000)
+
+  quotedText   String? @db.VarChar(500)
+  anchorStart  Int?
+  anchorPrefix String? @db.VarChar(64)
+  anchorSuffix String? @db.VarChar(64)
+
+  createdAt DateTime @default(now())
+
+  sheet  CharacterSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  author User?          @relation("CharacterSheetCommentAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([sheetId])
+  @@map("character_sheet_comments")
+}
+
+model CharacterSheetReviewHistory {
+  id           String               @id @default(cuid())
+  sheetId      String
+  authorId     String?
+  status       CharacterSheetStatus
+  commentCount Int                  @default(0)
+  note         String?              @db.VarChar(500)
+  createdAt    DateTime             @default(now())
+
+  sheet  CharacterSheet @relation(fields: [sheetId], references: [id], onDelete: Cascade)
+  author User?          @relation("CharacterSheetReviewAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([sheetId])
+  @@map("character_sheet_review_history")
 }
 
 model InterviewSlot {
@@ -240,15 +299,17 @@ model InterviewSlot {
 }
 
 model InterviewBooking {
-  id        String                 @id @default(cuid())
-  slotId    String                 @unique
-  playerId  String
-  status    InterviewBookingStatus @default(REGISTERED)
-  createdAt DateTime               @default(now())
-  updatedAt DateTime               @updatedAt
+  id           String                 @id @default(cuid())
+  slotId       String                 @unique
+  playerId     String
+  reviewedById String?
+  status       InterviewBookingStatus @default(REGISTERED)
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
 
-  slot   InterviewSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
-  player User          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slot     InterviewSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  player   User          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  reviewer User?         @relation("InterviewBookingReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
 
   @@index([playerId])
   @@map("interview_bookings")
@@ -266,4 +327,66 @@ model StaffNote {
 
   @@index([playerId])
   @@map("staff_notes")
+}
+
+model Chapter {
+  id        String   @id @default(cuid())
+  playerId  String
+  title     String   @db.VarChar(120)
+  content   String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  player User @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId])
+  @@map("chapters")
+}
+
+model Conversation {
+  id   String           @id @default(cuid())
+  type ConversationType
+
+  ticket Ticket?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ConversationMember[]
+  messages ConversationMessage[]
+
+  @@map("conversations")
+}
+
+model ConversationMember {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_members")
+}
+
+model ConversationMessage {
+  id             String            @id @default(cuid())
+  conversationId String
+  authorType     MessageAuthorType
+  authorId       String?
+  body           String?
+  imageUrl       String?
+  linkHref       String?
+  linkLabel      String?
+  createdAt      DateTime          @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId])
+  @@map("conversation_messages")
 }

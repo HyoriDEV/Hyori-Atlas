@@ -28,7 +28,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-const bookingStatuses = Object.values(InterviewBookingStatus);
+const bookingStatusItems = Object.values(InterviewBookingStatus).map((status) => ({
+  value: status,
+  label: interviewBookingStatusLabels[status],
+}));
 
 export function InterviewSlotRowActions({
   slotId,
@@ -45,6 +48,7 @@ export function InterviewSlotRowActions({
   if (bookingId && bookingStatus) {
     return (
       <Select
+        items={bookingStatusItems}
         value={bookingStatus}
         onValueChange={(value) => {
           startTransition(async () => {
@@ -56,9 +60,9 @@ export function InterviewSlotRowActions({
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
-          {bookingStatuses.map((status) => (
-            <SelectItem key={status} value={status}>
-              {interviewBookingStatusLabels[status]}
+          {bookingStatusItems.map((item) => (
+            <SelectItem key={item.value} value={item.value}>
+              {item.label}
             </SelectItem>
           ))}
         </SelectContent>

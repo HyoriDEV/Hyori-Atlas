@@ -16,6 +16,10 @@ export async function bookInterviewSlot(slotId: string) {
     throw new Error("L'entretien whitelist n'est pas encore disponible.");
   }
 
+  if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
+    throw new Error("Vous êtes déjà whitelisté.");
+  }
+
   const slot = await prisma.interviewSlot.findUnique({
     where: { id: slotId },
     include: { booking: true },

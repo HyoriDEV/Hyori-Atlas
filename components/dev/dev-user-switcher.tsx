@@ -64,7 +64,7 @@ export function DevUserSwitcher({
               className="h-8 gap-2 border-amber-500/30 bg-amber-500/10 px-2.5 text-xs font-medium text-amber-300 hover:bg-amber-500/20"
             >
               <UserSwitch className="size-4" />
-              <span>{activeUser ? `Test : ${activeUser.roleLabel}` : "Comptes de test (DEV)"}</span>
+              <span>{activeUser ? `Test: ${activeUser.roleLabel}` : "Comptes rapides"}</span>
             </Button>
           )
         }

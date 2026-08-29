@@ -1,34 +1,63 @@
 import { notFound } from "next/navigation";
 
-import { requireUser } from "@/lib/dal";
+import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { TicketMessageAuthorType } from "@/lib/generated/prisma/enums";
+import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
+import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
+import { serializeConversationMessage } from "@/lib/conversation";
+import { sendTicketMessage } from "@/lib/actions/ticket-actions";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Card, CardContent } from "@/components/ui/card";
-import { TicketMessageForm } from "@/components/player/ticket-message-form";
 import { TicketBackLink } from "@/components/player/ticket-back-link";
+import { ConversationChat } from "@/components/conversations/conversation-chat";
+import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 
 export default async function TicketDetailPage({
   params,
-}: PageProps<"/player/tickets/[ticketId]">) {
+}: {
+  params: Promise<{ ticketId: string }>;
+}) {
   const { ticketId } = await params;
-  const user = await requireUser();
+  const user = await requireActivePlayer();
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    include: { messages: { orderBy: { createdAt: "asc" } } },
+    include: {
+      player: true,
+      conversation: {
+        include: {
+          messages: { orderBy: { createdAt: "asc" }, include: { author: true } },
+          members: {
+            orderBy: { joinedAt: "asc" },
+            include: { user: true },
+          },
+        },
+      },
+    },
   });
 
-  if (!ticket || ticket.playerId !== user.id) {
+  const isStaff = user.role !== Role.PLAYER;
+  const isMember =
+    ticket &&
+    ticket.conversation.members.some((m) => m.userId === user.id);
+
+  if (!ticket || (!isStaff && !isMember)) {
     notFound();
   }
 
+  const messages = ticket.conversation.messages || [];
+
+  const membersData = ticket.conversation.members.map((m) => ({
+    userId: m.userId,
+    minecraftUsername: m.user.minecraftUsername,
+    discordDisplayName: m.user.discordDisplayName,
+    discordAvatarUrl: m.user.discordAvatarUrl,
+  }));
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-1 min-h-0 flex-col gap-4 h-full">
+      <div className="flex shrink-0 items-center gap-3">
         <TicketBackLink />
         <div className="flex flex-1 flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">
@@ -37,50 +66,34 @@ export default async function TicketDetailPage({
           </span>
           <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
         </div>
-        <Badge>{ticketStatusLabels[ticket.status]}</Badge>
+        <Badge variant={ticketStatusBadgeVariant(ticket.status)}>
+          {ticketStatusLabels[ticket.status]}
+        </Badge>
       </div>
 
-      <Card>
-        <CardContent className="flex flex-col gap-4 py-4">
-          {ticket.messages.map((message) =>
-            message.authorType === TicketMessageAuthorType.SYSTEM ? (
-              <div
-                key={message.id}
-                className="text-muted-foreground bg-muted mx-auto rounded-full px-3 py-1 text-xs"
-              >
-                {message.body}
-              </div>
-            ) : (
-              <div key={message.id} className="flex items-start gap-3">
-                <Avatar size="sm">
-                  <AvatarImage
-                    src={user.discordAvatarUrl ?? undefined}
-                    alt={user.minecraftUsername ?? user.discordUsername ?? ""}
-                  />
-                  <AvatarFallback>
-                    {(user.minecraftUsername ?? user.discordUsername ?? "?")
-                      .charAt(0)
-                      .toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex flex-1 flex-col gap-1">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-medium">
-                      {user.minecraftUsername ?? user.discordUsername}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(message.createdAt, { style: "prefix-short", withTime: true })}
-                    </span>
-                  </div>
-                  <p className="text-sm whitespace-pre-wrap">{message.body}</p>
-                </div>
-              </div>
-            )
-          )}
-        </CardContent>
-      </Card>
-
-      <TicketMessageForm ticketId={ticket.id} />
+      <div className="grid flex-1 min-h-0 gap-6 lg:grid-cols-7">
+        <div className="flex flex-1 min-h-0 flex-col lg:col-span-5">
+          <ConversationChat
+            conversationId={ticket.conversationId}
+            initialMessages={messages.map(serializeConversationMessage)}
+            viewerId={user.id}
+            viewerIsStaff={isStaff}
+            sendAction={async (cId, body, imageUrl) => {
+              "use server";
+              await sendTicketMessage(ticket.id, body, imageUrl);
+            }}
+            disabled={ticket.status === TicketStatus.ARCHIVED}
+            className="flex-1 min-h-0"
+          />
+        </div>
+        <div className="lg:col-span-2 min-h-0 overflow-y-auto">
+          <TicketMembersManager
+            ticketId={ticket.id}
+            members={membersData}
+            readOnly
+          />
+        </div>
+      </div>
     </div>
   );
 }
