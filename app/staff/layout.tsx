@@ -1,5 +1,13 @@
-import { Role } from "@/lib/generated/prisma/enums";
+import {
+  BdaReportStatus,
+  CharacterSheetStatus,
+  InterviewBookingStatus,
+  RegistrationStatus,
+  Role,
+  TicketStatus,
+} from "@/lib/generated/prisma/enums";
 import { requireRole } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
 import { getStaffNavGroups, staffRoleLabels } from "@/lib/navigation";
 import { AppShell, type AppShellNavGroup } from "@/components/app-shell/app-shell";
 
@@ -9,6 +17,38 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   const user = await requireRole(staffRoles);
 
   const roleGroups = getStaffNavGroups(user.role);
+
+  const [
+    pendingTicketsCount,
+    unreadBdaReportsCount,
+    pendingSheetsCount,
+    waitlistCount,
+    registeredInterviewBookingsCount,
+  ] = await Promise.all([
+    prisma.ticket.count({
+      where: { status: TicketStatus.PENDING_STAFF },
+    }),
+    prisma.bdaReport.count({
+      where: { status: BdaReportStatus.UNREAD },
+    }),
+    prisma.characterSheet.count({
+      where: { reviewStatus: CharacterSheetStatus.PENDING_STAFF },
+    }),
+    prisma.user.count({
+      where: { registrationStatus: RegistrationStatus.WAITLIST },
+    }),
+    prisma.interviewBooking.count({
+      where: { status: InterviewBookingStatus.REGISTERED },
+    }),
+  ]);
+
+  const navNotificationMap: Record<string, boolean> = {
+    "/staff/tickets": pendingTicketsCount > 0,
+    "/staff/bda-reports": unreadBdaReportsCount > 0,
+    "/staff/atlas": pendingSheetsCount > 0,
+    "/staff/waitlist": waitlistCount > 0,
+    "/staff/interview-slots": registeredInterviewBookingsCount > 0,
+  };
 
   const navGroups: AppShellNavGroup[] = roleGroups
     .map((group) => ({
@@ -20,6 +60,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
           href: item.href,
           iconKey: item.iconKey,
           fullWidth: item.fullWidth,
+          hasNotification: navNotificationMap[item.href] ?? false,
         })),
     }))
     .filter((group) => group.items.length > 0);

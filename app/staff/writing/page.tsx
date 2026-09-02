@@ -20,6 +20,16 @@ import { TablePagination } from "@/components/dashboard/table-pagination";
 
 const PAGE_SIZE = 10;
 
+function countWords(html: string): number {
+  if (!html) return 0;
+  const text = html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!text) return 0;
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
 export default async function WritingStaffListPage(props: {
   searchParams: Promise<{ page?: string }>;
 }) {
@@ -28,19 +38,36 @@ export default async function WritingStaffListPage(props: {
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
 
   const players = await prisma.user.findMany({
-    where: { registrationStatus: RegistrationStatus.WHITELISTED },
+    where: {
+      registrationStatus: RegistrationStatus.WHITELISTED,
+      chapters: { some: {} },
+    },
     include: {
       chapters: {
         orderBy: { updatedAt: "desc" },
-        take: 1,
+        select: {
+          id: true,
+          content: true,
+          updatedAt: true,
+        },
       },
       _count: { select: { chapters: true } },
     },
   });
 
-  const sorted = players.sort((a, b) => {
-    const aLast = a.chapters[0]?.updatedAt.getTime() ?? -1;
-    const bLast = b.chapters[0]?.updatedAt.getTime() ?? -1;
+  const formattedPlayers = players.map((player) => {
+    const totalWords = player.chapters.reduce((sum, chap) => sum + countWords(chap.content), 0);
+    const lastChapter = player.chapters[0];
+    return {
+      ...player,
+      totalWords,
+      lastUpdatedAt: lastChapter?.updatedAt ?? null,
+    };
+  });
+
+  const sorted = formattedPlayers.sort((a, b) => {
+    const aLast = a.lastUpdatedAt?.getTime() ?? -1;
+    const bLast = b.lastUpdatedAt?.getTime() ?? -1;
     if (aLast !== bLast) return bLast - aLast;
     return (a.minecraftUsername ?? a.discordDisplayName).localeCompare(
       b.minecraftUsername ?? b.discordDisplayName
@@ -54,7 +81,8 @@ export default async function WritingStaffListPage(props: {
   return (
     <div className="flex flex-col gap-6">
       <h1 className="font-heading text-2xl font-semibold">
-        Écriture <span className="text-muted-foreground text-base">({totalCount})</span>
+        Trames écrites par les joueurs{" "}
+        <span className="text-muted-foreground text-base">({totalCount})</span>
       </h1>
 
       <Card className="gap-0 overflow-hidden py-0">
@@ -63,19 +91,19 @@ export default async function WritingStaffListPage(props: {
             <TableRow>
               <TableHead>Joueur</TableHead>
               <TableHead>Chapitres</TableHead>
+              <TableHead>Mots</TableHead>
               <TableHead>Dernière modification</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pagePlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-muted-foreground py-10 text-center text-sm">
-                  Aucun joueur whitelisté.
+                <TableCell colSpan={4} className="text-muted-foreground py-10 text-center text-sm">
+                  Aucune trame écrite.
                 </TableCell>
               </TableRow>
             ) : (
               pagePlayers.map((player) => {
-                const lastChapter = player.chapters[0];
                 return (
                   <TableRow key={player.id}>
                     <TableCell className="p-0">
@@ -100,12 +128,17 @@ export default async function WritingStaffListPage(props: {
                       </Link>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {player._count.chapters}
+                      {player._count.chapters}{" "}
+                      {player._count.chapters > 1 ? "chapitres" : "chapitre"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {lastChapter
-                        ? formatDate(lastChapter.updatedAt, {
-                            style: "prefix-short",
+                      {player.totalWords.toLocaleString("fr-FR")}{" "}
+                      {player.totalWords > 1 ? "mots" : "mot"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {player.lastUpdatedAt
+                        ? formatDate(player.lastUpdatedAt, {
+                            style: "prefix-long",
                             withTime: true,
                           })
                         : "—"}

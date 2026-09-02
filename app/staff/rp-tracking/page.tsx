@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/dashboard/table-pagination";
+import { UnreadDot } from "@/components/ui/unread-dot";
 
 const PAGE_SIZE = 10;
 
@@ -73,7 +74,7 @@ export default async function RpTrackingStaffListPage(props: {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Joueur</TableHead>
+              <TableHead className="pl-6">Joueur</TableHead>
               <TableHead>Dernier message</TableHead>
             </TableRow>
           </TableHeader>
@@ -87,12 +88,16 @@ export default async function RpTrackingStaffListPage(props: {
             ) : (
               pagePlayers.map((player) => {
                 const lastMessage = player.conversationMemberships[0]?.conversation.messages[0];
+                const isPendingReply = lastMessage && lastMessage.authorId === player.id;
                 return (
                   <TableRow key={player.id} className="cursor-pointer">
-                    <TableCell className="p-0">
+                    <TableCell className="relative p-0 pl-6">
+                      {isPendingReply && (
+                        <UnreadDot placement="table" title="Réponse du staff attendue" />
+                      )}
                       <Link
                         href={`/staff/rp-tracking/${player.id}`}
-                        className="flex items-center gap-2 px-4 py-3"
+                        className="flex items-center gap-2 py-3 pr-4"
                       >
                         {player.minecraftUsername ? (
                           <SkinHead size="sm" username={player.minecraftUsername} />

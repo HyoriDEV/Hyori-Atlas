@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { promoteToWhitelisted } from "@/lib/actions/staff-review-actions";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,13 @@ export function AtlasPromoteButton({ playerId, pseudo }: { playerId: string; pse
 
   function handleConfirm() {
     startTransition(async () => {
-      await promoteToWhitelisted(playerId);
-      setOpen(false);
+      try {
+        await promoteToWhitelisted(playerId);
+        toast.success(`${pseudo} a été whitelisté avec succès !`);
+        setOpen(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -41,9 +47,9 @@ export function AtlasPromoteButton({ playerId, pseudo }: { playerId: string; pse
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+              Valider la whitelist
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -217,6 +217,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "discord" && profile) {
+        // Check if user exists in DB
+        const { prisma } = await import("@/lib/prisma");
+        const dbUser = await prisma.user.findUnique({
+          where: { discordId: profile.id as string }
+        });
+
+        if (!dbUser) {
+          // New user trying to register
+          const { getGlobalSettings } = await import("@/lib/services/settings-service");
+          const settings = await getGlobalSettings();
+          if (!settings.registrationEnabled) {
+            return false;
+          }
+        }
+      }
+      return true;
+    },
     async jwt({ token, user, account, profile, trigger }) {
       const appToken = token as typeof token & AppTokenFields;
 

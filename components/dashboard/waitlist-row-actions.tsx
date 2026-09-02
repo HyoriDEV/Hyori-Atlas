@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { acceptWaitlistPlayer, rejectWaitlistPlayer } from "@/lib/actions/waitlist-actions";
 import { Button } from "@/components/ui/button";
@@ -24,10 +25,21 @@ export function WaitlistRowActions({ userId, pseudo }: { userId: string; pseudo:
 
   function handleConfirm() {
     if (!pendingAction) return;
-    const action = pendingAction === "accept" ? acceptWaitlistPlayer : rejectWaitlistPlayer;
+    const isAccept = pendingAction === "accept";
+    const action = isAccept ? acceptWaitlistPlayer : rejectWaitlistPlayer;
     startTransition(async () => {
-      await action(userId);
-      setPendingAction(null);
+      try {
+        await action(userId);
+        if (isAccept) {
+          toast.success(`Demande de ${pseudo} acceptée.`);
+        } else {
+          toast.warning(`Demande de ${pseudo} refusée.`);
+        }
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      } finally {
+        setPendingAction(null);
+      }
     });
   }
 
@@ -40,15 +52,15 @@ export function WaitlistRowActions({ userId, pseudo }: { userId: string; pseudo:
         <AlertDialogTrigger render={<Button size="sm" />}>Accepter</AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation</AlertDialogTitle>
+            <AlertDialogTitle>Accepter l&apos;inscription</AlertDialogTitle>
             <AlertDialogDescription>
               Accepter la demande d&apos;inscription de {pseudo} ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+              Accepter
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -63,15 +75,15 @@ export function WaitlistRowActions({ userId, pseudo }: { userId: string; pseudo:
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation</AlertDialogTitle>
+            <AlertDialogTitle>Refuser l&apos;inscription</AlertDialogTitle>
             <AlertDialogDescription>
               Refuser la demande d&apos;inscription de {pseudo} ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+            <AlertDialogAction variant="destructive" onClick={handleConfirm} disabled={isPending}>
+              Refuser
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

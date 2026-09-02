@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { archiveTicket, reopenTicket } from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
@@ -30,8 +31,13 @@ export function TicketStatusActions({
 
   function handleConfirm() {
     startTransition(async () => {
-      await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId));
-      setOpen(false);
+      try {
+        await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId));
+        toast.success(isArchived ? "Ticket rouvert." : "Ticket archivé.");
+        setOpen(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -48,14 +54,14 @@ export function TicketStatusActions({
             </AlertDialogTitle>
             <AlertDialogDescription>
               {isArchived
-                ? "Le ticket repassera au statut « En attente du staff » et redeviendra modifiable."
-                : "Le ticket ne sera plus modifiable par le joueur, mais restera consultable par tous."}
+                ? "Le ticket redeviendra modifiable."
+                : "Le ticket ne sera plus modifiable par le joueur, mais restera consultable par tous ses membres."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+              {isArchived ? "Désarchiver" : "Archiver"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

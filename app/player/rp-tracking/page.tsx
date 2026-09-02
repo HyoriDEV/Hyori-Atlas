@@ -6,9 +6,21 @@ import { serializeConversationMessage } from "@/lib/conversation";
 import { sendConversationMessage } from "@/lib/actions/rp-tracking-actions";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export default async function RpTrackingPage() {
   const user = await requireActivePlayer();
+  const settings = await getGlobalSettings();
+
+  if (!settings.rpTrackingAccessEnabled) {
+    return (
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
+        <h1 className="font-heading shrink-0 text-2xl font-semibold">Suivi RP</h1>
+        <LockedFeatureCard description="Un administrateur a temporairement désactivé l'accès au Suivi RP." />
+      </div>
+    );
+  }
+
   const unlocked = isRegistrationStatusAtLeast(
     user.registrationStatus,
     RegistrationStatus.WHITELISTED
@@ -24,7 +36,13 @@ export default async function RpTrackingPage() {
       },
       include: {
         messages: {
-          include: { author: true },
+          where: { deletedAt: null },
+          include: {
+            author: true,
+            versions: {
+              orderBy: { createdAt: "asc" },
+            },
+          },
           orderBy: { createdAt: "desc" },
           take: 50,
         },
@@ -41,7 +59,10 @@ export default async function RpTrackingPage() {
         },
         include: {
           messages: {
-            include: { author: true },
+            include: {
+              author: true,
+              versions: true,
+            },
           },
         },
       });
@@ -56,7 +77,7 @@ export default async function RpTrackingPage() {
       {unlocked && conversation ? (
         <ConversationChat
           conversationId={conversation.id}
-          initialMessages={messages.reverse().map(serializeConversationMessage)}
+          initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, false))}
           viewerId={user.id}
           viewerIsStaff={false}
           sendAction={sendConversationMessage}

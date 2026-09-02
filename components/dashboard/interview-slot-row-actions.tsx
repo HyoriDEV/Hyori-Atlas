@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   deleteInterviewSlot,
@@ -52,7 +53,12 @@ export function InterviewSlotRowActions({
         value={bookingStatus}
         onValueChange={(value) => {
           startTransition(async () => {
-            await updateInterviewBookingStatus(bookingId, value as InterviewBookingStatus);
+            try {
+              await updateInterviewBookingStatus(bookingId, value as InterviewBookingStatus);
+              toast.success("Statut de l'entretien mis à jour.");
+            } catch (error) {
+              toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+            }
           });
         }}
       >
@@ -77,21 +83,30 @@ export function InterviewSlotRowActions({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Supprimer ce créneau</AlertDialogTitle>
-          <AlertDialogDescription>Cette action est irréversible.</AlertDialogDescription>
+          <AlertDialogTitle>Supprimer le créneau</AlertDialogTitle>
+          <AlertDialogDescription>
+            Es-tu sûr de vouloir supprimer ce créneau d&apos;entretien ? Cette action est
+            irréversible.
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
           <AlertDialogAction
+            variant="destructive"
             onClick={() =>
               startTransition(async () => {
-                await deleteInterviewSlot(slotId);
-                setConfirmDelete(false);
+                try {
+                  await deleteInterviewSlot(slotId);
+                  toast.success("Créneau supprimé.");
+                  setConfirmDelete(false);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+                }
               })
             }
             disabled={isPending}
           >
-            Confirmer
+            Supprimer
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

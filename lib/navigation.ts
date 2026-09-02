@@ -1,4 +1,5 @@
 import {
+  BdaReportStatus,
   CharacterSheetStatus,
   InterviewBookingStatus,
   RegistrationStatus,
@@ -18,7 +19,8 @@ export type NavIconKey =
   | "users"
   | "shield"
   | "info"
-  | "squares-four";
+  | "squares-four"
+  | "gear";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -116,6 +118,7 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         href: "/player/writing",
         iconKey: "pen",
         requiredStatus: RegistrationStatus.WHITELISTED,
+        fullWidth: true,
       },
     ],
   },
@@ -171,6 +174,13 @@ export const staffDashboardItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffSettingsItem: StaffNavItem = {
+  label: "Paramètres",
+  href: "/staff/settings",
+  iconKey: "gear",
+  roles: [Role.ADMIN],
+};
+
 export const staffTicketsItem: StaffNavItem = {
   label: "Tickets",
   href: "/staff/tickets",
@@ -179,7 +189,7 @@ export const staffTicketsItem: StaffNavItem = {
 };
 
 export const staffBdaReportsItem: StaffNavItem = {
-  label: "Rapports BDA",
+  label: "Rapports GC",
   href: "/staff/bda-reports",
   iconKey: "shield",
   roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
@@ -223,6 +233,7 @@ export const staffInterviewSlotsItem: StaffNavItem = {
 
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
+  staffSettingsItem,
   staffTicketsItem,
   staffBdaReportsItem,
   staffAtlasItem,
@@ -234,7 +245,7 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: [staffDashboardItem],
+    items: role === Role.ADMIN ? [staffDashboardItem, staffSettingsItem] : [staffDashboardItem],
   };
 
   if (role === Role.ADMIN) {
@@ -339,4 +350,10 @@ export const interviewBookingStatusLabels: Record<InterviewBookingStatus, string
   [InterviewBookingStatus.REGISTERED]: "Inscrit",
   [InterviewBookingStatus.CHANGES_REQUESTED]: "Modifications demandées",
   [InterviewBookingStatus.ACCEPTED]: "Accepté",
+};
+
+export const bdaReportStatusLabels: Record<BdaReportStatus, string> = {
+  [BdaReportStatus.UNREAD]: "Non lu",
+  [BdaReportStatus.RESOLVED]: "Résolu",
+  [BdaReportStatus.ARCHIVED]: "Archivé",
 };

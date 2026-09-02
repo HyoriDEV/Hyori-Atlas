@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import {
   saveCharacterSheetDraft,
@@ -44,6 +45,18 @@ import {
 import { CharacterSheetFeedbackSidebar } from "@/components/player/character-sheet-feedback-sidebar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { LockSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export function CharacterSheetForm({
@@ -63,7 +76,7 @@ export function CharacterSheetForm({
   const [skills, setSkills] = useState<SkillValues>(initialSkills);
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const activeComment = comments.find((comment) => comment.id === activeCommentId) ?? null;
@@ -180,13 +193,15 @@ export function CharacterSheetForm({
 
   function handleSaveDraft() {
     setError(null);
-    setSuccessMessage(null);
     startTransition(async () => {
       try {
         await saveCharacterSheetDraft(buildPayload());
-        setSuccessMessage("Brouillon enregistré avec succès.");
+        toast.success("Brouillon enregistré avec succès.");
       } catch (submitError) {
-        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+        const message =
+          submitError instanceof Error ? submitError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       }
     });
   }
@@ -194,12 +209,15 @@ export function CharacterSheetForm({
   function handleSubmit() {
     if (!isValid) return;
     setError(null);
-    setSuccessMessage(null);
     startTransition(async () => {
       try {
         await submitCharacterSheet(buildPayload());
+        toast.success("Fiche personnage soumise pour relecture.");
       } catch (submitError) {
-        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+        const message =
+          submitError instanceof Error ? submitError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       }
     });
   }
@@ -223,9 +241,10 @@ export function CharacterSheetForm({
         pendingStaffNotice}
 
       {!editable && status === CharacterSheetStatus.VALIDATED && (
-        <Card className="border-border bg-card p-4">
+        <Card className="border-border bg-card flex flex-row items-center gap-2.5 p-4">
+          <LockSimple className="text-muted-foreground size-4 shrink-0" />
           <p className="text-muted-foreground text-sm">
-            Ta fiche personnage est validée et verrouillée.
+            Une fois ta fiche personnage validée, elle ne peut plus être modifiée.
           </p>
         </Card>
       )}
@@ -277,13 +296,39 @@ export function CharacterSheetForm({
             <p className="text-muted-foreground text-right text-xs sm:text-sm">{validationError}</p>
           )}
           {error && <p className="text-destructive text-right text-sm">{error}</p>}
-          {successMessage && <p className="text-primary text-right text-sm">{successMessage}</p>}
           <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isPending}>
             Enregistrer le brouillon
           </Button>
-          <Button type="button" onClick={handleSubmit} disabled={isPending || !isValid}>
-            Soumettre la fiche pour relecture
-          </Button>
+          <AlertDialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+            <AlertDialogTrigger
+              render={
+                <Button type="button" disabled={isPending || !isValid}>
+                  Soumettre la fiche
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Soumettre la fiche personnage</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Une fois soumise, ta fiche sera transmise à l&apos;équipe pour évaluation et
+                  verrouillée en attendant leur retour. Es-tu sûr de vouloir l&apos;envoyer ?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+                <AlertDialogAction
+                  disabled={isPending || !isValid}
+                  onClick={() => {
+                    setIsSubmitDialogOpen(false);
+                    handleSubmit();
+                  }}
+                >
+                  Soumettre
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>

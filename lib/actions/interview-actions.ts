@@ -6,9 +6,15 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { InterviewBookingStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export async function bookInterviewSlot(slotId: string) {
   const user = await requireUser();
+  const settings = await getGlobalSettings();
+
+  if (!settings.interviewBookingEnabled) {
+    throw new Error("Un administrateur a désactivé cette fonctionnalité.");
+  }
 
   if (
     !isRegistrationStatusAtLeast(user.registrationStatus, RegistrationStatus.WHITELIST_IN_PROGRESS)

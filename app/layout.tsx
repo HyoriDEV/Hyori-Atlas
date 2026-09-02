@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-chapter-sans",
+  display: "swap",
+});
 
 const anthropicSerif = localFont({
   src: [
@@ -176,11 +184,13 @@ export default function RootLayout({
         "antialiased",
         anthropicSerif.variable,
         sourceSerif.variable,
+        inter.variable,
         "font-sans"
       )}
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
         <TooltipProvider>{children}</TooltipProvider>
+        <Toaster />
       </body>
     </html>
   );

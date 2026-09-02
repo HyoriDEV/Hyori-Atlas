@@ -21,13 +21,24 @@ export default async function TicketDetailPage({
   const { ticketId } = await params;
   const user = await requireActivePlayer();
 
+  const isStaff = user.role !== Role.PLAYER;
+
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
     include: {
       player: true,
       conversation: {
         include: {
-          messages: { orderBy: { createdAt: "asc" }, include: { author: true } },
+          messages: {
+            where: isStaff ? undefined : { deletedAt: null },
+            orderBy: { createdAt: "asc" },
+            include: {
+              author: true,
+              versions: {
+                orderBy: { createdAt: "asc" },
+              },
+            },
+          },
           members: {
             orderBy: { joinedAt: "asc" },
             include: { user: true },
@@ -37,7 +48,6 @@ export default async function TicketDetailPage({
     },
   });
 
-  const isStaff = user.role !== Role.PLAYER;
   const isMember = ticket && ticket.conversation.members.some((m) => m.userId === user.id);
 
   if (!ticket || (!isStaff && !isMember)) {
@@ -73,7 +83,7 @@ export default async function TicketDetailPage({
         <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
             conversationId={ticket.conversationId}
-            initialMessages={messages.map(serializeConversationMessage)}
+            initialMessages={messages.map((m) => serializeConversationMessage(m, isStaff))}
             viewerId={user.id}
             viewerIsStaff={isStaff}
             sendAction={async (cId, body, imageUrl) => {

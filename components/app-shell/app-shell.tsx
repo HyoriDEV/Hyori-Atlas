@@ -19,6 +19,7 @@ import {
   SquaresFour,
   User,
   Shield,
+  Gear,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -40,6 +41,17 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -56,6 +68,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   shield: ShieldWarning,
   info: Info,
   "squares-four": SquaresFour,
+  gear: Gear,
 };
 
 export interface AppShellNavEntry {
@@ -108,7 +121,8 @@ export function AppShell({
   const allNavItems = groups.flatMap((group) => group.items);
   const isFullWidth = allNavItems.some((item) => {
     if (!item.fullWidth) return false;
-    const isExactRoot = item.href === "/player" || item.href === "/staff";
+    const isExactRoot =
+      item.href === "/player" || item.href === "/staff" || item.href === "/player/writing";
     return isExactRoot
       ? pathname === item.href
       : pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -230,15 +244,35 @@ export function AppShell({
                 {user.secondaryLabel}
               </span>
             </div>
-            <form action={signOutAction}>
-              <button
-                type="submit"
-                aria-label="Déconnexion"
-                className="text-sidebar-foreground/60 hover:text-sidebar-foreground cursor-pointer rounded-md p-1.5 transition-colors"
-              >
-                <SignOut className="size-4" />
-              </button>
-            </form>
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label="Déconnexion"
+                    className="text-sidebar-foreground/60 hover:text-sidebar-foreground cursor-pointer rounded-md p-1.5 transition-colors"
+                  >
+                    <SignOut className="size-4" />
+                  </button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Se déconnecter</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Es-tu sûr de vouloir te déconnecter de ton compte ?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <form action={signOutAction}>
+                    <AlertDialogAction type="submit" variant="destructive">
+                      Se déconnecter
+                    </AlertDialogAction>
+                  </form>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </SidebarFooter>
       </Sidebar>
@@ -247,10 +281,10 @@ export function AppShell({
           <SidebarTrigger />
           <span className={cn("text-muted-foreground text-sm")}>{sectionLabel}</span>
         </header>
-        <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-4 sm:p-6">
+        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
           <div
             className={cn(
-              "mx-auto flex min-h-0 w-full flex-1 flex-col",
+              "mx-auto flex min-h-full w-full flex-1 flex-col",
               !isFullWidth && "max-w-[960px]"
             )}
           >

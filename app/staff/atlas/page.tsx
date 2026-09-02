@@ -28,6 +28,7 @@ import { AtlasFilters } from "@/components/dashboard/atlas-filters";
 import { AtlasTableRow } from "@/components/dashboard/atlas-table-row";
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { SortHeader } from "@/components/dashboard/waitlist-sort-controls";
+import { UnreadDot } from "@/components/ui/unread-dot";
 
 const PAGE_SIZE = 10;
 
@@ -209,7 +210,7 @@ export default async function AtlasPage(props: PageProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>
+              <TableHead className="pl-6">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="player"
@@ -288,10 +289,18 @@ export default async function AtlasPage(props: PageProps) {
               pagePlayers.map(({ player, activity }) => {
                 const playerName = player.minecraftUsername ?? player.discordDisplayName;
                 const sheet = player.characterSheet;
+                const isPendingStaffSheet =
+                  sheet?.reviewStatus === CharacterSheetStatus.PENDING_STAFF;
 
                 return (
                   <AtlasTableRow key={player.id} href={`/staff/atlas/${player.id}`}>
-                    <TableCell>
+                    <TableCell className="relative pl-6">
+                      {isPendingStaffSheet && (
+                        <UnreadDot
+                          placement="table"
+                          title="Fiche RP en attente de relecture"
+                        />
+                      )}
                       <div className="flex items-center gap-2.5">
                         <SkinHead size="sm" username={player.minecraftUsername ?? undefined} />
                         <span className="font-medium">{playerName}</span>

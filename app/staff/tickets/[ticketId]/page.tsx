@@ -29,7 +29,15 @@ export default async function TicketStaffDetailPage({
       player: true,
       conversation: {
         include: {
-          messages: { orderBy: { createdAt: "asc" }, include: { author: true } },
+          messages: {
+            orderBy: { createdAt: "asc" },
+            include: {
+              author: true,
+              versions: {
+                orderBy: { createdAt: "asc" },
+              },
+            },
+          },
           members: { include: { user: true } },
         },
       },
@@ -89,7 +97,7 @@ export default async function TicketStaffDetailPage({
         <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
             conversationId={ticket.conversationId}
-            initialMessages={messages.map(serializeConversationMessage)}
+            initialMessages={messages.map((m) => serializeConversationMessage(m, true))}
             viewerId={staffUser.id}
             viewerIsStaff
             sendAction={async (cId, body, imageUrl) => {

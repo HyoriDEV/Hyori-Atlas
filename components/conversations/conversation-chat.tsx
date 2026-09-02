@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import {
   CircleNotch,
   Copy,
@@ -31,6 +32,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface MessageGroup {
   id: string;
@@ -70,6 +81,7 @@ export function ConversationChat({
   const [isDragOver, setIsDragOver] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
+  const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,13 +93,35 @@ export function ConversationChat({
     eventSource.onmessage = (event) => {
       const data = JSON.parse(event.data);
       if (data.type === "DELETE") {
-        setMessages((previous) => previous.filter((msg) => msg.id !== data.messageId));
+        if (viewerIsStaff) {
+          setMessages((previous) =>
+            previous.map((msg) =>
+              msg.id === data.messageId
+                ? { ...msg, deletedAt: data.deletedAt || new Date().toISOString() }
+                : msg
+            )
+          );
+        } else {
+          setMessages((previous) => previous.filter((msg) => msg.id !== data.messageId));
+        }
       } else if (data.type === "UPDATE") {
         setMessages((previous) =>
-          previous.map((msg) => (msg.id === data.message.id ? data.message : msg))
+          previous.map((msg) => {
+            if (msg.id !== data.message.id) return msg;
+            if (!viewerIsStaff) {
+              return {
+                ...data.message,
+                versions: undefined,
+                deletedAt: null,
+                isEdited: data.message.isEdited ?? Boolean(data.message.versions?.length),
+              };
+            }
+            return data.message;
+          })
         );
       } else {
         const message: SerializedConversationMessage = data.type === "CREATE" ? data.message : data;
+        if (!viewerIsStaff && message.deletedAt) return;
         setMessages((previous) =>
           previous.some((existing) => existing.id === message.id)
             ? previous.map((existing) => (existing.id === message.id ? message : existing))
@@ -96,7 +130,7 @@ export function ConversationChat({
       }
     };
     return () => eventSource.close();
-  }, [conversationId]);
+  }, [conversationId, viewerIsStaff]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -125,11 +159,12 @@ export function ConversationChat({
       const { url } = await uploadConversationImage(formData, conversationId);
       setPendingImageUrl(url);
     } catch (uploadError) {
-      setError(
+      const message =
         uploadError instanceof Error
           ? uploadError.message
-          : "Une erreur est survenue lors de l'envoi de l'image."
-      );
+          : "Une erreur est survenue lors de l'envoi de l'image.";
+      setError(message);
+      toast.error(message);
     } finally {
       setIsUploading(false);
     }
@@ -199,7 +234,9 @@ export function ConversationChat({
       try {
         await sendAction(conversationId, trimmedBody, imageUrl);
       } catch (sendError) {
-        setError(sendError instanceof Error ? sendError.message : "Une erreur est survenue.");
+        const message = sendError instanceof Error ? sendError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       } finally {
         textareaRef.current?.focus();
       }
@@ -217,8 +254,9 @@ export function ConversationChat({
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
+      toast.success("Message copié dans le presse-papiers");
     } catch {
-      // ignore
+      toast.error("Impossible de copier le message.");
     }
   }
 
@@ -239,25 +277,40 @@ export function ConversationChat({
       try {
         await editConversationMessage(messageId, editBody.trim());
         setMessages((prev) =>
-          prev.map((m) => (m.id === messageId ? { ...m, body: editBody.trim() } : m))
+          prev.map((m) =>
+            m.id === messageId ? { ...m, body: editBody.trim(), isEdited: true } : m
+          )
         );
         setEditingId(null);
         setEditBody("");
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur lors de la modification.");
+        const message = err instanceof Error ? err.message : "Erreur lors de la modification.";
+        setError(message);
+        toast.error(message);
       }
     });
   }
 
   function handleDeleteMessage(messageId: string) {
-    if (!confirm("Veux-tu vraiment supprimer ce message ?")) return;
     setError(null);
     startTransition(async () => {
       try {
         await deleteConversationMessage(messageId);
-        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        if (viewerIsStaff) {
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === messageId ? { ...m, deletedAt: new Date().toISOString() } : m
+            )
+          );
+        } else {
+          setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        }
+        toast.success("Message supprimé.");
+        setDeletingMessageId(null);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Erreur lors de la suppression.");
+        const message = err instanceof Error ? err.message : "Erreur lors de la suppression.";
+        setError(message);
+        toast.error(message);
       }
     });
   }
@@ -270,8 +323,10 @@ export function ConversationChat({
     const items: ChatItem[] = [];
     let currentGroup: MessageGroup | null = null;
 
-    for (let i = 0; i < messages.length; i++) {
-      const msg = messages[i];
+    const visibleMessages = viewerIsStaff ? messages : messages.filter((msg) => !msg.deletedAt);
+
+    for (let i = 0; i < visibleMessages.length; i++) {
+      const msg = visibleMessages[i];
       if (msg.authorType === MessageAuthorType.SYSTEM) {
         if (currentGroup) {
           items.push({ type: "group", group: currentGroup });
@@ -315,7 +370,6 @@ export function ConversationChat({
         const sameAuthor =
           currentGroup.authorId === msg.authorId && currentGroup.authorType === msg.authorType;
 
-        // Group if same author and time gap <= 10 minutes (600,000 ms)
         if (sameAuthor && timeDiffMs <= 10 * 60 * 1000) {
           currentGroup.messages.push(msg);
         } else {
@@ -344,16 +398,13 @@ export function ConversationChat({
   return (
     <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
       <div className="bg-card/30 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border p-4">
-        {messages.length === 0 ? (
-          emptyBadge ? (
-            <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-auto flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-medium">
-              <span>{emptyBadge}</span>
-            </div>
-          ) : (
-            <p className="text-muted-foreground m-auto text-sm">
-              Aucun message pour l&apos;instant.
-            </p>
-          )
+        {emptyBadge && (
+          <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1 flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-medium">
+            <span>{emptyBadge}</span>
+          </div>
+        )}
+        {messages.length === 0 && !emptyBadge ? (
+          <p className="text-muted-foreground m-auto text-sm">Aucun message pour l&apos;instant.</p>
         ) : (
           groupedItems.map((item) => {
             if (item.type === "system") {
@@ -388,6 +439,10 @@ export function ConversationChat({
                 {group.messages.map((message, msgIndex) => {
                   const isFirst = msgIndex === 0;
                   const isEditing = editingId === message.id;
+                  const isDeleted = Boolean(message.deletedAt);
+                  const hasActions = isDeleted
+                    ? Boolean(message.body?.trim())
+                    : Boolean(message.body?.trim()) || group.isOwn;
 
                   return (
                     <div
@@ -398,7 +453,6 @@ export function ConversationChat({
                         group.isOwn && "flex-row-reverse"
                       )}
                     >
-                      {/* Avatar column or hover timestamp */}
                       <div
                         className={cn(
                           "flex w-8 shrink-0 items-center justify-center",
@@ -430,13 +484,12 @@ export function ConversationChat({
                             </Avatar>
                           )
                         ) : (
-                          <span className="text-muted-foreground/60 font-mono text-[10px] opacity-0 transition-opacity select-none group-hover/msg-row:opacity-100">
-                            {formatShortTime(message.createdAt)}
+                          <span className="text-muted-foreground/60 flex items-center justify-center font-mono text-[10px] opacity-0 transition-opacity select-none group-hover/msg-row:opacity-100">
+                            <span>{formatShortTime(message.createdAt)}</span>
                           </span>
                         )}
                       </div>
 
-                      {/* Message content + actions */}
                       <div
                         className={cn(
                           "flex max-w-full min-w-0 flex-col gap-1",
@@ -461,15 +514,11 @@ export function ConversationChat({
                               {group.displayName}
                             </span>
                             <span className="text-muted-foreground text-xs">
-                              {formatDate(new Date(message.createdAt), {
-                                style: "prefix-short",
-                                withTime: true,
-                              })}
+                              {formatDate(message.createdAt, { style: "chat" })}
                             </span>
                           </div>
                         )}
 
-                        {/* Bubble and 3-dots action menu */}
                         <div
                           className={cn(
                             "flex max-w-full items-center gap-1.5",
@@ -526,8 +575,67 @@ export function ConversationChat({
                           ) : (
                             <>
                               <div className="flex max-w-full flex-col gap-1">
-                                {message.body && (
-                                  <p
+                                {viewerIsStaff &&
+                                  message.versions &&
+                                  message.versions.length > 0 && (
+                                    <div className="flex flex-col gap-1">
+                                      {message.versions.map((version, vIdx) => (
+                                        <div
+                                          key={version.id}
+                                          className={cn(
+                                            "rounded-2xl border border-dashed px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-2xs",
+                                            group.isOwn
+                                              ? "bg-primary/20 text-foreground border-primary/40 rounded-tr-xs"
+                                              : "bg-muted/45 text-foreground border-border/60 rounded-tl-xs"
+                                          )}
+                                        >
+                                          <p>{version.body}</p>
+                                          <div className="text-muted-foreground/80 mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none">
+                                            <PencilSimple className="size-3 shrink-0" />
+                                            <span>
+                                              {vIdx === 0
+                                                ? "Version initiale"
+                                                : `Version ${vIdx + 1}`}
+                                              {version.createdAt
+                                                ? ` (${formatDate(version.createdAt, { style: "chat" })})`
+                                                : ""}
+                                            </span>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                {viewerIsStaff && isDeleted ? (
+                                  <div
+                                    className={cn(
+                                      "border-destructive/40 bg-destructive/5 dark:bg-destructive/10 text-muted-foreground rounded-2xl border border-dashed px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-2xs",
+                                      group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
+                                    )}
+                                  >
+                                    {message.body && <p className="italic">{message.body}</p>}
+                                    {message.imageUrl && (
+                                      <img
+                                        src={message.imageUrl}
+                                        alt=""
+                                        className={cn(
+                                          "border-destructive/30 max-h-64 max-w-full rounded-lg border border-dashed object-contain opacity-75",
+                                          message.body && "mt-1.5"
+                                        )}
+                                      />
+                                    )}
+                                    <div className="text-destructive/80 mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none">
+                                      <Trash className="size-3 shrink-0" />
+                                      <span>
+                                        Message supprimé
+                                        {message.deletedAt
+                                          ? ` (${formatDate(message.deletedAt, { style: "chat" })})`
+                                          : ""}
+                                      </span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div
                                     className={cn(
                                       "rounded-2xl px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-2xs",
                                       group.isOwn
@@ -535,20 +643,40 @@ export function ConversationChat({
                                         : "bg-muted/80 border-border/40 rounded-tl-xs border"
                                     )}
                                   >
-                                    {message.body}
-                                  </p>
-                                )}
-                                {message.imageUrl && (
-                                  <img
-                                    src={message.imageUrl}
-                                    alt=""
-                                    className="max-h-64 max-w-full rounded-lg border object-contain"
-                                  />
+                                    {message.body && <p>{message.body}</p>}
+                                    {message.imageUrl && (
+                                      <img
+                                        src={message.imageUrl}
+                                        alt=""
+                                        className={cn(
+                                          "max-h-64 max-w-full rounded-lg border object-contain",
+                                          message.body && "mt-1.5"
+                                        )}
+                                      />
+                                    )}
+                                    {message.isEdited && (
+                                      <div
+                                        className={cn(
+                                          "mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none",
+                                          group.isOwn
+                                            ? "text-primary-foreground/75"
+                                            : "text-muted-foreground/80"
+                                        )}
+                                      >
+                                        <PencilSimple className="size-3 shrink-0" />
+                                        <span>
+                                          Modifié
+                                          {message.updatedAt
+                                            ? ` (${formatDate(message.updatedAt, { style: "chat" })})`
+                                            : ""}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
                                 )}
                               </div>
 
-                              {/* 3-dots action menu */}
-                              {!disabled && (
+                              {!disabled && hasActions && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger
                                     render={
@@ -568,15 +696,15 @@ export function ConversationChat({
                                     side="top"
                                     sideOffset={4}
                                   >
-                                    {message.body && (
+                                    {message.body?.trim() && (
                                       <DropdownMenuItem onClick={() => handleCopy(message.body)}>
                                         <Copy className="size-3.5" />
                                         <span>Copier</span>
                                       </DropdownMenuItem>
                                     )}
-                                    {group.isOwn && (
+                                    {group.isOwn && !isDeleted && (
                                       <>
-                                        {message.body && (
+                                        {message.body?.trim() && (
                                           <DropdownMenuItem
                                             onClick={() => handleStartEdit(message)}
                                           >
@@ -586,7 +714,7 @@ export function ConversationChat({
                                         )}
                                         <DropdownMenuItem
                                           variant="destructive"
-                                          onClick={() => handleDeleteMessage(message.id)}
+                                          onClick={() => setDeletingMessageId(message.id)}
                                         >
                                           <Trash className="size-3.5" />
                                           <span>Supprimer</span>
@@ -718,6 +846,34 @@ export function ConversationChat({
           </div>
         </div>
       )}
+
+      <AlertDialog
+        open={deletingMessageId !== null}
+        onOpenChange={(open) => !open && setDeletingMessageId(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer le message</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ce message sera définitivement supprimé pour tous les participants.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={isPending}
+              onClick={() => {
+                if (deletingMessageId) {
+                  handleDeleteMessage(deletingMessageId);
+                }
+              }}
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

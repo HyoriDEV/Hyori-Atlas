@@ -2,12 +2,23 @@
 
 import { useState } from "react";
 import { UserMinus, UserPlus } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import { addTicketMember, removeTicketMember } from "@/lib/actions/ticket-actions";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
 import { PlayerOption, PlayerSelect } from "@/components/player-select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 type MemberProps = {
   userId: string;
@@ -29,14 +40,16 @@ export function TicketMembersManager({
   readOnly?: boolean;
 }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [memberToRemove, setMemberToRemove] = useState<MemberProps | null>(null);
 
   const handleAdd = async (playerId: string) => {
     if (!ticketId || readOnly) return;
     setLoadingId(playerId);
     try {
       await addTicketMember(ticketId, playerId);
+      toast.success("Membre ajouté au ticket.");
     } catch (e) {
-      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Impossible d'ajouter le membre.");
     } finally {
       setLoadingId(null);
     }
@@ -47,8 +60,10 @@ export function TicketMembersManager({
     setLoadingId(playerId);
     try {
       await removeTicketMember(ticketId, playerId);
+      toast.success("Membre retiré du ticket.");
+      setMemberToRemove(null);
     } catch (e) {
-      console.error(e);
+      toast.error(e instanceof Error ? e.message : "Impossible de retirer le membre.");
     } finally {
       setLoadingId(null);
     }
@@ -60,7 +75,15 @@ export function TicketMembersManager({
     if (isSelected) {
       await handleAdd(player.id);
     } else {
-      await handleRemove(player.id);
+      const existing = members.find((m) => m.userId === player.id);
+      setMemberToRemove(
+        existing ?? {
+          userId: player.id,
+          minecraftUsername: player.minecraftUsername ?? null,
+          discordDisplayName: player.discordDisplayName ?? player.id,
+          discordAvatarUrl: player.discordAvatarUrl ?? null,
+        }
+      );
     }
   };
 
@@ -123,7 +146,7 @@ export function TicketMembersManager({
                     variant="ghost"
                     size="icon"
                     className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 w-8"
-                    onClick={() => handleRemove(member.userId)}
+                    onClick={() => setMemberToRemove(member)}
                     disabled={loadingId === member.userId}
                     title="Retirer du ticket"
                   >
@@ -135,6 +158,38 @@ export function TicketMembersManager({
           })
         )}
       </div>
+
+      <AlertDialog
+        open={memberToRemove !== null}
+        onOpenChange={(open) => !open && setMemberToRemove(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Retirer le membre du ticket</AlertDialogTitle>
+            <AlertDialogDescription>
+              Retirer{" "}
+              <span className="text-foreground font-medium">
+                {memberToRemove?.minecraftUsername ?? memberToRemove?.discordDisplayName}
+              </span>{" "}
+              de ce ticket ? Ce joueur n&apos;aura plus accès à la conversation.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loadingId !== null}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={loadingId !== null}
+              onClick={() => {
+                if (memberToRemove) {
+                  handleRemove(memberToRemove.userId);
+                }
+              }}
+            >
+              Retirer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

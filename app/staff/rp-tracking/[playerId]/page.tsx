@@ -30,7 +30,12 @@ export default async function RpTrackingStaffDetailPage({
     },
     include: {
       messages: {
-        include: { author: true },
+        include: {
+          author: true,
+          versions: {
+            orderBy: { createdAt: "asc" },
+          },
+        },
         orderBy: { createdAt: "desc" },
         take: 50,
       },
@@ -47,7 +52,10 @@ export default async function RpTrackingStaffDetailPage({
       },
       include: {
         messages: {
-          include: { author: true },
+          include: {
+            author: true,
+            versions: true,
+          },
         },
       },
     });
@@ -66,7 +74,7 @@ export default async function RpTrackingStaffDetailPage({
 
       <ConversationChat
         conversationId={conversation.id}
-        initialMessages={messages.reverse().map(serializeConversationMessage)}
+        initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true))}
         viewerId={staffUser.id}
         viewerIsStaff
         sendAction={sendStaffConversationMessage}

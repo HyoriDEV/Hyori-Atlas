@@ -1,6 +1,6 @@
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus, RegistrationStatus, Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import {
   isRegistrationStatusAtLeast,
   playerPendingNavGroups,
@@ -44,9 +44,17 @@ export default async function PlayerLayout({ children }: { children: React.React
     );
   }
 
-  const characterSheet = await prisma.characterSheet.findUnique({
-    where: { playerId: user.id },
-  });
+  const [characterSheet, pendingTicketsCount] = await Promise.all([
+    prisma.characterSheet.findUnique({
+      where: { playerId: user.id },
+    }),
+    prisma.ticket.count({
+      where: {
+        conversation: { members: { some: { userId: user.id } } },
+        status: TicketStatus.PENDING_PLAYER,
+      },
+    }),
+  ]);
 
   const isSheetValidated =
     characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED ||
@@ -79,15 +87,18 @@ export default async function PlayerLayout({ children }: { children: React.React
           ) {
             fullWidth = true;
           }
+          const hasNotification =
+            (item.href === "/player/character-sheet" &&
+              (characterSheet?.hasUnreadFeedback ?? false)) ||
+            (item.href === "/player/tickets" && pendingTicketsCount > 0);
+
           return {
             label: item.label,
             href: item.href,
             iconKey: item.iconKey,
             locked,
             fullWidth,
-            hasNotification:
-              item.href === "/player/character-sheet" &&
-              (characterSheet?.hasUnreadFeedback ?? false),
+            hasNotification,
           };
         }),
     }))

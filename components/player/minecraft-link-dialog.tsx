@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Check } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -27,9 +28,14 @@ export function MinecraftLinkDialog({ linked }: { linked: boolean }) {
   }
 
   async function handleCopy() {
-    await navigator.clipboard.writeText(LINK_COMMAND);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(LINK_COMMAND);
+      setCopied(true);
+      toast.success("Commande copiée dans le presse-papiers !");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Impossible de copier la commande.");
+    }
   }
 
   return (

@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { auth } from "@/auth";
 import { PlayerSpaceCta } from "@/components/player-space-cta";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 const navLinks = [
   { label: "Actualités", href: "/news" },
@@ -13,6 +14,7 @@ const navLinks = [
 
 export async function PublicNav() {
   const session = await auth();
+  const settings = await getGlobalSettings();
 
   const user = session?.user
     ? {
@@ -49,7 +51,7 @@ export async function PublicNav() {
               {link.label}
             </Link>
           ))}
-          <PlayerSpaceCta user={user} />
+          <PlayerSpaceCta user={user} registrationEnabled={settings.registrationEnabled} />
         </nav>
       </div>
     </header>

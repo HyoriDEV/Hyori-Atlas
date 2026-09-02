@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { reopenCharacterSheetReview } from "@/lib/actions/staff-review-actions";
 import { Button } from "@/components/ui/button";
@@ -21,8 +22,13 @@ export function AtlasReopenSheetButton({ sheetId, pseudo }: { sheetId: string; p
 
   function handleConfirm() {
     startTransition(async () => {
-      await reopenCharacterSheetReview(sheetId);
-      setOpen(false);
+      try {
+        await reopenCharacterSheetReview(sheetId);
+        toast.success(`Fiche personnage de ${pseudo} rouverte.`);
+        setOpen(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -42,9 +48,9 @@ export function AtlasReopenSheetButton({ sheetId, pseudo }: { sheetId: string; p
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer la réouverture
+              Rouvrir la fiche
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -11,7 +11,6 @@ import {
 import {
   characterSheetStatusLabels,
   interviewBookingStatusLabels,
-  isRegistrationStatusAtLeast,
   registrationStatusLabels,
   staffRoleLabels,
 } from "@/lib/navigation";
@@ -85,7 +84,7 @@ export default async function PlayerDashboardPage() {
   const isStaff = user.role !== Role.PLAYER;
 
   return (
-    <div className="flex flex-col gap-6 pb-8">
+    <div className="flex flex-col gap-6">
       <div className="border-border/80 from-card to-card/60 flex flex-col gap-4 rounded-xl border bg-gradient-to-r p-5 shadow-xs">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-3.5">

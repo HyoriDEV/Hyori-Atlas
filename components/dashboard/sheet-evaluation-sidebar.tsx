@@ -145,9 +145,9 @@ export function SheetEvaluationSidebar({
             type="button"
             className="w-full"
             disabled={isPending}
-            onClick={() => (hasComments ? onSubmit() : onApprovalDialogChange(true))}
+            onClick={() => onApprovalDialogChange(true)}
           >
-            {hasComments ? "Demander des modifications" : "Valider la fiche"}
+            {hasComments ? "Envoyer les retours" : "Valider la fiche"}
           </Button>
         </div>
       )}
@@ -155,17 +155,29 @@ export function SheetEvaluationSidebar({
       <AlertDialog open={isApprovalDialogOpen} onOpenChange={onApprovalDialogChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Valider la fiche</AlertDialogTitle>
+            <AlertDialogTitle>
+              {hasComments ? "Envoyer les retours" : "Valider la fiche"}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              La fiche de <span className="text-foreground">{pseudo} </span>sera marquée comme
-              validée et verrouillée pour le joueur. Elle pourra être rouverte par le staff en cas
-              de besoin.
+              {hasComments ? (
+                <>
+                  Envoyer cette fiche avec {comments.length} commentaire
+                  {comments.length > 1 ? "s" : ""} à{" "}
+                  <span className="text-foreground">{pseudo}</span> pour révision ?
+                </>
+              ) : (
+                <>
+                  La fiche de <span className="text-foreground">{pseudo} </span>sera marquée comme
+                  validée et verrouillée pour le joueur. Elle pourra être rouverte par le staff en
+                  cas de besoin.
+                </>
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction disabled={isPending} onClick={onSubmit}>
-              Confirmer
+              {hasComments ? "Envoyer" : "Valider"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

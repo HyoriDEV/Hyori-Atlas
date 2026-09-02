@@ -2,6 +2,7 @@ import type { VariantProps } from "class-variance-authority";
 
 import type { badgeVariants } from "@/components/ui/badge";
 import {
+  BdaReportStatus,
   CharacterSheetStatus,
   RegistrationStatus,
   TicketStatus,
@@ -44,6 +45,17 @@ export function ticketStatusBadgeVariant(status: TicketStatus): BadgeVariant {
     case TicketStatus.PENDING_PLAYER:
       return "secondary";
     case TicketStatus.ARCHIVED:
+      return "outline";
+  }
+}
+
+export function bdaReportStatusBadgeVariant(status: BdaReportStatus): BadgeVariant {
+  switch (status) {
+    case BdaReportStatus.UNREAD:
+      return "destructive";
+    case BdaReportStatus.RESOLVED:
+      return "default";
+    case BdaReportStatus.ARCHIVED:
       return "outline";
   }
 }

@@ -23,11 +23,18 @@ export async function editConversationMessage(messageId: string, body: string): 
         },
       },
       author: true,
+      versions: {
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
   if (!message) {
     throw new Error("Message introuvable.");
+  }
+
+  if (message.deletedAt) {
+    throw new Error("Impossible de modifier un message supprimé.");
   }
 
   if (message.authorType === MessageAuthorType.SYSTEM) {
@@ -42,15 +49,37 @@ export async function editConversationMessage(messageId: string, body: string): 
     throw new Error("Ce ticket est archivé.");
   }
 
-  const updated = await prisma.conversationMessage.update({
-    where: { id: messageId },
-    data: { body: trimmedBody },
-    include: { author: true },
+  if (message.body === trimmedBody) {
+    return;
+  }
+
+  const previousVersionCreatedAt =
+    message.versions.length === 0 ? message.createdAt : message.updatedAt;
+
+  const updated = await prisma.$transaction(async (tx) => {
+    await tx.conversationMessageVersion.create({
+      data: {
+        messageId: message.id,
+        body: message.body,
+        createdAt: previousVersionCreatedAt,
+      },
+    });
+
+    return await tx.conversationMessage.update({
+      where: { id: messageId },
+      data: { body: trimmedBody },
+      include: {
+        author: true,
+        versions: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+    });
   });
 
   publish(message.conversationId, {
     type: "UPDATE",
-    message: serializeConversationMessage(updated),
+    message: serializeConversationMessage(updated, true),
   });
 }
 
@@ -65,11 +94,19 @@ export async function deleteConversationMessage(messageId: string): Promise<void
           ticket: true,
         },
       },
+      author: true,
+      versions: {
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
   if (!message) {
     throw new Error("Message introuvable.");
+  }
+
+  if (message.deletedAt) {
+    throw new Error("Ce message est déjà supprimé.");
   }
 
   if (message.authorType === MessageAuthorType.SYSTEM) {
@@ -84,13 +121,17 @@ export async function deleteConversationMessage(messageId: string): Promise<void
     throw new Error("Ce ticket est archivé.");
   }
 
-  await prisma.conversationMessage.delete({
+  const deletedAt = new Date();
+
+  await prisma.conversationMessage.update({
     where: { id: messageId },
+    data: { deletedAt },
   });
 
   publish(message.conversationId, {
     type: "DELETE",
     messageId: message.id,
     conversationId: message.conversationId,
+    deletedAt: deletedAt.toISOString(),
   });
 }

@@ -20,12 +20,7 @@ const categoryItems = [
   ...Object.values(TicketCategory).map((value) => ({ value, label: ticketCategoryLabels[value] })),
 ];
 
-const scopeItems = [
-  { value: "OPEN", label: "Tickets ouverts" },
-  { value: "ARCHIVED", label: "Tickets archivés" },
-];
-
-export function TicketFilters({ category, status }: { category?: string; status?: string }) {
+export function TicketFilters({ category }: { category?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -34,7 +29,7 @@ export function TicketFilters({ category, status }: { category?: string; status?
   function updateParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
     for (const [key, value] of Object.entries(next)) {
-      if (value && value !== ALL_VALUE && value !== "OPEN") {
+      if (value && value !== ALL_VALUE) {
         params.set(key, value);
       } else {
         params.delete(key);
@@ -58,23 +53,6 @@ export function TicketFilters({ category, status }: { category?: string; status?
         </SelectTrigger>
         <SelectContent>
           {categoryItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        items={scopeItems}
-        value={status === "ARCHIVED" ? "ARCHIVED" : "OPEN"}
-        onValueChange={(value) => updateParams({ status: value ?? "OPEN" })}
-      >
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Filtre" />
-        </SelectTrigger>
-        <SelectContent>
-          {scopeItems.map((item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}
             </SelectItem>

@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { UserSwitch, Check } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import { DEV_TEST_USERS, type DevTestUser } from "@/lib/dev-auth";
 import { devSignInAction } from "@/lib/actions/dev-auth-actions";
@@ -32,6 +33,7 @@ export function DevUserSwitcher({
   const [isPending, startTransition] = useTransition();
 
   const handleSelectUser = (user: DevTestUser) => {
+    toast.info(`Connexion en tant que ${user.discordDisplayName} (${user.roleLabel})`);
     startTransition(async () => {
       const targetRedirect = redirectTo ?? (user.role === "PLAYER" ? "/player" : "/staff");
       await devSignInAction(user.id, targetRedirect);

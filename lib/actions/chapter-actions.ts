@@ -4,8 +4,16 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 const TITLE_MAX_LENGTH = 120;
+
+async function requireWritingEnabled() {
+  const settings = await getGlobalSettings();
+  if (!settings.chapterWritingEnabled) {
+    throw new Error("L'écriture de narration est temporairement désactivée par un administrateur.");
+  }
+}
 
 function assertOwnsChapter(chapter: { playerId: string } | null, userId: string) {
   if (!chapter || chapter.playerId !== userId) {
@@ -20,6 +28,7 @@ async function requireOwnedChapter(chapterId: string, userId: string) {
 }
 
 export async function createChapter(title: string) {
+  await requireWritingEnabled();
   const user = await requireActivePlayer();
 
   const trimmedTitle = title.trim() || "Nouveau chapitre";
@@ -47,6 +56,7 @@ export async function createChapter(title: string) {
 }
 
 export async function updateChapterContent(chapterId: string, content: string) {
+  await requireWritingEnabled();
   const user = await requireActivePlayer();
   await requireOwnedChapter(chapterId, user.id);
 
@@ -57,6 +67,7 @@ export async function updateChapterContent(chapterId: string, content: string) {
 }
 
 export async function updateChapterTitle(chapterId: string, title: string) {
+  await requireWritingEnabled();
   const user = await requireActivePlayer();
   await requireOwnedChapter(chapterId, user.id);
 
@@ -77,6 +88,7 @@ export async function updateChapterTitle(chapterId: string, title: string) {
 }
 
 export async function deleteChapter(chapterId: string) {
+  await requireWritingEnabled();
   const user = await requireActivePlayer();
   await requireOwnedChapter(chapterId, user.id);
 
@@ -85,7 +97,37 @@ export async function deleteChapter(chapterId: string) {
   revalidatePath("/player/writing");
 }
 
+export async function duplicateChapter(chapterId: string) {
+  await requireWritingEnabled();
+  const user = await requireActivePlayer();
+  const source = await requireOwnedChapter(chapterId, user.id);
+
+  const lastChapter = await prisma.chapter.findFirst({
+    where: { playerId: user.id },
+    orderBy: { order: "desc" },
+  });
+
+  const duplicate = await prisma.chapter.create({
+    data: {
+      playerId: user.id,
+      title: `${source.title} (Copie)`,
+      content: source.content,
+      order: (lastChapter?.order ?? -1) + 1,
+    },
+  });
+
+  revalidatePath("/player/writing");
+
+  return {
+    id: duplicate.id,
+    title: duplicate.title,
+    content: duplicate.content,
+    order: duplicate.order,
+  };
+}
+
 export async function reorderChapters(orderedChapterIds: string[]) {
+  await requireWritingEnabled();
   const user = await requireActivePlayer();
 
   const chapters = await prisma.chapter.findMany({ where: { playerId: user.id } });

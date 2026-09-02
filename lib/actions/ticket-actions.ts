@@ -1,6 +1,5 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole } from "@/lib/dal";
@@ -14,9 +13,15 @@ import {
   TicketCategory,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export async function createTicket(category: TicketCategory, subject: string, description: string) {
   const user = await requireActivePlayer();
+  const settings = await getGlobalSettings();
+
+  if (!settings.ticketCreationEnabled) {
+    throw new Error("Un administrateur a désactivé l'ouverture de tickets.");
+  }
 
   const trimmedSubject = subject.trim();
   const trimmedDescription = description.trim();
@@ -91,7 +96,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
   }
 
   revalidatePath("/player/tickets");
-  redirect(`/player/tickets/${ticket.id}`);
+  return { id: ticket.id };
 }
 
 export async function sendTicketMessage(ticketId: string, body?: string, imageUrl?: string) {

@@ -33,6 +33,12 @@ export async function sendConversationMessage(
     throw new Error("Tu n'as pas accès à cette conversation.");
   }
 
+  const { getGlobalSettings } = await import("@/lib/services/settings-service");
+  const settings = await getGlobalSettings();
+  if (!settings.rpTrackingAccessEnabled) {
+    throw new Error("Un administrateur a désactivé l'accès au Suivi RP.");
+  }
+
   assertHasContent(body, imageUrl);
 
   const message = await prisma.conversationMessage.create({

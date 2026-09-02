@@ -103,25 +103,28 @@ model User {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  accounts            Account[]
-  sessions            Session[]
-  news                News[]
-  tickets               Ticket[]
-  registrationHistory   RegistrationStatusHistory[]
+  accounts                Account[]
+  sessions                Session[]
+  news                    News[]
+  tickets                 Ticket[]
+  registrationHistory     RegistrationStatusHistory[]
   conversationMemberships ConversationMember[]
   conversationMessages    ConversationMessage[]
-  characterSheet      CharacterSheet?
-  interviewBookings   InterviewBooking[]
-  staffNotes          StaffNote[]                 @relation("StaffNotePlayer")
-  authoredStaffNotes  StaffNote[]                 @relation("StaffNoteAuthor")
-  chapters            Chapter[]
+  characterSheet          CharacterSheet?
+  interviewBookings       InterviewBooking[]
+  staffNotes              StaffNote[]                 @relation("StaffNotePlayer")
+  authoredStaffNotes      StaffNote[]                 @relation("StaffNoteAuthor")
+  chapters                Chapter[]
 
   authoredStatusChanges     RegistrationStatusHistory[] @relation("RegistrationStatusHistoryAuthor")
   reviewedInterviewBookings InterviewBooking[]          @relation("InterviewBookingReviewer")
 
   authoredSheetComments CharacterSheetComment[]       @relation("CharacterSheetCommentAuthor")
   authoredSheetReviews  CharacterSheetReviewHistory[] @relation("CharacterSheetReviewAuthor")
-
+  bdaPartyMemberships   BdaPartyMember[]
+  createdBdaReports     BdaReport[]                   @relation("BdaReportCreator")
+  bdaStaffMemberships   BdaStaffMember[]
+  updatedGlobalSettings GlobalSettings[]
 
   @@map("users")
 }
@@ -198,21 +201,21 @@ model News {
 }
 
 model Ticket {
-  id        String         @id @default(cuid())
-  playerId  String
-  category  TicketCategory
-  subject   String
-  status    TicketStatus   @default(PENDING_STAFF)
+  id             String         @id @default(cuid())
+  playerId       String
+  category       TicketCategory
+  subject        String
+  status         TicketStatus   @default(PENDING_STAFF)
   conversationId String         @unique
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  player       User           @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  conversation Conversation   @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  player       User         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  bdaReport    BdaReport?
 
   @@map("tickets")
 }
-
 
 model CharacterSheet {
   id       String @id @default(cuid())
@@ -384,10 +387,117 @@ model ConversationMessage {
   linkHref       String?
   linkLabel      String?
   createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @default(now()) @updatedAt
+  deletedAt      DateTime?
 
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  author       User?        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  conversation Conversation                 @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  author       User?                        @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  versions     ConversationMessageVersion[]
 
   @@index([conversationId])
   @@map("conversation_messages")
+}
+
+model ConversationMessageVersion {
+  id        String   @id @default(cuid())
+  messageId String
+  body      String?
+  createdAt DateTime @default(now())
+
+  message ConversationMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@map("conversation_message_versions")
+}
+
+enum BdaReportStatus {
+  UNREAD
+  RESOLVED
+  ARCHIVED
+}
+
+model BdaReport {
+  id          String          @id @default(cuid())
+  title       String          @db.VarChar(120)
+  description String          @db.Text
+  status      BdaReportStatus @default(UNREAD)
+
+  ticketId    String? @unique // Optional link to a PLAYER_COMPLAINT ticket
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy    User?            @relation("BdaReportCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  ticket       Ticket?          @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+  parties      BdaParty[]
+  attachments  BdaAttachment[]
+  staffMembers BdaStaffMember[]
+
+  @@map("bda_reports")
+}
+
+model BdaStaffMember {
+  id       String @id @default(cuid())
+  reportId String
+  userId   String
+
+  report BdaReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([reportId, userId])
+  @@index([userId])
+  @@map("bda_staff_members")
+}
+
+model BdaParty {
+  id       String @id @default(cuid())
+  reportId String
+  name     String @db.VarChar(100)
+
+  report  BdaReport        @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  members BdaPartyMember[]
+
+  @@map("bda_parties")
+}
+
+model BdaPartyMember {
+  id      String @id @default(cuid())
+  partyId String
+  userId  String
+
+  party BdaParty @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  user  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([partyId, userId])
+  @@index([userId])
+  @@map("bda_party_members")
+}
+
+model BdaAttachment {
+  id        String   @id @default(cuid())
+  reportId  String
+  url       String
+  createdAt DateTime @default(now())
+
+  report BdaReport @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  @@index([reportId])
+  @@map("bda_attachments")
+}
+
+model GlobalSettings {
+  id                         String   @id @default("global")
+  registrationEnabled        Boolean  @default(true)
+  interviewBookingEnabled    Boolean  @default(true)
+  ticketCreationEnabled      Boolean  @default(true)
+  rpTrackingAccessEnabled    Boolean  @default(true)
+  chapterWritingEnabled      Boolean  @default(true)
+  bdaReportSubmissionEnabled Boolean  @default(true)
+  updatedAt                  DateTime @updatedAt
+  updatedById                String?
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("global_settings")
 }

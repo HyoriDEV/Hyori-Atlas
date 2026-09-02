@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { submitCharacterSheetEvaluation } from "@/lib/actions/staff-review-actions";
@@ -130,10 +131,18 @@ export function SheetEvaluationWorkspace({
           })),
           sheetUpdatedAt
         );
+        if (comments.length > 0) {
+          toast.success("Modifications demandées au joueur.");
+        } else {
+          toast.success("Fiche personnage validée avec succès !");
+        }
         router.push(`/staff/atlas/${playerId}`);
       } catch (submitError) {
         setIsApprovalDialogOpen(false);
-        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+        const message =
+          submitError instanceof Error ? submitError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       }
     });
   }

@@ -1,5 +1,11 @@
 import type { MessageAuthorType } from "@/lib/generated/prisma/enums";
 
+export interface SerializedConversationMessageVersion {
+  id: string;
+  body: string | null;
+  createdAt: string;
+}
+
 export interface SerializedConversationMessage {
   id: string;
   conversationId: string;
@@ -13,12 +19,16 @@ export interface SerializedConversationMessage {
   linkHref: string | null;
   linkLabel: string | null;
   createdAt: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  isEdited?: boolean;
+  versions?: SerializedConversationMessageVersion[];
 }
 
 export type ConversationEventPayload =
   | { type: "CREATE"; message: SerializedConversationMessage }
   | { type: "UPDATE"; message: SerializedConversationMessage }
-  | { type: "DELETE"; messageId: string; conversationId: string }
+  | { type: "DELETE"; messageId: string; conversationId: string; deletedAt?: string }
   | SerializedConversationMessage;
 
 type Subscriber = (event: ConversationEventPayload) => void;

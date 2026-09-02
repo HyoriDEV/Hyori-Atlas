@@ -10,9 +10,20 @@ import { interviewBookingStatusLabels, isRegistrationStatusAtLeast } from "@/lib
 import { Badge } from "@/components/ui/badge";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { InterviewCalendar, type InterviewSlotInfo } from "@/components/player/interview-calendar";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export default async function InterviewPage() {
   const user = await requireActivePlayer();
+  const settings = await getGlobalSettings();
+
+  if (!settings.interviewBookingEnabled) {
+    return (
+      <div className="flex flex-col gap-6">
+        <h1 className="font-heading text-2xl font-semibold">Entretien whitelist</h1>
+        <LockedFeatureCard description="Un administrateur a temporairement désactivé la réservation d'entretiens." />
+      </div>
+    );
+  }
 
   if (user.registrationStatus === RegistrationStatus.WHITELISTED) {
     redirect("/player/character-sheet");

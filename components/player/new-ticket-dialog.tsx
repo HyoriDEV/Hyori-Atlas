@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 import { TicketCategory } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels } from "@/lib/navigation";
@@ -21,12 +23,24 @@ import {
 
 const ticketCategories = Object.values(TicketCategory);
 
-export function NewTicketDialog() {
+export function NewTicketDialog({ ticketCreationEnabled = true }: { ticketCreationEnabled?: boolean }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<TicketCategory | null>(null);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [isPending, startTransition] = useTransition();
+
+  if (!ticketCreationEnabled) {
+    return (
+      <Button 
+        variant="secondary"
+        onClick={() => toast.error("L'ouverture de tickets a été temporairement désactivée par un administrateur.")}
+      >
+        Ouvrir un ticket
+      </Button>
+    );
+  }
 
   function resetForm() {
     setCategory(null);
@@ -37,9 +51,15 @@ export function NewTicketDialog() {
   function handleSubmit() {
     if (!category || !subject.trim() || !description.trim()) return;
     startTransition(async () => {
-      await createTicket(category, subject, description);
-      resetForm();
-      setOpen(false);
+      try {
+        const ticket = await createTicket(category, subject, description);
+        toast.success("Ticket ouvert avec succès.");
+        resetForm();
+        setOpen(false);
+        router.push(`/player/tickets/${ticket.id}`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 

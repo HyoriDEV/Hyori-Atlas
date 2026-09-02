@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 
 import { restoreWaitlistPlayer } from "@/lib/actions/waitlist-actions";
 import { Button } from "@/components/ui/button";
@@ -22,8 +23,13 @@ export function RejectedRowActions({ userId, pseudo }: { userId: string; pseudo:
 
   function handleConfirm() {
     startTransition(async () => {
-      await restoreWaitlistPlayer(userId);
-      setOpen(false);
+      try {
+        await restoreWaitlistPlayer(userId);
+        toast.success(`${pseudo} a été remis sur la liste d'attente.`);
+        setOpen(false);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -35,15 +41,15 @@ export function RejectedRowActions({ userId, pseudo }: { userId: string; pseudo:
         </AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmation</AlertDialogTitle>
+            <AlertDialogTitle>Remettre en liste d&apos;attente</AlertDialogTitle>
             <AlertDialogDescription>
               Remettre {pseudo} sur la liste d&apos;attente ?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+              Remettre en attente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

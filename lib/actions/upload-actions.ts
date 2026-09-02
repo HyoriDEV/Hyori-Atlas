@@ -74,3 +74,14 @@ export async function uploadConversationImage(
 
   return processAndStoreUpload(file, "conversations", conversationId);
 }
+
+export async function uploadBdaImage(formData: FormData): Promise<{ url: string }> {
+  const user = await requireUser();
+  const file = formData.get("file");
+
+  if (!(file instanceof File)) {
+    throw new Error("Aucun fichier reçu.");
+  }
+
+  return processAndStoreUpload(file, "bda-reports", user.id);
+}

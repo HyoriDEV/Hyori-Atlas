@@ -82,7 +82,7 @@ export default async function CharacterSheetEvaluationPage({
         <h1 className="font-heading flex-1 text-lg font-semibold">
           {sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF
             ? `Évaluation de la fiche de ${playerName}`
-            : `Consultation de la fiche de ${playerName}`}
+            : `Fiche personnage de ${playerName}`}
         </h1>
         <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
           {characterSheetStatusLabels[sheet.reviewStatus]}

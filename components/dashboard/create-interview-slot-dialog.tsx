@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { Plus } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import { createInterviewSlot } from "@/lib/actions/interview-slot-actions";
 import { Button } from "@/components/ui/button";
@@ -35,10 +36,14 @@ export function CreateInterviewSlotDialog() {
     startTransition(async () => {
       try {
         await createInterviewSlot(new Date(startsAt));
+        toast.success("Créneau d'entretien créé.");
         resetForm();
         setOpen(false);
       } catch (submitError) {
-        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+        const message =
+          submitError instanceof Error ? submitError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       }
     });
   }

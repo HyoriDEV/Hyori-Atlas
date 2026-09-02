@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 
 import { bookInterviewSlot } from "@/lib/actions/interview-actions";
 import { formatDate } from "@/lib/date";
@@ -62,8 +63,12 @@ export function InterviewCalendar({
       try {
         await bookInterviewSlot(pendingSlot.id);
         setPendingSlot(null);
+        toast.success("Créneau d'entretien réservé avec succès !");
       } catch (submitError) {
-        setError(submitError instanceof Error ? submitError.message : "Une erreur est survenue.");
+        const message =
+          submitError instanceof Error ? submitError.message : "Une erreur est survenue.";
+        setError(message);
+        toast.error(message);
       }
     });
   }
@@ -124,9 +129,9 @@ export function InterviewCalendar({
           </AlertDialogHeader>
           {error && <p className="text-destructive text-sm">{error}</p>}
           <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
-              Confirmer
+              Réserver
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

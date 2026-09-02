@@ -22,6 +22,14 @@ async function main() {
       },
     });
   }
+
+  await prisma.globalSettings.upsert({
+    where: { id: "global" },
+    update: {},
+    create: {
+      id: "global",
+    },
+  });
 }
 
 main()

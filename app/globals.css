@@ -10,6 +10,8 @@
   --font-sans: var(--font-sans), serif;
   --font-heading: var(--font-heading), serif;
   --font-serif: var(--font-heading), serif;
+  --font-chapter-sans: var(--font-chapter-sans), sans-serif;
+  --font-chapter-serif: var(--font-sans), serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -107,6 +109,28 @@
   --sidebar-ring: #e9d15c;
 }
 
+.editor-light {
+  --background: #faf8f5;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+  --primary: #926312;
+  --primary-foreground: #ffffff;
+  --secondary: #f3ede4;
+  --secondary-foreground: #1c1917;
+  --muted: #f4eee5;
+  --muted-foreground: #78716c;
+  --accent: #b48324;
+  --accent-foreground: #ffffff;
+  --border: #e6ded3;
+  --input: #e6ded3;
+  --ring: #926312;
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -125,23 +149,72 @@
 }
 
 .chapter-content {
-  @apply flex flex-col gap-3 text-sm leading-relaxed;
+  @apply flex flex-col gap-3.5 leading-relaxed;
 }
 .chapter-content p {
   @apply leading-relaxed;
 }
+
+.chapter-content.font-chapter-serif,
+.font-chapter-serif {
+  font-family: var(--font-sans), serif;
+}
+.chapter-content.font-chapter-serif h1,
+.chapter-content.font-chapter-serif h2,
+.chapter-content.font-chapter-serif h3,
+.font-chapter-serif h1,
+.font-chapter-serif h2,
+.font-chapter-serif h3 {
+  font-family: var(--font-heading), serif;
+}
+
+.chapter-content.font-chapter-sans,
+.font-chapter-sans,
+.chapter-content.font-chapter-sans h1,
+.chapter-content.font-chapter-sans h2,
+.chapter-content.font-chapter-sans h3,
+.font-chapter-sans h1,
+.font-chapter-sans h2,
+.font-chapter-sans h3 {
+  font-family: var(--font-chapter-sans), sans-serif;
+}
+
+.chapter-content h1 {
+  @apply text-foreground mt-4 mb-1 text-2xl font-bold tracking-tight;
+}
+.chapter-content h2 {
+  @apply text-foreground/95 mt-3 mb-1 text-xl font-semibold;
+}
+.chapter-content h3 {
+  @apply text-primary mt-2 mb-0.5 text-lg font-medium;
+}
 .chapter-content a {
-  @apply text-primary underline underline-offset-2;
+  @apply text-primary underline underline-offset-2 transition-opacity hover:opacity-80;
 }
 .chapter-content img {
-  @apply max-w-full rounded-lg;
+  @apply border-border/60 mx-auto my-3 block max-w-full rounded-lg border shadow-md;
 }
 .chapter-content strong {
-  @apply font-semibold;
+  @apply text-foreground font-semibold;
+}
+.chapter-content em {
+  @apply italic;
+}
+.chapter-content s {
+  @apply text-muted-foreground line-through;
+}
+.chapter-content u {
+  @apply decoration-primary/60 underline underline-offset-2;
+}
+.chapter-content code {
+  @apply bg-muted text-primary rounded px-1.5 py-0.5 font-mono text-xs;
+}
+.chapter-content pre {
+  @apply bg-muted/60 border-border/60 my-2 overflow-x-auto rounded-lg border p-3 font-mono text-xs;
 }
 .chapter-content ul,
 .chapter-content ol {
-  @apply flex flex-col gap-1 pl-5;
+  @apply my-1 flex flex-col gap-1.5 pl-6;
 }
 .chapter-content ul {
   @apply list-disc;
@@ -150,5 +223,88 @@
   @apply list-decimal;
 }
 .chapter-content blockquote {
-  @apply border-border text-muted-foreground border-l-2 pl-3 italic;
+  @apply border-primary/80 bg-muted/30 text-foreground/90 my-2 rounded-r-md border-l-2 py-2.5 pr-3 pl-4 italic;
+}
+.chapter-content hr {
+  @apply relative my-6 flex items-center justify-center border-0 text-center;
+}
+.chapter-content hr::before {
+  content: "♦  ♦  ♦";
+  @apply text-primary/50 inline-block text-xs tracking-[0.6em] select-none;
+}
+.chapter-content .tiptap:focus {
+  @apply outline-none;
+}
+.chapter-content .tiptap p.is-editor-empty:first-child::before {
+  color: var(--muted-foreground);
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+
+.chapter-size-small {
+  @apply text-sm leading-relaxed sm:text-[15px];
+}
+.chapter-size-small .chapter-kicker {
+  @apply text-[11px];
+}
+.chapter-size-small .chapter-main-title {
+  @apply text-2xl sm:text-3xl;
+}
+.chapter-size-small .chapter-content h1,
+.chapter-size-small.chapter-content h1 {
+  @apply text-xl sm:text-2xl;
+}
+.chapter-size-small .chapter-content h2,
+.chapter-size-small.chapter-content h2 {
+  @apply text-lg sm:text-xl;
+}
+.chapter-size-small .chapter-content h3,
+.chapter-size-small.chapter-content h3 {
+  @apply text-base sm:text-lg;
+}
+
+.chapter-size-normal {
+  @apply text-base leading-relaxed sm:text-[17px];
+}
+.chapter-size-normal .chapter-kicker {
+  @apply text-xs;
+}
+.chapter-size-normal .chapter-main-title {
+  @apply text-3xl sm:text-4xl;
+}
+.chapter-size-normal .chapter-content h1,
+.chapter-size-normal.chapter-content h1 {
+  @apply text-2xl sm:text-3xl;
+}
+.chapter-size-normal .chapter-content h2,
+.chapter-size-normal.chapter-content h2 {
+  @apply text-xl sm:text-2xl;
+}
+.chapter-size-normal .chapter-content h3,
+.chapter-size-normal.chapter-content h3 {
+  @apply text-lg sm:text-xl;
+}
+
+.chapter-size-large {
+  @apply text-lg leading-relaxed sm:text-[19px];
+}
+.chapter-size-large .chapter-kicker {
+  @apply text-sm;
+}
+.chapter-size-large .chapter-main-title {
+  @apply text-4xl sm:text-5xl;
+}
+.chapter-size-large .chapter-content h1,
+.chapter-size-large.chapter-content h1 {
+  @apply text-3xl sm:text-4xl;
+}
+.chapter-size-large .chapter-content h2,
+.chapter-size-large.chapter-content h2 {
+  @apply text-2xl sm:text-3xl;
+}
+.chapter-size-large .chapter-content h3,
+.chapter-size-large.chapter-content h3 {
+  @apply text-xl sm:text-2xl;
 }

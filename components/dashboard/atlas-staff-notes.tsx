@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { PencilSimple, TrashSimple } from "@phosphor-icons/react";
+import { toast } from "sonner";
 
 import { addStaffNote, deleteStaffNote, updateStaffNote } from "@/lib/actions/atlas-actions";
 import { formatDate } from "@/lib/date";
@@ -45,8 +46,13 @@ export function AtlasStaffNotes({
   function handleSubmit() {
     if (!body.trim()) return;
     startTransition(async () => {
-      await addStaffNote(playerId, body);
-      setBody("");
+      try {
+        await addStaffNote(playerId, body);
+        setBody("");
+        toast.success("Note ajoutée.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -63,9 +69,14 @@ export function AtlasStaffNotes({
   function handleSaveEdit(noteId: string) {
     if (!editingBody.trim()) return;
     startTransition(async () => {
-      await updateStaffNote(noteId, editingBody);
-      setEditingNoteId(null);
-      setEditingBody("");
+      try {
+        await updateStaffNote(noteId, editingBody);
+        setEditingNoteId(null);
+        setEditingBody("");
+        toast.success("Note mise à jour.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
@@ -73,8 +84,13 @@ export function AtlasStaffNotes({
     if (!deletingNoteId) return;
     const noteId = deletingNoteId;
     startTransition(async () => {
-      await deleteStaffNote(noteId);
-      setDeletingNoteId(null);
+      try {
+        await deleteStaffNote(noteId);
+        setDeletingNoteId(null);
+        toast.success("Note supprimée.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
     });
   }
 
