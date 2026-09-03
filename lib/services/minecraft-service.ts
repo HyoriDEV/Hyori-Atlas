@@ -160,6 +160,17 @@ export async function getActiveMinecraftAuthCode(userId: string) {
   };
 }
 
+/**
+ * Retrieves the currently active code or automatically generates a new one if none or expired.
+ */
+export async function getOrCreateActiveMinecraftAuthCode(userId: string) {
+  const activeCode = await getActiveMinecraftAuthCode(userId);
+  if (activeCode) {
+    return activeCode;
+  }
+  return createMinecraftAuthCode(userId);
+}
+
 export interface LinkResult {
   success: boolean;
   message: string;
@@ -177,33 +188,17 @@ export async function verifyAndLinkMinecraftAccount(params: {
   ipAddress?: string;
   skipMojangCheck?: boolean;
 }): Promise<LinkResult> {
-  const { code, ipAddress, skipMojangCheck } = params;
+  const { code, skipMojangCheck } = params;
   const normalizedCode = code.trim().toUpperCase();
   const normalizedUuid = normalizeMinecraftUuid(params.minecraftUuid);
   const trimmedUsername = params.minecraftUsername.trim();
 
   // Validate format
   if (!normalizedUuid) {
-    await logAttempt({
-      code: normalizedCode,
-      minecraftUuid: params.minecraftUuid,
-      minecraftUsername: trimmedUsername,
-      ipAddress,
-      success: false,
-      reason: "INVALID_UUID_FORMAT",
-    });
     return { success: false, message: "Format d'UUID Minecraft invalide.", error: "INVALID_UUID" };
   }
 
   if (!/^[a-zA-Z0-9_]{2,16}$/.test(trimmedUsername)) {
-    await logAttempt({
-      code: normalizedCode,
-      minecraftUuid: normalizedUuid,
-      minecraftUsername: trimmedUsername,
-      ipAddress,
-      success: false,
-      reason: "INVALID_USERNAME_FORMAT",
-    });
     return {
       success: false,
       message: "Format de pseudo Minecraft invalide.",
@@ -215,14 +210,6 @@ export async function verifyAndLinkMinecraftAccount(params: {
   if (!skipMojangCheck) {
     const mojangVerification = await verifyMojangProfile(normalizedUuid, trimmedUsername);
     if (!mojangVerification.valid) {
-      await logAttempt({
-        code: normalizedCode,
-        minecraftUuid: normalizedUuid,
-        minecraftUsername: trimmedUsername,
-        ipAddress,
-        success: false,
-        reason: mojangVerification.reason || "MOJANG_VERIFICATION_FAILED",
-      });
       return {
         success: false,
         message: "L'UUID et le pseudo ne correspondent pas au compte officiel Minecraft.",
@@ -288,19 +275,6 @@ export async function verifyAndLinkMinecraftAccount(params: {
         },
       });
 
-      // 6. Record successful audit attempt
-      await tx.minecraftAuthAttempt.create({
-        data: {
-          code: normalizedCode,
-          minecraftUuid: normalizedUuid,
-          minecraftUsername: trimmedUsername,
-          ipAddress,
-          success: true,
-          reason: "SUCCESS",
-          userId: authCode.userId,
-        },
-      });
-
       return { user: updatedUser };
     });
 
@@ -311,15 +285,6 @@ export async function verifyAndLinkMinecraftAccount(params: {
     };
   } catch (error: any) {
     const reason = error?.message || "TRANSACTION_FAILED";
-
-    await logAttempt({
-      code: normalizedCode,
-      minecraftUuid: normalizedUuid,
-      minecraftUsername: trimmedUsername,
-      ipAddress,
-      success: false,
-      reason,
-    });
 
     if (reason === "UUID_ALREADY_LINKED") {
       return {
@@ -332,7 +297,7 @@ export async function verifyAndLinkMinecraftAccount(params: {
     if (reason === "CODE_EXPIRED" || reason === "CODE_ALREADY_USED" || reason === "CODE_NOT_FOUND") {
       return {
         success: false,
-        message: "Code invalide ou expiré. Génère un nouveau code sur le site.",
+        message: "Code invalide ou expiré.",
         error: "INVALID_OR_EXPIRED_CODE",
       };
     }
@@ -342,31 +307,5 @@ export async function verifyAndLinkMinecraftAccount(params: {
       message: "Une erreur est survenue lors de la validation.",
       error: "SERVER_ERROR",
     };
-  }
-}
-
-async function logAttempt(data: {
-  code?: string;
-  minecraftUuid?: string;
-  minecraftUsername?: string;
-  ipAddress?: string;
-  success: boolean;
-  reason: string;
-  userId?: string;
-}) {
-  try {
-    await prisma.minecraftAuthAttempt.create({
-      data: {
-        code: data.code,
-        minecraftUuid: data.minecraftUuid,
-        minecraftUsername: data.minecraftUsername,
-        ipAddress: data.ipAddress,
-        success: data.success,
-        reason: data.reason,
-        userId: data.userId,
-      },
-    });
-  } catch {
-    // Non-blocking log failure
   }
 }

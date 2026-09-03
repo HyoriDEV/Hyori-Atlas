@@ -126,7 +126,6 @@ model User {
   bdaStaffMemberships   BdaStaffMember[]
   updatedGlobalSettings GlobalSettings[]
   minecraftAuthCodes    MinecraftAuthCode[]
-  minecraftAuthAttempts MinecraftAuthAttempt[]
 
   @@map("users")
 }
@@ -496,7 +495,7 @@ model GlobalSettings {
   rpTrackingAccessEnabled    Boolean  @default(true)
   chapterWritingEnabled      Boolean  @default(true)
   bdaReportSubmissionEnabled Boolean  @default(true)
-  minecraftServerAddress     String   @default("link.hyorirp.fr")
+  minecraftServerAddress     String   @default("auth.hyori-rp.fr")
   minecraftServerVersion     String   @default("1.21.11")
   minecraftAuthCommand       String   @default("auth")
   updatedAt                  DateTime @updatedAt
@@ -520,24 +519,4 @@ model MinecraftAuthCode {
   @@index([userId])
   @@index([code])
   @@map("minecraft_auth_codes")
-}
-
-model MinecraftAuthAttempt {
-  id                String   @id @default(cuid())
-  code              String?
-  minecraftUuid     String?
-  minecraftUsername String?
-  ipAddress         String?
-  success           Boolean
-  reason            String?
-  userId            String?
-  createdAt         DateTime @default(now())
-
-  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
-
-  @@index([createdAt])
-  @@index([minecraftUuid])
-  @@index([ipAddress])
-  @@index([userId])
-  @@map("minecraft_auth_attempts")
 }

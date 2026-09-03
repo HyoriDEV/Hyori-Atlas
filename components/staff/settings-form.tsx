@@ -92,7 +92,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
               id="minecraftServerAddress"
               name="minecraftServerAddress"
               defaultValue={defaultValues.minecraftServerAddress}
-              placeholder="link.hyorirp.fr"
+              placeholder="auth.hyori-rp.fr"
               className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
             <p className="text-[12px] text-muted-foreground">

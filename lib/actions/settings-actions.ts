@@ -20,7 +20,7 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const rawVersion = (formData.get("minecraftServerVersion") as string)?.trim();
   const rawCommand = (formData.get("minecraftAuthCommand") as string)?.trim().replace(/^\//, "");
 
-  const minecraftServerAddress = rawAddress || "link.hyorirp.fr";
+  const minecraftServerAddress = rawAddress || "auth.hyori-rp.fr";
   const minecraftServerVersion = rawVersion || "1.21.11";
   const minecraftAuthCommand = rawCommand ? rawCommand.toLowerCase() : "auth";
 
