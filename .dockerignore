@@ -3,3 +3,7 @@ node_modules
 .git
 lib/generated
 npm-debug.log*
+.env
+.env*.local
+public/uploads/*
+!public/uploads/.gitkeep
