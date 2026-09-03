@@ -7,6 +7,7 @@ import {
   RegistrationStatus,
 } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,7 +26,7 @@ export default async function GettingStartedPage() {
 
   const minecraftLinked = Boolean(user.minecraftUuid);
 
-  const [characterSheet, latestBooking] = await Promise.all([
+  const [characterSheet, latestBooking, settings] = await Promise.all([
     prisma.characterSheet.findUnique({
       where: { playerId: user.id },
     }),
@@ -33,6 +34,7 @@ export default async function GettingStartedPage() {
       where: { playerId: user.id },
       orderBy: { createdAt: "desc" },
     }),
+    getGlobalSettings(),
   ]);
 
   const isWaitlistPassed = isRegistrationStatusAtLeast(
@@ -144,7 +146,12 @@ export default async function GettingStartedPage() {
                   </div>
                 </div>
               </div>
-              <MinecraftLinkDialog linked={minecraftLinked} />
+              <MinecraftLinkDialog
+                linked={minecraftLinked}
+                serverAddress={settings.minecraftServerAddress}
+                serverVersion={settings.minecraftServerVersion}
+                authCommand={settings.minecraftAuthCommand}
+              />
             </CardContent>
           </Card>
         </div>

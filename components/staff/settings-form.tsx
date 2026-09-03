@@ -74,6 +74,73 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
       </div>
 
+      <div className="space-y-4 pt-4 border-t">
+        <div>
+          <h2 className="text-base font-semibold">Serveur Minecraft & Liaison de compte</h2>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Configurez les informations du serveur de liaison affichées aux nouveaux joueurs et utilisées par le plugin.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-1.5">
+            <label htmlFor="minecraftServerAddress" className="text-sm font-medium">
+              Adresse du serveur (IP ou Domaine)
+            </label>
+            <input
+              type="text"
+              id="minecraftServerAddress"
+              name="minecraftServerAddress"
+              defaultValue={defaultValues.minecraftServerAddress}
+              placeholder="link.hyorirp.fr"
+              className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-[12px] text-muted-foreground">
+              Adresse sur laquelle les joueurs doivent se connecter pour lier leur compte.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <label htmlFor="minecraftServerVersion" className="text-sm font-medium">
+              Version Minecraft recommandée
+            </label>
+            <input
+              type="text"
+              id="minecraftServerVersion"
+              name="minecraftServerVersion"
+              defaultValue={defaultValues.minecraftServerVersion}
+              placeholder="1.21.11"
+              className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+            <p className="text-[12px] text-muted-foreground">
+              Version indicative affichée aux joueurs sur le site.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="minecraftAuthCommand" className="text-sm font-medium">
+            Préfixe de la commande en jeu
+          </label>
+          <div className="flex items-center">
+            <span className="border-input bg-muted flex h-9 items-center rounded-l-md border border-r-0 px-3 font-mono text-sm text-muted-foreground">
+              /
+            </span>
+            <input
+              type="text"
+              id="minecraftAuthCommand"
+              name="minecraftAuthCommand"
+              defaultValue={defaultValues.minecraftAuthCommand}
+              placeholder="auth"
+              className="border-input bg-background h-9 w-full rounded-r-md border px-3 py-1.5 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+            />
+          </div>
+          <p className="text-[12px] text-muted-foreground">
+            Par exemple : &quot;auth&quot; (donnera <code>/auth &lt;code&gt;</code>) ou &quot;link&quot; (donnera <code>/link &lt;code&gt;</code>).
+          </p>
+        </div>
+      </div>
+
       <div className="flex justify-end pt-4">
         <Button type="submit" disabled={isPending} className="gap-2">
           <Check className="size-4" />
