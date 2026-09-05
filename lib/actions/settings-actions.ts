@@ -16,6 +16,14 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const chapterWritingEnabled = formData.get("chapterWritingEnabled") === "true";
   const bdaReportSubmissionEnabled = formData.get("bdaReportSubmissionEnabled") === "true";
 
+  const rawAddress = (formData.get("minecraftServerAddress") as string)?.trim();
+  const rawVersion = (formData.get("minecraftServerVersion") as string)?.trim();
+  const rawCommand = (formData.get("minecraftAuthCommand") as string)?.trim().replace(/^\//, "");
+
+  const minecraftServerAddress = rawAddress || "auth.hyori-rp.fr";
+  const minecraftServerVersion = rawVersion || "1.21.11";
+  const minecraftAuthCommand = rawCommand ? rawCommand.toLowerCase() : "auth";
+
   await updateGlobalSettings(
     {
       registrationEnabled,
@@ -24,6 +32,9 @@ export async function saveGlobalSettingsAction(formData: FormData) {
       rpTrackingAccessEnabled,
       chapterWritingEnabled,
       bdaReportSubmissionEnabled,
+      minecraftServerAddress,
+      minecraftServerVersion,
+      minecraftAuthCommand,
     },
     user.id
   );

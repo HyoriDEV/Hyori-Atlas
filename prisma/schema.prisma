@@ -125,6 +125,7 @@ model User {
   createdBdaReports     BdaReport[]                   @relation("BdaReportCreator")
   bdaStaffMemberships   BdaStaffMember[]
   updatedGlobalSettings GlobalSettings[]
+  minecraftAuthCodes    MinecraftAuthCode[]
 
   @@map("users")
 }
@@ -494,10 +495,28 @@ model GlobalSettings {
   rpTrackingAccessEnabled    Boolean  @default(true)
   chapterWritingEnabled      Boolean  @default(true)
   bdaReportSubmissionEnabled Boolean  @default(true)
+  minecraftServerAddress     String   @default("auth.hyori-rp.fr")
+  minecraftServerVersion     String   @default("1.21.11")
+  minecraftAuthCommand       String   @default("auth")
   updatedAt                  DateTime @updatedAt
   updatedById                String?
 
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("global_settings")
+}
+
+model MinecraftAuthCode {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  userId    String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([code])
+  @@map("minecraft_auth_codes")
 }
