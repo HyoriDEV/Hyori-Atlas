@@ -498,6 +498,14 @@ model GlobalSettings {
   minecraftServerAddress     String   @default("auth.hyori-rp.fr")
   minecraftServerVersion     String   @default("1.21.11")
   minecraftAuthCommand       String   @default("auth")
+  countdownEnabled           Boolean  @default(false)
+  countdownBadgeText         String?  @default("Hyori RP — Lancement Officiel")
+  countdownTitle             String   @default("Lancement Officiel de Hyori RP")
+  countdownSubtitle          String?  @default("Le compte à rebours est lancé. Préparez-vous à entrer dans l'histoire.")
+  countdownTargetDate        DateTime?
+  countdownVideoType         String   @default("URL")
+  countdownVideoUrl          String?
+  countdownDiscordUrl        String?  @default("https://discord.gg/hyori")
   updatedAt                  DateTime @updatedAt
   updatedById                String?
 
