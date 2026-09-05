@@ -217,12 +217,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ account, profile }) {
       if (account?.provider === "discord" && profile) {
         // Check if user exists in DB
         const { prisma } = await import("@/lib/prisma");
         const dbUser = await prisma.user.findUnique({
-          where: { discordId: profile.id as string }
+          where: { discordId: profile.id as string },
         });
 
         if (!dbUser) {

@@ -16,6 +16,8 @@ import {
   LockSimple,
   ArrowRight,
   Gear,
+  Newspaper,
+  BookBookmark,
 } from "@phosphor-icons/react/dist/ssr";
 import type { VariantProps } from "class-variance-authority";
 
@@ -38,6 +40,8 @@ const iconMap: Record<NavIconKey | "user" | "shield-check", typeof Flag> = {
   user: User,
   "shield-check": Shield,
   gear: Gear,
+  newspaper: Newspaper,
+  "book-bookmark": BookBookmark,
 };
 
 export interface DashboardStatCardProps {

@@ -4,7 +4,6 @@ import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/n
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
-import type { Prisma } from "@/lib/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -20,7 +19,6 @@ import { StatusTabs } from "@/components/dashboard/status-tabs";
 import { TicketFilters } from "@/components/dashboard/ticket-filters";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 

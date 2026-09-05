@@ -8,7 +8,12 @@ import {
   submitCharacterSheet,
 } from "@/lib/actions/character-sheet-actions";
 import type { SheetComment } from "@/lib/character-sheet-comments";
-import { CharacterSheetCommentTarget, CharacterSheetStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetCommentTarget,
+  CharacterSheetStatus,
+  type CharacterClass,
+} from "@/lib/generated/prisma/enums";
+import { REQUIRED_CLASS_CHOICES_COUNT } from "@/lib/character-classes";
 import { resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
@@ -43,6 +48,7 @@ import {
   useCommentTargetScroll,
 } from "@/components/character-sheet/use-comment-target-scroll";
 import { CharacterSheetFeedbackSidebar } from "@/components/player/character-sheet-feedback-sidebar";
+import { CharacterSkinPreview } from "@/components/player/character-skin-preview";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -62,18 +68,23 @@ import { cn } from "@/lib/utils";
 export function CharacterSheetForm({
   initialValues,
   initialSkills,
+  initialClasses = [],
   editable,
   status,
   comments,
+  minecraftUsername,
 }: {
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
+  initialClasses?: CharacterClass[];
   editable: boolean;
   status: CharacterSheetStatus;
   comments: SheetComment[];
+  minecraftUsername?: string | null;
 }) {
   const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
   const [skills, setSkills] = useState<SkillValues>(initialSkills);
+  const [chosenClasses, setChosenClasses] = useState<CharacterClass[]>(initialClasses);
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
@@ -169,6 +180,10 @@ export function CharacterSheetForm({
     if (total > MAX_TOTAL_SKILL_POINTS)
       return `Attribue au plus ${MAX_TOTAL_SKILL_POINTS} points de compétences.`;
 
+    if (chosenClasses.length !== REQUIRED_CLASS_CHOICES_COUNT) {
+      return `Choisis ${REQUIRED_CLASS_CHOICES_COUNT} classes parmi les 5 disponibles.`;
+    }
+
     return null;
   }
 
@@ -187,6 +202,7 @@ export function CharacterSheetForm({
       description: fields.description,
       background: fields.background,
       additionalComments: fields.additionalComments,
+      chosenClasses,
       skills,
     };
   }
@@ -251,8 +267,10 @@ export function CharacterSheetForm({
 
       <CharacterSheetFields
         values={fields}
+        chosenClasses={chosenClasses}
         interactive={editable}
         onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
+        onClassesChange={editable ? setChosenClasses : undefined}
         commentedTargets={comments.map((comment) => comment.target)}
         activeTarget={activeComment?.target ?? null}
         narrativeSlot={
@@ -334,16 +352,12 @@ export function CharacterSheetForm({
     </div>
   );
 
-  if (!showSidebar) {
-    return sheet;
-  }
-
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_minmax(300px,22rem)]">
       {sheet}
       <div className="flex flex-col gap-6 lg:sticky lg:top-6">
         {pendingStaffNotice}
-        {hasFeedback && (
+        {hasFeedback ? (
           <CharacterSheetFeedbackSidebar
             comments={comments}
             orphanedCommentIds={orphanedCommentIds}
@@ -351,6 +365,8 @@ export function CharacterSheetForm({
             onSelectComment={setActiveCommentId}
             editable={editable}
           />
+        ) : (
+          <CharacterSkinPreview username={minecraftUsername} />
         )}
       </div>
     </div>

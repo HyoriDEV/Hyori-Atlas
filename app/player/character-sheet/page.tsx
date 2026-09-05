@@ -90,9 +90,11 @@ export default async function CharacterSheetPage() {
       <CharacterSheetForm
         initialValues={fieldValues}
         initialSkills={skillValues}
+        initialClasses={sheet?.chosenClasses ?? []}
         editable={editable}
         status={currentStatus}
         comments={comments}
+        minecraftUsername={user.minecraftUsername}
       />
     </div>
   );

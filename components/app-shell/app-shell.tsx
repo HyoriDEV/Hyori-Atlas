@@ -20,6 +20,8 @@ import {
   User,
   Shield,
   Gear,
+  Newspaper,
+  BookBookmark,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -69,6 +71,8 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   info: Info,
   "squares-four": SquaresFour,
   gear: Gear,
+  newspaper: Newspaper,
+  "book-bookmark": BookBookmark,
 };
 
 export interface AppShellNavEntry {
@@ -133,32 +137,32 @@ export function AppShell({
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="flex flex-col gap-3 px-3 pt-3 pb-0">
+        <SidebarHeader className="flex flex-col gap-3.5 px-4 pt-5 pb-2">
           <Link
             href="/"
-            className="flex items-center gap-3 px-2 transition-opacity hover:opacity-85"
+            className="flex items-center gap-3.5 px-1 py-0.5 transition-opacity hover:opacity-85"
           >
             <Image
               src="/HYORI-LOGO-COMPRESSED.jpg"
               alt="Logo Hyori RP"
-              width={36}
-              height={36}
-              className="size-9 shrink-0 rounded-full object-cover shadow-xs"
+              width={48}
+              height={48}
+              className="size-12 shrink-0 rounded-[8px] object-cover shadow-xs"
             />
             <div className="flex min-w-0 flex-col">
-              <span className="font-heading text-lg leading-tight font-normal">Hyori RP</span>
-              <span className="text-sidebar-foreground/60 text-xs tracking-wide uppercase">
+              <span className="font-heading text-lg leading-tight font-medium">Hyori RP</span>
+              <span className="text-sidebar-foreground/60 mt-0.5 text-xs tracking-wide uppercase">
                 {sectionLabel}
               </span>
             </div>
           </Link>
           {user.isStaff && (
-            <div className="px-2 pt-1">
+            <div className="px-1 pt-1">
               {isStaffDashboard ? (
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 w-full justify-start gap-2 text-xs font-medium"
+                  className="h-8.5 w-full justify-start gap-2 text-xs font-medium transition-all duration-150 ease-out"
                   render={<Link href="/player" />}
                 >
                   <User className="text-primary size-3.5 shrink-0" />
@@ -168,7 +172,7 @@ export function AppShell({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-8 w-full justify-start gap-2 text-xs font-medium"
+                  className="h-8.5 w-full justify-start gap-2 text-xs font-medium transition-all duration-150 ease-out"
                   render={<Link href="/staff" />}
                 >
                   <Shield className="text-primary size-3.5 shrink-0" />
@@ -178,17 +182,17 @@ export function AppShell({
             </div>
           )}
         </SidebarHeader>
-        <SidebarContent className="gap-3 px-3 pt-1 pb-3">
+        <SidebarContent className="gap-4 px-3.5 py-2.5">
           {groups.map((group, groupIndex) => (
             <SidebarGroup key={groupIndex} className="p-0">
               {group.title && (
-                <SidebarGroupLabel className="text-sidebar-foreground/50 flex h-7 items-center gap-2 px-2 text-[11px] font-semibold tracking-wider uppercase select-none">
+                <SidebarGroupLabel className="text-sidebar-foreground/50 mb-1 flex h-7 items-center gap-2 px-2 text-[11px] font-semibold tracking-wider uppercase select-none">
                   <span className="shrink-0">{group.title}</span>
                   <span className="bg-sidebar-border/70 h-px flex-1" />
                 </SidebarGroupLabel>
               )}
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-1">
                   {group.items.map((item) => {
                     const isExactRoot = item.href === "/staff" || item.href === "/player";
                     const isActive = isExactRoot
@@ -202,7 +206,7 @@ export function AppShell({
                           <SidebarMenuButton
                             aria-disabled
                             tooltip="Verrouillé pour le moment"
-                            className="pointer-events-none opacity-50"
+                            className="pointer-events-none h-9 gap-3 rounded-md px-2.5 opacity-50 transition-all duration-150 ease-out"
                           >
                             <Icon className="size-4" />
                             <span>{item.label}</span>
@@ -214,7 +218,11 @@ export function AppShell({
 
                     return (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton isActive={isActive} render={<Link href={item.href} />}>
+                        <SidebarMenuButton
+                          isActive={isActive}
+                          render={<Link href={item.href} />}
+                          className="h-9 gap-3 rounded-md px-2.5 transition-all duration-150 ease-out"
+                        >
                           <Icon className="size-4" />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
@@ -231,16 +239,16 @@ export function AppShell({
             </SidebarGroup>
           ))}
         </SidebarContent>
-        <SidebarFooter className="flex flex-col gap-3 p-3">
-          <Separator />
-          <div className="flex items-center gap-2 px-2">
+        <SidebarFooter className="flex flex-col gap-3 px-4 py-4">
+          <Separator className="opacity-60" />
+          <div className="flex items-center gap-3 px-1">
             <Avatar className="size-8">
               <AvatarImage src={user.avatarUrl ?? undefined} alt={user.name} />
               <AvatarFallback>{initial}</AvatarFallback>
             </Avatar>
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">{user.name}</span>
-              <span className="text-sidebar-foreground/60 truncate text-sm">
+              <span className="text-sidebar-foreground/60 truncate text-xs">
                 {user.secondaryLabel}
               </span>
             </div>

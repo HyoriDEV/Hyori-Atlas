@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: sh -c "npx prisma generate && npx prisma studio --port 5555 --browser none"
+    command: npx prisma studio --port 5555 --browser none
     env_file:
       - .env
     environment:
@@ -35,11 +35,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      app:
+        condition: service_started
 
   app:
     build:
       context: .
       dockerfile: Dockerfile.dev
+    command: sh -c "echo '==> ⚙️ Generating Prisma Client...' && npx prisma generate && echo '==> 🗄️ Applying migrations...' && npx prisma migrate deploy && echo '==> 🌱 Seeding database...' && npx prisma db seed && echo '==> 🚀 Starting Next.js dev server...' && npm run dev"
     env_file:
       - .env
     environment:

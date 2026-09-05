@@ -33,10 +33,7 @@ export async function POST(request: NextRequest) {
   // 1. Verify authorization header
   const authHeader = request.headers.get("authorization");
   if (!verifyApiKey(authHeader, apiKey)) {
-    return NextResponse.json(
-      { success: false, message: "Non autorisé." },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, message: "Non autorisé." }, { status: 401 });
   }
 
   // 2. Rate limiting
@@ -54,9 +51,9 @@ export async function POST(request: NextRequest) {
   }
 
   // 3. Parse and validate JSON body
-  let body: any;
+  let body: Record<string, unknown> | null = null;
   try {
-    body = await request.json();
+    body = (await request.json()) as Record<string, unknown>;
   } catch {
     return NextResponse.json(
       { success: false, message: "Corps de requête invalide." },
@@ -64,9 +61,19 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { code, minecraftUuid, minecraftUsername } = body ?? {};
+  const code = typeof body?.code === "string" ? body.code : undefined;
+  const minecraftUuid = typeof body?.minecraftUuid === "string" ? body.minecraftUuid : undefined;
+  const minecraftUsername =
+    typeof body?.minecraftUsername === "string" ? body.minecraftUsername : undefined;
 
-  if (!code || typeof code !== "string" || !minecraftUuid || typeof minecraftUuid !== "string" || !minecraftUsername || typeof minecraftUsername !== "string") {
+  if (
+    !code ||
+    typeof code !== "string" ||
+    !minecraftUuid ||
+    typeof minecraftUuid !== "string" ||
+    !minecraftUsername ||
+    typeof minecraftUsername !== "string"
+  ) {
     return NextResponse.json(
       { success: false, message: "Paramètres manquants ou invalides." },
       { status: 400 }
@@ -94,10 +101,7 @@ export async function POST(request: NextRequest) {
 
   if (!result.success) {
     const status = result.error === "UUID_ALREADY_LINKED" ? 409 : 400;
-    return NextResponse.json(
-      { success: false, message: result.message },
-      { status }
-    );
+    return NextResponse.json({ success: false, message: result.message }, { status });
   }
 
   return NextResponse.json({

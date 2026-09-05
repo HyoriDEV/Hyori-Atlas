@@ -1,6 +1,11 @@
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, RegistrationStatus, Role, TicketStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  RegistrationStatus,
+  Role,
+  TicketStatus,
+} from "@/lib/generated/prisma/enums";
 import {
   isRegistrationStatusAtLeast,
   playerPendingNavGroups,
@@ -79,14 +84,7 @@ export default async function PlayerLayout({ children }: { children: React.React
           if (item.href === "/player/interview" && !isSheetValidated) {
             locked = true;
           }
-          let fullWidth = item.fullWidth;
-          if (
-            item.href === "/player/character-sheet" &&
-            (characterSheet?.reviewStatus === CharacterSheetStatus.PENDING_PLAYER ||
-              characterSheet?.reviewStatus === CharacterSheetStatus.PENDING_STAFF)
-          ) {
-            fullWidth = true;
-          }
+          const fullWidth = item.fullWidth;
           const hasNotification =
             (item.href === "/player/character-sheet" &&
               (characterSheet?.hasUnreadFeedback ?? false)) ||

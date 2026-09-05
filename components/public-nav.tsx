@@ -35,9 +35,9 @@ export async function PublicNav() {
           <Image
             src="/HYORI-LOGO-COMPRESSED.jpg"
             alt="Logo Hyori RP"
-            width={32}
-            height={32}
-            className="size-8 shrink-0 rounded-full object-cover shadow-xs"
+            width={48}
+            height={48}
+            className="size-12 shrink-0 rounded-[8px] object-cover shadow-xs"
           />
           <span>Hyori RP</span>
         </Link>

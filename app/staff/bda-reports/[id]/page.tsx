@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
+import { Role } from "@/lib/generated/prisma/enums";
 import { formatDate } from "@/lib/date";
 import { bdaReportStatusBadgeVariant } from "@/lib/atlas-status";
 import { bdaReportStatusLabels } from "@/lib/navigation";

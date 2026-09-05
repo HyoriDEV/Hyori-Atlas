@@ -27,8 +27,7 @@ const unreadDotVariants = cva("rounded-full select-none", {
 });
 
 export interface UnreadDotProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof unreadDotVariants> {}
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof unreadDotVariants> {}
 
 export function UnreadDot({
   className,

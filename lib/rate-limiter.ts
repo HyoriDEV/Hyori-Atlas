@@ -10,14 +10,17 @@ const cache = new Map<string, RateLimitEntry>();
 
 // Cleanup stale entries every 5 minutes
 if (typeof setInterval !== "undefined") {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of cache.entries()) {
-      if (entry.resetAt <= now) {
-        cache.delete(key);
+  setInterval(
+    () => {
+      const now = Date.now();
+      for (const [key, entry] of cache.entries()) {
+        if (entry.resetAt <= now) {
+          cache.delete(key);
+        }
       }
-    }
-  }, 5 * 60 * 1000).unref?.();
+    },
+    5 * 60 * 1000
+  ).unref?.();
 }
 
 /**

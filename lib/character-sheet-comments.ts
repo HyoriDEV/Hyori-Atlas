@@ -14,6 +14,7 @@ export const commentTargetLabels: Record<CharacterSheetCommentTarget, string> = 
   [CharacterSheetCommentTarget.background]: "Histoire",
   [CharacterSheetCommentTarget.additionalComments]: "Commentaires additionnels",
   [CharacterSheetCommentTarget.skillMap]: "Carte de compétences",
+  [CharacterSheetCommentTarget.chosenClasses]: "Classes souhaitées",
 };
 
 export const narrativeCommentTargets: CharacterSheetCommentTarget[] = [

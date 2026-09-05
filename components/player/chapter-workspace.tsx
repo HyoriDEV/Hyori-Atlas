@@ -72,7 +72,13 @@ function countWords(html: string): number {
   return text.split(/\s+/).filter(Boolean).length;
 }
 
-export function ChapterWorkspace({ initialChapters, chapterWritingEnabled = true }: { initialChapters: ChapterSummary[], chapterWritingEnabled?: boolean }) {
+export function ChapterWorkspace({
+  initialChapters,
+  chapterWritingEnabled = true,
+}: {
+  initialChapters: ChapterSummary[];
+  chapterWritingEnabled?: boolean;
+}) {
   const [chapters, setChapters] = useState(initialChapters);
   const [activeChapterId, setActiveChapterId] = useState<string | null>(
     initialChapters[0]?.id ?? null
@@ -326,65 +332,65 @@ export function ChapterWorkspace({ initialChapters, chapterWritingEnabled = true
 
                         {chapterWritingEnabled && (
                           <DropdownMenu>
-                          <DropdownMenuTrigger
-                            render={
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-xs"
-                                aria-label="Options du chapitre"
-                                className="text-muted-foreground hover:text-foreground size-7 shrink-0 p-1 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
-                              />
-                            }
-                          >
-                            <DotsThreeVertical className="size-4" />
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuItem
-                              onClick={() => {
-                                setRenameDraft(chapter.title);
-                                setRenamingChapterId(chapter.id);
-                              }}
-                              className="gap-2.5 py-1.5 text-sm"
+                            <DropdownMenuTrigger
+                              render={
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon-xs"
+                                  aria-label="Options du chapitre"
+                                  className="text-muted-foreground hover:text-foreground size-7 shrink-0 p-1 opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100"
+                                />
+                              }
                             >
-                              <PencilSimple className="size-4" />
-                              <span>Renommer</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleDuplicate(chapter.id)}
-                              className="gap-2.5 py-1.5 text-sm"
-                            >
-                              <Copy className="size-4" />
-                              <span>Dupliquer</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              disabled={index === 0}
-                              onClick={() => handleMove(chapter.id, -1)}
-                              className="gap-2.5 py-1.5 text-sm"
-                            >
-                              <ArrowUp className="size-4" />
-                              <span>Monter</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              disabled={index === chapters.length - 1}
-                              onClick={() => handleMove(chapter.id, 1)}
-                              className="gap-2.5 py-1.5 text-sm"
-                            >
-                              <ArrowDown className="size-4" />
-                              <span>Descendre</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem
-                              variant="destructive"
-                              onClick={() => setChapterToDelete(chapter)}
-                              className="text-destructive focus:text-destructive gap-2.5 py-1.5 text-sm"
-                            >
-                              <Trash className="size-4" />
-                              <span>Supprimer</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                              <DotsThreeVertical className="size-4" />
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setRenameDraft(chapter.title);
+                                  setRenamingChapterId(chapter.id);
+                                }}
+                                className="gap-2.5 py-1.5 text-sm"
+                              >
+                                <PencilSimple className="size-4" />
+                                <span>Renommer</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDuplicate(chapter.id)}
+                                className="gap-2.5 py-1.5 text-sm"
+                              >
+                                <Copy className="size-4" />
+                                <span>Dupliquer</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                disabled={index === 0}
+                                onClick={() => handleMove(chapter.id, -1)}
+                                className="gap-2.5 py-1.5 text-sm"
+                              >
+                                <ArrowUp className="size-4" />
+                                <span>Monter</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                disabled={index === chapters.length - 1}
+                                onClick={() => handleMove(chapter.id, 1)}
+                                className="gap-2.5 py-1.5 text-sm"
+                              >
+                                <ArrowDown className="size-4" />
+                                <span>Descendre</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem
+                                variant="destructive"
+                                onClick={() => setChapterToDelete(chapter)}
+                                className="text-destructive focus:text-destructive gap-2.5 py-1.5 text-sm"
+                              >
+                                <Trash className="size-4" />
+                                <span>Supprimer</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                       </div>
 

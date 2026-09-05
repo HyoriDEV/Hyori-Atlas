@@ -11,4 +11,4 @@ COPY . .
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npm install && npx prisma generate && npx prisma migrate deploy && npx prisma db seed && npm run dev"]
+CMD ["sh", "-c", "echo '==> ⚙️ Generating Prisma Client...' && npx prisma generate && echo '==> 🗄️ Applying migrations...' && npx prisma migrate deploy && echo '==> 🌱 Seeding database...' && npx prisma db seed && echo '==> 🚀 Starting Next.js dev server...' && npm run dev"]

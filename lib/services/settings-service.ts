@@ -19,10 +19,7 @@ export const getGlobalSettings = cache(async () => {
 
 export async function updateGlobalSettings(
   data: Partial<
-    Omit<
-      import("@/lib/generated/prisma/client").GlobalSettings,
-      "id" | "updatedAt" | "updatedBy"
-    >
+    Omit<import("@/lib/generated/prisma/client").GlobalSettings, "id" | "updatedAt" | "updatedBy">
   >,
   userId: string
 ) {

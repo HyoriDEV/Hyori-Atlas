@@ -5,13 +5,18 @@ import {
   truncateAtWordBoundary,
   type SkillValues,
 } from "@/lib/character-sheet";
-import { CharacterSheetStatus, type Gender } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  type CharacterClass,
+  type Gender,
+} from "@/lib/generated/prisma/enums";
 import { characterSheetStatusLabels } from "@/lib/navigation";
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
+import { CharacterClassCircles } from "@/components/character-sheet/character-class-circles";
 
 interface CharacterSheetSummaryData extends SkillValues {
   id: string;
@@ -24,6 +29,7 @@ interface CharacterSheetSummaryData extends SkillValues {
   description: string;
   background: string;
   additionalComments: string | null;
+  chosenClasses: CharacterClass[];
   reviewStatus: CharacterSheetStatus;
 }
 
@@ -94,6 +100,17 @@ export function AtlasCharacterSheetSummary({
                 <p className="text-sm">{entry.value}</p>
               </div>
             ))}
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Classes souhaitées
+            </span>
+            <CharacterClassCircles
+              selectedClasses={sheet.chosenClasses ?? []}
+              interactive={false}
+              size="md"
+            />
           </div>
 
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">

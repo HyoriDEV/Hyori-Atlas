@@ -70,6 +70,14 @@ enum CharacterSheetStatus {
   VALIDATED
 }
 
+enum CharacterClass {
+  NOBLE
+  PAYSAN
+  PECHEUR
+  MINEUR
+  ERUDIT
+}
+
 enum CharacterSheetCommentTarget {
   name
   nickname
@@ -81,6 +89,7 @@ enum CharacterSheetCommentTarget {
   background
   additionalComments
   skillMap
+  chosenClasses
 }
 
 enum InterviewBookingStatus {
@@ -231,6 +240,8 @@ model CharacterSheet {
   description        String  @db.VarChar(2000)
   background         String  @db.VarChar(2000)
   additionalComments String? @db.VarChar(300)
+
+  chosenClasses CharacterClass[] @default([])
 
   physicalForce        Int @default(1)
   physicalEndurance    Int @default(1)
@@ -519,4 +530,45 @@ model MinecraftAuthCode {
   @@index([userId])
   @@index([code])
   @@map("minecraft_auth_codes")
+}
+
+model RuleSection {
+  id        String        @id @default(cuid())
+  title     String        @db.VarChar(120)
+  order     Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  articles  RuleArticle[]
+
+  @@map("rule_sections")
+}
+
+model RuleArticle {
+  id        String        @id @default(cuid())
+  sectionId String
+  title     String        @db.VarChar(120)
+  order     Int
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  section   RuleSection   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  rules     RuleItem[]
+
+  @@index([sectionId])
+  @@map("rule_articles")
+}
+
+model RuleItem {
+  id        String      @id @default(cuid())
+  articleId String
+  content   String      @db.Text
+  order     Int
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  article   RuleArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@index([articleId])
+  @@map("rule_items")
 }

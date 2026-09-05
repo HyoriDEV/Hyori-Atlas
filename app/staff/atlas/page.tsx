@@ -296,10 +296,7 @@ export default async function AtlasPage(props: PageProps) {
                   <AtlasTableRow key={player.id} href={`/staff/atlas/${player.id}`}>
                     <TableCell className="relative pl-6">
                       {isPendingStaffSheet && (
-                        <UnreadDot
-                          placement="table"
-                          title="Fiche RP en attente de relecture"
-                        />
+                        <UnreadDot placement="table" title="Fiche RP en attente de relecture" />
                       )}
                       <div className="flex items-center gap-2.5">
                         <SkinHead size="sm" username={player.minecraftUsername ?? undefined} />

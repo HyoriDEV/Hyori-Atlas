@@ -75,9 +75,11 @@ export function PlayerSpaceCta({ user, registrationEnabled = true }: PlayerSpace
           <Button type="submit">Espace Joueur</Button>
         </form>
       ) : (
-        <Button 
+        <Button
           variant="secondary"
-          onClick={() => toast.error("Les inscriptions sont actuellement fermées par un administrateur.")}
+          onClick={() =>
+            toast.error("Les inscriptions sont actuellement fermées par un administrateur.")
+          }
         >
           Inscriptions fermées
         </Button>

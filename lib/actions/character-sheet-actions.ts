@@ -4,8 +4,18 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, Gender, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  Gender,
+  RegistrationStatus,
+  CharacterClass,
+} from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
+import {
+  MAX_CLASS_CHOICES_COUNT,
+  REQUIRED_CLASS_CHOICES_COUNT,
+  isCharacterClass,
+} from "@/lib/character-classes";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
   AGE_MAX,
@@ -40,6 +50,7 @@ export interface CharacterSheetInput {
   description: string;
   background: string;
   additionalComments: string;
+  chosenClasses: CharacterClass[];
   skills: SkillValues;
 }
 
@@ -59,6 +70,13 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
   const description = input.description.trim();
   const background = input.background.trim();
   const additionalComments = input.additionalComments.trim();
+  const rawClasses = Array.isArray(input.chosenClasses) ? input.chosenClasses : [];
+  const chosenClasses: CharacterClass[] = [];
+  for (const cls of rawClasses) {
+    if (isCharacterClass(cls) && !chosenClasses.includes(cls)) {
+      chosenClasses.push(cls);
+    }
+  }
 
   if (strict) {
     if (!name || !gender || !civilStatus || !description || !background) {
@@ -122,6 +140,17 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
         `La carte de compétences doit totaliser entre ${MIN_TOTAL_SKILL_POINTS} et ${MAX_TOTAL_SKILL_POINTS} points.`
       );
     }
+    if (chosenClasses.length !== REQUIRED_CLASS_CHOICES_COUNT) {
+      throw new Error(
+        `Tu dois choisir exactement ${REQUIRED_CLASS_CHOICES_COUNT} classes souhaitées parmi les 5 disponibles.`
+      );
+    }
+  } else {
+    if (chosenClasses.length > MAX_CLASS_CHOICES_COUNT) {
+      throw new Error(
+        `Tu ne peux pas sélectionner plus de ${MAX_CLASS_CHOICES_COUNT} classes souhaitées.`
+      );
+    }
   }
 
   return {
@@ -136,6 +165,7 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
     description: description || "",
     background: background || "",
     additionalComments: additionalComments || null,
+    chosenClasses,
     ...input.skills,
   };
 }
