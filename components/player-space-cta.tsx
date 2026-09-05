@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { DiscordLogo, Shield, SignOut, User } from "@phosphor-icons/react";
+import { Shield, SignOut, User } from "@phosphor-icons/react";
 
 import { signInWithDiscord, signOutAction } from "@/lib/actions/auth-actions";
 import { isDevAuthEnabled } from "@/lib/dev-auth";
 import { DevUserSwitcher } from "@/components/dev/dev-user-switcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DiscordOfficialIcon } from "@/components/icons/discord-icon";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,7 +49,7 @@ export function PlayerSpaceCta({
       title="Rejoindre notre Discord"
       aria-label="Rejoindre notre Discord"
     >
-      <DiscordLogo className="size-5" weight="fill" />
+      <DiscordOfficialIcon className="size-4.5" />
     </a>
   );
 

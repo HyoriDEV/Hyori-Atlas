@@ -10,11 +10,11 @@ import {
   Trash,
   HourglassHigh,
   CalendarBlank,
-  DiscordLogo,
   Clock,
   Sparkle,
 } from "@phosphor-icons/react";
 
+import { DiscordOfficialIcon } from "@/components/icons/discord-icon";
 import { Button } from "@/components/ui/button";
 import { saveGlobalSettingsAction } from "@/lib/actions/settings-actions";
 import { uploadCountdownVideoAction } from "@/lib/actions/countdown-video-actions";
@@ -297,7 +297,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 Lien d&apos;invitation Discord
               </label>
               <div className="relative flex items-center">
-                <DiscordLogo className="size-4 absolute left-3 text-[#5865F2]" weight="fill" />
+                <DiscordOfficialIcon className="size-4 absolute left-3 text-[#5865F2]" />
                 <input
                   type="url"
                   id="countdownDiscordUrl"
