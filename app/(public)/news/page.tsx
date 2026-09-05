@@ -29,7 +29,7 @@ function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
             <div className="mt-4 flex flex-col items-start gap-2 sm:mt-0 sm:items-end">
               <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                 {formatDate(item.publishedAt, {
-                  style: "long",
+                  style: "prefix-long",
                   withTime: false,
                   withYear: true,
                 })}
