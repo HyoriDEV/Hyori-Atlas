@@ -23,7 +23,11 @@ import {
 
 const ticketCategories = Object.values(TicketCategory);
 
-export function NewTicketDialog({ ticketCreationEnabled = true }: { ticketCreationEnabled?: boolean }) {
+export function NewTicketDialog({
+  ticketCreationEnabled = true,
+}: {
+  ticketCreationEnabled?: boolean;
+}) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [category, setCategory] = useState<TicketCategory | null>(null);
@@ -33,9 +37,13 @@ export function NewTicketDialog({ ticketCreationEnabled = true }: { ticketCreati
 
   if (!ticketCreationEnabled) {
     return (
-      <Button 
+      <Button
         variant="secondary"
-        onClick={() => toast.error("L'ouverture de tickets a été temporairement désactivée par un administrateur.")}
+        onClick={() =>
+          toast.error(
+            "L'ouverture de tickets a été temporairement désactivée par un administrateur."
+          )
+        }
       >
         Ouvrir un ticket
       </Button>

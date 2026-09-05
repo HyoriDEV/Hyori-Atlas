@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { PlayerSelect, type PlayerOption } from "@/components/player-select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
-import { Plus, Trash, CircleNotch, CloudArrowUp, Link as LinkIcon } from "@phosphor-icons/react";
+import { Plus, Trash, CircleNotch, CloudArrowUp } from "@phosphor-icons/react";
 import { createBdaReport } from "@/lib/actions/bda-actions";
 import { uploadBdaImage } from "@/lib/actions/upload-actions";
 

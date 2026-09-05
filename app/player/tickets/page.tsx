@@ -63,10 +63,11 @@ function TicketList({
         const isPendingPlayer = ticket.status === TicketStatus.PENDING_PLAYER;
         return (
           <Link key={ticket.id} href={`/player/tickets/${ticket.id}`} className="group relative">
-            <Card size="sm" className="hover:border-ring/40 relative overflow-visible transition-colors">
-              {isPendingPlayer && (
-                <UnreadDot placement="card" title="En attente de ta réponse" />
-              )}
+            <Card
+              size="sm"
+              className="hover:border-ring/40 relative overflow-visible transition-colors"
+            >
+              {isPendingPlayer && <UnreadDot placement="card" title="En attente de ta réponse" />}
               <CardContent className="flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-1">
                   <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">

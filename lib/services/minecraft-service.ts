@@ -219,7 +219,7 @@ export async function verifyAndLinkMinecraftAccount(params: {
   }
 
   try {
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 1. Check if UUID is already linked to another user
       const existingUserWithUuid = await tx.user.findUnique({
         where: { minecraftUuid: normalizedUuid },
@@ -283,8 +283,8 @@ export async function verifyAndLinkMinecraftAccount(params: {
       message: "Compte Minecraft lié avec succès ! Ton statut passe en liste d'attente.",
       minecraftUsername: trimmedUsername,
     };
-  } catch (error: any) {
-    const reason = error?.message || "TRANSACTION_FAILED";
+  } catch (error: unknown) {
+    const reason = error instanceof Error ? error.message : "TRANSACTION_FAILED";
 
     if (reason === "UUID_ALREADY_LINKED") {
       return {
@@ -294,7 +294,11 @@ export async function verifyAndLinkMinecraftAccount(params: {
       };
     }
 
-    if (reason === "CODE_EXPIRED" || reason === "CODE_ALREADY_USED" || reason === "CODE_NOT_FOUND") {
+    if (
+      reason === "CODE_EXPIRED" ||
+      reason === "CODE_ALREADY_USED" ||
+      reason === "CODE_NOT_FOUND"
+    ) {
       return {
         success: false,
         message: "Code invalide ou expiré.",

@@ -38,7 +38,10 @@ export function ChapterSelect({
             type="button"
             variant="outline"
             size="sm"
-            className="h-8.5 justify-between gap-2 px-3 text-xs font-medium shadow-xs sm:text-sm"
+            className={cn(
+              "h-8.5 justify-between gap-2 px-3 text-xs font-medium shadow-xs sm:text-sm",
+              className
+            )}
           />
         }
       >

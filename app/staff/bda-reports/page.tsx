@@ -2,7 +2,6 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/date";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
-import type { Prisma } from "@/lib/generated/prisma/client";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -22,7 +21,6 @@ import { StatusTabs } from "@/components/dashboard/status-tabs";
 import { UnreadDot } from "@/components/ui/unread-dot";
 import { bdaReportStatusBadgeVariant } from "@/lib/atlas-status";
 import { bdaReportStatusLabels } from "@/lib/navigation";
-import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
@@ -109,11 +107,7 @@ export default async function BdaReportsPage(props: {
                   <TicketTableRow key={report.id} href={`/staff/bda-reports/${report.id}`}>
                     <TableCell className="relative pl-6 font-medium">
                       {isUnread && (
-                        <UnreadDot
-                          variant="destructive"
-                          placement="table"
-                          title="Non lu"
-                        />
+                        <UnreadDot variant="destructive" placement="table" title="Non lu" />
                       )}
                       <span>{report.title}</span>
                     </TableCell>

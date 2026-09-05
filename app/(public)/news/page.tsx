@@ -11,25 +11,42 @@ function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-8">
       {items.map((item) => (
-        <Card key={item.id}>
-          <CardHeader className="flex flex-row items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-muted-foreground text-sm">
+        <Card
+          key={item.id}
+          className="hover:border-primary/50 w-full overflow-hidden transition-all hover:shadow-md"
+        >
+          <CardHeader className="bg-muted/10 border-b p-6 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+            <div className="flex flex-col gap-2">
+              <h3 className="font-heading text-foreground text-2xl font-bold tracking-tight">
+                {item.title}
+              </h3>
+              <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
+                {item.excerpt}
+              </p>
+            </div>
+            <div className="mt-4 flex flex-col items-start gap-2 sm:mt-0 sm:items-end">
+              <span className="text-muted-foreground text-xs font-medium tracking-wider uppercase">
                 {formatDate(item.publishedAt, {
-                  style: "prefix-long",
+                  style: "long",
                   withTime: false,
                   withYear: true,
                 })}
               </span>
-              <Badge variant="secondary">{item.authorLabel}</Badge>
+              <Badge variant="secondary" className="font-semibold">
+                {item.authorLabel}
+              </Badge>
             </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3 pt-0">
-            <h3 className="font-heading text-lg font-semibold">{item.title}</h3>
-            <p className="text-muted-foreground text-base">{item.excerpt}</p>
-          </CardContent>
+          {item.content && (
+            <CardContent className="p-6 md:p-8">
+              <div
+                className="prose prose-zinc dark:prose-invert prose-headings:font-heading prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80 prose-p:leading-relaxed max-w-none"
+                dangerouslySetInnerHTML={{ __html: item.content }}
+              />
+            </CardContent>
+          )}
         </Card>
       ))}
     </div>

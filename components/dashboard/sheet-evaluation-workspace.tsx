@@ -8,7 +8,11 @@ import { cn } from "@/lib/utils";
 import { submitCharacterSheetEvaluation } from "@/lib/actions/staff-review-actions";
 import type { SkillValues } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
-import { CharacterSheetCommentTarget, CharacterSheetStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetCommentTarget,
+  CharacterSheetStatus,
+  type CharacterClass,
+} from "@/lib/generated/prisma/enums";
 import { createTextAnchor, resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -34,6 +38,7 @@ export function SheetEvaluationWorkspace({
   sheetUpdatedAt,
   fieldValues,
   skillValues,
+  chosenClasses = [],
   initialComments,
 }: {
   sheetId: string;
@@ -43,6 +48,7 @@ export function SheetEvaluationWorkspace({
   sheetUpdatedAt: string;
   fieldValues: CharacterSheetFieldValues;
   skillValues: SkillValues;
+  chosenClasses?: CharacterClass[];
   initialComments: SheetComment[];
 }) {
   const router = useRouter();
@@ -152,6 +158,7 @@ export function SheetEvaluationWorkspace({
       <div className="flex flex-col gap-6">
         <CharacterSheetFields
           values={fieldValues}
+          chosenClasses={chosenClasses}
           commentedTargets={comments.map((comment) => comment.target)}
           activeTarget={activeComment?.target ?? null}
           onTargetClick={canEvaluate ? (target) => openComposer(target, null) : undefined}

@@ -25,7 +25,9 @@ export async function createBdaReport(data: CreateBdaReportData) {
   const settings = await getGlobalSettings();
 
   if (!settings.bdaReportSubmissionEnabled) {
-    throw new Error("La soumission de rapports a été temporairement désactivée par un administrateur.");
+    throw new Error(
+      "La soumission de rapports a été temporairement désactivée par un administrateur."
+    );
   }
 
   const trimmedTitle = data.title.trim();

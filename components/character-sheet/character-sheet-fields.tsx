@@ -4,7 +4,9 @@ import { ChatCircleDots } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import { isNarrativeCommentTarget } from "@/lib/character-sheet-comments";
-import type { CharacterSheetCommentTarget } from "@/lib/generated/prisma/enums";
+import { CharacterSheetCommentTarget } from "@/lib/generated/prisma/enums";
+import { CharacterClassDualSelector } from "@/components/character-sheet/character-class-dual-selector";
+import type { CharacterClass } from "@/lib/character-classes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -159,16 +161,20 @@ export interface CharacterSheetCommentProps {
 
 export function CharacterSheetFields({
   values,
+  chosenClasses,
   interactive = false,
   onChange,
+  onClassesChange,
   commentedTargets = [],
   activeTarget = null,
   onTargetClick,
   narrativeSlot,
 }: CharacterSheetCommentProps & {
   values: CharacterSheetFieldValues;
+  chosenClasses?: CharacterClass[];
   interactive?: boolean;
   onChange?: (key: CharacterSheetFieldKey, value: string) => void;
+  onClassesChange?: (classes: CharacterClass[]) => void;
 }) {
   function fieldWrapperProps(key: CharacterSheetFieldKey, clickable: boolean) {
     const target = key as CharacterSheetCommentTarget;
@@ -256,6 +262,38 @@ export function CharacterSheetFields({
               )}
             </div>
           ))}
+
+          {chosenClasses !== undefined && (
+            <div
+              id={commentTargetElementId(CharacterSheetCommentTarget.chosenClasses)}
+              onClick={
+                onTargetClick
+                  ? () => onTargetClick(CharacterSheetCommentTarget.chosenClasses)
+                  : undefined
+              }
+              className={cn(
+                "flex flex-col gap-2 rounded-md border border-transparent pt-2 transition-colors sm:col-span-2 lg:col-span-1",
+                onTargetClick ? "hover:border-primary/50 -m-2 cursor-pointer p-2" : undefined,
+                activeTarget === CharacterSheetCommentTarget.chosenClasses &&
+                  "border-primary bg-primary/5"
+              )}
+            >
+              <div className="flex min-h-6 items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Label className="text-sm font-medium">Classes souhaitées</Label>
+                  {commentedTargets.includes(CharacterSheetCommentTarget.chosenClasses) && (
+                    <ChatCircleDots className="text-primary size-3.5 shrink-0" />
+                  )}
+                </div>
+              </div>
+
+              <CharacterClassDualSelector
+                selectedClasses={chosenClasses}
+                interactive={interactive}
+                onChange={onClassesChange}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 

@@ -331,62 +331,62 @@ export function ChapterEditor({
           editor={editor}
           className="bg-card/95 ring-border/70 text-card-foreground flex items-center gap-1 rounded-lg p-1.5 shadow-xl ring-1 backdrop-blur-md"
         >
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("bold")}
-          onPressedChange={() => editor.chain().focus().toggleBold().run()}
-          aria-label="Gras"
-          className="size-8 p-1"
-        >
-          <TextB className="size-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("italic")}
-          onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-          aria-label="Italique"
-          className="size-8 p-1"
-        >
-          <TextItalic className="size-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("underline")}
-          onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-          aria-label="Souligné"
-          className="size-8 p-1"
-        >
-          <TextUnderline className="size-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("strike")}
-          onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-          aria-label="Barré"
-          className="size-8 p-1"
-        >
-          <TextStrikethrough className="size-4" />
-        </Toggle>
-        <div className="bg-border/60 mx-1 h-5 w-px" />
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("heading", { level: 2 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-          aria-label="Titre 2"
-          className="size-8 p-1"
-        >
-          <TextHTwo className="size-4" />
-        </Toggle>
-        <Toggle
-          size="sm"
-          pressed={editor.isActive("blockquote")}
-          onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
-          aria-label="Citation"
-          className="size-8 p-1"
-        >
-          <Quotes className="size-4" />
-        </Toggle>
-      </BubbleMenu>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("bold")}
+            onPressedChange={() => editor.chain().focus().toggleBold().run()}
+            aria-label="Gras"
+            className="size-8 p-1"
+          >
+            <TextB className="size-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("italic")}
+            onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+            aria-label="Italique"
+            className="size-8 p-1"
+          >
+            <TextItalic className="size-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("underline")}
+            onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
+            aria-label="Souligné"
+            className="size-8 p-1"
+          >
+            <TextUnderline className="size-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("strike")}
+            onPressedChange={() => editor.chain().focus().toggleStrike().run()}
+            aria-label="Barré"
+            className="size-8 p-1"
+          >
+            <TextStrikethrough className="size-4" />
+          </Toggle>
+          <div className="bg-border/60 mx-1 h-5 w-px" />
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("heading", { level: 2 })}
+            onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            aria-label="Titre 2"
+            className="size-8 p-1"
+          >
+            <TextHTwo className="size-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("blockquote")}
+            onPressedChange={() => editor.chain().focus().toggleBlockquote().run()}
+            aria-label="Citation"
+            className="size-8 p-1"
+          >
+            <Quotes className="size-4" />
+          </Toggle>
+        </BubbleMenu>
       )}
 
       <div className="bg-card/90 border-border/80 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-5 py-2.5 backdrop-blur-md">

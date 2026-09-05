@@ -30,10 +30,7 @@ export async function GET(request: NextRequest) {
 
   const authHeader = request.headers.get("authorization");
   if (!verifyApiKey(authHeader, apiKey)) {
-    return NextResponse.json(
-      { success: false, message: "Non autorisé." },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, message: "Non autorisé." }, { status: 401 });
   }
 
   const settings = await getGlobalSettings();

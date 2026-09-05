@@ -20,7 +20,9 @@ export type NavIconKey =
   | "shield"
   | "info"
   | "squares-four"
-  | "gear";
+  | "gear"
+  | "newspaper"
+  | "book-bookmark";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -75,6 +77,7 @@ export const playerPendingNavGroups: PlayerNavGroup[] = [
         href: "/player/character-sheet",
         iconKey: "id-card",
         requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+        fullWidth: true,
       },
       {
         label: "Entretien whitelist",
@@ -112,6 +115,7 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         href: "/player/character-sheet",
         iconKey: "id-card",
         requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+        fullWidth: true,
       },
       {
         label: "Écriture de trame",
@@ -229,6 +233,22 @@ export const staffInterviewSlotsItem: StaffNavItem = {
   href: "/staff/interview-slots",
   iconKey: "calendar",
   roles: [Role.ADMIN],
+  fullWidth: true,
+};
+
+export const staffNewsItem: StaffNavItem = {
+  label: "Actualités",
+  href: "/staff/news",
+  iconKey: "newspaper",
+  roles: [Role.ADMIN, Role.DEVELOPER],
+};
+
+export const staffRulesItem: StaffNavItem = {
+  label: "Règlement",
+  href: "/staff/rules",
+  iconKey: "book-bookmark",
+  roles: [Role.ADMIN],
+  fullWidth: true,
 };
 
 export const staffNavItems: StaffNavItem[] = [
@@ -241,6 +261,8 @@ export const staffNavItems: StaffNavItem[] = [
   staffRpTrackingItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
+  staffNewsItem,
+  staffRulesItem,
 ];
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
@@ -258,6 +280,10 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
+      },
+      {
+        title: "Contenu",
+        items: [staffNewsItem, staffRulesItem],
       },
       {
         title: "Admission",
@@ -292,6 +318,16 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
+      },
+    ];
+  }
+
+  if (role === Role.DEVELOPER) {
+    return [
+      overviewGroup,
+      {
+        title: "Contenu",
+        items: [staffNewsItem],
       },
     ];
   }

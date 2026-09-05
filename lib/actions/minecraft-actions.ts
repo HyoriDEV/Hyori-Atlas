@@ -1,9 +1,7 @@
 "use server";
 
 import { requireActivePlayer } from "@/lib/dal";
-import {
-  getOrCreateActiveMinecraftAuthCode,
-} from "@/lib/services/minecraft-service";
+import { getOrCreateActiveMinecraftAuthCode } from "@/lib/services/minecraft-service";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export async function getMinecraftStatusAction() {
@@ -35,4 +33,3 @@ export async function getMinecraftStatusAction() {
     },
   };
 }
-
