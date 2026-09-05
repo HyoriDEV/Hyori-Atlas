@@ -28,6 +28,7 @@ export default async function HomePage() {
             title={settings.countdownTitle || "Lancement Officiel de Hyori RP"}
             subtitle={settings.countdownSubtitle}
             discordUrl={settings.countdownDiscordUrl || "https://discord.gg/hyori"}
+            loreEnabled={settings.publicLoreEnabled}
           />
         </div>
       </>

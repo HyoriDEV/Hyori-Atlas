@@ -35,6 +35,12 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const countdownVideoUrl = (formData.get("countdownVideoUrl") as string)?.trim() || null;
   const countdownDiscordUrl = (formData.get("countdownDiscordUrl") as string)?.trim() || "https://discord.gg/hyori";
 
+  // Pages Publiques
+  const publicNewsEnabled = formData.get("publicNewsEnabled") === "true";
+  const publicRulesEnabled = formData.get("publicRulesEnabled") === "true";
+  const publicLoreEnabled = formData.get("publicLoreEnabled") === "true";
+  const publicGalleryEnabled = formData.get("publicGalleryEnabled") === "true";
+
   await updateGlobalSettings(
     {
       registrationEnabled,
@@ -46,6 +52,10 @@ export async function saveGlobalSettingsAction(formData: FormData) {
       minecraftServerAddress,
       minecraftServerVersion,
       minecraftAuthCommand,
+      publicNewsEnabled,
+      publicRulesEnabled,
+      publicLoreEnabled,
+      publicGalleryEnabled,
       ...({
         countdownEnabled,
         countdownBadgeText,
@@ -61,6 +71,10 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   );
 
   revalidatePath("/", "layout");
+  revalidatePath("/news");
+  revalidatePath("/rules");
+  revalidatePath("/lore");
+  revalidatePath("/gallery");
   revalidatePath("/staff/settings");
 
   return { success: true };

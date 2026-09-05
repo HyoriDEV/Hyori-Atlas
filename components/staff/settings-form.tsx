@@ -30,6 +30,10 @@ interface SettingsFormProps {
     countdownVideoType?: string;
     countdownVideoUrl?: string | null;
     countdownDiscordUrl?: string | null;
+    publicNewsEnabled?: boolean;
+    publicRulesEnabled?: boolean;
+    publicLoreEnabled?: boolean;
+    publicGalleryEnabled?: boolean;
   };
 }
 
@@ -304,7 +308,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 />
               </div>
               <p className="text-[12px] text-muted-foreground">
-                Lien ouvert par le bouton « Discord Officiel » sur le compte à rebours.
+                Lien ouvert par le bouton Discord dans la barre de navigation et sur le compte à rebours.
               </p>
             </div>
           </div>
@@ -625,7 +629,48 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
       </div>
 
       {/* ------------------------------------------------------------- */}
-      {/* 3. SERVEUR MINECRAFT */}
+      {/* 3. PAGES PUBLIQUES DU SITE */}
+      {/* ------------------------------------------------------------- */}
+      <div className="space-y-4 pt-4 border-t">
+        <div>
+          <h2 className="text-base font-semibold">Pages Publiques du Site</h2>
+          <p className="text-[13px] text-muted-foreground mt-1">
+            Activez ou désactivez l&apos;accès public à ces sections. Si une page est désactivée,
+            elle disparaît de la barre de navigation et renvoie une erreur 404 en cas d&apos;accès direct.
+          </p>
+        </div>
+
+        <SettingToggle
+          name="publicNewsEnabled"
+          label="Page Actualités"
+          description="Rendre accessible la page des annonces et mises à jour (/news)."
+          defaultChecked={defaultValues.publicNewsEnabled ?? true}
+        />
+
+        <SettingToggle
+          name="publicRulesEnabled"
+          label="Page Règlement"
+          description="Rendre accessible la page de consultation du règlement officiel (/rules)."
+          defaultChecked={defaultValues.publicRulesEnabled ?? true}
+        />
+
+        <SettingToggle
+          name="publicLoreEnabled"
+          label="Page Lore"
+          description="Rendre accessible la page présentant l'univers et le lore (/lore)."
+          defaultChecked={defaultValues.publicLoreEnabled ?? true}
+        />
+
+        <SettingToggle
+          name="publicGalleryEnabled"
+          label="Page Galerie"
+          description="Rendre accessible la page de la galerie communautaire (/gallery)."
+          defaultChecked={defaultValues.publicGalleryEnabled ?? true}
+        />
+      </div>
+
+      {/* ------------------------------------------------------------- */}
+      {/* 4. SERVEUR MINECRAFT */}
       {/* ------------------------------------------------------------- */}
       <div className="space-y-4 pt-4 border-t">
         <div>

@@ -5,16 +5,16 @@ import { auth } from "@/auth";
 import { PlayerSpaceCta } from "@/components/player-space-cta";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
-const navLinks = [
-  { label: "Actualités", href: "/news" },
-  { label: "Galerie", href: "/gallery" },
-  { label: "Lore", href: "/lore" },
-  { label: "Règlement", href: "/rules" },
-];
-
 export async function PublicNav() {
   const session = await auth();
   const settings = await getGlobalSettings();
+
+  const navLinks = [
+    { label: "Actualités", href: "/news", enabled: settings.publicNewsEnabled },
+    { label: "Galerie", href: "/gallery", enabled: settings.publicGalleryEnabled },
+    { label: "Lore", href: "/lore", enabled: settings.publicLoreEnabled },
+    { label: "Règlement", href: "/rules", enabled: settings.publicRulesEnabled },
+  ].filter((item) => item.enabled !== false);
 
   const user = session?.user
     ? {
@@ -41,17 +41,23 @@ export async function PublicNav() {
           />
           <span>Hyori RP</span>
         </Link>
-        <nav className="flex h-full items-center gap-4 sm:gap-10">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-muted-foreground hover:text-foreground flex h-full items-center text-[15px] font-semibold transition-colors"
-            >
-              {link.label}
-            </Link>
-          ))}
-          <PlayerSpaceCta user={user} registrationEnabled={settings.registrationEnabled} />
+        <nav className="flex h-full items-center gap-4 sm:gap-8">
+          <div className="flex items-center gap-4 sm:gap-8">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-muted-foreground hover:text-foreground flex h-full items-center text-[15px] font-semibold transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          <PlayerSpaceCta
+            user={user}
+            registrationEnabled={settings.registrationEnabled}
+            discordUrl={settings.countdownDiscordUrl || "https://discord.gg/hyori"}
+          />
         </nav>
       </div>
     </header>
