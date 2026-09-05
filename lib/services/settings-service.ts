@@ -23,6 +23,10 @@ export const getGlobalSettings = cache(async () => {
     countdownVideoType?: string;
     countdownVideoUrl?: string | null;
     countdownDiscordUrl?: string | null;
+    publicNewsEnabled?: boolean;
+    publicRulesEnabled?: boolean;
+    publicLoreEnabled?: boolean;
+    publicGalleryEnabled?: boolean;
   };
 
   const s = settings as ExtendedSettings;
@@ -37,6 +41,10 @@ export const getGlobalSettings = cache(async () => {
     countdownVideoType: s.countdownVideoType || "URL",
     countdownVideoUrl: s.countdownVideoUrl ?? null,
     countdownDiscordUrl: s.countdownDiscordUrl || "https://discord.gg/hyori",
+    publicNewsEnabled: s.publicNewsEnabled ?? true,
+    publicRulesEnabled: s.publicRulesEnabled ?? true,
+    publicLoreEnabled: s.publicLoreEnabled ?? true,
+    publicGalleryEnabled: s.publicGalleryEnabled ?? true,
   };
 });
 

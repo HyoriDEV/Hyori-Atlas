@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { CaretDown, Shield, User } from "@phosphor-icons/react";
+import { DiscordLogo, Shield, SignOut, User } from "@phosphor-icons/react";
 
-import { signInWithDiscord } from "@/lib/actions/auth-actions";
+import { signInWithDiscord, signOutAction } from "@/lib/actions/auth-actions";
 import { isDevAuthEnabled } from "@/lib/dev-auth";
 import { DevUserSwitcher } from "@/components/dev/dev-user-switcher";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Role } from "@/lib/generated/prisma/enums";
-
+import { roleLabels } from "@/lib/navigation";
 import { toast } from "sonner";
 
 export interface PublicNavUser {
@@ -27,40 +29,96 @@ export interface PublicNavUser {
 interface PlayerSpaceCtaProps {
   user: PublicNavUser | null;
   registrationEnabled?: boolean;
+  discordUrl?: string | null;
 }
 
-export function PlayerSpaceCta({ user, registrationEnabled = true }: PlayerSpaceCtaProps) {
-  if (user) {
-    if (user.role === Role.PLAYER) {
-      return (
-        <div className="flex items-center gap-2 sm:gap-3">
-          {isDevAuthEnabled() && <DevUserSwitcher currentUserId={user.id} />}
-          <Button render={<Link href="/player" />}>Espace Joueur</Button>
-        </div>
-      );
-    }
+export function PlayerSpaceCta({
+  user,
+  registrationEnabled = true,
+  discordUrl,
+}: PlayerSpaceCtaProps) {
+  const resolvedDiscordUrl = discordUrl || "https://discord.gg/hyori";
 
+  const discordIconButton = (
+    <a
+      href={resolvedDiscordUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="border-border/80 bg-card/60 text-muted-foreground hover:text-[#5865F2] hover:bg-[#5865F2]/10 hover:border-[#5865F2]/40 flex size-9 items-center justify-center rounded-full border shadow-xs transition-colors cursor-pointer"
+      title="Rejoindre notre Discord"
+      aria-label="Rejoindre notre Discord"
+    >
+      <DiscordLogo className="size-5" weight="fill" />
+    </a>
+  );
+
+  if (user) {
     return (
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="flex items-center gap-2 sm:gap-2.5">
         {isDevAuthEnabled() && <DevUserSwitcher currentUserId={user.id} />}
+        {discordIconButton}
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button className="gap-2">
-                <span>Accès Espace</span>
-                <CaretDown className="size-3.5 opacity-70" />
-              </Button>
+              <button
+                type="button"
+                className="border-border/80 bg-card/60 hover:border-primary/60 hover:ring-2 hover:ring-primary/20 flex size-9 items-center justify-center rounded-full border shadow-xs transition-all cursor-pointer overflow-hidden outline-none"
+                title={`Profil — ${user.name}`}
+                aria-label="Menu de profil"
+              >
+                <Avatar className="size-full">
+                  {user.avatarUrl && (
+                    <AvatarImage
+                      src={user.avatarUrl}
+                      alt={user.name}
+                      className="size-full object-cover"
+                    />
+                  )}
+                  <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
+                    {user.name ? user.name.slice(0, 2).toUpperCase() : <User className="size-4.5" weight="bold" />}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
             }
           />
-          <DropdownMenuContent align="end" className="w-52">
+          <DropdownMenuContent align="end" className="w-56 p-1.5">
+            <div className="flex items-center gap-2.5 px-2.5 py-2">
+              <Avatar className="size-8 shrink-0">
+                {user.avatarUrl && (
+                  <AvatarImage src={user.avatarUrl} alt={user.name} className="object-cover" />
+                )}
+                <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
+                  {user.name ? user.name.slice(0, 2).toUpperCase() : "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs font-semibold truncate">{user.name}</span>
+                <span className="text-[11px] text-muted-foreground truncate">
+                  {roleLabels[user.role] ?? "Joueur"}
+                </span>
+              </div>
+            </div>
+            <DropdownMenuSeparator />
             <DropdownMenuItem render={<Link href="/player" />} className="cursor-pointer py-2">
-              <User className="text-primary size-4 shrink-0" />
+              <User className="text-primary size-4 shrink-0" weight="bold" />
               <span className="text-xs font-medium">Espace Joueur</span>
             </DropdownMenuItem>
-            <DropdownMenuItem render={<Link href="/staff" />} className="cursor-pointer py-2">
-              <Shield className="text-primary size-4 shrink-0" />
-              <span className="text-xs font-medium">Espace Staff</span>
-            </DropdownMenuItem>
+            {user.role !== Role.PLAYER && (
+              <DropdownMenuItem render={<Link href="/staff" />} className="cursor-pointer py-2">
+                <Shield className="text-primary size-4 shrink-0" weight="bold" />
+                <span className="text-xs font-medium">Espace Staff</span>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuSeparator />
+            <form action={signOutAction} className="w-full">
+              <button
+                type="submit"
+                className="hover:bg-destructive/10 text-destructive flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium cursor-pointer transition-colors"
+              >
+                <SignOut className="size-4 shrink-0" />
+                <span>Se déconnecter</span>
+              </button>
+            </form>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -68,20 +126,35 @@ export function PlayerSpaceCta({ user, registrationEnabled = true }: PlayerSpace
   }
 
   return (
-    <div className="flex items-center gap-2 sm:gap-3">
+    <div className="flex items-center gap-2 sm:gap-2.5">
       {isDevAuthEnabled() && <DevUserSwitcher />}
+      {discordIconButton}
       {registrationEnabled ? (
         <form action={signInWithDiscord.bind(null, "/player")}>
-          <Button type="submit">Espace Joueur</Button>
+          <Button
+            type="submit"
+            variant="outline"
+            size="icon"
+            className="border-border/80 bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10 flex size-9 items-center justify-center rounded-full border shadow-xs transition-colors cursor-pointer"
+            title="Espace Joueur — Se connecter"
+            aria-label="Accéder à l'Espace Joueur"
+          >
+            <User className="size-5" weight="bold" />
+          </Button>
         </form>
       ) : (
         <Button
-          variant="secondary"
+          type="button"
+          variant="outline"
+          size="icon"
           onClick={() =>
             toast.error("Les inscriptions sont actuellement fermées par un administrateur.")
           }
+          className="border-border/80 bg-card/60 text-muted-foreground opacity-60 hover:opacity-100 flex size-9 items-center justify-center rounded-full border shadow-xs transition-all cursor-pointer"
+          title="Inscriptions fermées"
+          aria-label="Inscriptions fermées"
         >
-          Inscriptions fermées
+          <User className="size-5" weight="bold" />
         </Button>
       )}
     </div>
