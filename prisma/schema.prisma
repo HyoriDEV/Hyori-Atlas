@@ -517,6 +517,10 @@ model GlobalSettings {
   countdownVideoType         String   @default("URL")
   countdownVideoUrl          String?
   countdownDiscordUrl        String?  @default("https://discord.gg/hyori")
+  publicNewsEnabled          Boolean  @default(true)
+  publicRulesEnabled         Boolean  @default(true)
+  publicLoreEnabled          Boolean  @default(true)
+  publicGalleryEnabled       Boolean  @default(true)
   updatedAt                  DateTime @updatedAt
   updatedById                String?
 

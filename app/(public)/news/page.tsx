@@ -1,9 +1,11 @@
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { NewsType } from "@/lib/generated/prisma/enums";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/date";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
   if (items.length === 0) {
@@ -58,6 +60,11 @@ async function getNews() {
 }
 
 export default async function NewsPage() {
+  const settings = await getGlobalSettings();
+  if (!settings.publicNewsEnabled) {
+    notFound();
+  }
+
   const news = await getNews();
   const announcements = news.filter((item) => item.type === NewsType.ANNOUNCEMENT);
   const changelog = news.filter((item) => item.type === NewsType.CHANGELOG);

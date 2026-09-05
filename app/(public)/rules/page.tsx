@@ -1,6 +1,13 @@
+import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export default async function RulesPage() {
+  const settings = await getGlobalSettings();
+  if (!settings.publicRulesEnabled) {
+    notFound();
+  }
+
   const sections = await prisma.ruleSection.findMany({
     orderBy: { order: "asc" },
     include: {

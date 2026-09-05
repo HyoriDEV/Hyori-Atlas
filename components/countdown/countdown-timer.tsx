@@ -28,6 +28,7 @@ interface CountdownTimerProps {
   title: string;
   subtitle?: string | null;
   discordUrl?: string | null;
+  loreEnabled?: boolean;
 }
 
 interface TimeRemaining {
@@ -66,6 +67,7 @@ export function CountdownTimer({
   title,
   subtitle,
   discordUrl = "https://discord.gg/hyori",
+  loreEnabled = true,
 }: CountdownTimerProps) {
   const targetDate = useMemo(() => {
     return targetDateStr ? new Date(targetDateStr) : null;
@@ -189,13 +191,15 @@ export function CountdownTimer({
             <span>Discord Officiel</span>
           </a>
 
-          <Link
-            href="/lore"
-            className="font-heading inline-flex items-center gap-2.5 rounded-md border border-[#323232] bg-[#1a1a1a]/80 px-6 py-2.5 text-sm font-medium text-[#f8f5e8] transition-colors hover:border-[#d4af35]/50 hover:bg-[#262626] active:translate-y-px shadow-xs cursor-pointer"
-          >
-            <BookOpen className="size-4.5 text-[#e9d15c]" weight="bold" />
-            <span>Consulter le Lore</span>
-          </Link>
+          {loreEnabled && (
+            <Link
+              href="/lore"
+              className="font-heading inline-flex items-center gap-2.5 rounded-md border border-[#323232] bg-[#1a1a1a]/80 px-6 py-2.5 text-sm font-medium text-[#f8f5e8] transition-colors hover:border-[#d4af35]/50 hover:bg-[#262626] active:translate-y-px shadow-xs cursor-pointer"
+            >
+              <BookOpen className="size-4.5 text-[#e9d15c]" weight="bold" />
+              <span>Consulter le Lore</span>
+            </Link>
+          )}
         </div>
       </div>
     </div>
