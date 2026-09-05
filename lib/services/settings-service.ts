@@ -14,7 +14,30 @@ export const getGlobalSettings = cache(async () => {
     });
   }
 
-  return settings;
+  type ExtendedSettings = import("@/lib/generated/prisma/client").GlobalSettings & {
+    countdownEnabled?: boolean;
+    countdownBadgeText?: string | null;
+    countdownTitle?: string;
+    countdownSubtitle?: string | null;
+    countdownTargetDate?: Date | null;
+    countdownVideoType?: string;
+    countdownVideoUrl?: string | null;
+    countdownDiscordUrl?: string | null;
+  };
+
+  const s = settings as ExtendedSettings;
+
+  return {
+    ...settings,
+    countdownEnabled: s.countdownEnabled ?? false,
+    countdownBadgeText: s.countdownBadgeText || "Hyori RP — Lancement Officiel",
+    countdownTitle: s.countdownTitle || "Lancement Officiel de Hyori RP",
+    countdownSubtitle: s.countdownSubtitle ?? "Le compte à rebours est lancé. Préparez-vous à entrer dans l'histoire.",
+    countdownTargetDate: s.countdownTargetDate ?? null,
+    countdownVideoType: s.countdownVideoType || "URL",
+    countdownVideoUrl: s.countdownVideoUrl ?? null,
+    countdownDiscordUrl: s.countdownDiscordUrl || "https://discord.gg/hyori",
+  };
 });
 
 export async function updateGlobalSettings(

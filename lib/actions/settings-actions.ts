@@ -24,6 +24,17 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const minecraftServerVersion = rawVersion || "1.21.11";
   const minecraftAuthCommand = rawCommand ? rawCommand.toLowerCase() : "auth";
 
+  // Compte à rebours & Vidéo
+  const countdownEnabled = formData.get("countdownEnabled") === "true";
+  const countdownBadgeText = (formData.get("countdownBadgeText") as string)?.trim() || "Hyori RP — Lancement Officiel";
+  const countdownTitle = (formData.get("countdownTitle") as string)?.trim() || "Lancement Officiel de Hyori RP";
+  const countdownSubtitle = (formData.get("countdownSubtitle") as string)?.trim() || "";
+  const rawTargetDate = (formData.get("countdownTargetDate") as string)?.trim();
+  const countdownTargetDate = rawTargetDate ? new Date(rawTargetDate) : null;
+  const countdownVideoType = ((formData.get("countdownVideoType") as string)?.trim() || "URL").toUpperCase();
+  const countdownVideoUrl = (formData.get("countdownVideoUrl") as string)?.trim() || null;
+  const countdownDiscordUrl = (formData.get("countdownDiscordUrl") as string)?.trim() || "https://discord.gg/hyori";
+
   await updateGlobalSettings(
     {
       registrationEnabled,
@@ -35,11 +46,22 @@ export async function saveGlobalSettingsAction(formData: FormData) {
       minecraftServerAddress,
       minecraftServerVersion,
       minecraftAuthCommand,
+      ...({
+        countdownEnabled,
+        countdownBadgeText,
+        countdownTitle,
+        countdownSubtitle,
+        countdownTargetDate,
+        countdownVideoType,
+        countdownVideoUrl,
+        countdownDiscordUrl,
+      } as Record<string, unknown>),
     },
     user.id
   );
 
   revalidatePath("/", "layout");
+  revalidatePath("/staff/settings");
 
   return { success: true };
 }
