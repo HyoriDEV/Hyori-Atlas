@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Trash, Pencil, CaretUp, CaretDown } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,19 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
 
   const prefaceSection = initialSections.find((s) => s.isPreface);
   const voletSections = initialSections.filter((s) => !s.isPreface);
+
+  // Continuous article numbering across volets (preface excluded)
+  const articleNumberMap = useMemo(() => {
+    const map = new Map<string, number>();
+    let count = 0;
+    for (const volet of voletSections) {
+      for (const article of volet.articles) {
+        count += 1;
+        map.set(article.id, count);
+      }
+    }
+    return map;
+  }, [voletSections]);
 
   async function handleAddSection(isPreface: boolean = false) {
     setIsLoading(true);
@@ -248,9 +261,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
 
               <div className="flex flex-1 items-center gap-3">
                 {isPreface ? (
-                  <span className="font-heading text-primary text-xl font-bold">
-                    Préface
-                  </span>
+                  <span className="font-heading text-primary text-xl font-bold">Préface</span>
                 ) : (
                   <>
                     <span className="font-heading text-primary text-xl font-bold">
@@ -271,11 +282,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
                         >
                           Enregistrer
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => setEditingSectionId(null)}
-                        >
+                        <Button size="sm" variant="ghost" onClick={() => setEditingSectionId(null)}>
                           Annuler
                         </Button>
                       </div>
@@ -321,14 +328,21 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
             </p>
           ) : (
             section.articles.map((article, aIndex) => {
+              const currentArticleNumber = isPreface
+                ? 0
+                : (articleNumberMap.get(article.id) ?? aIndex + 1);
               const articleLabel = isPreface
-                ? `Article ${aIndex + 1}`
-                : `Article ${globalVoletArticleIndex++}`;
-
-              const rulePrefix = isPreface ? `${aIndex + 1}` : `${globalVoletArticleIndex - 1}`;
+                ? article.title
+                  ? article.title.replace(/^article\s*\d*\s*[:\-–—]?\s*/i, "").trim() ||
+                    article.title
+                  : `Article ${aIndex + 1}`
+                : `Article ${currentArticleNumber}`;
 
               return (
-                <div key={article.id} className="border-border rounded-lg border p-4">
+                <div
+                  key={article.id}
+                  className="border-border w-full max-w-full min-w-0 rounded-lg border p-4"
+                >
                   <div className="mb-4 flex items-center justify-between gap-4">
                     <div className="flex flex-1 items-center gap-4">
                       <div className="flex flex-col gap-1">
@@ -351,7 +365,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
                       </div>
 
                       <div className="flex flex-1 items-center gap-2">
-                        <span className="text-muted-foreground font-semibold text-sm">
+                        <span className="text-muted-foreground text-sm font-semibold">
                           {articleLabel}
                         </span>
                         {editingArticleId === article.id ? (
@@ -406,14 +420,14 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
                     )}
                   </div>
 
-                  <div className="ml-8 flex flex-col gap-3">
+                  <div className="ml-8 flex w-full max-w-full min-w-0 flex-col gap-3">
                     {article.rules.length === 0 ? (
                       <p className="text-muted-foreground text-sm italic">
                         Aucune règle dans cet article.
                       </p>
                     ) : (
                       article.rules.map((rule, rIndex) => (
-                        <div key={rule.id} className="flex gap-4">
+                        <div key={rule.id} className="flex w-full max-w-full min-w-0 gap-4">
                           <div className="flex flex-col gap-1 pt-1">
                             <Button
                               variant="ghost"
@@ -435,14 +449,21 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
                             </Button>
                           </div>
 
-                          <div className="flex flex-1 flex-col gap-2">
-                            <div className="flex items-start gap-2">
-                              <span className="text-muted-foreground mt-0.5 text-base select-none leading-none">
-                                •
-                              </span>
+                          <div className="flex max-w-full min-w-0 flex-1 flex-col gap-2">
+                            <div className="flex max-w-full min-w-0 items-start gap-2.5">
+                              {isPreface ? (
+                                <span
+                                  className="bg-primary/80 mt-2 size-1.5 shrink-0 rounded-full select-none"
+                                  aria-hidden="true"
+                                />
+                              ) : (
+                                <span className="text-primary shrink-0 font-sans text-sm font-medium tabular-nums select-none">
+                                  {currentArticleNumber}.{rIndex + 1}
+                                </span>
+                              )}
 
                               {editingRuleId === rule.id ? (
-                                <div className="flex flex-1 flex-col gap-2">
+                                <div className="flex max-w-full min-w-0 flex-1 flex-col gap-2">
                                   <RichTextEditor
                                     value={editingRuleContent}
                                     onChange={setEditingRuleContent}
@@ -466,7 +487,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
                                 </div>
                               ) : (
                                 <div
-                                  className="prose prose-sm dark:prose-invert max-w-none flex-1"
+                                  className="text-foreground/90 max-w-full min-w-0 flex-1 font-sans text-sm leading-relaxed break-words [&_p]:my-0 [&_p]:leading-relaxed"
                                   dangerouslySetInnerHTML={{ __html: rule.content }}
                                 />
                               )}
@@ -532,8 +553,6 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
       </Card>
     );
   }
-
-  let globalVoletArticleIndex = 1;
 
   return (
     <div className="flex flex-col gap-8">

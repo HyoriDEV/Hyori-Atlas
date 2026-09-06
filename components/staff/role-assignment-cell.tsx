@@ -26,10 +26,12 @@ import {
 import { StaffRoleBadge } from "@/components/staff/staff-role-badge";
 
 const roleDescriptions: Record<Role, string> = {
-  [Role.ADMIN]: "Accès complet à tous les modules d'administration, gestion des membres et paramètres globaux.",
+  [Role.ADMIN]:
+    "Accès complet à tous les modules d'administration, gestion des membres et paramètres globaux.",
   [Role.COMMUNICATION]: "Gestion des tickets joueurs et consultation de l'Atlas des joueurs.",
   [Role.CONFLICT_MANAGEMENT]: "Gestion des litiges, conciliation, rapports GC et tickets joueurs.",
-  [Role.RP_TRACKING]: "Évaluation des fiches personnages, validation du lore et salons de suivi RP.",
+  [Role.RP_TRACKING]:
+    "Évaluation des fiches personnages, validation du lore et salons de suivi RP.",
   [Role.DEVELOPER]: "Publication des changelogs et actualités techniques du serveur.",
   [Role.PLAYER]: "Rôle standard réservé aux joueurs (aucun accès à l'espace staff).",
 };
@@ -89,12 +91,12 @@ export function RoleAssignmentCell({
       try {
         await updateUserRoleAction(userId, targetRole);
         setSelectedRole(targetRole);
-        toast.success(
-          `Le rôle de ${userName} a été mis à jour : ${staffRoleLabels[targetRole]}.`
-        );
+        toast.success(`Le rôle de ${userName} a été mis à jour : ${staffRoleLabels[targetRole]}.`);
       } catch (error) {
         setSelectedRole(currentRole);
-        toast.error(error instanceof Error ? error.message : "Une erreur est survenue lors de la mise à jour.");
+        toast.error(
+          error instanceof Error ? error.message : "Une erreur est survenue lors de la mise à jour."
+        );
       } finally {
         setPendingRole(null);
       }
@@ -154,7 +156,7 @@ export function RoleAssignmentCell({
                 <span className="text-muted-foreground">Rôle actuel :</span>
                 <StaffRoleBadge role={currentRole} />
               </div>
-              <div className="my-2 border-t border-border/50" />
+              <div className="border-border/50 my-2 border-t" />
               <div className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground">Nouveau rôle :</span>
                 {pendingRole && <StaffRoleBadge role={pendingRole} />}
@@ -162,9 +164,7 @@ export function RoleAssignmentCell({
             </div>
 
             {pendingRole && (
-              <p className="text-muted-foreground text-xs">
-                {roleDescriptions[pendingRole]}
-              </p>
+              <p className="text-muted-foreground text-xs">{roleDescriptions[pendingRole]}</p>
             )}
           </div>
           <AlertDialogFooter>

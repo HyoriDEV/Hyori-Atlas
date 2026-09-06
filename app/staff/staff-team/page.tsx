@@ -114,7 +114,7 @@ export default async function StaffTeamPage(props: PageProps) {
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">Équipe staff</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+          <p className="text-muted-foreground mt-1 text-sm">
             Membres actifs du staff Hyori RP et gestion des rôles de l&apos;équipe.
           </p>
         </div>
@@ -193,10 +193,10 @@ export default async function StaffTeamPage(props: PageProps) {
 
       {/* Tableau des membres du staff */}
       <Card className="gap-0 overflow-hidden py-0">
-        <div className="border-b px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center justify-between border-b px-6 py-4">
           <div className="flex items-center gap-2">
             <Users className="text-muted-foreground size-4" />
-            <h2 className="font-medium text-sm">
+            <h2 className="text-sm font-medium">
               Membres de l&apos;équipe staff{" "}
               <span className="text-muted-foreground font-normal">
                 ({filteredStaffCount} {filteredStaffCount > 1 ? "membres" : "membre"})
@@ -211,7 +211,7 @@ export default async function StaffTeamPage(props: PageProps) {
               <TableHead className="pl-6">Membre du staff</TableHead>
               <TableHead>Pôle actuel</TableHead>
               <TableHead>Changer de rôle</TableHead>
-              <TableHead className="text-right pr-6">Action</TableHead>
+              <TableHead className="pr-6 text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -248,11 +248,11 @@ export default async function StaffTeamPage(props: PageProps) {
                         )}
                         <div className="flex flex-col">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-medium text-sm">{displayName}</span>
+                            <span className="text-sm font-medium">{displayName}</span>
                             {isCurrentAdminUser && (
                               <Badge
                                 variant="outline"
-                                className="text-[10px] px-1 py-0 h-4 border-primary/30 text-primary"
+                                className="border-primary/30 text-primary h-4 px-1 py-0 text-[10px]"
                               >
                                 Vous
                               </Badge>
@@ -281,7 +281,7 @@ export default async function StaffTeamPage(props: PageProps) {
                       />
                     </TableCell>
 
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="pr-6 text-right">
                       <div className="flex justify-end">
                         <RemoveStaffMemberButton
                           userId={member.id}

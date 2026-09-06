@@ -39,6 +39,8 @@ export function RichTextEditor({ value, onChange, className }: RichTextEditorPro
     extensions: [
       StarterKit.configure({
         underline: false,
+        codeBlock: false,
+        code: false,
         heading: { levels: [1, 2, 3] },
       }),
       Underline,

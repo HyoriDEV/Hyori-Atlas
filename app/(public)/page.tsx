@@ -41,8 +41,9 @@ export default async function HomePage() {
       <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">
         Bienvenue sur Hyori RP
       </h1>
-      <p className="max-w-xl text-lg text-muted-foreground">
-        Plongez dans un univers roleplay médiéval unique, façonné par les joueurs et porté par une communauté passionnée.
+      <p className="text-muted-foreground max-w-xl text-lg">
+        Plongez dans un univers roleplay médiéval unique, façonné par les joueurs et porté par une
+        communauté passionnée.
       </p>
     </div>
   );

@@ -16,7 +16,9 @@ const ALLOWED_VIDEO_MIMES = [
   "video/x-matroska",
 ];
 
-export async function uploadCountdownVideoAction(formData: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
+export async function uploadCountdownVideoAction(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
     await requireRole([Role.ADMIN]);
 
@@ -26,7 +28,10 @@ export async function uploadCountdownVideoAction(formData: FormData): Promise<{ 
     }
 
     if (file.size > MAX_VIDEO_BYTES) {
-      return { success: false, error: "Le fichier vidéo dépasse la taille maximale autorisée (100 Mo)." };
+      return {
+        success: false,
+        error: "Le fichier vidéo dépasse la taille maximale autorisée (100 Mo).",
+      };
     }
 
     const fileExt = path.extname(file.name).toLowerCase();

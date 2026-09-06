@@ -2,11 +2,7 @@
 
 import { useEffect, useState, useMemo, useSyncExternalStore } from "react";
 import Link from "next/link";
-import {
-  BookOpen,
-  Sparkle,
-  CalendarBlank,
-} from "@phosphor-icons/react";
+import { BookOpen, Sparkle, CalendarBlank } from "@phosphor-icons/react";
 
 import { DiscordOfficialIcon } from "@/components/icons/discord-icon";
 export { DiscordOfficialIcon };
@@ -62,9 +58,7 @@ export function CountdownTimer({
     return targetDateStr ? new Date(targetDateStr) : null;
   }, [targetDateStr]);
 
-  const [timeLeft, setTimeLeft] = useState<TimeRemaining>(() =>
-    calculateTimeRemaining(targetDate)
-  );
+  const [timeLeft, setTimeLeft] = useState<TimeRemaining>(() => calculateTimeRemaining(targetDate));
 
   const mounted = useSyncExternalStore(
     () => () => {},
@@ -109,11 +103,11 @@ export function CountdownTimer({
       <div className="mx-auto flex max-w-4xl flex-col items-center gap-6 md:gap-7">
         {/* En-tête éditorial personnalisable avec filets latéraux (Charte Hyori RP) */}
         <div className="flex items-center gap-3">
-          <span className="h-px w-6 sm:w-10 bg-[#323232]" />
-          <span className="font-sans text-[11px] sm:text-xs font-semibold tracking-[0.25em] uppercase text-[#d4af35]">
+          <span className="h-px w-6 bg-[#323232] sm:w-10" />
+          <span className="font-sans text-[11px] font-semibold tracking-[0.25em] text-[#d4af35] uppercase sm:text-xs">
             {badgeText || "Hyori RP — Lancement Officiel"}
           </span>
-          <span className="h-px w-6 sm:w-10 bg-[#323232]" />
+          <span className="h-px w-6 bg-[#323232] sm:w-10" />
         </div>
 
         {/* Titre Principal (Anthropic Serif) & Sous-titre (Source Serif) */}
@@ -129,7 +123,7 @@ export function CountdownTimer({
           )}
 
           {formattedTargetDate && (
-            <div className="inline-flex items-center gap-2 rounded-md border border-[#262626] bg-[#1a1a1a]/70 px-3.5 py-1 text-xs font-sans text-[#a3a39e]">
+            <div className="inline-flex items-center gap-2 rounded-md border border-[#262626] bg-[#1a1a1a]/70 px-3.5 py-1 font-sans text-xs text-[#a3a39e]">
               <CalendarBlank className="size-3.5 text-[#d4af35]" />
               <span>{formattedTargetDate}</span>
             </div>
@@ -147,7 +141,7 @@ export function CountdownTimer({
                 <span className="font-heading text-3xl font-normal tracking-normal text-[#f8f5e8] sm:text-5xl md:text-6xl">
                   {mounted ? String(unit.value).padStart(2, "0") : "00"}
                 </span>
-                <span className="mt-2 font-sans text-[10px] font-semibold uppercase tracking-[0.25em] text-[#a3a39e] transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
+                <span className="mt-2 font-sans text-[10px] font-semibold tracking-[0.25em] text-[#a3a39e] uppercase transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
                   {unit.label}
                 </span>
               </div>
@@ -162,8 +156,9 @@ export function CountdownTimer({
             <h2 className="font-heading text-2xl font-normal text-[#f8f5e8] sm:text-3xl">
               Le serveur est officiellement ouvert
             </h2>
-            <p className="max-w-md font-sans text-sm text-[#a3a39e] leading-relaxed">
-              Rejoignez dès maintenant notre communauté sur Discord et plongez dans l&apos;univers de Hyori RP.
+            <p className="max-w-md font-sans text-sm leading-relaxed text-[#a3a39e]">
+              Rejoignez dès maintenant notre communauté sur Discord et plongez dans l&apos;univers
+              de Hyori RP.
             </p>
           </div>
         )}
@@ -174,7 +169,7 @@ export function CountdownTimer({
             href={discordUrl || "https://discord.gg/hyori"}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-heading inline-flex items-center gap-2.5 rounded-md bg-[#e9d15c] px-6 py-2.5 text-sm font-medium text-[#121212] transition-colors hover:bg-[#d4af35] active:translate-y-px shadow-xs cursor-pointer"
+            className="font-heading inline-flex cursor-pointer items-center gap-2.5 rounded-md bg-[#e9d15c] px-6 py-2.5 text-sm font-medium text-[#121212] shadow-xs transition-colors hover:bg-[#d4af35] active:translate-y-px"
           >
             <DiscordOfficialIcon className="size-4.5" />
             <span>Discord Officiel</span>
@@ -183,7 +178,7 @@ export function CountdownTimer({
           {loreEnabled && (
             <Link
               href="/lore"
-              className="font-heading inline-flex items-center gap-2.5 rounded-md border border-[#323232] bg-[#1a1a1a]/80 px-6 py-2.5 text-sm font-medium text-[#f8f5e8] transition-colors hover:border-[#d4af35]/50 hover:bg-[#262626] active:translate-y-px shadow-xs cursor-pointer"
+              className="font-heading inline-flex cursor-pointer items-center gap-2.5 rounded-md border border-[#323232] bg-[#1a1a1a]/80 px-6 py-2.5 text-sm font-medium text-[#f8f5e8] shadow-xs transition-colors hover:border-[#d4af35]/50 hover:bg-[#262626] active:translate-y-px"
             >
               <BookOpen className="size-4.5 text-[#e9d15c]" weight="bold" />
               <span>Consulter le Lore</span>
