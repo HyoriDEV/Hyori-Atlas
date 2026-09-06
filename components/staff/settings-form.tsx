@@ -199,22 +199,22 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
       <div className="space-y-5 rounded-xl border border-amber-500/30 bg-amber-500/5 p-5 shadow-xs">
         <div className="flex items-center gap-2.5 text-amber-500">
           <HourglassHigh className="size-5" weight="bold" />
-          <h2 className="text-base font-semibold text-foreground">
+          <h2 className="text-foreground text-base font-semibold">
             Compte à Rebours &amp; Page d&apos;Accueil Immersive
           </h2>
         </div>
-        <p className="text-[13px] text-muted-foreground">
-          Configurez un compte à rebours avec vidéo d&apos;ambiance en arrière-plan. La page d&apos;accueil
-          deviendra non scrollable avec le compte à rebours au premier plan.
+        <p className="text-muted-foreground text-[13px]">
+          Configurez un compte à rebours avec vidéo d&apos;ambiance en arrière-plan. La page
+          d&apos;accueil deviendra non scrollable avec le compte à rebours au premier plan.
         </p>
 
         {/* Toggle Activer / Désactiver */}
-        <div className="flex items-center justify-between rounded-lg border bg-card p-4 shadow-2xs">
+        <div className="bg-card flex items-center justify-between rounded-lg border p-4 shadow-2xs">
           <div className="space-y-0.5">
             <label htmlFor="countdownEnabled" className="text-sm font-medium">
               Activer le compte à rebours sur l&apos;accueil
             </label>
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-muted-foreground text-[13px]">
               Remplace la page d&apos;accueil par le compte à rebours immersif avec vidéo de fond.
             </p>
           </div>
@@ -229,7 +229,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 onChange={(e) => setCountdownEnabled(e.target.checked)}
                 className="peer sr-only"
               />
-              <div className="peer h-6 w-11 rounded-full border border-input bg-muted after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-primary peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring dark:border-gray-600 dark:bg-gray-700 dark:peer-focus:ring-primary"></div>
+              <div className="peer border-input bg-muted peer-checked:bg-primary peer-focus:ring-ring dark:peer-focus:ring-primary h-6 w-11 rounded-full border peer-focus:ring-2 peer-focus:outline-none after:absolute after:start-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:after:translate-x-full peer-checked:after:border-white dark:border-gray-600 dark:bg-gray-700"></div>
             </label>
           </div>
         </div>
@@ -249,10 +249,11 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 name="countdownBadgeText"
                 defaultValue={defaultValues.countdownBadgeText || "Hyori RP — Lancement Officiel"}
                 placeholder="Hyori RP — Lancement Officiel"
-                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
               />
-              <p className="text-[12px] text-muted-foreground">
-                Affiché en majuscules entre les deux filets dorés (ex : HYORI RP — LANCEMENT OFFICIEL).
+              <p className="text-muted-foreground text-[12px]">
+                Affiché en majuscules entre les deux filets dorés (ex : HYORI RP — LANCEMENT
+                OFFICIEL).
               </p>
             </div>
 
@@ -267,7 +268,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 name="countdownTitle"
                 defaultValue={defaultValues.countdownTitle || "Lancement Officiel de Hyori RP"}
                 placeholder="Lancement Officiel de Hyori RP"
-                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
               />
             </div>
           </div>
@@ -287,7 +288,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                   "Le compte à rebours est lancé. Préparez-vous à entrer dans l'histoire."
                 }
                 placeholder="Ex: Ouverture des portes du serveur et début du Chapitre I..."
-                className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
               />
             </div>
 
@@ -297,34 +298,37 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 Lien d&apos;invitation Discord
               </label>
               <div className="relative flex items-center">
-                <DiscordOfficialIcon className="size-4 absolute left-3 text-[#5865F2]" />
+                <DiscordOfficialIcon className="absolute left-3 size-4 text-[#5865F2]" />
                 <input
                   type="url"
                   id="countdownDiscordUrl"
                   name="countdownDiscordUrl"
                   defaultValue={defaultValues.countdownDiscordUrl || "https://discord.gg/hyori"}
                   placeholder="https://discord.gg/hyori"
-                  className="border-input bg-background w-full rounded-md border py-2 pr-3 pl-9 text-sm focus:outline-none focus:ring-2 focus:ring-ring font-mono text-xs"
+                  className="border-input bg-background focus:ring-ring w-full rounded-md border py-2 pr-3 pl-9 font-mono text-sm text-xs focus:ring-2 focus:outline-none"
                 />
               </div>
-              <p className="text-[12px] text-muted-foreground">
-                Lien ouvert par le bouton Discord dans la barre de navigation et sur le compte à rebours.
+              <p className="text-muted-foreground text-[12px]">
+                Lien ouvert par le bouton Discord dans la barre de navigation et sur le compte à
+                rebours.
               </p>
             </div>
           </div>
 
           {/* Date et Heure cible avec raccourcis et sélecteur simplifié */}
-          <div className="space-y-3 rounded-lg border bg-card p-4">
+          <div className="bg-card space-y-3 rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Clock className="size-4.5 text-primary" />
-                <span className="text-sm font-medium">Date &amp; Heure de fin du compte à rebours</span>
+                <Clock className="text-primary size-4.5" />
+                <span className="text-sm font-medium">
+                  Date &amp; Heure de fin du compte à rebours
+                </span>
               </div>
               {datePart && (
                 <button
                   type="button"
                   onClick={clearDate}
-                  className="text-xs text-muted-foreground transition-colors hover:text-destructive hover:underline"
+                  className="text-muted-foreground hover:text-destructive text-xs transition-colors hover:underline"
                 >
                   Effacer la date
                 </button>
@@ -341,39 +345,41 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
             {/* Raccourcis en 1 clic */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1">
-              <span className="text-[11px] font-medium text-muted-foreground mr-1">Raccourcis rapides :</span>
+              <span className="text-muted-foreground mr-1 text-[11px] font-medium">
+                Raccourcis rapides :
+              </span>
               <button
                 type="button"
                 onClick={() => setPreset("tonight")}
-                className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:border-primary/50 hover:bg-muted"
+                className="border-border bg-background text-foreground/90 hover:border-primary/50 hover:bg-muted rounded-md border px-2.5 py-1 text-xs transition-colors"
               >
                 Ce soir (20h)
               </button>
               <button
                 type="button"
                 onClick={() => setPreset("tomorrow")}
-                className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:border-primary/50 hover:bg-muted"
+                className="border-border bg-background text-foreground/90 hover:border-primary/50 hover:bg-muted rounded-md border px-2.5 py-1 text-xs transition-colors"
               >
                 Demain (18h)
               </button>
               <button
                 type="button"
                 onClick={() => setPreset("weekend")}
-                className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:border-primary/50 hover:bg-muted"
+                className="border-border bg-background text-foreground/90 hover:border-primary/50 hover:bg-muted rounded-md border px-2.5 py-1 text-xs transition-colors"
               >
                 Ce samedi (18h)
               </button>
               <button
                 type="button"
                 onClick={() => setPreset("in3days")}
-                className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:border-primary/50 hover:bg-muted"
+                className="border-border bg-background text-foreground/90 hover:border-primary/50 hover:bg-muted rounded-md border px-2.5 py-1 text-xs transition-colors"
               >
                 +3 jours
               </button>
               <button
                 type="button"
                 onClick={() => setPreset("in1week")}
-                className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-foreground/90 transition-colors hover:border-primary/50 hover:bg-muted"
+                className="border-border bg-background text-foreground/90 hover:border-primary/50 hover:bg-muted rounded-md border px-2.5 py-1 text-xs transition-colors"
               >
                 +1 semaine
               </button>
@@ -382,19 +388,17 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             {/* Sélecteurs séparés Jour et Heure */}
             <div className="grid gap-3 pt-1 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
-                  Jour :
-                </label>
+                <label className="text-muted-foreground text-xs font-medium">Jour :</label>
                 <input
                   type="date"
                   value={datePart}
                   onChange={(e) => setDatePart(e.target.value)}
-                  className="border-input bg-background w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-muted-foreground text-xs font-medium">
                   Heure de lancement :
                 </label>
                 <div className="flex gap-2">
@@ -402,15 +406,15 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                     type="time"
                     value={timePart}
                     onChange={(e) => setTimePart(e.target.value)}
-                    className="border-input bg-background w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   />
-                  <div className="hidden sm:flex items-center gap-1">
+                  <div className="hidden items-center gap-1 sm:flex">
                     {["14:00", "18:00", "20:00", "21:00"].map((h) => (
                       <button
                         key={h}
                         type="button"
                         onClick={() => setTimePart(h)}
-                        className={`rounded-md border px-2 py-1.5 text-xs font-mono transition-colors ${
+                        className={`rounded-md border px-2 py-1.5 font-mono text-xs transition-colors ${
                           timePart === h
                             ? "border-primary bg-primary/10 text-primary font-semibold"
                             : "border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -434,24 +438,22 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 )}
               </div>
             ) : (
-              <p className="text-xs italic text-muted-foreground">
-                Aucune date sélectionnée.
-              </p>
+              <p className="text-muted-foreground text-xs italic">Aucune date sélectionnée.</p>
             )}
           </div>
 
           {/* Configuration Vidéo */}
-          <div className="space-y-3 rounded-lg border bg-card p-4">
+          <div className="bg-card space-y-3 rounded-lg border p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <VideoCamera className="size-4.5 text-primary" />
+                <VideoCamera className="text-primary size-4.5" />
                 <span className="text-sm font-medium">Vidéo d&apos;arrière-plan (2e plan)</span>
               </div>
               <input type="hidden" name="countdownVideoType" value={videoType} />
               <input type="hidden" name="countdownVideoUrl" value={videoUrl} />
 
               {/* Sélecteur de méthode */}
-              <div className="inline-flex rounded-lg border bg-muted p-0.5 text-xs">
+              <div className="bg-muted inline-flex rounded-lg border p-0.5 text-xs">
                 <button
                   type="button"
                   onClick={() => setVideoType("URL")}
@@ -482,7 +484,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             {/* Méthode URL */}
             {videoType === "URL" && (
               <div className="space-y-1.5">
-                <label className="text-xs text-muted-foreground">
+                <label className="text-muted-foreground text-xs">
                   Lien direct vidéo (.mp4, .webm) ou lien YouTube (ex:
                   https://www.youtube.com/watch?v=...)
                 </label>
@@ -492,7 +494,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                     value={videoUrl}
                     onChange={(e) => setVideoUrl(e.target.value)}
                     placeholder="https://www.youtube.com/watch?v=..."
-                    className="border-input bg-background w-full rounded-md border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   />
                   {videoUrl && (
                     <Button
@@ -502,7 +504,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                       onClick={() => setVideoUrl("")}
                       title="Effacer l'URL"
                     >
-                      <Trash className="size-4 text-destructive" />
+                      <Trash className="text-destructive size-4" />
                     </Button>
                   )}
                 </div>
@@ -512,14 +514,14 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             {/* Méthode Upload Fichier */}
             {videoType === "FILE" && (
               <div className="space-y-2">
-                <label className="text-xs text-muted-foreground">
+                <label className="text-muted-foreground text-xs">
                   Téléversez un fichier vidéo local (MP4, WEBM, MOV - max 100 Mo). Le fichier sera
                   stocké sur le serveur et diffusé en boucle fluide.
                 </label>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <label className="border-input hover:border-primary/50 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed bg-muted/40 px-4 py-3 text-sm font-medium transition-colors">
-                    <UploadSimple className="size-4.5 text-primary" />
+                  <label className="border-input hover:border-primary/50 bg-muted/40 flex cursor-pointer items-center justify-center gap-2 rounded-md border border-dashed px-4 py-3 text-sm font-medium transition-colors">
+                    <UploadSimple className="text-primary size-4.5" />
                     <span>
                       {isUploadingVideo ? "Téléversement..." : "Sélectionner un fichier vidéo"}
                     </span>
@@ -535,7 +537,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                   {videoUrl && (
                     <div className="flex items-center gap-2 text-xs text-emerald-500">
                       <Check className="size-4 shrink-0" weight="bold" />
-                      <span className="truncate max-w-[280px]">Vidéo active : {videoUrl}</span>
+                      <span className="max-w-[280px] truncate">Vidéo active : {videoUrl}</span>
                       <button
                         type="button"
                         onClick={() => setVideoUrl("")}
@@ -552,9 +554,9 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             {/* Prévisualisation Vidéo */}
             {videoUrl && (
               <div className="mt-3 overflow-hidden rounded-lg border bg-black/60">
-                <div className="flex items-center justify-between border-b px-3 py-1.5 text-xs text-muted-foreground">
+                <div className="text-muted-foreground flex items-center justify-between border-b px-3 py-1.5 text-xs">
                   <span>Prévisualisation de l&apos;arrière-plan</span>
-                  <span className="text-[11px] font-mono">{videoUrl}</span>
+                  <span className="font-mono text-[11px]">{videoUrl}</span>
                 </div>
                 <div className="relative aspect-video max-h-48 w-full overflow-hidden">
                   {videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be") ? (
@@ -631,12 +633,13 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
       {/* ------------------------------------------------------------- */}
       {/* 3. PAGES PUBLIQUES DU SITE */}
       {/* ------------------------------------------------------------- */}
-      <div className="space-y-4 pt-4 border-t">
+      <div className="space-y-4 border-t pt-4">
         <div>
           <h2 className="text-base font-semibold">Pages Publiques du Site</h2>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-[13px]">
             Activez ou désactivez l&apos;accès public à ces sections. Si une page est désactivée,
-            elle disparaît de la barre de navigation et renvoie une erreur 404 en cas d&apos;accès direct.
+            elle disparaît de la barre de navigation et renvoie une erreur 404 en cas d&apos;accès
+            direct.
           </p>
         </div>
 
@@ -672,10 +675,10 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
       {/* ------------------------------------------------------------- */}
       {/* 4. SERVEUR MINECRAFT */}
       {/* ------------------------------------------------------------- */}
-      <div className="space-y-4 pt-4 border-t">
+      <div className="space-y-4 border-t pt-4">
         <div>
           <h2 className="text-base font-semibold">Serveur Minecraft & Liaison de compte</h2>
-          <p className="text-[13px] text-muted-foreground mt-1">
+          <p className="text-muted-foreground mt-1 text-[13px]">
             Configurez les informations du serveur de liaison affichées aux nouveaux joueurs et
             utilisées par le plugin.
           </p>

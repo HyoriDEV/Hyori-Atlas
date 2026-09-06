@@ -26,6 +26,12 @@ export interface RuleSectionData {
   articles: RuleArticleData[];
 }
 
+function formatVoletArticleTitle(num: number, rawTitle: string): string {
+  const trimmed = (rawTitle || "").trim();
+  const cleaned = trimmed.replace(/^article\s*\d+\s*[:\-–—]?\s*/i, "").trim();
+  return cleaned ? `Article ${num} : ${cleaned}` : `Article ${num}`;
+}
+
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").toLowerCase();
 }
@@ -35,6 +41,19 @@ export function RulesView({ sections }: { sections: RuleSectionData[] }) {
 
   const preface = sections.find((s) => s.isPreface);
   const volets = sections.filter((s) => !s.isPreface);
+
+  // Pre-calculate continuous article numbers across all volets (never resets between volets)
+  const articleNumberMap = useMemo(() => {
+    const map = new Map<string, number>();
+    let count = 0;
+    for (const volet of volets) {
+      for (const article of volet.articles) {
+        count += 1;
+        map.set(article.id, count);
+      }
+    }
+    return map;
+  }, [volets]);
 
   const cleanQuery = searchQuery.trim().toLowerCase();
 
@@ -120,10 +139,8 @@ export function RulesView({ sections }: { sections: RuleSectionData[] }) {
     return { preface: filteredPreface, volets: filteredVolets, matchCount };
   }, [cleanQuery, preface, volets]);
 
-  let globalVoletArticleIndex = 0;
-
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full max-w-full min-w-0 flex-col gap-6">
       {/* Search bar */}
       <div className="flex flex-col gap-2">
         <div className="relative w-full">
@@ -184,47 +201,55 @@ export function RulesView({ sections }: { sections: RuleSectionData[] }) {
       )}
 
       {/* Direct display without cards */}
-      <div className="flex flex-col gap-10">
+      <div className="flex w-full max-w-full min-w-0 flex-col gap-10">
         {/* Préface */}
         {filteredData.preface && (
-          <section id="preface" className="flex flex-col gap-5">
-            <h2 className="font-heading text-foreground border-border/50 border-b pb-2 text-2xl font-bold tracking-tight">
+          <section id="preface" className="flex w-full max-w-full min-w-0 flex-col gap-5">
+            <h2 className="font-heading text-foreground border-border/50 border-b pb-2 text-2xl font-semibold tracking-tight">
               Préface
             </h2>
 
-            <div className="flex flex-col gap-6">
+            <div className="flex w-full max-w-full min-w-0 flex-col gap-6">
               {filteredData.preface.articles.length === 0 ? (
                 <p className="text-muted-foreground text-sm italic">
                   Aucun article défini dans la préface.
                 </p>
               ) : (
                 filteredData.preface.articles.map((article) => (
-                  <article key={article.id} className="flex flex-col gap-2.5">
+                  <article
+                    key={article.id}
+                    className="flex w-full max-w-full min-w-0 flex-col gap-2.5"
+                  >
                     {article.title && (
                       <h3 className="font-heading text-foreground text-lg font-semibold tracking-tight">
-                        {article.title}
+                        {article.title.replace(/^article\s*\d*\s*[:\-–—]?\s*/i, "").trim() ||
+                          article.title}
                       </h3>
                     )}
 
-                    <ul className="marker:text-muted-foreground/70 flex list-disc flex-col gap-1.5 pl-5">
+                    <div className="flex w-full max-w-full min-w-0 flex-col gap-2 pl-1 sm:pl-2">
                       {article.rules.length === 0 ? (
-                        <li className="text-muted-foreground list-none text-sm italic">
+                        <p className="text-muted-foreground text-sm italic">
                           Aucune règle définie pour cet article.
-                        </li>
+                        </p>
                       ) : (
                         article.rules.map((rule) => (
-                          <li
+                          <div
                             key={rule.id}
-                            className="text-foreground/90 pl-1 text-sm leading-relaxed"
+                            className="flex w-full max-w-full min-w-0 items-start gap-3"
                           >
+                            <span
+                              className="bg-primary/80 mt-2 size-1.5 shrink-0 rounded-full select-none"
+                              aria-hidden="true"
+                            />
                             <div
-                              className="prose prose-zinc dark:prose-invert prose-p:my-0 prose-p:leading-relaxed prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80 text-foreground/90 max-w-none text-sm"
+                              className="text-foreground/90 max-w-full min-w-0 flex-1 font-sans text-sm leading-relaxed break-words [&_p]:my-0 [&_p]:leading-relaxed"
                               dangerouslySetInnerHTML={{ __html: rule.content }}
                             />
-                          </li>
+                          </div>
                         ))
                       )}
-                    </ul>
+                    </div>
                   </article>
                 ))
               )}
@@ -241,51 +266,53 @@ export function RulesView({ sections }: { sections: RuleSectionData[] }) {
             <section
               key={section.id}
               id={`volet-${sectionLetter.toLowerCase()}`}
-              className="flex flex-col gap-5"
+              className="flex w-full max-w-full min-w-0 flex-col gap-5"
             >
-              <h2 className="font-heading text-foreground border-border/50 border-b pb-2 text-2xl font-bold tracking-tight">
+              <h2 className="font-heading text-foreground border-border/50 border-b pb-2 text-2xl font-semibold tracking-tight">
                 Volet {sectionLetter} : {section.title}
               </h2>
 
-              <div className="flex flex-col gap-6">
+              <div className="flex w-full max-w-full min-w-0 flex-col gap-6">
                 {section.articles.length === 0 ? (
                   <p className="text-muted-foreground text-sm italic">
                     Aucun article défini dans ce volet.
                   </p>
                 ) : (
                   section.articles.map((article) => {
-                    globalVoletArticleIndex++;
-                    const currentArticleNumber = globalVoletArticleIndex;
+                    const currentArticleNumber = articleNumberMap.get(article.id) ?? 1;
 
                     return (
                       <article
                         key={article.id}
                         id={`article-${currentArticleNumber}`}
-                        className="flex flex-col gap-2.5"
+                        className="flex w-full max-w-full min-w-0 flex-col gap-2.5"
                       >
                         <h3 className="font-heading text-foreground text-lg font-semibold tracking-tight">
-                          Article {currentArticleNumber} : {article.title}
+                          {formatVoletArticleTitle(currentArticleNumber, article.title)}
                         </h3>
 
-                        <ul className="marker:text-muted-foreground/70 flex list-disc flex-col gap-1.5 pl-5">
+                        <div className="flex w-full max-w-full min-w-0 flex-col gap-2 pl-1 sm:pl-2">
                           {article.rules.length === 0 ? (
-                            <li className="text-muted-foreground list-none text-sm italic">
+                            <p className="text-muted-foreground text-sm italic">
                               Aucune règle définie pour cet article.
-                            </li>
+                            </p>
                           ) : (
-                            article.rules.map((rule) => (
-                              <li
+                            article.rules.map((rule, rIndex) => (
+                              <div
                                 key={rule.id}
-                                className="text-foreground/90 pl-1 text-sm leading-relaxed"
+                                className="flex w-full max-w-full min-w-0 items-start gap-2.5"
                               >
+                                <span className="text-primary shrink-0 font-sans text-sm font-medium tabular-nums select-none">
+                                  {currentArticleNumber}.{rIndex + 1}
+                                </span>
                                 <div
-                                  className="prose prose-zinc dark:prose-invert prose-p:my-0 prose-p:leading-relaxed prose-a:text-primary prose-a:underline-offset-4 hover:prose-a:text-primary/80 text-foreground/90 max-w-none text-sm"
+                                  className="text-foreground/90 max-w-full min-w-0 flex-1 font-sans text-sm leading-relaxed break-words [&_p]:my-0 [&_p]:leading-relaxed"
                                   dangerouslySetInnerHTML={{ __html: rule.content }}
                                 />
-                              </li>
+                              </div>
                             ))
                           )}
-                        </ul>
+                        </div>
                       </article>
                     );
                   })
