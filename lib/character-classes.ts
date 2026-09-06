@@ -1,5 +1,5 @@
 import type React from "react";
-import { Crown, Fish, Plant, Scroll } from "@phosphor-icons/react";
+import { Crown, Fish, Plant, Scroll } from "@phosphor-icons/react/dist/ssr";
 import { CharacterClass } from "@/lib/generated/prisma/enums";
 import { PickaxeIcon } from "@/components/character-sheet/pickaxe-icon";
 

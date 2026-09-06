@@ -7,7 +7,7 @@ export default async function StaffRulesPage() {
   await requireRole([Role.ADMIN]);
 
   const sections = await prisma.ruleSection.findMany({
-    orderBy: { order: "asc" },
+    orderBy: [{ isPreface: "desc" }, { order: "asc" }],
     include: {
       articles: {
         orderBy: { order: "asc" },

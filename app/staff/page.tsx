@@ -46,6 +46,7 @@ export default async function StaffDashboardPage() {
   const canAccessWriting = writingRoles.includes(user.role);
   const canAccessRpTracking = rpTrackingRoles.includes(user.role);
   const canAccessBdaReports = bdaRoles.includes(user.role);
+  const canAccessStaffTeam = user.role === Role.ADMIN;
 
   const [
     pendingTicketsCount,
@@ -57,6 +58,7 @@ export default async function StaffDashboardPage() {
     totalChaptersCount,
     activeRpTrackingConversationsCount,
     bdaReportsCount,
+    staffMembersCount,
   ] = await Promise.all([
     canAccessTickets
       ? prisma.ticket.count({
@@ -96,6 +98,11 @@ export default async function StaffDashboardPage() {
             category: TicketCategory.PLAYER_COMPLAINT,
             status: { not: TicketStatus.ARCHIVED },
           },
+        })
+      : 0,
+    canAccessStaffTeam
+      ? prisma.user.count({
+          where: { role: { not: Role.PLAYER } },
         })
       : 0,
   ]);
@@ -148,6 +155,14 @@ export default async function StaffDashboardPage() {
       iconKey: "shield",
       stat: bdaReportsCount,
       statLabel: bdaReportsCount > 1 ? "dossiers" : "dossier",
+    },
+    "/staff/staff-team": {
+      title: "Équipe staff",
+      description: "Gestion des permissions et rôles du staff.",
+      href: "/staff/staff-team",
+      iconKey: "shield-check",
+      stat: staffMembersCount,
+      statLabel: staffMembersCount > 1 ? "membres" : "membre",
     },
     "/staff/atlas": {
       title: "Atlas des joueurs",
