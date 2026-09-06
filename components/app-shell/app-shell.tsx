@@ -68,6 +68,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   clock: ClockCountdown,
   users: UsersThree,
   shield: ShieldWarning,
+  "shield-check": Shield,
   info: Info,
   "squares-four": SquaresFour,
   gear: Gear,

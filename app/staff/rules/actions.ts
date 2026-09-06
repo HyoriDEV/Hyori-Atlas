@@ -5,18 +5,31 @@ import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 
-export async function createRuleSection(title: string) {
+export async function createRuleSection(title: string, isPreface: boolean = false) {
   await requireRole([Role.ADMIN]);
 
-  const lastSection = await prisma.ruleSection.findFirst({
-    orderBy: { order: "desc" },
-  });
+  if (isPreface) {
+    const existingPreface = await prisma.ruleSection.findFirst({
+      where: { isPreface: true },
+    });
+    if (existingPreface) {
+      throw new Error("Une préface existe déjà.");
+    }
 
-  const order = lastSection ? lastSection.order + 1 : 1;
+    await prisma.ruleSection.create({
+      data: { title, order: 0, isPreface: true },
+    });
+  } else {
+    const lastSection = await prisma.ruleSection.findFirst({
+      orderBy: { order: "desc" },
+    });
 
-  await prisma.ruleSection.create({
-    data: { title, order },
-  });
+    const order = lastSection ? Math.max(lastSection.order + 1, 1) : 1;
+
+    await prisma.ruleSection.create({
+      data: { title, order, isPreface: false },
+    });
+  }
 
   revalidatePath("/staff/rules");
   revalidatePath("/rules");
