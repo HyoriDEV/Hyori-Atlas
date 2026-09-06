@@ -18,6 +18,7 @@ export type NavIconKey =
   | "clock"
   | "users"
   | "shield"
+  | "shield-check"
   | "info"
   | "squares-four"
   | "gear"
@@ -251,11 +252,20 @@ export const staffRulesItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffStaffTeamItem: StaffNavItem = {
+  label: "Équipe staff",
+  href: "/staff/staff-team",
+  iconKey: "shield-check",
+  roles: [Role.ADMIN],
+  fullWidth: true,
+};
+
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
   staffSettingsItem,
   staffTicketsItem,
   staffBdaReportsItem,
+  staffStaffTeamItem,
   staffAtlasItem,
   staffWritingItem,
   staffRpTrackingItem,
@@ -275,7 +285,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffBdaReportsItem],
+        items: [staffTicketsItem, staffBdaReportsItem, staffStaffTeamItem],
       },
       {
         title: "Gestion RP",

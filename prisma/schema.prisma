@@ -548,6 +548,7 @@ model RuleSection {
   id        String        @id @default(cuid())
   title     String        @db.VarChar(120)
   order     Int
+  isPreface Boolean       @default(false)
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
 
