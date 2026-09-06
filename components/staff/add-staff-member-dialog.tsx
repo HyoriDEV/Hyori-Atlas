@@ -82,13 +82,13 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
       try {
         await updateUserRoleAction(selectedPlayerId, selectedRole);
         const name = getPlayerDisplayName(selectedPlayer);
-        toast.success(`${name} a été ajouté à l'équipe staff avec le rôle ${staffRoleLabels[selectedRole]}.`);
+        toast.success(
+          `${name} a été ajouté à l'équipe staff avec le rôle ${staffRoleLabels[selectedRole]}.`
+        );
         setIsOpen(false);
         handleReset();
       } catch (error) {
-        toast.error(
-          error instanceof Error ? error.message : "Erreur lors de l'ajout du membre."
-        );
+        toast.error(error instanceof Error ? error.message : "Erreur lors de l'ajout du membre.");
       }
     });
   }
@@ -103,13 +103,13 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
     >
       <DialogTrigger
         render={
-          <Button size="sm" className="gap-1.5 h-9">
+          <Button size="sm" className="h-9 gap-1.5">
             <UserPlus className="size-4" />
             Ajouter un membre
           </Button>
         }
       />
-      <DialogContent className="sm:max-w-md gap-5">
+      <DialogContent className="gap-5 sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Ajouter un membre au staff</DialogTitle>
           <DialogDescription>
@@ -155,7 +155,7 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
                 {staffRoleOptions.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>
                     <div className="flex flex-col py-0.5 text-left">
-                      <span className="font-medium text-sm">{opt.label}</span>
+                      <span className="text-sm font-medium">{opt.label}</span>
                       <span className="text-muted-foreground text-xs leading-tight">
                         {opt.description}
                       </span>
@@ -168,12 +168,12 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
 
           {/* Récapitulatif si un joueur est sélectionné */}
           {selectedPlayer && (
-            <div className="bg-muted/50 rounded-lg border p-3 flex flex-col gap-2">
+            <div className="bg-muted/50 flex flex-col gap-2 rounded-lg border p-3">
               <span className="text-muted-foreground text-xs font-medium">
                 Aperçu de l&apos;intégration :
               </span>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-medium text-foreground">
+                <span className="text-foreground font-medium">
                   {getPlayerDisplayName(selectedPlayer)}
                 </span>
                 <StaffRoleBadge role={selectedRole} />
@@ -191,11 +191,7 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
           >
             Annuler
           </Button>
-          <Button
-            type="button"
-            onClick={handleAddMember}
-            disabled={!selectedPlayerId || isPending}
-          >
+          <Button type="button" onClick={handleAddMember} disabled={!selectedPlayerId || isPending}>
             {isPending ? "Ajout en cours..." : "Confirmer l'ajout"}
           </Button>
         </DialogFooter>

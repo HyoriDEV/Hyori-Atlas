@@ -45,7 +45,7 @@ export function PlayerSpaceCta({
       href={resolvedDiscordUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="border-border/80 bg-card/60 text-muted-foreground hover:text-[#5865F2] hover:bg-[#5865F2]/10 hover:border-[#5865F2]/40 flex size-9 items-center justify-center rounded-full border shadow-xs transition-colors cursor-pointer"
+      className="border-border/80 bg-card/60 text-muted-foreground flex size-9 cursor-pointer items-center justify-center rounded-full border shadow-xs transition-colors hover:border-[#5865F2]/40 hover:bg-[#5865F2]/10 hover:text-[#5865F2]"
       title="Rejoindre notre Discord"
       aria-label="Rejoindre notre Discord"
     >
@@ -63,7 +63,7 @@ export function PlayerSpaceCta({
             render={
               <button
                 type="button"
-                className="border-border/80 bg-card/60 hover:border-primary/60 hover:ring-2 hover:ring-primary/20 flex size-9 items-center justify-center rounded-full border shadow-xs transition-all cursor-pointer overflow-hidden outline-none"
+                className="border-border/80 bg-card/60 hover:border-primary/60 hover:ring-primary/20 flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-full border shadow-xs transition-all outline-none hover:ring-2"
                 title={`Profil — ${user.name}`}
                 aria-label="Menu de profil"
               >
@@ -76,7 +76,11 @@ export function PlayerSpaceCta({
                     />
                   )}
                   <AvatarFallback className="bg-primary/15 text-primary text-xs font-semibold">
-                    {user.name ? user.name.slice(0, 2).toUpperCase() : <User className="size-4.5" weight="bold" />}
+                    {user.name ? (
+                      user.name.slice(0, 2).toUpperCase()
+                    ) : (
+                      <User className="size-4.5" weight="bold" />
+                    )}
                   </AvatarFallback>
                 </Avatar>
               </button>
@@ -92,9 +96,9 @@ export function PlayerSpaceCta({
                   {user.name ? user.name.slice(0, 2).toUpperCase() : "U"}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex flex-col min-w-0">
-                <span className="text-xs font-semibold truncate">{user.name}</span>
-                <span className="text-[11px] text-muted-foreground truncate">
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate text-xs font-semibold">{user.name}</span>
+                <span className="text-muted-foreground truncate text-[11px]">
                   {roleLabels[user.role] ?? "Joueur"}
                 </span>
               </div>
@@ -114,7 +118,7 @@ export function PlayerSpaceCta({
             <form action={signOutAction} className="w-full">
               <button
                 type="submit"
-                className="hover:bg-destructive/10 text-destructive flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium cursor-pointer transition-colors"
+                className="hover:bg-destructive/10 text-destructive flex w-full cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium transition-colors"
               >
                 <SignOut className="size-4 shrink-0" />
                 <span>Se déconnecter</span>
@@ -136,7 +140,7 @@ export function PlayerSpaceCta({
             type="submit"
             variant="outline"
             size="icon"
-            className="border-border/80 bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10 flex size-9 items-center justify-center rounded-full border shadow-xs transition-colors cursor-pointer"
+            className="border-border/80 bg-card/60 text-muted-foreground hover:text-primary hover:border-primary/40 hover:bg-primary/10 flex size-9 cursor-pointer items-center justify-center rounded-full border shadow-xs transition-colors"
             title="Espace Joueur — Se connecter"
             aria-label="Accéder à l'Espace Joueur"
           >
@@ -151,7 +155,7 @@ export function PlayerSpaceCta({
           onClick={() =>
             toast.error("Les inscriptions sont actuellement fermées par un administrateur.")
           }
-          className="border-border/80 bg-card/60 text-muted-foreground opacity-60 hover:opacity-100 flex size-9 items-center justify-center rounded-full border shadow-xs transition-all cursor-pointer"
+          className="border-border/80 bg-card/60 text-muted-foreground flex size-9 cursor-pointer items-center justify-center rounded-full border opacity-60 shadow-xs transition-all hover:opacity-100"
           title="Inscriptions fermées"
           aria-label="Inscriptions fermées"
         >

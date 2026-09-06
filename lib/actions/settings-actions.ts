@@ -26,14 +26,19 @@ export async function saveGlobalSettingsAction(formData: FormData) {
 
   // Compte à rebours & Vidéo
   const countdownEnabled = formData.get("countdownEnabled") === "true";
-  const countdownBadgeText = (formData.get("countdownBadgeText") as string)?.trim() || "Hyori RP — Lancement Officiel";
-  const countdownTitle = (formData.get("countdownTitle") as string)?.trim() || "Lancement Officiel de Hyori RP";
+  const countdownBadgeText =
+    (formData.get("countdownBadgeText") as string)?.trim() || "Hyori RP — Lancement Officiel";
+  const countdownTitle =
+    (formData.get("countdownTitle") as string)?.trim() || "Lancement Officiel de Hyori RP";
   const countdownSubtitle = (formData.get("countdownSubtitle") as string)?.trim() || "";
   const rawTargetDate = (formData.get("countdownTargetDate") as string)?.trim();
   const countdownTargetDate = rawTargetDate ? new Date(rawTargetDate) : null;
-  const countdownVideoType = ((formData.get("countdownVideoType") as string)?.trim() || "URL").toUpperCase();
+  const countdownVideoType = (
+    (formData.get("countdownVideoType") as string)?.trim() || "URL"
+  ).toUpperCase();
   const countdownVideoUrl = (formData.get("countdownVideoUrl") as string)?.trim() || null;
-  const countdownDiscordUrl = (formData.get("countdownDiscordUrl") as string)?.trim() || "https://discord.gg/hyori";
+  const countdownDiscordUrl =
+    (formData.get("countdownDiscordUrl") as string)?.trim() || "https://discord.gg/hyori";
 
   // Pages Publiques
   const publicNewsEnabled = formData.get("publicNewsEnabled") === "true";
