@@ -27,8 +27,9 @@ export default async function GettingStartedPage() {
   const minecraftLinked = Boolean(user.minecraftUuid);
 
   const [characterSheet, latestBooking, settings] = await Promise.all([
-    prisma.characterSheet.findUnique({
+    prisma.characterSheet.findFirst({
       where: { playerId: user.id },
+      orderBy: { createdAt: "desc" },
     }),
     prisma.interviewBooking.findFirst({
       where: { playerId: user.id },

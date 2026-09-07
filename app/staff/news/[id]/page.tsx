@@ -6,7 +6,7 @@ import { NewsForm } from "./news-form";
 
 export default async function StaffNewsEditPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
-  const user = await requireRole([Role.ADMIN, Role.DEVELOPER]);
+  const user = await requireRole([Role.ADMIN]);
 
   let initialData = null;
 

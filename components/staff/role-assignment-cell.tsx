@@ -32,7 +32,7 @@ const roleDescriptions: Record<Role, string> = {
   [Role.CONFLICT_MANAGEMENT]: "Gestion des litiges, conciliation, rapports GC et tickets joueurs.",
   [Role.RP_TRACKING]:
     "Évaluation des fiches personnages, validation du lore et salons de suivi RP.",
-  [Role.DEVELOPER]: "Publication des changelogs et actualités techniques du serveur.",
+  [Role.DEVELOPER]: "Rôle technique et développement du serveur.",
   [Role.PLAYER]: "Rôle standard réservé aux joueurs (aucun accès à l'espace staff).",
 };
 

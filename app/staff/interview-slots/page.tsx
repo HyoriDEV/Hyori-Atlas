@@ -2,7 +2,7 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/generated/prisma/enums";
 import { InterviewSlotsManager } from "@/components/staff/interview-slots/interview-slots-manager";
-import type { InterviewSlotsKPIs } from "@/components/staff/interview-slots/types";
+import type { InterviewSlotItem, InterviewSlotsKPIs } from "@/components/staff/interview-slots/types";
 
 export default async function InterviewSlotsPage() {
   await requireRole([Role.ADMIN]);
@@ -13,7 +13,8 @@ export default async function InterviewSlotsPage() {
         include: {
           player: {
             include: {
-              characterSheet: {
+              characterSheets: {
+                orderBy: { createdAt: "desc" },
                 select: {
                   id: true,
                   reviewStatus: true,
@@ -66,5 +67,29 @@ export default async function InterviewSlotsPage() {
     nextInterviewDate,
   };
 
-  return <InterviewSlotsManager initialSlots={slots} kpis={kpis} />;
+  const formattedSlots: InterviewSlotItem[] = slots.map((slot) => {
+    if (!slot.booking) {
+      return {
+        id: slot.id,
+        startsAt: slot.startsAt,
+        createdAt: slot.createdAt,
+        booking: null,
+      };
+    }
+    const { characterSheets, ...restPlayer } = slot.booking.player;
+    return {
+      id: slot.id,
+      startsAt: slot.startsAt,
+      createdAt: slot.createdAt,
+      booking: {
+        ...slot.booking,
+        player: {
+          ...restPlayer,
+          characterSheet: characterSheets[0] ?? null,
+        },
+      },
+    };
+  });
+
+  return <InterviewSlotsManager initialSlots={formattedSlots} kpis={kpis} />;
 }

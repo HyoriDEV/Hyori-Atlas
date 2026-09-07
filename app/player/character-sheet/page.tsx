@@ -1,8 +1,8 @@
 import { requireActivePlayer } from "@/lib/dal";
-import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
-import { characterSheetStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
-import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
+import { getPlayerCharacters } from "@/lib/services/character-service";
+import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { characterSheetStatusLabels, characterStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
+import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
 import {
   SKILL_DEFINITIONS,
   isCharacterSheetEditable,
@@ -10,13 +10,18 @@ import {
 } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
 import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { CharacterSheetForm } from "@/components/player/character-sheet-form";
+import { CharacterSwitcher } from "@/components/player/character-switcher";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
 import { CHARACTER_CLASSES } from "@/lib/character-classes";
 
-export default async function CharacterSheetPage() {
+export default async function CharacterSheetPage(props: {
+  searchParams: Promise<{ characterId?: string }>;
+}) {
   const user = await requireActivePlayer();
+  const searchParams = await props.searchParams;
   const unlocked = isRegistrationStatusAtLeast(
     user.registrationStatus,
     RegistrationStatus.WHITELIST_IN_PROGRESS
@@ -31,10 +36,13 @@ export default async function CharacterSheetPage() {
     );
   }
 
-  const sheet = await prisma.characterSheet.findUnique({
-    where: { playerId: user.id },
-    include: { comments: { orderBy: { createdAt: "asc" }, include: { author: true } } },
-  });
+  const allCharacters = await getPlayerCharacters(user.id);
+
+  // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
+  let sheet = allCharacters.find((c) => c.id === searchParams.characterId);
+  if (!sheet) {
+    sheet = allCharacters.find((c) => c.status === CharacterStatus.ACTIVE) ?? allCharacters[0] ?? null;
+  }
 
   const assignedClassDef = sheet?.assignedClass
     ? CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass)
@@ -62,8 +70,9 @@ export default async function CharacterSheetPage() {
     SKILL_DEFINITIONS.map((skill) => [skill.field, sheet ? sheet[skill.field] : 1])
   ) as SkillValues;
 
-  const currentStatus = sheet?.reviewStatus ?? CharacterSheetStatus.PENDING_PLAYER;
-  const editable = !sheet || isCharacterSheetEditable(sheet.reviewStatus);
+  const currentReviewStatus = sheet?.reviewStatus ?? CharacterSheetStatus.PENDING_PLAYER;
+  const isCharacterActive = sheet?.status === CharacterStatus.ACTIVE;
+  const editable = isCharacterActive && (!sheet || isCharacterSheetEditable(sheet.reviewStatus));
 
   const comments: SheetComment[] = (sheet?.comments ?? []).map((comment) => ({
     id: comment.id,
@@ -85,14 +94,17 @@ export default async function CharacterSheetPage() {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
-          {sheet && (
+        <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
+        {sheet && (
+          <div className="flex items-center gap-2">
+            <Badge variant={characterStatusBadgeVariant(sheet.status)}>
+              {characterStatusLabels[sheet.status]}
+            </Badge>
             <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
               {characterSheetStatusLabels[sheet.reviewStatus]}
             </Badge>
-          )}
-        </div>
+          </div>
+        )}
 
         {assignedClassDef && (
           <div className="flex items-center gap-2">
@@ -106,12 +118,40 @@ export default async function CharacterSheetPage() {
           </div>
         )}
       </div>
+
+      {allCharacters.length > 1 && sheet && (
+        <CharacterSwitcher
+          characters={allCharacters.map((c) => ({
+            id: c.id,
+            name: c.name,
+            status: c.status,
+            reviewStatus: c.reviewStatus,
+            createdAt: c.createdAt,
+          }))}
+          selectedCharacterId={sheet.id}
+        />
+      )}
+
+      {sheet && !isCharacterActive && (
+        <Card className="border-border/60 bg-muted/40 flex flex-col gap-1 p-4">
+          <p className="text-foreground text-sm font-semibold">
+            {sheet.status === CharacterStatus.DEAD
+              ? "Ce personnage est décédé en jeu de rôle (Mort)."
+              : "Ce personnage a été désactivé par l'équipe d'administration."}
+          </p>
+          <p className="text-muted-foreground text-xs">
+            Cette fiche est archivée en lecture seule. Tu peux consulter les informations et commentaires d&apos;évaluation, mais elle ne peut plus être modifiée.
+          </p>
+        </Card>
+      )}
+
       <CharacterSheetForm
+        sheetId={sheet?.id}
         initialValues={fieldValues}
         initialSkills={skillValues}
         initialClasses={sheet?.chosenClasses ?? []}
         editable={editable}
-        status={currentStatus}
+        status={currentReviewStatus}
         comments={comments}
         minecraftUsername={user.minecraftUsername}
       />

@@ -10,6 +10,7 @@ import {
 } from "@/lib/atlas-status";
 import {
   CharacterSheetStatus,
+  CharacterStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -29,6 +30,8 @@ import { CopyButton } from "@/components/player/copy-button";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { AtlasPromoteButton } from "@/components/dashboard/atlas-promote-button";
 import { AtlasCharacterSheetSummary } from "@/components/dashboard/atlas-character-sheet-summary";
+import { AtlasCharacterTabs } from "@/components/dashboard/atlas-character-tabs";
+import { AtlasCreateCharacterDialog } from "@/components/dashboard/atlas-create-character-dialog";
 import { AtlasStaffNotes } from "@/components/dashboard/atlas-staff-notes";
 import {
   AtlasTimelineTabs,
@@ -39,17 +42,21 @@ import {
 
 export default async function AtlasPlayerPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ playerId: string }>;
+  searchParams: Promise<{ sheetId?: string }>;
 }) {
   const { playerId } = await params;
+  const { sheetId } = await searchParams;
   const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
   const player = await prisma.user.findUnique({
     where: { id: playerId },
     include: {
-      characterSheet: {
+      characterSheets: {
+        orderBy: { createdAt: "desc" },
         include: {
           reviewHistory: {
             orderBy: { createdAt: "desc" },
@@ -75,7 +82,12 @@ export default async function AtlasPlayerPage({
   }
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
-  const sheet = player.characterSheet;
+  const activeSheet = player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE);
+  const sheet =
+    (sheetId ? player.characterSheets.find((s) => s.id === sheetId) : null) ??
+    activeSheet ??
+    player.characterSheets[0] ??
+    null;
   const activity = getMockServerActivity(player.id, player.createdAt);
 
   const whitelistInProgressAt = player.registrationHistory.find(
@@ -90,6 +102,7 @@ export default async function AtlasPlayerPage({
     player.registrationStatus !== RegistrationStatus.WHITELISTED;
   const isAdmin = staffUser.role === Role.ADMIN;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
+  const canManageCharacters = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
 
   const logItems: AtlasLogItem[] = [
     ...player.registrationHistory.map((entry) => {
@@ -116,30 +129,32 @@ export default async function AtlasPlayerPage({
         },
       };
     }),
-    ...(player.characterSheet?.reviewHistory ?? []).map((entry) => {
-      let actor: AtlasLogActor;
-      if (entry.authorId === player.id) {
-        actor = { type: "player" };
-      } else if (entry.author) {
-        actor = {
-          type: "staff",
-          name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
-        };
-      } else {
-        actor = { type: "system" };
-      }
+    ...player.characterSheets.flatMap((charSheet) =>
+      (charSheet.reviewHistory ?? []).map((entry) => {
+        let actor: AtlasLogActor;
+        if (entry.authorId === player.id) {
+          actor = { type: "player" };
+        } else if (entry.author) {
+          actor = {
+            type: "staff",
+            name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
+          };
+        } else {
+          actor = { type: "system" };
+        }
 
-      return {
-        id: `sheet-review-${entry.id}`,
-        date: entry.createdAt,
-        title: "Fiche personnage :",
-        actor,
-        badge: {
-          label: characterSheetStatusLabels[entry.status],
-          variant: characterSheetStatusBadgeVariant(entry.status),
-        },
-      };
-    }),
+        return {
+          id: `sheet-review-${entry.id}`,
+          date: entry.createdAt,
+          title: `Fiche (${charSheet.name || "Sans nom"}) :`,
+          actor,
+          badge: {
+            label: characterSheetStatusLabels[entry.status],
+            variant: characterSheetStatusBadgeVariant(entry.status),
+          },
+        };
+      })
+    ),
     ...player.tickets.map((ticket) => ({
       id: `ticket-${ticket.id}`,
       date: ticket.createdAt,
@@ -297,6 +312,26 @@ export default async function AtlasPlayerPage({
               </div>
             </div>
           </Card>
+
+          {player.characterSheets.length > 0 && sheet ? (
+            <AtlasCharacterTabs
+              playerId={player.id}
+              pseudo={playerName}
+              characters={player.characterSheets.map((c) => ({
+                id: c.id,
+                name: c.name,
+                status: c.status,
+                reviewStatus: c.reviewStatus,
+                createdAt: c.createdAt,
+              }))}
+              selectedSheetId={sheet.id}
+              canManageCharacters={canManageCharacters}
+            />
+          ) : canManageCharacters ? (
+            <div className="flex justify-end">
+              <AtlasCreateCharacterDialog playerId={player.id} pseudo={playerName} />
+            </div>
+          ) : null}
 
           <AtlasCharacterSheetSummary
             sheet={sheet}
