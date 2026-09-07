@@ -15,6 +15,7 @@ import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { CharacterSheetForm } from "@/components/player/character-sheet-form";
 import { CharacterSwitcher } from "@/components/player/character-switcher";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
+import { CHARACTER_CLASSES } from "@/lib/character-classes";
 
 export default async function CharacterSheetPage(props: {
   searchParams: Promise<{ characterId?: string }>;
@@ -42,6 +43,10 @@ export default async function CharacterSheetPage(props: {
   if (!sheet) {
     sheet = allCharacters.find((c) => c.status === CharacterStatus.ACTIVE) ?? allCharacters[0] ?? null;
   }
+
+  const assignedClassDef = sheet?.assignedClass
+    ? CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass)
+    : null;
 
   const fieldValues: CharacterSheetFieldValues = {
     name: sheet?.name ?? "",
@@ -97,6 +102,18 @@ export default async function CharacterSheetPage(props: {
             </Badge>
             <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
               {characterSheetStatusLabels[sheet.reviewStatus]}
+            </Badge>
+          </div>
+        )}
+
+        {assignedClassDef && (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="secondary"
+              className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1 text-sm font-medium"
+            >
+              <assignedClassDef.icon size={18} className="shrink-0" />
+              Classe attribuée : {assignedClassDef.singularLabel}
             </Badge>
           </div>
         )}

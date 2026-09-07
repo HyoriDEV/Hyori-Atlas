@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
+  CharacterClass,
   CharacterSheetCommentTarget,
   CharacterSheetStatus,
   CharacterStatus,
@@ -12,6 +13,11 @@ import {
   Role,
 } from "@/lib/generated/prisma/enums";
 import { characterSheetReviewerRoles } from "@/lib/navigation";
+import {
+  notifyPlayerCharacterSheetStatus,
+  notifyPlayerRegistrationStatus,
+  syncPlayerWhitelistClassRole,
+} from "@/lib/services/discord-bot-service";
 import {
   COMMENT_BODY_MAX_LENGTH,
   isNarrativeCommentTarget,
@@ -114,6 +120,13 @@ export async function submitCharacterSheetEvaluation(
     }),
   ]);
 
+  if (hasComments && sheet.player?.discordId) {
+    await notifyPlayerCharacterSheetStatus(
+      sheet.player.discordId,
+      CharacterSheetStatus.PENDING_PLAYER
+    );
+  }
+
   revalidateSheetSurfaces(sheet.playerId);
 }
 
@@ -147,41 +160,42 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
   revalidateSheetSurfaces(sheet.playerId);
 }
 
-export async function promoteToWhitelisted(userId: string) {
+export async function promoteToWhitelisted(userId: string, assignedClass: CharacterClass) {
   const staffUser = await requireRole([Role.ADMIN]);
 
-  const sheet = await prisma.characterSheet.findFirst({
-    where: { playerId: userId, status: CharacterStatus.ACTIVE },
-    orderBy: { createdAt: "desc" },
+  if (!assignedClass || !Object.values(CharacterClass).includes(assignedClass)) {
+    throw new Error("Une classe RP valide doit obligatoirement être attribuée au joueur.");
+  }
+
+  const user = await prisma.user.findUniqueOrThrow({
+    where: { id: userId },
+    select: { id: true, discordId: true },
   });
+
+  const sheet = await prisma.characterSheet.findUnique({ where: { playerId: userId } });
   if (!sheet) {
     throw new Error("Ce joueur n'a pas encore de fiche personnage.");
   }
 
-  const isSheetAlreadyValidated = sheet.reviewStatus === CharacterSheetStatus.VALIDATED;
-
   await prisma.$transaction([
-    ...(isSheetAlreadyValidated
-      ? []
-      : [
-          prisma.characterSheetComment.deleteMany({ where: { sheetId: sheet.id } }),
-          prisma.characterSheet.update({
-            where: { id: sheet.id },
-            data: {
-              reviewStatus: CharacterSheetStatus.VALIDATED,
-              hasUnreadFeedback: false,
-            },
-          }),
-          prisma.characterSheetReviewHistory.create({
-            data: {
-              sheetId: sheet.id,
-              authorId: staffUser.id,
-              status: CharacterSheetStatus.VALIDATED,
-              commentCount: 0,
-              note: "Validation automatique lors du passage en whitelist",
-            },
-          }),
-        ]),
+    prisma.characterSheetComment.deleteMany({ where: { sheetId: sheet.id } }),
+    prisma.characterSheet.update({
+      where: { id: sheet.id },
+      data: {
+        reviewStatus: CharacterSheetStatus.VALIDATED,
+        assignedClass: assignedClass,
+        hasUnreadFeedback: false,
+      },
+    }),
+    prisma.characterSheetReviewHistory.create({
+      data: {
+        sheetId: sheet.id,
+        authorId: staffUser.id,
+        status: CharacterSheetStatus.VALIDATED,
+        commentCount: 0,
+        note: `Validation de la whitelist avec attribution de la classe ${assignedClass}`,
+      },
+    }),
     prisma.user.update({
       where: { id: userId },
       data: { registrationStatus: RegistrationStatus.WHITELISTED },
@@ -190,6 +204,13 @@ export async function promoteToWhitelisted(userId: string) {
       data: { userId, authorId: staffUser.id, status: RegistrationStatus.WHITELISTED },
     }),
   ]);
+
+  if (user.discordId) {
+    // 1. Synchronisation du rôle whitelist et du rôle de classe sur Discord
+    await syncPlayerWhitelistClassRole(user.discordId, true, assignedClass);
+    // 2. Notification MP de la validation définitive
+    await notifyPlayerRegistrationStatus(user.discordId, RegistrationStatus.WHITELISTED);
+  }
 
   revalidateSheetSurfaces(userId);
 }

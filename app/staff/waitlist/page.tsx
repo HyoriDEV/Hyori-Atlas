@@ -39,10 +39,7 @@ export default async function WaitlistPage(props: PageProps) {
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const rejectedPage = Math.max(1, parseInt(searchParams.rejectedPage ?? "1", 10) || 1);
 
-  const [waitlistCount, players, rejectedCount, rejectedPlayers] = await Promise.all([
-    prisma.user.count({
-      where: { registrationStatus: RegistrationStatus.WAITLIST },
-    }),
+  const [waitlistPlayers, rejectedPlayersAll] = await Promise.all([
     prisma.user.findMany({
       where: { registrationStatus: RegistrationStatus.WAITLIST },
       include: {
@@ -52,12 +49,6 @@ export default async function WaitlistPage(props: PageProps) {
           take: 1,
         },
       },
-      orderBy: { createdAt: sortOrder },
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
-    }),
-    prisma.user.count({
-      where: { registrationStatus: RegistrationStatus.REJECTED },
     }),
     prisma.user.findMany({
       where: { registrationStatus: RegistrationStatus.REJECTED },
@@ -68,14 +59,39 @@ export default async function WaitlistPage(props: PageProps) {
           take: 1,
         },
       },
-      orderBy: { createdAt: sortOrder },
-      skip: (rejectedPage - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
     }),
   ]);
 
+  const sortByWaitlistDate = <
+    T extends {
+      createdAt: Date;
+      registrationHistory: { createdAt: Date }[];
+    },
+  >(
+    list: T[]
+  ) => {
+    return list.sort((a, b) => {
+      const dateA = a.registrationHistory[0]?.createdAt ?? a.createdAt;
+      const dateB = b.registrationHistory[0]?.createdAt ?? b.createdAt;
+      const diff = dateA.getTime() - dateB.getTime();
+      return sortOrder === "asc" ? diff : -diff;
+    });
+  };
+
+  const sortedWaitlistPlayers = sortByWaitlistDate(waitlistPlayers);
+  const sortedRejectedPlayers = sortByWaitlistDate(rejectedPlayersAll);
+
+  const waitlistCount = sortedWaitlistPlayers.length;
+  const rejectedCount = sortedRejectedPlayers.length;
+
   const waitlistTotalPages = Math.ceil(waitlistCount / PAGE_SIZE) || 1;
   const rejectedTotalPages = Math.ceil(rejectedCount / PAGE_SIZE) || 1;
+
+  const players = sortedWaitlistPlayers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const rejectedPlayers = sortedRejectedPlayers.slice(
+    (rejectedPage - 1) * PAGE_SIZE,
+    rejectedPage * PAGE_SIZE
+  );
 
   return (
     <div className="flex flex-col gap-8">

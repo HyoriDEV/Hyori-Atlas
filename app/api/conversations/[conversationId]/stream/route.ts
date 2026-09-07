@@ -50,28 +50,55 @@ export async function GET(
 
   const encoder = new TextEncoder();
   let unsubscribe: (() => void) | null = null;
+  let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
   const stream = new ReadableStream({
     start(controller) {
       controller.enqueue(encoder.encode(": connected\n\n"));
+
       unsubscribe = subscribe(conversationId, (message) => {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+        try {
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+        } catch {
+          // Stream controller might already be closed
+        }
       });
+
+      // Keep connection alive through reverse proxies (e.g. Nginx default 60s timeout)
+      keepAliveInterval = setInterval(() => {
+        try {
+          controller.enqueue(encoder.encode(": keepalive\n\n"));
+        } catch {
+          if (keepAliveInterval) {
+            clearInterval(keepAliveInterval);
+            keepAliveInterval = null;
+          }
+        }
+      }, 25000);
     },
     cancel() {
+      if (keepAliveInterval) {
+        clearInterval(keepAliveInterval);
+        keepAliveInterval = null;
+      }
       unsubscribe?.();
     },
   });
 
   request.signal.addEventListener("abort", () => {
+    if (keepAliveInterval) {
+      clearInterval(keepAliveInterval);
+      keepAliveInterval = null;
+    }
     unsubscribe?.();
   });
 
   return new Response(stream, {
     headers: {
-      "Content-Type": "text/event-stream",
+      "Content-Type": "text/event-stream; charset=utf-8",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
     },
   });
 }

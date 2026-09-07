@@ -24,12 +24,10 @@ export function TablePagination({
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  if (totalCount === 0 || totalPages <= 1) {
-    return null;
-  }
-
-  const startItem = (currentPage - 1) * pageSize + 1;
-  const endItem = Math.min(currentPage * pageSize, totalCount);
+  const safeTotalPages = Math.max(1, totalPages);
+  const safeCurrentPage = Math.max(1, currentPage);
+  const startItem = totalCount === 0 ? 0 : (safeCurrentPage - 1) * pageSize + 1;
+  const endItem = Math.min(safeCurrentPage * pageSize, totalCount);
 
   function goToPage(page: number) {
     const params = new URLSearchParams(searchParams.toString());
@@ -47,14 +45,14 @@ export function TablePagination({
 
       <div className="flex items-center gap-2">
         <span className="mr-2">
-          Page <span className="text-foreground font-medium">{currentPage}</span> sur{" "}
-          <span className="text-foreground font-medium">{totalPages}</span>
+          Page <span className="text-foreground font-medium">{safeCurrentPage}</span> sur{" "}
+          <span className="text-foreground font-medium">{safeTotalPages}</span>
         </span>
         <Button
           variant="outline"
           size="icon-xs"
-          disabled={currentPage <= 1}
-          onClick={() => goToPage(currentPage - 1)}
+          disabled={safeCurrentPage <= 1}
+          onClick={() => goToPage(safeCurrentPage - 1)}
           aria-label="Page précédente"
         >
           <CaretLeft className="size-3.5" />
@@ -62,8 +60,8 @@ export function TablePagination({
         <Button
           variant="outline"
           size="icon-xs"
-          disabled={currentPage >= totalPages}
-          onClick={() => goToPage(currentPage + 1)}
+          disabled={safeCurrentPage >= safeTotalPages}
+          onClick={() => goToPage(safeCurrentPage + 1)}
           aria-label="Page suivante"
         >
           <CaretRight className="size-3.5" />

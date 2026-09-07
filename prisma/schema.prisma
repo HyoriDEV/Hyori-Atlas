@@ -248,6 +248,7 @@ model CharacterSheet {
   additionalComments String? @db.VarChar(300)
 
   chosenClasses CharacterClass[] @default([])
+  assignedClass CharacterClass?
 
   physicalForce        Int @default(1)
   physicalEndurance    Int @default(1)

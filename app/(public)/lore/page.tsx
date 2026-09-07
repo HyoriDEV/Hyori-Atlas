@@ -153,6 +153,63 @@ export default async function LorePage() {
             accident. C&apos;est un système.
           </p>
         </article>
+
+        <article className="text-foreground/90 flex flex-col gap-6 leading-relaxed">
+          <h3 className="font-heading text-2xl font-semibold tracking-tight">
+            🏮 Les yeux du clan (1860)
+          </h3>
+
+          <p>
+            Il y a 4 ans, les assassinats qui frappent le shogunat donnent au clan une nouvelle peur
+            : celle de perdre le contrôle de l&apos;intérieur. Alors il met en place sa police
+            secrète. Les hommes ne circulent plus comme avant. Les informations deviennent
+            suspectes. Les portes s&apos;ouvrent moins facilement. Et surtout, le système des cinq
+            foyers est instauré : si un homme fuit, ses quatre voisins paient avec lui.
+          </p>
+
+          <p>
+            D&apos;un coup, toute la province apprend à se surveiller elle-même. On devient prudent
+            avec les mots. On ferme les fenêtres plus vite. On demande moins de choses. On évite de
+            poser trop de questions. On dénonce parfois avant d&apos;être dénoncé, juste pour
+            prouver sa propre loyauté. Les familles vivent avec cette idée qu&apos;un seul geste de
+            travers peut faire tomber cinq maisons à la fois. Alors les gens cessent progressivement
+            de se défendre ; ils commencent surtout à se protéger les uns des autres.
+          </p>
+
+          <p>
+            C&apos;est l&apos;année où Hyori se scinde vraiment en deux provinces superposées :
+            celle qu&apos;on montre, avec ses rues entretenues, ses ordres bien exécutés, ses taxes
+            bien notées ; et l&apos;autre, celle qui vit dans l&apos;ombre, les caves, les dettes,
+            les peurs, les arrangements, les chuchotements et les faux sourires.
+          </p>
+        </article>
+
+        <article className="text-foreground/90 flex flex-col gap-6 leading-relaxed">
+          <h3 className="font-heading text-2xl font-semibold tracking-tight">
+            🎴 Aujourd&apos;hui (1864)
+          </h3>
+
+          <p>
+            Aujourd&apos;hui, la grande ville reste le cœur visible de Hyori. C&apos;est là que le
+            clan garde ses registres, que les ordres sont transmis, que les impôts sont levés et que
+            les façades de stabilité sont entretenues. De jour, la ville donne l&apos;impression
+            d&apos;un pouvoir solide : des rues tenues, des marchés actifs, des samouraïs visibles,
+            des fonctionnaires qui circulent, des porteurs qui chargent et déchargent. Mais derrière
+            cette façade, tout le monde sait que l&apos;équilibre repose sur la peur, les dettes et
+            les arrangements discrets.
+          </p>
+
+          <p>
+            La ville est aussi le point de contact entre les différents territoires de la province.
+            Les routes partent d&apos;elle comme des veines : vers le port, vers les villages
+            agricoles, vers les zones de pêche, vers les forêts, vers les mines, vers les marges
+            plus secrètes. Elle concentre la richesse, mais aussi les tensions. C&apos;est là que
+            les taxes sont réclamées, que les plaintes disparaissent, que les affaires se négocient,
+            que les yakuza trouvent des relais et que les samouraïs gardent les apparences de
+            l&apos;ordre. Plus Hyori s&apos;agrandit, plus cette ville ressemble à un centre qui
+            absorbe tout sans jamais rendre grand-chose en retour.
+          </p>
+        </article>
       </section>
 
       <section aria-labelledby="villages-heading" className="flex flex-col gap-8 pt-4">

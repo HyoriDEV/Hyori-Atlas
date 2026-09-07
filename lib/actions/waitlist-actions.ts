@@ -5,9 +5,15 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { notifyPlayerRegistrationStatus } from "@/lib/services/discord-bot-service";
 
 export async function acceptWaitlistPlayer(userId: string) {
   const staffUser = await requireRole([Role.ADMIN]);
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { discordId: true },
+  });
 
   await prisma.$transaction([
     prisma.user.update({
@@ -23,11 +29,23 @@ export async function acceptWaitlistPlayer(userId: string) {
     }),
   ]);
 
+  if (targetUser?.discordId) {
+    await notifyPlayerRegistrationStatus(
+      targetUser.discordId,
+      RegistrationStatus.WHITELIST_IN_PROGRESS
+    );
+  }
+
   revalidatePath("/staff/waitlist");
 }
 
 export async function rejectWaitlistPlayer(userId: string) {
   const staffUser = await requireRole([Role.ADMIN]);
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { discordId: true },
+  });
 
   await prisma.$transaction([
     prisma.user.update({
@@ -43,11 +61,23 @@ export async function rejectWaitlistPlayer(userId: string) {
     }),
   ]);
 
+  if (targetUser?.discordId) {
+    await notifyPlayerRegistrationStatus(
+      targetUser.discordId,
+      RegistrationStatus.REJECTED
+    );
+  }
+
   revalidatePath("/staff/waitlist");
 }
 
 export async function restoreWaitlistPlayer(userId: string) {
   const staffUser = await requireRole([Role.ADMIN]);
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { discordId: true },
+  });
 
   await prisma.$transaction([
     prisma.user.update({
@@ -62,6 +92,13 @@ export async function restoreWaitlistPlayer(userId: string) {
       },
     }),
   ]);
+
+  if (targetUser?.discordId) {
+    await notifyPlayerRegistrationStatus(
+      targetUser.discordId,
+      RegistrationStatus.WAITLIST
+    );
+  }
 
   revalidatePath("/staff/waitlist");
 }

@@ -141,8 +141,9 @@ const textFields: CharacterSheetTextFieldConfig[] = [
   },
   {
     key: "additionalComments",
-    label: "Commentaires additionnels (optionnel)",
-    placeholder: "Liens avec d'autres personnages, remarques HRP...",
+    label: "Membres de ton groupe RP",
+    placeholder:
+      "Renseigne le pseudo Discord exact des membres de ton groupe si tu comptes en constituer un. Cette information doit être prise en compte par l'équipe RP pour le bon déroulement de la whitelist.",
     rows: 4,
     maxLength: ADDITIONAL_COMMENTS_MAX_LENGTH,
     className: "min-h-[6rem]",
@@ -286,6 +287,12 @@ export function CharacterSheetFields({
                   )}
                 </div>
               </div>
+
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Indique deux classes de jeu par ordre de préférence. Ce sont des souhaits à titre
+                indicatif, ta classe définitive te sera attribuée par l&apos;équipe RP lors de ton
+                entretien de whitelist.
+              </p>
 
               <CharacterClassDualSelector
                 selectedClasses={chosenClasses}

@@ -12,7 +12,7 @@ export const commentTargetLabels: Record<CharacterSheetCommentTarget, string> = 
   [CharacterSheetCommentTarget.heightCm]: "Taille",
   [CharacterSheetCommentTarget.description]: "Description",
   [CharacterSheetCommentTarget.background]: "Histoire",
-  [CharacterSheetCommentTarget.additionalComments]: "Commentaires additionnels",
+  [CharacterSheetCommentTarget.additionalComments]: "Membres de ton groupe RP",
   [CharacterSheetCommentTarget.skillMap]: "Carte de compétences",
   [CharacterSheetCommentTarget.chosenClasses]: "Classes souhaitées",
 };

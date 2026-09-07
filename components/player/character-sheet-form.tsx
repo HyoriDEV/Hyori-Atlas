@@ -169,7 +169,7 @@ export function CharacterSheetForm({
       return `L'histoire dépasse ${BACKGROUND_MAX_LENGTH} caractères.`;
 
     if (additionalCommentsLength > ADDITIONAL_COMMENTS_MAX_LENGTH)
-      return `Les commentaires additionnels dépassent ${ADDITIONAL_COMMENTS_MAX_LENGTH} caractères.`;
+      return `Le champ « Membres de ton groupe RP » dépasse ${ADDITIONAL_COMMENTS_MAX_LENGTH} caractères.`;
 
     for (const skill of SKILL_DEFINITIONS) {
       if (!isSkillValueValid(skills[skill.field]))

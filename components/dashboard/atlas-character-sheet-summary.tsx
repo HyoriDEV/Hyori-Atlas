@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
 import { CharacterClassCircles } from "@/components/character-sheet/character-class-circles";
+import { CHARACTER_CLASSES } from "@/lib/character-classes";
 
 interface CharacterSheetSummaryData extends SkillValues {
   id: string;
@@ -32,6 +33,7 @@ interface CharacterSheetSummaryData extends SkillValues {
   additionalComments: string | null;
   chosenClasses: CharacterClass[];
   status: CharacterStatus;
+  assignedClass?: CharacterClass | null;
   reviewStatus: CharacterSheetStatus;
 }
 
@@ -109,15 +111,36 @@ export function AtlasCharacterSheetSummary({
             ))}
           </div>
 
-          <div className="flex flex-col gap-2">
-            <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-              Classes souhaitées
-            </span>
-            <CharacterClassCircles
-              selectedClasses={sheet.chosenClasses ?? []}
-              interactive={false}
-              size="md"
-            />
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex flex-col gap-2">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                Classes souhaitées (indicatives)
+              </span>
+              <CharacterClassCircles
+                selectedClasses={sheet.chosenClasses ?? []}
+                interactive={false}
+                size="md"
+              />
+            </div>
+
+            {sheet.assignedClass && (() => {
+              const assignedDef = CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass);
+              if (!assignedDef) return null;
+              const IconComponent = assignedDef.icon;
+              return (
+                <div className="flex flex-col gap-2">
+                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                    Classe définitive attribuée
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1.5 text-sm font-medium">
+                      <IconComponent size={18} className="shrink-0" />
+                      {assignedDef.singularLabel}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
@@ -134,7 +157,7 @@ export function AtlasCharacterSheetSummary({
               </p>
             </div>
             <div className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-xs">Commentaires additionnels</span>
+              <span className="text-muted-foreground text-xs">Membres du groupe RP</span>
               <p
                 className={cn(
                   "text-justify text-xs whitespace-pre-wrap",
@@ -143,7 +166,7 @@ export function AtlasCharacterSheetSummary({
               >
                 {sheet.additionalComments?.trim()
                   ? truncateAtWordBoundary(sheet.additionalComments, EXCERPT_MAX_LENGTH)
-                  : "Aucun commentaire écrit par le joueur."}
+                  : "Aucun membre de groupe RP renseigné."}
               </p>
             </div>
           </div>
