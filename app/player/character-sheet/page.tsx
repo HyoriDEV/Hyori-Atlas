@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { CharacterSheetForm } from "@/components/player/character-sheet-form";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
+import { CHARACTER_CLASSES } from "@/lib/character-classes";
 
 export default async function CharacterSheetPage() {
   const user = await requireActivePlayer();
@@ -34,6 +35,10 @@ export default async function CharacterSheetPage() {
     where: { playerId: user.id },
     include: { comments: { orderBy: { createdAt: "asc" }, include: { author: true } } },
   });
+
+  const assignedClassDef = sheet?.assignedClass
+    ? CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass)
+    : null;
 
   const fieldValues: CharacterSheetFieldValues = {
     name: sheet?.name ?? "",
@@ -79,12 +84,26 @@ export default async function CharacterSheetPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
-        {sheet && (
-          <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
-            {characterSheetStatusLabels[sheet.reviewStatus]}
-          </Badge>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
+          {sheet && (
+            <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
+              {characterSheetStatusLabels[sheet.reviewStatus]}
+            </Badge>
+          )}
+        </div>
+
+        {assignedClassDef && (
+          <div className="flex items-center gap-2">
+            <Badge
+              variant="secondary"
+              className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1 text-sm font-medium"
+            >
+              <assignedClassDef.icon size={18} className="shrink-0" />
+              Classe attribuée : {assignedClassDef.singularLabel}
+            </Badge>
+          </div>
         )}
       </div>
       <CharacterSheetForm
