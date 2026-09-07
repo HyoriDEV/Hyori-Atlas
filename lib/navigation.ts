@@ -186,6 +186,13 @@ export const staffSettingsItem: StaffNavItem = {
   roles: [Role.ADMIN],
 };
 
+export const staffBotTestItem: StaffNavItem = {
+  label: "Tests",
+  href: "/staff/bot-test",
+  iconKey: "info",
+  roles: [Role.ADMIN],
+};
+
 export const staffTicketsItem: StaffNavItem = {
   label: "Tickets",
   href: "/staff/tickets",
@@ -263,6 +270,7 @@ export const staffStaffTeamItem: StaffNavItem = {
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
   staffSettingsItem,
+  staffBotTestItem,
   staffTicketsItem,
   staffBdaReportsItem,
   staffStaffTeamItem,
@@ -277,7 +285,10 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: role === Role.ADMIN ? [staffDashboardItem, staffSettingsItem] : [staffDashboardItem],
+    items:
+      role === Role.ADMIN
+        ? [staffDashboardItem, staffSettingsItem, staffBotTestItem]
+        : [staffDashboardItem],
   };
 
   if (role === Role.ADMIN) {

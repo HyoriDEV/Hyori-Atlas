@@ -198,7 +198,13 @@ export default async function AtlasPlayerPage({
         <Badge variant={registrationStatusBadgeVariant(player.registrationStatus)}>
           {registrationStatusLabels[player.registrationStatus]}
         </Badge>
-        {isAdmin && canPromote && <AtlasPromoteButton playerId={player.id} pseudo={playerName} />}
+        {isAdmin && canPromote && (
+          <AtlasPromoteButton
+            playerId={player.id}
+            pseudo={playerName}
+            preferredClasses={sheet?.chosenClasses ?? []}
+          />
+        )}
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[2fr_minmax(300px,1fr)]">
