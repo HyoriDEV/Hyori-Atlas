@@ -18,11 +18,14 @@ export interface BotRoleSyncResult {
   error?: string;
 }
 
-const DEFAULT_BOT_API_URL = "http://127.0.0.1:4000/api/v1";
 const REQUEST_TIMEOUT_MS = 5000;
 
 function getBotConfig() {
-  const apiUrl = (process.env.DISCORD_BOT_API_URL || DEFAULT_BOT_API_URL).replace(/\/$/, "");
+  const defaultUrl =
+    process.env.NODE_ENV === "production"
+      ? "http://bot:4000/api/v1"
+      : "http://127.0.0.1:4000/api/v1";
+  const apiUrl = (process.env.DISCORD_BOT_API_URL || defaultUrl).replace(/\/$/, "");
   const apiKey = process.env.INTERNAL_BOT_API_KEY || "";
   return { apiUrl, apiKey };
 }
@@ -85,9 +88,14 @@ export async function callDiscordBot<T = unknown>(
       success: true,
       data: responseData ?? undefined,
     };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown connection error";
-    console.warn(`[DiscordBot] Network/connection error while calling ${endpoint}: ${message}`);
+  } catch (error: unknown) {
+    const err = error as { message?: string; cause?: { code?: string; message?: string } };
+    const causeCode = err?.cause?.code || err?.cause?.message;
+    const details = causeCode ? ` (${causeCode})` : "";
+    const message = err?.message
+      ? `${err.message}${details} [Cible: ${targetUrl}]`
+      : `Erreur de connexion inconnue [Cible: ${targetUrl}]`;
+    console.warn(`[DiscordBot] Network/connection error while calling ${targetUrl}:`, error);
     return {
       success: false,
       error: message,
