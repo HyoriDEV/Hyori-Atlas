@@ -116,7 +116,7 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
     }
     if (additionalComments.length > ADDITIONAL_COMMENTS_MAX_LENGTH) {
       throw new Error(
-        `Les commentaires additionnels ne peuvent pas dépasser ${ADDITIONAL_COMMENTS_MAX_LENGTH} caractères.`
+        `Le champ « Membres de ton groupe RP » ne peut pas dépasser ${ADDITIONAL_COMMENTS_MAX_LENGTH} caractères.`
       );
     }
     if (!Number.isInteger(input.age) || input.age < AGE_MIN || input.age > AGE_MAX) {
