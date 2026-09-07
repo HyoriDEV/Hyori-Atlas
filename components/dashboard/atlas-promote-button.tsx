@@ -21,12 +21,14 @@ import {
 export interface AtlasPromoteButtonProps {
   playerId: string;
   pseudo: string;
+  characterSheetId?: string;
   preferredClasses?: CharacterClass[];
 }
 
 export function AtlasPromoteButton({
   playerId,
   pseudo,
+  characterSheetId,
   preferredClasses = [],
 }: AtlasPromoteButtonProps) {
   const [open, setOpen] = useState(false);
@@ -55,7 +57,7 @@ export function AtlasPromoteButton({
 
     startTransition(async () => {
       try {
-        await promoteToWhitelisted(playerId, selectedClass);
+        await promoteToWhitelisted(playerId, selectedClass, characterSheetId);
         const classDef = CHARACTER_CLASSES.find((c) => c.id === selectedClass);
         toast.success(
           `${pseudo} a été whitelisté avec succès avec la classe ${classDef?.singularLabel ?? selectedClass} !`

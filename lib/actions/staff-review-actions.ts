@@ -160,7 +160,11 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
   revalidateSheetSurfaces(sheet.playerId);
 }
 
-export async function promoteToWhitelisted(userId: string, assignedClass: CharacterClass) {
+export async function promoteToWhitelisted(
+  userId: string,
+  assignedClass: CharacterClass,
+  characterSheetId?: string
+) {
   const staffUser = await requireRole([Role.ADMIN]);
 
   if (!assignedClass || !Object.values(CharacterClass).includes(assignedClass)) {
@@ -172,7 +176,19 @@ export async function promoteToWhitelisted(userId: string, assignedClass: Charac
     select: { id: true, discordId: true },
   });
 
-  const sheet = await prisma.characterSheet.findUnique({ where: { playerId: userId } });
+  const sheet = characterSheetId
+    ? await prisma.characterSheet.findFirst({
+        where: { id: characterSheetId, playerId: userId },
+      })
+    : (await prisma.characterSheet.findFirst({
+        where: { playerId: userId, status: CharacterStatus.ACTIVE },
+        orderBy: { createdAt: "desc" },
+      })) ??
+      (await prisma.characterSheet.findFirst({
+        where: { playerId: userId },
+        orderBy: { createdAt: "desc" },
+      }));
+
   if (!sheet) {
     throw new Error("Ce joueur n'a pas encore de fiche personnage.");
   }

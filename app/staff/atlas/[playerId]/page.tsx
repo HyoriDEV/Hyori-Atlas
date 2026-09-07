@@ -217,6 +217,7 @@ export default async function AtlasPlayerPage({
           <AtlasPromoteButton
             playerId={player.id}
             pseudo={playerName}
+            characterSheetId={sheet?.id}
             preferredClasses={sheet?.chosenClasses ?? []}
           />
         )}
