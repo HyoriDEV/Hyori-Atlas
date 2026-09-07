@@ -1,0 +1,37 @@
+name: 🚀 Production Deployment (Hyori-Atlas)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-atlas-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy Atlas to Dedicated Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🌐 Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            set -e
+            echo "🚀 [CI/CD] Connexion au serveur de production établie."
+            cd "${{ secrets.DEPLOY_PATH }}"
+            
+            # S'assurer que deploy.sh est exécutable
+            chmod +x ./deploy.sh
+            
+            # Déployer Hyori-Atlas (Pull, Build, Prisma Migrate, Restart)
+            ./deploy.sh atlas
