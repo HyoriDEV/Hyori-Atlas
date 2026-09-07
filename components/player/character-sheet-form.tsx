@@ -66,6 +66,7 @@ import { LockSimple } from "@phosphor-icons/react";
 import { cn } from "@/lib/utils";
 
 export function CharacterSheetForm({
+  sheetId,
   initialValues,
   initialSkills,
   initialClasses = [],
@@ -74,6 +75,7 @@ export function CharacterSheetForm({
   comments,
   minecraftUsername,
 }: {
+  sheetId?: string;
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
   initialClasses?: CharacterClass[];
@@ -211,7 +213,7 @@ export function CharacterSheetForm({
     setError(null);
     startTransition(async () => {
       try {
-        await saveCharacterSheetDraft(buildPayload());
+        await saveCharacterSheetDraft(buildPayload(), sheetId);
         toast.success("Brouillon enregistré avec succès.");
       } catch (submitError) {
         const message =
@@ -227,7 +229,7 @@ export function CharacterSheetForm({
     setError(null);
     startTransition(async () => {
       try {
-        await submitCharacterSheet(buildPayload());
+        await submitCharacterSheet(buildPayload(), sheetId);
         toast.success("Fiche personnage soumise pour relecture.");
       } catch (submitError) {
         const message =

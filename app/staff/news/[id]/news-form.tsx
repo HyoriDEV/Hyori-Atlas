@@ -43,7 +43,6 @@ interface NewsFormProps {
 
 export function NewsForm({ initialData, userRole }: NewsFormProps) {
   const router = useRouter();
-  const isDeveloper = userRole === Role.DEVELOPER;
 
   const [isLoading, setIsLoading] = useState(false);
   const [content, setContent] = useState(initialData?.content || "");
@@ -102,16 +101,13 @@ export function NewsForm({ initialData, userRole }: NewsFormProps) {
           <Label htmlFor="type">Type d&apos;actualité</Label>
           <Select
             name="type"
-            defaultValue={
-              initialData?.type || (isDeveloper ? NewsType.CHANGELOG : NewsType.ANNOUNCEMENT)
-            }
-            disabled={isDeveloper} // Developers can only post changelogs
+            defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionnez un type" />
             </SelectTrigger>
             <SelectContent>
-              {!isDeveloper && <SelectItem value={NewsType.ANNOUNCEMENT}>Annonce</SelectItem>}
+              <SelectItem value={NewsType.ANNOUNCEMENT}>Annonce</SelectItem>
               <SelectItem value={NewsType.CHANGELOG}>Changelog</SelectItem>
             </SelectContent>
           </Select>
@@ -133,10 +129,7 @@ export function NewsForm({ initialData, userRole }: NewsFormProps) {
           <Input
             id="authorLabel"
             name="authorLabel"
-            defaultValue={
-              initialData?.authorLabel ||
-              (isDeveloper ? "L'Équipe de Développement" : "L'Administration")
-            }
+            defaultValue={initialData?.authorLabel || "L'Administration"}
             required
           />
         </div>
@@ -155,7 +148,7 @@ export function NewsForm({ initialData, userRole }: NewsFormProps) {
                 <Button
                   type="button"
                   variant="destructive"
-                  disabled={isLoading || (isDeveloper && initialData.type !== NewsType.CHANGELOG)}
+                  disabled={isLoading}
                 >
                   Supprimer
                 </Button>

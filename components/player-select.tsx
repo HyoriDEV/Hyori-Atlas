@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { CaretUpDown, Check, User, Users, X } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
-import { RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
+import { CharacterStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
 import { registrationStatusLabels } from "@/lib/navigation";
 import { registrationStatusBadgeVariant } from "@/lib/atlas-status";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -26,6 +26,7 @@ export interface PlayerOption {
   id: string;
   characterName?: string | null;
   characterSheet?: { name?: string | null } | null;
+  characterSheets?: Array<{ name?: string | null; status?: CharacterStatus | string }> | null;
   minecraftUsername?: string | null;
   discordDisplayName?: string | null;
   discordUsername?: string | null;
@@ -35,9 +36,14 @@ export interface PlayerOption {
 }
 
 export function getPlayerRpName(
-  player: Pick<PlayerOption, "characterName" | "characterSheet">
+  player: Pick<PlayerOption, "characterName" | "characterSheet" | "characterSheets">
 ): string | null {
-  return player.characterName || player.characterSheet?.name || null;
+  if (player.characterName) return player.characterName;
+  if (player.characterSheets && player.characterSheets.length > 0) {
+    const active = player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE);
+    return active?.name || player.characterSheets[0]?.name || null;
+  }
+  return player.characterSheet?.name || null;
 }
 
 export function getPlayerAccountName(

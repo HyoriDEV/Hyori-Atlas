@@ -218,13 +218,18 @@ export default async function StaffDashboardPage() {
     },
   };
 
-  const navGroups = getStaffNavGroups(user.role)
-    .filter((group) => group.title && group.items.length > 0)
-    .map((group) => ({
-      title: group.title!,
-      items: group.items.filter((item) => item.roles.includes(user.role)),
-    }))
-    .filter((group) => group.items.length > 0);
+  const seenHrefs = new Set<string>();
+  const modules = getStaffNavGroups(user.role)
+    .flatMap((group) => group.items)
+    .filter((item) => {
+      if (!item.roles.includes(user.role) || seenHrefs.has(item.href)) {
+        return false;
+      }
+      seenHrefs.add(item.href);
+      return true;
+    })
+    .map((item) => cardConfigs[item.href])
+    .filter((config): config is NonNullable<typeof config> => Boolean(config));
 
   return (
     <div className="flex flex-col gap-6">
@@ -260,44 +265,31 @@ export default async function StaffDashboardPage() {
         </div>
       </div>
 
-      {navGroups.map((group) => (
-        <div key={group.title} className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-heading text-foreground text-base font-semibold tracking-tight">
-              {group.title}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
-            {group.items.map((item) => {
-              const config = cardConfigs[item.href];
-              if (!config) return null;
-              return (
-                <DashboardStatCard
-                  key={item.href}
-                  title={config.title}
-                  description={config.description}
-                  href={config.href}
-                  iconKey={config.iconKey}
-                  stat={config.stat}
-                  statLabel={config.statLabel}
-                  badge={config.badge}
-                  hasNotification={config.hasNotification}
-                />
-              );
-            })}
-          </div>
-        </div>
-      ))}
-
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="font-heading text-foreground text-base font-semibold tracking-tight">
-            Espace personnel
+            Modules staff
           </h2>
+          <span className="text-muted-foreground text-xs">
+            Tu as accès aux modules ci-dessous.
+          </span>
         </div>
 
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          {modules.map((config) => (
+            <DashboardStatCard
+              key={config.href}
+              title={config.title}
+              description={config.description}
+              href={config.href}
+              iconKey={config.iconKey}
+              stat={config.stat}
+              statLabel={config.statLabel}
+              badge={config.badge}
+              hasNotification={config.hasNotification}
+            />
+          ))}
+
           <DashboardStatCard
             title="Espace Joueur"
             description="Ton profil personnel et tes tickets."

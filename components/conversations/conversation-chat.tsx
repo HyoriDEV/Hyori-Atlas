@@ -91,42 +91,47 @@ export function ConversationChat({
   useEffect(() => {
     const eventSource = new EventSource(`/api/conversations/${conversationId}/stream`);
     eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "DELETE") {
-        if (viewerIsStaff) {
+      try {
+        const data = JSON.parse(event.data);
+        if (data.type === "DELETE") {
+          if (viewerIsStaff) {
+            setMessages((previous) =>
+              previous.map((msg) =>
+                msg.id === data.messageId
+                  ? { ...msg, deletedAt: data.deletedAt || new Date().toISOString() }
+                  : msg
+              )
+            );
+          } else {
+            setMessages((previous) => previous.filter((msg) => msg.id !== data.messageId));
+          }
+        } else if (data.type === "UPDATE") {
           setMessages((previous) =>
-            previous.map((msg) =>
-              msg.id === data.messageId
-                ? { ...msg, deletedAt: data.deletedAt || new Date().toISOString() }
-                : msg
-            )
+            previous.map((msg) => {
+              if (msg.id !== data.message.id) return msg;
+              if (!viewerIsStaff) {
+                return {
+                  ...data.message,
+                  versions: undefined,
+                  deletedAt: null,
+                  isEdited: data.message.isEdited ?? Boolean(data.message.versions?.length),
+                };
+              }
+              return data.message;
+            })
           );
         } else {
-          setMessages((previous) => previous.filter((msg) => msg.id !== data.messageId));
+          const message: SerializedConversationMessage =
+            data.type === "CREATE" ? data.message : data;
+          if (!viewerIsStaff && message.deletedAt) return;
+          setMessages((previous) =>
+            previous.some((existing) => existing.id === message.id)
+              ? previous.map((existing) => (existing.id === message.id ? message : existing))
+              : [...previous, message]
+          );
         }
-      } else if (data.type === "UPDATE") {
-        setMessages((previous) =>
-          previous.map((msg) => {
-            if (msg.id !== data.message.id) return msg;
-            if (!viewerIsStaff) {
-              return {
-                ...data.message,
-                versions: undefined,
-                deletedAt: null,
-                isEdited: data.message.isEdited ?? Boolean(data.message.versions?.length),
-              };
-            }
-            return data.message;
-          })
-        );
-      } else {
-        const message: SerializedConversationMessage = data.type === "CREATE" ? data.message : data;
-        if (!viewerIsStaff && message.deletedAt) return;
-        setMessages((previous) =>
-          previous.some((existing) => existing.id === message.id)
-            ? previous.map((existing) => (existing.id === message.id ? message : existing))
-            : [...previous, message]
-        );
+      } catch (err) {
+        console.error("[ConversationChat] Erreur lors de la réception d'un événement SSE:", err);
       }
     };
     return () => eventSource.close();

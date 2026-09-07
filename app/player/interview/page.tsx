@@ -53,8 +53,9 @@ export default async function InterviewPage() {
       where: { playerId: user.id },
       orderBy: { createdAt: "desc" },
     }),
-    prisma.characterSheet.findUnique({
+    prisma.characterSheet.findFirst({
       where: { playerId: user.id },
+      orderBy: { createdAt: "desc" },
     }),
   ]);
 

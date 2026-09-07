@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { characterSheetReviewerRoles, characterSheetStatusLabels } from "@/lib/navigation";
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { SKILL_DEFINITIONS, type SkillValues } from "@/lib/character-sheet";
@@ -14,16 +14,19 @@ import type { CharacterSheetFieldValues } from "@/components/character-sheet/cha
 
 export default async function CharacterSheetEvaluationPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ playerId: string }>;
+  searchParams: Promise<{ sheetId?: string }>;
 }) {
   const { playerId } = await params;
+  const { sheetId } = await searchParams;
   await requireRole(characterSheetReviewerRoles);
 
   const player = await prisma.user.findUnique({
     where: { id: playerId },
     include: {
-      characterSheet: {
+      characterSheets: {
         include: {
           comments: { orderBy: { createdAt: "asc" }, include: { author: true } },
         },
@@ -31,11 +34,20 @@ export default async function CharacterSheetEvaluationPage({
     },
   });
 
-  if (!player?.characterSheet || player.registrationStatus === RegistrationStatus.REJECTED) {
+  if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
     notFound();
   }
 
-  const sheet = player.characterSheet;
+  const sheet =
+    (sheetId ? player.characterSheets.find((s) => s.id === sheetId) : null) ??
+    player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE) ??
+    player.characterSheets[0] ??
+    null;
+
+  if (!sheet) {
+    notFound();
+  }
+
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
 
   const fieldValues: CharacterSheetFieldValues = {

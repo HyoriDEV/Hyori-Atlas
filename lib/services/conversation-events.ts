@@ -34,15 +34,14 @@ export type ConversationEventPayload =
 type Subscriber = (event: ConversationEventPayload) => void;
 
 const globalForConversation = globalThis as unknown as {
-  conversationSubscribers: Map<string, Set<Subscriber>> | undefined;
+  conversationSubscribers?: Map<string, Set<Subscriber>>;
 };
 
-const subscribersByConversationId =
-  globalForConversation.conversationSubscribers ?? new Map<string, Set<Subscriber>>();
-
-if (process.env.NODE_ENV !== "production") {
-  globalForConversation.conversationSubscribers = subscribersByConversationId;
+if (!globalForConversation.conversationSubscribers) {
+  globalForConversation.conversationSubscribers = new Map<string, Set<Subscriber>>();
 }
+
+const subscribersByConversationId = globalForConversation.conversationSubscribers;
 
 export function subscribe(conversationId: string, fn: Subscriber): () => void {
   const existing = subscribersByConversationId.get(conversationId);
@@ -62,8 +61,12 @@ export function subscribe(conversationId: string, fn: Subscriber): () => void {
 
 export function publish(conversationId: string, event: ConversationEventPayload): void {
   const subscribers = subscribersByConversationId.get(conversationId);
-  if (!subscribers) return;
+  if (!subscribers || subscribers.size === 0) return;
   for (const fn of subscribers) {
-    fn(event);
+    try {
+      fn(event);
+    } catch (err) {
+      console.error("[conversation-events] Error dispatching event to subscriber:", err);
+    }
   }
 }

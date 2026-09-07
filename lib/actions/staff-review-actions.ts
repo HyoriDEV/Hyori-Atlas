@@ -8,6 +8,7 @@ import {
   CharacterClass,
   CharacterSheetCommentTarget,
   CharacterSheetStatus,
+  CharacterStatus,
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
@@ -29,6 +30,7 @@ function revalidateSheetSurfaces(playerId: string) {
   revalidatePath(`/staff/atlas/${playerId}/evaluation`);
   revalidatePath("/player/character-sheet");
   revalidatePath("/player", "layout");
+  revalidatePath("/player/writing");
 }
 
 export async function submitCharacterSheetEvaluation(
