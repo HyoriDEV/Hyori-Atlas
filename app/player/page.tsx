@@ -3,6 +3,7 @@ import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
+  CharacterStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -10,11 +11,12 @@ import {
 } from "@/lib/generated/prisma/enums";
 import {
   characterSheetStatusLabels,
+  characterStatusLabels,
   interviewBookingStatusLabels,
   registrationStatusLabels,
   staffRoleLabels,
 } from "@/lib/navigation";
-import { registrationStatusBadgeVariant } from "@/lib/atlas-status";
+import { characterStatusBadgeVariant, registrationStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -34,10 +36,37 @@ export default async function PlayerDashboardPage() {
   const isWhitelisted = true;
   const isWaitlistPassed = true;
 
+  const activeSheet = await prisma.characterSheet.findFirst({
+    where: { playerId: user.id, status: CharacterStatus.ACTIVE },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      reviewStatus: true,
+      hasUnreadFeedback: true,
+      _count: { select: { comments: true } },
+    },
+  });
+
+  const latestSheet = activeSheet ?? await prisma.characterSheet.findFirst({
+    where: { playerId: user.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      name: true,
+      status: true,
+      reviewStatus: true,
+      hasUnreadFeedback: true,
+      _count: { select: { comments: true } },
+    },
+  });
+
+  const characterSheet = latestSheet;
+
   const [
     activeTicketsCount,
     pendingStaffTicketsCount,
-    characterSheet,
     latestBooking,
     chapterCount,
   ] = await Promise.all([
@@ -53,29 +82,19 @@ export default async function PlayerDashboardPage() {
         status: TicketStatus.PENDING_STAFF,
       },
     }),
-    prisma.characterSheet.findUnique({
-      where: { playerId: user.id },
-      select: {
-        id: true,
-        reviewStatus: true,
-        hasUnreadFeedback: true,
-        _count: { select: { comments: true } },
-      },
-    }),
     prisma.interviewBooking.findFirst({
       where: { playerId: user.id },
       include: { slot: true },
       orderBy: { createdAt: "desc" },
     }),
-    isWhitelisted
+    isWhitelisted && characterSheet
       ? prisma.chapter.count({
-          where: { playerId: user.id },
+          where: { playerId: user.id, characterSheetId: characterSheet.id },
         })
       : 0,
   ]);
 
-  const isSheetValidated =
-    isWhitelisted || characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
+  const isSheetValidated = characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
   const displayName =
     user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Joueur";
@@ -127,6 +146,22 @@ export default async function PlayerDashboardPage() {
           </div>
         </div>
       </div>
+
+      {characterSheet && characterSheet.status !== CharacterStatus.ACTIVE && (
+        <div className="border-border/80 bg-muted/40 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 shadow-xs">
+          <div className="flex flex-col gap-1">
+            <span className="text-foreground text-sm font-semibold">
+              Ton personnage « {characterSheet.name || "Sans nom"} » est {characterStatusLabels[characterSheet.status].toLowerCase()}.
+            </span>
+            <p className="text-muted-foreground text-xs">
+              L&apos;équipe de modération ou de suivi RP t&apos;attribuera prochainement un nouveau personnage vierge pour continuer ton aventure.
+            </p>
+          </div>
+          <Badge variant={characterStatusBadgeVariant(characterSheet.status)}>
+            {characterStatusLabels[characterSheet.status]}
+          </Badge>
+        </div>
+      )}
 
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">

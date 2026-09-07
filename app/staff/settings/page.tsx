@@ -8,21 +8,16 @@ export default async function SettingsPage() {
   const settings = await getGlobalSettings();
 
   return (
-    <div className="mx-auto w-full max-w-2xl p-4 md:p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">Paramètres de l&apos;application</h1>
-        <p className="text-muted-foreground mt-2">
-          Gérez l&apos;activation et la désactivation des fonctionnalités globales. Attention, la
-          désactivation d&apos;une fonctionnalité s&apos;applique à tous les utilisateurs (staff
-          compris).
+    <div className="flex flex-col gap-6 w-full">
+      <div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">Paramètres</h1>
+        <p className="text-muted-foreground text-sm">
+          Configuration globale des modules et services de l&apos;application.
         </p>
       </div>
 
-      <div className="bg-card text-card-foreground rounded-lg border shadow-sm">
-        <div className="p-6">
-          <SettingsForm defaultValues={settings} />
-        </div>
-      </div>
+      <SettingsForm defaultValues={settings} />
     </div>
   );
 }
+

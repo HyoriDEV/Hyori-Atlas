@@ -4,11 +4,13 @@ import { getMockServerActivity, formatPlaytime } from "@/lib/mock-server-data";
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
+  characterStatusBadgeVariant,
   registrationStatusBadgeVariant,
 } from "@/lib/atlas-status";
-import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import {
   characterSheetStatusLabels,
+  characterStatusLabels,
   registrationStatusLabels,
   registrationStatusRank,
   staffNavItems,
@@ -101,9 +103,9 @@ export default async function AtlasPage(props: PageProps) {
             ? statusFilter
             : { not: RegistrationStatus.REJECTED },
       ...(sheetStatusParam === "NONE"
-        ? { characterSheet: { is: null } }
+        ? { characterSheets: { none: {} } }
         : parsedSheetStatus
-          ? { characterSheet: { is: { reviewStatus: parsedSheetStatus } } }
+          ? { characterSheets: { some: { reviewStatus: parsedSheetStatus } } }
           : {}),
       ...(query
         ? {
@@ -112,8 +114,8 @@ export default async function AtlasPage(props: PageProps) {
               { discordDisplayName: { contains: query, mode: "insensitive" } },
               { discordUsername: { contains: query, mode: "insensitive" } },
               {
-                characterSheet: {
-                  is: {
+                characterSheets: {
+                  some: {
                     name: { contains: query, mode: "insensitive" },
                   },
                 },
@@ -123,15 +125,24 @@ export default async function AtlasPage(props: PageProps) {
         : {}),
     },
     include: {
-      characterSheet: true,
+      characterSheets: {
+        orderBy: { createdAt: "desc" },
+      },
     },
     orderBy: { createdAt: "desc" },
   });
 
-  const playersWithActivity = players.map((player) => ({
-    player,
-    activity: getMockServerActivity(player.id, player.createdAt),
-  }));
+  const playersWithActivity = players.map((player) => {
+    const activeSheet =
+      player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE) ??
+      player.characterSheets[0] ??
+      null;
+    return {
+      player,
+      activeSheet,
+      activity: getMockServerActivity(player.id, player.createdAt),
+    };
+  });
 
   if (sortKey) {
     playersWithActivity.sort((a, b) => {
@@ -141,15 +152,15 @@ export default async function AtlasPage(props: PageProps) {
         const nameB = b.player.minecraftUsername ?? b.player.discordDisplayName;
         comparison = nameA.localeCompare(nameB, "fr", { sensitivity: "base" });
       } else if (sortKey === "rpName") {
-        const nameA = a.player.characterSheet?.name ?? "";
-        const nameB = b.player.characterSheet?.name ?? "";
+        const nameA = a.activeSheet?.name ?? "";
+        const nameB = b.activeSheet?.name ?? "";
         if (!nameA && !nameB) comparison = 0;
         else if (!nameA) comparison = 1;
         else if (!nameB) comparison = -1;
         else comparison = nameA.localeCompare(nameB, "fr", { sensitivity: "base" });
       } else if (sortKey === "civilStatus") {
-        const statA = a.player.characterSheet?.civilStatus ?? "";
-        const statB = b.player.characterSheet?.civilStatus ?? "";
+        const statA = a.activeSheet?.civilStatus ?? "";
+        const statB = b.activeSheet?.civilStatus ?? "";
         if (!statA && !statB) comparison = 0;
         else if (!statA) comparison = 1;
         else if (!statB) comparison = -1;
@@ -161,11 +172,11 @@ export default async function AtlasPage(props: PageProps) {
           [CharacterSheetStatus.DRAFT]: 2,
           [CharacterSheetStatus.VALIDATED]: 1,
         };
-        const rankA = a.player.characterSheet
-          ? (rankMap[a.player.characterSheet.reviewStatus] ?? 0)
+        const rankA = a.activeSheet
+          ? (rankMap[a.activeSheet.reviewStatus] ?? 0)
           : 0;
-        const rankB = b.player.characterSheet
-          ? (rankMap[b.player.characterSheet.reviewStatus] ?? 0)
+        const rankB = b.activeSheet
+          ? (rankMap[b.activeSheet.reviewStatus] ?? 0)
           : 0;
         comparison = rankA - rankB;
       } else if (sortKey === "playtime") {
@@ -286,11 +297,12 @@ export default async function AtlasPage(props: PageProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              pagePlayers.map(({ player, activity }) => {
+              pagePlayers.map(({ player, activeSheet, activity }) => {
                 const playerName = player.minecraftUsername ?? player.discordDisplayName;
-                const sheet = player.characterSheet;
-                const isPendingStaffSheet =
-                  sheet?.reviewStatus === CharacterSheetStatus.PENDING_STAFF;
+                const sheet = activeSheet;
+                const isPendingStaffSheet = player.characterSheets.some(
+                  (s) => s.reviewStatus === CharacterSheetStatus.PENDING_STAFF
+                );
 
                 return (
                   <AtlasTableRow key={player.id} href={`/staff/atlas/${player.id}`}>
@@ -317,11 +329,16 @@ export default async function AtlasPage(props: PageProps) {
                     </TableCell>
                     <TableCell>
                       {sheet ? (
-                        <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
-                          {characterSheetStatusLabels[sheet.reviewStatus]}
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant={characterStatusBadgeVariant(sheet.status)} className="text-[10px] px-1.5 py-0">
+                            {characterStatusLabels[sheet.status]}
+                          </Badge>
+                          <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)} className="text-[10px] px-1.5 py-0">
+                            {characterSheetStatusLabels[sheet.reviewStatus]}
+                          </Badge>
+                        </div>
                       ) : (
-                        <span className="text-muted-foreground text-xs">Non commencée</span>
+                        <Badge variant="outline">—</Badge>
                       )}
                     </TableCell>
                     <TableCell>

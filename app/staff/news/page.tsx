@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/date";
 
 export default async function StaffNewsPage() {
-  await requireRole([Role.ADMIN, Role.DEVELOPER]);
+  await requireRole([Role.ADMIN]);
 
   const news = await prisma.news.findMany({
     orderBy: { publishedAt: "desc" },

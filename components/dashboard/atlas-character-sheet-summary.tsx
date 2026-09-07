@@ -7,11 +7,12 @@ import {
 } from "@/lib/character-sheet";
 import {
   CharacterSheetStatus,
+  CharacterStatus,
   type CharacterClass,
   type Gender,
 } from "@/lib/generated/prisma/enums";
-import { characterSheetStatusLabels } from "@/lib/navigation";
-import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
+import { characterSheetStatusLabels, characterStatusLabels } from "@/lib/navigation";
+import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
@@ -30,6 +31,7 @@ interface CharacterSheetSummaryData extends SkillValues {
   background: string;
   additionalComments: string | null;
   chosenClasses: CharacterClass[];
+  status: CharacterStatus;
   reviewStatus: CharacterSheetStatus;
 }
 
@@ -72,9 +74,14 @@ export function AtlasCharacterSheetSummary({
             Fiche personnage
           </span>
           {sheet && (
-            <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
-              {characterSheetStatusLabels[sheet.reviewStatus]}
-            </Badge>
+            <div className="flex items-center gap-1.5">
+              <Badge variant={characterStatusBadgeVariant(sheet.status)}>
+                {characterStatusLabels[sheet.status]}
+              </Badge>
+              <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
+                {characterSheetStatusLabels[sheet.reviewStatus]}
+              </Badge>
+            </div>
           )}
         </div>
         {sheet && (
@@ -83,9 +90,9 @@ export function AtlasCharacterSheetSummary({
               <AtlasReopenSheetButton sheetId={sheet.id} pseudo={pseudo ?? sheet.name} />
             )}
             {canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
-              <AtlasEvaluateSheetButton playerId={playerId} label="Évaluer la fiche personnage" />
+              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer la fiche personnage" />
             ) : (
-              <AtlasEvaluateSheetButton playerId={playerId} label="Lire la fiche personnage" />
+              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Lire la fiche personnage" />
             )}
           </div>
         )}

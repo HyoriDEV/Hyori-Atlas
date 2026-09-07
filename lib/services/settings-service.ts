@@ -6,15 +6,38 @@ import { prisma } from "@/lib/prisma";
 export const getGlobalSettings = cache(async () => {
   let settings = await prisma.globalSettings.findUnique({
     where: { id: "global" },
+    include: {
+      updatedBy: {
+        select: {
+          minecraftUsername: true,
+          discordDisplayName: true,
+          discordUsername: true,
+        },
+      },
+    },
   });
 
   if (!settings) {
     settings = await prisma.globalSettings.create({
       data: { id: "global" },
+      include: {
+        updatedBy: {
+          select: {
+            minecraftUsername: true,
+            discordDisplayName: true,
+            discordUsername: true,
+          },
+        },
+      },
     });
   }
 
   type ExtendedSettings = import("@/lib/generated/prisma/client").GlobalSettings & {
+    updatedBy?: {
+      minecraftUsername: string | null;
+      discordDisplayName: string | null;
+      discordUsername: string | null;
+    } | null;
     countdownEnabled?: boolean;
     countdownBadgeText?: string | null;
     countdownTitle?: string;
@@ -33,6 +56,7 @@ export const getGlobalSettings = cache(async () => {
 
   return {
     ...settings,
+    updatedBy: s.updatedBy ?? null,
     countdownEnabled: s.countdownEnabled ?? false,
     countdownBadgeText: s.countdownBadgeText || "Hyori RP — Lancement Officiel",
     countdownTitle: s.countdownTitle || "Lancement Officiel de Hyori RP",

@@ -6,6 +6,7 @@ import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
+  CharacterStatus,
   Gender,
   RegistrationStatus,
   CharacterClass,
@@ -57,6 +58,7 @@ export interface CharacterSheetInput {
 function revalidateSheetSurfaces(playerId: string) {
   revalidatePath("/player/character-sheet");
   revalidatePath("/player", "layout");
+  revalidatePath("/player/writing");
   revalidatePath("/staff/atlas");
   revalidatePath(`/staff/atlas/${playerId}`);
   revalidatePath(`/staff/atlas/${playerId}/evaluation`);
@@ -170,7 +172,7 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
   };
 }
 
-export async function saveCharacterSheetDraft(input: CharacterSheetInput) {
+export async function saveCharacterSheetDraft(input: CharacterSheetInput, sheetId?: string) {
   const user = await requireUser();
 
   if (
@@ -179,7 +181,16 @@ export async function saveCharacterSheetDraft(input: CharacterSheetInput) {
     throw new Error("La fiche personnage n'est pas encore disponible.");
   }
 
-  const existing = await prisma.characterSheet.findUnique({ where: { playerId: user.id } });
+  const existing = sheetId
+    ? await prisma.characterSheet.findFirst({ where: { id: sheetId, playerId: user.id } })
+    : await prisma.characterSheet.findFirst({
+        where: { playerId: user.id, status: CharacterStatus.ACTIVE },
+        orderBy: { createdAt: "desc" },
+      });
+
+  if (existing && existing.status !== CharacterStatus.ACTIVE) {
+    throw new Error("Seul un personnage actif peut être modifié.");
+  }
   if (existing?.reviewStatus === CharacterSheetStatus.VALIDATED) {
     throw new Error("Cette fiche a été validée et ne peut plus être modifiée.");
   }
@@ -195,25 +206,31 @@ export async function saveCharacterSheetDraft(input: CharacterSheetInput) {
       ? CharacterSheetStatus.PENDING_PLAYER
       : CharacterSheetStatus.DRAFT;
 
-  await prisma.characterSheet.upsert({
-    where: { playerId: user.id },
-    create: {
-      player: { connect: { id: user.id } },
-      ...data,
-      reviewStatus: targetStatus,
-      hasUnreadFeedback: false,
-    },
-    update: {
-      ...data,
-      reviewStatus: targetStatus,
-      hasUnreadFeedback: false,
-    },
-  });
+  if (existing) {
+    await prisma.characterSheet.update({
+      where: { id: existing.id },
+      data: {
+        ...data,
+        reviewStatus: targetStatus,
+        hasUnreadFeedback: false,
+      },
+    });
+  } else {
+    await prisma.characterSheet.create({
+      data: {
+        playerId: user.id,
+        ...data,
+        status: CharacterStatus.ACTIVE,
+        reviewStatus: targetStatus,
+        hasUnreadFeedback: false,
+      },
+    });
+  }
 
   revalidateSheetSurfaces(user.id);
 }
 
-export async function submitCharacterSheet(input: CharacterSheetInput) {
+export async function submitCharacterSheet(input: CharacterSheetInput, sheetId?: string) {
   const user = await requireUser();
 
   if (
@@ -222,7 +239,16 @@ export async function submitCharacterSheet(input: CharacterSheetInput) {
     throw new Error("La fiche personnage n'est pas encore disponible.");
   }
 
-  const existing = await prisma.characterSheet.findUnique({ where: { playerId: user.id } });
+  const existing = sheetId
+    ? await prisma.characterSheet.findFirst({ where: { id: sheetId, playerId: user.id } })
+    : await prisma.characterSheet.findFirst({
+        where: { playerId: user.id, status: CharacterStatus.ACTIVE },
+        orderBy: { createdAt: "desc" },
+      });
+
+  if (existing && existing.status !== CharacterStatus.ACTIVE) {
+    throw new Error("Seul un personnage actif peut être soumis.");
+  }
   if (existing?.reviewStatus === CharacterSheetStatus.VALIDATED) {
     throw new Error("Cette fiche a été validée et ne peut plus être modifiée.");
   }
@@ -233,20 +259,27 @@ export async function submitCharacterSheet(input: CharacterSheetInput) {
   const data = parseAndValidateSheetData(input, true);
 
   await prisma.$transaction(async (tx) => {
-    const sheet = await tx.characterSheet.upsert({
-      where: { playerId: user.id },
-      create: {
-        player: { connect: { id: user.id } },
-        ...data,
-        reviewStatus: CharacterSheetStatus.PENDING_STAFF,
-        hasUnreadFeedback: false,
-      },
-      update: {
-        ...data,
-        reviewStatus: CharacterSheetStatus.PENDING_STAFF,
-        hasUnreadFeedback: false,
-      },
-    });
+    let sheet;
+    if (existing) {
+      sheet = await tx.characterSheet.update({
+        where: { id: existing.id },
+        data: {
+          ...data,
+          reviewStatus: CharacterSheetStatus.PENDING_STAFF,
+          hasUnreadFeedback: false,
+        },
+      });
+    } else {
+      sheet = await tx.characterSheet.create({
+        data: {
+          playerId: user.id,
+          ...data,
+          status: CharacterStatus.ACTIVE,
+          reviewStatus: CharacterSheetStatus.PENDING_STAFF,
+          hasUnreadFeedback: false,
+        },
+      });
+    }
 
     await tx.characterSheetReviewHistory.create({
       data: {
@@ -262,6 +295,6 @@ export async function submitCharacterSheet(input: CharacterSheetInput) {
   revalidateSheetSurfaces(user.id);
 }
 
-export async function upsertCharacterSheet(input: CharacterSheetInput) {
-  return submitCharacterSheet(input);
+export async function upsertCharacterSheet(input: CharacterSheetInput, sheetId?: string) {
+  return submitCharacterSheet(input, sheetId);
 }

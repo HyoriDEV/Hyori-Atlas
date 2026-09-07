@@ -219,17 +219,19 @@ export function ChapterWorkspace({
                     Chapitres
                   </span>
                 </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={handleCreate}
-                  disabled={isPending}
-                  className="h-8 gap-1.5 px-3 text-xs font-semibold shadow-xs"
-                >
-                  <Plus className="size-3.5" />
-                  <span>Nouveau</span>
-                </Button>
+                {chapterWritingEnabled && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleCreate}
+                    disabled={isPending}
+                    className="h-8 gap-1.5 px-3 text-xs font-semibold shadow-xs"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Nouveau</span>
+                  </Button>
+                )}
               </div>
 
               <div className="relative">
@@ -440,17 +442,19 @@ export function ChapterWorkspace({
                   Crée ton premier chapitre ou sélectionne-en un dans la barre latérale pour débuter
                   l&apos;écriture de ta trame roleplay.
                 </p>
-                <Button
-                  type="button"
-                  variant="default"
-                  size="sm"
-                  onClick={handleCreate}
-                  disabled={isPending}
-                  className="mt-2 gap-1.5 text-xs font-medium"
-                >
-                  <Plus className="size-3.5" />
-                  <span>Créer un chapitre</span>
-                </Button>
+                {chapterWritingEnabled && (
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handleCreate}
+                    disabled={isPending}
+                    className="mt-2 gap-1.5 text-xs font-medium"
+                  >
+                    <Plus className="size-3.5" />
+                    <span>Créer un chapitre</span>
+                  </Button>
+                )}
               </div>
             </div>
           )}

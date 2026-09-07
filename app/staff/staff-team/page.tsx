@@ -99,7 +99,7 @@ export default async function StaffTeamPage(props: PageProps) {
         discordAvatarUrl: true,
         role: true,
         registrationStatus: true,
-        characterSheet: { select: { name: true } },
+        characterSheets: { select: { name: true, status: true } },
       },
       orderBy: [{ discordDisplayName: "asc" }, { discordUsername: "asc" }],
     }),

@@ -57,9 +57,10 @@ export default async function TicketStaffDetailPage({
       discordAvatarUrl: true,
       role: true,
       registrationStatus: true,
-      characterSheet: {
+      characterSheets: {
         select: {
           name: true,
+          status: true,
         },
       },
     },

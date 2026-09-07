@@ -2,6 +2,7 @@ import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
+  CharacterStatus,
   RegistrationStatus,
   Role,
   TicketStatus,
@@ -49,9 +50,10 @@ export default async function PlayerLayout({ children }: { children: React.React
     );
   }
 
-  const [characterSheet, pendingTicketsCount] = await Promise.all([
-    prisma.characterSheet.findUnique({
-      where: { playerId: user.id },
+  const [activeSheet, pendingTicketsCount] = await Promise.all([
+    prisma.characterSheet.findFirst({
+      where: { playerId: user.id, status: CharacterStatus.ACTIVE },
+      orderBy: { createdAt: "desc" },
     }),
     prisma.ticket.count({
       where: {
@@ -60,6 +62,13 @@ export default async function PlayerLayout({ children }: { children: React.React
       },
     }),
   ]);
+
+  const characterSheet =
+    activeSheet ??
+    (await prisma.characterSheet.findFirst({
+      where: { playerId: user.id },
+      orderBy: { createdAt: "desc" },
+    }));
 
   const isSheetValidated =
     characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED ||

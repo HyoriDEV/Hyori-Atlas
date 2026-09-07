@@ -70,6 +70,12 @@ enum CharacterSheetStatus {
   VALIDATED
 }
 
+enum CharacterStatus {
+  ACTIVE
+  DEAD
+  DISABLED
+}
+
 enum CharacterClass {
   NOBLE
   PAYSAN
@@ -119,7 +125,7 @@ model User {
   registrationHistory     RegistrationStatusHistory[]
   conversationMemberships ConversationMember[]
   conversationMessages    ConversationMessage[]
-  characterSheet          CharacterSheet?
+  characterSheets         CharacterSheet[]
   interviewBookings       InterviewBooking[]
   staffNotes              StaffNote[]                 @relation("StaffNotePlayer")
   authoredStaffNotes      StaffNote[]                 @relation("StaffNoteAuthor")
@@ -229,7 +235,7 @@ model Ticket {
 
 model CharacterSheet {
   id       String @id @default(cuid())
-  playerId String @unique
+  playerId String
 
   name               String  @db.VarChar(50)
   nickname           String? @db.VarChar(50)
@@ -254,6 +260,7 @@ model CharacterSheet {
   socialPersuasion     Int @default(1)
   socialViolence       Int @default(1)
 
+  status            CharacterStatus      @default(ACTIVE)
   reviewStatus      CharacterSheetStatus @default(DRAFT)
   hasUnreadFeedback Boolean              @default(false)
   createdAt         DateTime             @default(now())
@@ -262,7 +269,9 @@ model CharacterSheet {
   player        User                          @relation(fields: [playerId], references: [id], onDelete: Cascade)
   comments      CharacterSheetComment[]
   reviewHistory CharacterSheetReviewHistory[]
+  chapters      Chapter[]
 
+  @@index([playerId])
   @@map("character_sheets")
 }
 
@@ -346,17 +355,20 @@ model StaffNote {
 }
 
 model Chapter {
-  id        String   @id @default(cuid())
-  playerId  String
-  title     String   @db.VarChar(120)
-  content   String
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  playerId         String
+  characterSheetId String?
+  title            String   @db.VarChar(120)
+  content          String
+  order            Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  player User @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  player         User            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  characterSheet CharacterSheet? @relation(fields: [characterSheetId], references: [id], onDelete: Cascade)
 
   @@index([playerId])
+  @@index([characterSheetId])
   @@map("chapters")
 }
 

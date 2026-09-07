@@ -1,6 +1,7 @@
 import {
   BdaReportStatus,
   CharacterSheetStatus,
+  CharacterStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -241,7 +242,7 @@ export const staffNewsItem: StaffNavItem = {
   label: "Actualités",
   href: "/staff/news",
   iconKey: "newspaper",
-  roles: [Role.ADMIN, Role.DEVELOPER],
+  roles: [Role.ADMIN],
 };
 
 export const staffRulesItem: StaffNavItem = {
@@ -333,13 +334,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   }
 
   if (role === Role.DEVELOPER) {
-    return [
-      overviewGroup,
-      {
-        title: "Contenu",
-        items: [staffNewsItem],
-      },
-    ];
+    return [overviewGroup];
   }
 
   return [overviewGroup];
@@ -390,6 +385,12 @@ export const characterSheetStatusLabels: Record<CharacterSheetStatus, string> = 
   [CharacterSheetStatus.PENDING_STAFF]: "À évaluer (staff)",
   [CharacterSheetStatus.PENDING_PLAYER]: "En rédaction (joueur)",
   [CharacterSheetStatus.VALIDATED]: "Validée",
+};
+
+export const characterStatusLabels: Record<CharacterStatus, string> = {
+  [CharacterStatus.ACTIVE]: "Actif",
+  [CharacterStatus.DEAD]: "Mort",
+  [CharacterStatus.DISABLED]: "Désactivé",
 };
 
 export const interviewBookingStatusLabels: Record<InterviewBookingStatus, string> = {

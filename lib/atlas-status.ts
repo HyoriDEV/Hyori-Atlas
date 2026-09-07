@@ -4,11 +4,23 @@ import type { badgeVariants } from "@/components/ui/badge";
 import {
   BdaReportStatus,
   CharacterSheetStatus,
+  CharacterStatus,
   RegistrationStatus,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 
 type BadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
+
+export function characterStatusBadgeVariant(status: CharacterStatus): BadgeVariant {
+  switch (status) {
+    case CharacterStatus.ACTIVE:
+      return "default";
+    case CharacterStatus.DEAD:
+      return "destructive";
+    case CharacterStatus.DISABLED:
+      return "secondary";
+  }
+}
 
 export function registrationStatusBadgeVariant(status: RegistrationStatus): BadgeVariant {
   switch (status) {

@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetCommentTarget,
   CharacterSheetStatus,
+  CharacterStatus,
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
@@ -23,6 +24,7 @@ function revalidateSheetSurfaces(playerId: string) {
   revalidatePath(`/staff/atlas/${playerId}/evaluation`);
   revalidatePath("/player/character-sheet");
   revalidatePath("/player", "layout");
+  revalidatePath("/player/writing");
 }
 
 export async function submitCharacterSheetEvaluation(
@@ -148,7 +150,10 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
 export async function promoteToWhitelisted(userId: string) {
   const staffUser = await requireRole([Role.ADMIN]);
 
-  const sheet = await prisma.characterSheet.findUnique({ where: { playerId: userId } });
+  const sheet = await prisma.characterSheet.findFirst({
+    where: { playerId: userId, status: CharacterStatus.ACTIVE },
+    orderBy: { createdAt: "desc" },
+  });
   if (!sheet) {
     throw new Error("Ce joueur n'a pas encore de fiche personnage.");
   }
