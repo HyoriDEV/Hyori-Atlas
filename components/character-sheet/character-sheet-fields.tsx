@@ -281,7 +281,7 @@ export function CharacterSheetFields({
             >
               <div className="flex min-h-6 items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5">
-                  <Label className="text-sm font-medium">Classes souhaitées</Label>
+                  <Label className="text-sm font-medium">Villages souhaités</Label>
                   {commentedTargets.includes(CharacterSheetCommentTarget.chosenClasses) && (
                     <ChatCircleDots className="text-primary size-3.5 shrink-0" />
                   )}
@@ -289,9 +289,9 @@ export function CharacterSheetFields({
               </div>
 
               <p className="text-muted-foreground text-xs leading-relaxed">
-                Indique deux classes de jeu par ordre de préférence. Ce sont des souhaits à titre
-                indicatif, ta classe définitive te sera attribuée par l&apos;équipe RP lors de ton
-                entretien de whitelist.
+                Indique deux villages (classes) par ordre de préférence. Ce sont des souhaits à
+                titre indicatif, ta classe définitive te sera attribuée par l&apos;équipe RP lors de
+                ton entretien de whitelist.
               </p>
 
               <CharacterClassDualSelector
