@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { getMockServerActivity, formatPlaytime } from "@/lib/mock-server-data";
 import { formatDate } from "@/lib/date";
 import {
@@ -35,13 +38,19 @@ import { UnreadDot } from "@/components/ui/unread-dot";
 const PAGE_SIZE = 10;
 
 type SortKey =
-  "player" | "rpName" | "civilStatus" | "sheetStatus" | "playtime" | "lastLogin" | "status";
+  | "player"
+  | "rpName"
+  | "sheetUpdatedAt"
+  | "sheetStatus"
+  | "playtime"
+  | "lastLogin"
+  | "status";
 type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = [
   "player",
   "rpName",
-  "civilStatus",
+  "sheetUpdatedAt",
   "sheetStatus",
   "playtime",
   "lastLogin",
@@ -73,6 +82,13 @@ export default async function AtlasPage(props: PageProps) {
   await requireRole(item.roles);
 
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/atlas");
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/atlas", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
   const query = searchParams.q?.trim() ?? "";
 
   const statusParam = searchParams.status;
@@ -158,13 +174,16 @@ export default async function AtlasPage(props: PageProps) {
         else if (!nameA) comparison = 1;
         else if (!nameB) comparison = -1;
         else comparison = nameA.localeCompare(nameB, "fr", { sensitivity: "base" });
-      } else if (sortKey === "civilStatus") {
-        const statA = a.activeSheet?.civilStatus ?? "";
-        const statB = b.activeSheet?.civilStatus ?? "";
-        if (!statA && !statB) comparison = 0;
-        else if (!statA) comparison = 1;
-        else if (!statB) comparison = -1;
-        else comparison = statA.localeCompare(statB, "fr", { sensitivity: "base" });
+      } else if (sortKey === "sheetUpdatedAt") {
+        const timeA = a.activeSheet?.updatedAt ? a.activeSheet.updatedAt.getTime() : null;
+        const timeB = b.activeSheet?.updatedAt ? b.activeSheet.updatedAt.getTime() : null;
+        if (timeA === null && timeB === null) comparison = 0;
+        else if (timeA === null) return 1;
+        else if (timeB === null) return -1;
+        else {
+          const diff = timeA - timeB;
+          return sortDir === "asc" ? diff : -diff;
+        }
       } else if (sortKey === "sheetStatus") {
         const rankMap: Record<CharacterSheetStatus, number> = {
           [CharacterSheetStatus.PENDING_STAFF]: 4,
@@ -242,15 +261,6 @@ export default async function AtlasPage(props: PageProps) {
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
-                  sortKey="civilStatus"
-                  defaultDirection="asc"
-                  currentSort={sortDir}
-                  label="Statut civil"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
                   sortKey="playtime"
                   defaultDirection="desc"
                   currentSort={sortDir}
@@ -264,6 +274,15 @@ export default async function AtlasPage(props: PageProps) {
                   defaultDirection="desc"
                   currentSort={sortDir}
                   label="Dernière connexion"
+                />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  {...sortHeaderProps}
+                  sortKey="sheetUpdatedAt"
+                  defaultDirection="desc"
+                  currentSort={sortDir}
+                  label="Modification fiche"
                 />
               </TableHead>
               <TableHead>
@@ -310,14 +329,16 @@ export default async function AtlasPage(props: PageProps) {
                       {isPendingStaffSheet && (
                         <UnreadDot placement="table" title="Fiche RP en attente de relecture" />
                       )}
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex max-w-[180px] items-center gap-2.5" title={playerName}>
                         <SkinHead size="sm" username={player.minecraftUsername ?? undefined} />
-                        <span className="font-medium">{playerName}</span>
+                        <span className="truncate font-medium">{playerName}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{sheet?.name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {sheet?.civilStatus || "—"}
+                    <TableCell
+                      className="max-w-[180px] font-medium"
+                      title={sheet?.name || undefined}
+                    >
+                      <span className="block truncate">{sheet?.name || "—"}</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {activity.lastLoginAt ? formatPlaytime(activity.totalPlaytimeMinutes) : "—"}
@@ -325,6 +346,11 @@ export default async function AtlasPage(props: PageProps) {
                     <TableCell className="text-muted-foreground">
                       {activity.lastLoginAt
                         ? formatDate(activity.lastLoginAt, { style: "prefix-long", withTime: true })
+                        : "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {sheet?.updatedAt
+                        ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
                         : "—"}
                     </TableCell>
                     <TableCell>

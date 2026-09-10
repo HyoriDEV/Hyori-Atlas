@@ -105,7 +105,7 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
         render={
           <Button size="sm" className="h-9 gap-1.5">
             <UserPlus className="size-4" />
-            Ajouter un membre
+            Ajouter
           </Button>
         }
       />

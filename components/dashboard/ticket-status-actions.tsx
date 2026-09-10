@@ -33,17 +33,24 @@ export function TicketStatusActions({
     startTransition(async () => {
       try {
         await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId));
-        toast.success(isArchived ? "Ticket rouvert." : "Ticket archivé.");
+        toast.success(isArchived ? "Ticket rouvert." : "Ticket archivé.", { id: "ticket-status" });
         setOpen(false);
       } catch (error) {
-        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.", {
+          id: "ticket-status",
+        });
       }
     });
   }
 
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <Button
+        type="button"
+        variant={isArchived ? "destructive" : "outline"}
+        size="sm"
+        onClick={() => setOpen(true)}
+      >
         {isArchived ? "Désarchiver" : "Archiver"}
       </Button>
       <AlertDialog open={open} onOpenChange={setOpen}>
@@ -60,7 +67,11 @@ export function TicketStatusActions({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm} disabled={isPending}>
+            <AlertDialogAction
+              variant={isArchived ? "destructive" : "default"}
+              onClick={handleConfirm}
+              disabled={isPending}
+            >
               {isArchived ? "Désarchiver" : "Archiver"}
             </AlertDialogAction>
           </AlertDialogFooter>

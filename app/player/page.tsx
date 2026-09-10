@@ -214,8 +214,8 @@ export default async function PlayerDashboardPage() {
             statLabel={
               characterSheet && characterSheet._count.comments > 0
                 ? characterSheet._count.comments > 1
-                  ? "retours staff"
-                  : "retour staff"
+                  ? "retours équipe RP"
+                  : "retour équipe RP"
                 : undefined
             }
             badge={

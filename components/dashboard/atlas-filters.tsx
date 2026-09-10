@@ -15,6 +15,7 @@ import {
 import { CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { characterSheetStatusLabels, registrationStatusLabels } from "@/lib/navigation";
 import { ResetSortButton } from "@/components/dashboard/waitlist-sort-controls";
+import { setClientPagePref } from "@/lib/table-preferences";
 
 const ALL_VALUE = "ALL";
 const QUERY_DEBOUNCE_MS = 200;
@@ -86,13 +87,26 @@ export function AtlasFilters({
 
   function updateParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
+    const prefsToUpdate: Record<string, string | undefined> = {};
+
     for (const [key, value] of Object.entries(next)) {
       if (value && value !== ALL_VALUE) {
         params.set(key, value);
+        if (key !== "q") {
+          prefsToUpdate[key] = value;
+        }
       } else {
         params.delete(key);
+        if (key !== "q") {
+          prefsToUpdate[key] = undefined;
+        }
       }
     }
+
+    if (Object.keys(prefsToUpdate).length > 0) {
+      setClientPagePref(pathname, prefsToUpdate);
+    }
+
     params.set("page", "1");
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });

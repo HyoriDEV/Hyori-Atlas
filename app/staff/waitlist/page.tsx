@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { staffNavItems } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
@@ -35,6 +38,13 @@ export default async function WaitlistPage(props: PageProps) {
   await requireRole(item.roles);
 
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/waitlist");
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/waitlist", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
   const sortOrder: "asc" | "desc" = searchParams.sort === "asc" ? "asc" : "desc";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const rejectedPage = Math.max(1, parseInt(searchParams.rejectedPage ?? "1", 10) || 1);
@@ -135,17 +145,23 @@ export default async function WaitlistPage(props: PageProps) {
                     <TableRow key={player.id}>
                       <TableCell>
                         {player.minecraftUsername ? (
-                          <div className="flex items-center gap-2">
+                          <div
+                            className="flex max-w-[160px] items-center gap-2"
+                            title={player.minecraftUsername}
+                          >
                             <SkinHead size="sm" username={player.minecraftUsername} />
-                            <span>{player.minecraftUsername}</span>
+                            <span className="truncate">{player.minecraftUsername}</span>
                           </div>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Avatar size="sm">
+                        <div
+                          className="flex max-w-[240px] items-center gap-2"
+                          title={`${player.discordDisplayName} (${player.discordUsername})`}
+                        >
+                          <Avatar size="sm" className="shrink-0">
                             <AvatarImage
                               src={player.discordAvatarUrl ?? undefined}
                               alt={player.discordUsername}
@@ -154,8 +170,10 @@ export default async function WaitlistPage(props: PageProps) {
                               {player.discordUsername.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span>{player.discordDisplayName}</span>
-                          <span className="text-muted-foreground">({player.discordUsername})</span>
+                          <span className="truncate">{player.discordDisplayName}</span>
+                          <span className="text-muted-foreground shrink-0 text-xs">
+                            ({player.discordUsername})
+                          </span>
                         </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -221,17 +239,23 @@ export default async function WaitlistPage(props: PageProps) {
                         <TableRow key={player.id}>
                           <TableCell>
                             {player.minecraftUsername ? (
-                              <div className="flex items-center gap-2">
+                              <div
+                                className="flex max-w-[160px] items-center gap-2"
+                                title={player.minecraftUsername}
+                              >
                                 <SkinHead size="sm" username={player.minecraftUsername} />
-                                <span>{player.minecraftUsername}</span>
+                                <span className="truncate">{player.minecraftUsername}</span>
                               </div>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Avatar size="sm">
+                            <div
+                              className="flex max-w-[240px] items-center gap-2"
+                              title={`${player.discordDisplayName} (${player.discordUsername})`}
+                            >
+                              <Avatar size="sm" className="shrink-0">
                                 <AvatarImage
                                   src={player.discordAvatarUrl ?? undefined}
                                   alt={player.discordUsername}
@@ -240,8 +264,8 @@ export default async function WaitlistPage(props: PageProps) {
                                   {player.discordUsername.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span>{player.discordDisplayName}</span>
-                              <span className="text-muted-foreground">
+                              <span className="truncate">{player.discordDisplayName}</span>
+                              <span className="text-muted-foreground shrink-0 text-xs">
                                 ({player.discordUsername})
                               </span>
                             </div>

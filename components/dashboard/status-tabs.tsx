@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { setClientPagePref } from "@/lib/table-preferences";
 
 export interface StatusTabsProps {
   activeTab: "active" | "archived";
@@ -35,8 +36,10 @@ export function StatusTabs({
     const params = new URLSearchParams(searchParams.toString());
     if (value === "archived") {
       params.set("tab", "archived");
+      setClientPagePref(pathname, { tab: "archived" });
     } else {
       params.delete("tab");
+      setClientPagePref(pathname, { tab: undefined });
     }
     params.delete("page");
 
