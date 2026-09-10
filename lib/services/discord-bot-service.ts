@@ -140,12 +140,14 @@ export async function notifyPlayerRegistrationStatus(
   );
 }
 
+export type CharacterSheetNotificationStatus = CharacterSheetStatus | "REOPENED";
+
 /**
- * Notifie le joueur par message privé Discord lors de retours déposés sur sa fiche personnage.
+ * Notifie le joueur par message privé Discord lors de retours, de la validation ou de la réouverture de sa fiche personnage.
  */
 export async function notifyPlayerCharacterSheetStatus(
   discordId: string,
-  status: CharacterSheetStatus,
+  status: CharacterSheetNotificationStatus,
   customPlayerSpaceUrl?: string
 ): Promise<BotNotificationResult> {
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player/character-sheet");

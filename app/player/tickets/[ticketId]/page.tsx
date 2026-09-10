@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { TicketBackLink } from "@/components/player/ticket-back-link";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
+import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 
 export default async function TicketDetailPage({
   params,
@@ -82,6 +83,12 @@ export default async function TicketDetailPage({
         <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
           {ticketStatusLabels[ticket.status]}
         </Badge>
+        <TicketMembersSheet
+          ticketId={ticket.id}
+          members={membersData}
+          readOnly
+          className="lg:hidden"
+        />
       </div>
 
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
@@ -100,7 +107,7 @@ export default async function TicketDetailPage({
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+        <div className="hidden min-h-0 lg:flex lg:col-span-2 lg:flex-col">
           <TicketMembersManager ticketId={ticket.id} members={membersData} readOnly />
         </div>
       </div>

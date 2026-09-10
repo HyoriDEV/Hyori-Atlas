@@ -120,11 +120,18 @@ export async function submitCharacterSheetEvaluation(
     }),
   ]);
 
-  if (hasComments && sheet.player?.discordId) {
-    await notifyPlayerCharacterSheetStatus(
-      sheet.player.discordId,
-      CharacterSheetStatus.PENDING_PLAYER
-    );
+  if (sheet.player?.discordId) {
+    if (hasComments) {
+      await notifyPlayerCharacterSheetStatus(
+        sheet.player.discordId,
+        CharacterSheetStatus.PENDING_PLAYER
+      );
+    } else {
+      await notifyPlayerCharacterSheetStatus(
+        sheet.player.discordId,
+        CharacterSheetStatus.VALIDATED
+      );
+    }
   }
 
   revalidateSheetSurfaces(sheet.playerId);
@@ -138,11 +145,15 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
     include: { player: true },
   });
 
+  if (sheet.reviewStatus !== CharacterSheetStatus.VALIDATED) {
+    throw new Error("Seule une fiche validée peut être rouverte.");
+  }
+
   await prisma.$transaction([
     prisma.characterSheet.update({
       where: { id: sheetId },
       data: {
-        reviewStatus: CharacterSheetStatus.PENDING_STAFF,
+        reviewStatus: CharacterSheetStatus.PENDING_PLAYER,
         hasUnreadFeedback: false,
       },
     }),
@@ -150,12 +161,16 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
       data: {
         sheetId,
         authorId: staffUser.id,
-        status: CharacterSheetStatus.PENDING_STAFF,
+        status: CharacterSheetStatus.PENDING_PLAYER,
         commentCount: 0,
         note: note?.trim() || "Réouverture de la fiche par le staff",
       },
     }),
   ]);
+
+  if (sheet.player?.discordId) {
+    await notifyPlayerCharacterSheetStatus(sheet.player.discordId, "REOPENED");
+  }
 
   revalidateSheetSurfaces(sheet.playerId);
 }

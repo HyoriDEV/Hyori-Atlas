@@ -135,6 +135,13 @@ export function AppShell({
       : pathname === item.href || pathname?.startsWith(`${item.href}/`);
   });
 
+  const isConversationPage = Boolean(
+    (pathname?.startsWith("/staff/tickets/") && pathname !== "/staff/tickets") ||
+    (pathname?.startsWith("/player/tickets/") && pathname !== "/player/tickets") ||
+    (pathname?.startsWith("/staff/rp-tracking/") && pathname !== "/staff/rp-tracking") ||
+    pathname === "/player/rp-tracking"
+  );
+
   const isStaffDashboard = sectionLabel === "Espace Staff";
 
   return (
@@ -292,11 +299,17 @@ export function AppShell({
           <SidebarTrigger />
           <span className={cn("text-muted-foreground text-sm")}>{sectionLabel}</span>
         </header>
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div
+          className={cn(
+            "min-h-0 flex-1 p-4 sm:p-6",
+            isConversationPage ? "flex flex-col overflow-hidden" : "overflow-y-auto"
+          )}
+        >
           <div
             className={cn(
-              "mx-auto flex min-h-full w-full flex-1 flex-col",
-              !isFullWidth && "max-w-[960px]"
+              "mx-auto flex w-full flex-1 flex-col",
+              isConversationPage ? "h-full min-h-0" : "min-h-full",
+              !isFullWidth && (isConversationPage ? "max-w-6xl" : "max-w-[960px]")
             )}
           >
             {children}
