@@ -97,6 +97,8 @@ export function ConversationChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const isInitialMount = useRef(true);
 
   useEffect(() => {
     setIsChatDisabled(disabled);
@@ -164,7 +166,19 @@ export function ConversationChat({
   }, [conversationId, viewerIsStaff, router]);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    } else {
+      if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTo({
+          top: messagesContainerRef.current.scrollHeight,
+          behavior: "smooth",
+        });
+      }
+    }
   }, [messages.length]);
 
   useEffect(() => {
@@ -495,7 +509,10 @@ export function ConversationChat({
 
   return (
     <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
-      <div className="bg-card/30 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border p-4">
+      <div
+        ref={messagesContainerRef}
+        className="bg-card/30 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border p-4"
+      >
         {emptyBadge && (
           <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1 flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-medium">
             <span>{emptyBadge}</span>
@@ -837,7 +854,7 @@ export function ConversationChat({
       </div>
 
       {error && (
-        <div className="bg-destructive/10 text-destructive border-destructive/20 flex items-center justify-between rounded-lg border px-3 py-2 text-xs">
+        <div className="bg-destructive/10 text-destructive border-destructive/20 flex shrink-0 items-center justify-between rounded-lg border px-3 py-2 text-xs">
           <span>{error}</span>
           <button type="button" onClick={() => setError(null)} className="ml-2 hover:opacity-70">
             <X className="size-3" />
@@ -846,7 +863,7 @@ export function ConversationChat({
       )}
 
       {isChatDisabled ? (
-        <div className="bg-muted/30 text-muted-foreground border-border/60 flex items-center justify-center rounded-xl border border-dashed px-4 py-3.5 text-center text-xs font-medium select-none">
+        <div className="bg-muted/30 text-muted-foreground border-border/60 flex shrink-0 items-center justify-center rounded-xl border border-dashed px-4 py-3.5 text-center text-xs font-medium select-none">
           <span>
             {disabledMessage ?? "Cette conversation est archivée. Les réponses sont fermées."}
           </span>

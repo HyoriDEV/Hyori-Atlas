@@ -13,6 +13,7 @@ import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
+import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 
 export default async function TicketStaffDetailPage({
   params,
@@ -98,6 +99,12 @@ export default async function TicketStaffDetailPage({
             {ticketStatusLabels[ticket.status]}
           </Badge>
         )}
+        <TicketMembersSheet
+          ticketId={ticket.id}
+          members={membersData}
+          availablePlayers={allPlayers}
+          className="lg:hidden"
+        />
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>
 
@@ -117,7 +124,7 @@ export default async function TicketStaffDetailPage({
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+        <div className="hidden min-h-0 lg:flex lg:col-span-2 lg:flex-col">
           <TicketMembersManager
             ticketId={ticket.id}
             members={membersData}
