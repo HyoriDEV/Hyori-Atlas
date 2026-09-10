@@ -24,7 +24,8 @@ export type NavIconKey =
   | "squares-four"
   | "gear"
   | "newspaper"
-  | "book-bookmark";
+  | "book-bookmark"
+  | "scroll";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -245,6 +246,13 @@ export const staffInterviewSlotsItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffInterviewGuideItem: StaffNavItem = {
+  label: "Guide d'entretien",
+  href: "/staff/interview-guide",
+  iconKey: "scroll",
+  roles: [Role.ADMIN],
+};
+
 export const staffNewsItem: StaffNavItem = {
   label: "Actualités",
   href: "/staff/news",
@@ -280,6 +288,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffRpTrackingItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
+  staffInterviewGuideItem,
   staffNewsItem,
   staffRulesItem,
 ];
@@ -309,7 +318,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       },
       {
         title: "Admission",
-        items: [staffWaitlistItem, staffInterviewSlotsItem],
+        items: [staffWaitlistItem, staffInterviewSlotsItem, staffInterviewGuideItem],
       },
     ];
   }
