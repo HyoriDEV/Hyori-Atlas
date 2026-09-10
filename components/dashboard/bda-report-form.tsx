@@ -13,6 +13,7 @@ import { SkinHead } from "@/components/ui/skin-head";
 import { Plus, Trash, CircleNotch, CloudArrowUp } from "@phosphor-icons/react";
 import { createBdaReport } from "@/lib/actions/bda-actions";
 import { uploadBdaImage } from "@/lib/actions/upload-actions";
+import { validateImageFile } from "@/lib/upload-config";
 
 export interface BdaReportTicketOption {
   id: string;
@@ -79,8 +80,18 @@ export function BdaReportForm({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
     setError(null);
+
+    for (let i = 0; i < files.length; i++) {
+      const validation = validateImageFile(files[i]);
+      if (!validation.valid) {
+        setError(validation.error ?? "Fichier invalide.");
+        if (e.target) e.target.value = "";
+        return;
+      }
+    }
+
+    setIsUploading(true);
 
     try {
       const newAttachments = [...attachments];
@@ -92,7 +103,11 @@ export function BdaReportForm({
       }
       setAttachments(newAttachments);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur lors de l'upload des fichiers.";
+      const rawMessage =
+        err instanceof Error ? err.message : "Erreur lors de l'upload des fichiers.";
+      const msg = rawMessage.includes("unexpected response")
+        ? "Le serveur a rejeté l'image (taille trop volumineuse ou erreur réseau)."
+        : rawMessage;
       setError(msg);
     } finally {
       setIsUploading(false);

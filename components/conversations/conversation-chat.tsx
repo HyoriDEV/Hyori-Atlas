@@ -17,6 +17,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { uploadConversationImage } from "@/lib/actions/upload-actions";
+import { validateImageFile } from "@/lib/upload-config";
 import {
   editConversationMessage,
   deleteConversationMessage,
@@ -182,6 +183,14 @@ export function ConversationChat({
 
   async function uploadFile(file: File) {
     setError(null);
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      const errorMsg = validation.error ?? "Fichier invalide.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -189,10 +198,13 @@ export function ConversationChat({
       const { url } = await uploadConversationImage(formData, conversationId);
       setPendingImageUrl(url);
     } catch (uploadError) {
-      const message =
+      const rawMessage =
         uploadError instanceof Error
           ? uploadError.message
           : "Une erreur est survenue lors de l'envoi de l'image.";
+      const message = rawMessage.includes("unexpected response")
+        ? "L'image a été rejetée par le serveur (taille trop volumineuse pour le serveur web ou timeout réseau)."
+        : rawMessage;
       setError(message);
       toast.error(message);
     } finally {
@@ -834,8 +846,10 @@ export function ConversationChat({
       )}
 
       {isChatDisabled ? (
-        <div className="bg-muted/30 text-muted-foreground border-border/60 flex items-center justify-center rounded-xl border border-dashed py-3.5 px-4 text-center text-xs font-medium select-none">
-          <span>{disabledMessage ?? "Cette conversation est archivée. Les réponses sont fermées."}</span>
+        <div className="bg-muted/30 text-muted-foreground border-border/60 flex items-center justify-center rounded-xl border border-dashed px-4 py-3.5 text-center text-xs font-medium select-none">
+          <span>
+            {disabledMessage ?? "Cette conversation est archivée. Les réponses sont fermées."}
+          </span>
         </div>
       ) : (
         <div

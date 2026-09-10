@@ -8,17 +8,14 @@ import sharp from "sharp";
 
 import { requireActivePlayer, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES, validateImageFile } from "@/lib/upload-config";
 
-const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
 
 async function processAndStoreUpload(file: File, scope: string, ownerId: string) {
-  if (file.size > MAX_UPLOAD_BYTES) {
-    throw new Error("L'image est trop volumineuse (10 Mo maximum).");
-  }
-  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error("Format d'image non supporté (JPEG, PNG, WEBP ou GIF uniquement).");
+  const validation = validateImageFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
   }
 
   const inputBuffer = Buffer.from(await file.arrayBuffer());
