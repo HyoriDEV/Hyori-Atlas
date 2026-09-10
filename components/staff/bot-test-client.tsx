@@ -24,6 +24,7 @@ import {
   testRegistrationNotificationAction,
   testRoleSyncAction,
 } from "@/lib/actions/bot-test-actions";
+import { type CharacterSheetNotificationStatus } from "@/lib/services/discord-bot-service";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -132,7 +133,7 @@ export function BotTestClient({
     });
   }
 
-  function handleSheetTest(status: CharacterSheetStatus, label: string) {
+  function handleSheetTest(status: CharacterSheetNotificationStatus, label: string) {
     if (!targetId.trim()) {
       toast.error("Veuillez renseigner un ID Discord cible.");
       return;
@@ -388,10 +389,22 @@ export function BotTestClient({
                 Notification Fiche Personnage (MP Discord)
               </CardTitle>
               <CardDescription className="text-xs">
-                Simulez la notification de retours / modifications demandées par le staff.
+                Simulez la notification de validation, de retours ou de réouverture par le staff.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={() => handleSheetTest(CharacterSheetStatus.VALIDATED, "Fiche validée")}
+                disabled={isPending}
+              >
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 text-[10px]">
+                  Validée
+                </Badge>
+                Fiche personnage validée par le staff
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
@@ -403,6 +416,18 @@ export function BotTestClient({
                   Retours
                 </Badge>
                 Retours disponibles sur la fiche personnage
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={() => handleSheetTest("REOPENED", "Fiche rouverte")}
+                disabled={isPending}
+              >
+                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 text-[10px]">
+                  Réouverture
+                </Badge>
+                Fiche personnage rouverte par le staff
               </Button>
             </CardContent>
           </Card>

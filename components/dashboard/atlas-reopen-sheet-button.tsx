@@ -42,9 +42,8 @@ export function AtlasReopenSheetButton({ sheetId, pseudo }: { sheetId: string; p
           <AlertDialogHeader>
             <AlertDialogTitle>Rouvrir la fiche personnage</AlertDialogTitle>
             <AlertDialogDescription>
-              La fiche de <span className="text-foreground">{pseudo} </span>repassera au statut « À
-              évaluer (staff) ». Le staff pourra à nouveau l&apos;évaluer et demander des
-              modifications si nécessaire.
+              La fiche de <span className="text-foreground">{pseudo} </span>repassera au statut « En
+              rédaction (joueur) ». Le joueur pourra à nouveau la modifier et la soumettre.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
