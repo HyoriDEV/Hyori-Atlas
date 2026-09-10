@@ -8,6 +8,7 @@ import { DiscordOfficialIcon } from "@/components/icons/discord-icon";
 export { DiscordOfficialIcon };
 
 interface CountdownTimerProps {
+  countdownEnabled?: boolean;
   targetDateStr?: string | null;
   badgeText?: string | null;
   title: string;
@@ -47,6 +48,7 @@ function calculateTimeRemaining(targetDate: Date | null): TimeRemaining {
 }
 
 export function CountdownTimer({
+  countdownEnabled = true,
   targetDateStr,
   badgeText = "Hyori RP — Lancement Officiel",
   title,
@@ -67,12 +69,14 @@ export function CountdownTimer({
   );
 
   useEffect(() => {
+    if (!countdownEnabled) return;
+
     const interval = setInterval(() => {
       setTimeLeft(calculateTimeRemaining(targetDate));
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [targetDate]);
+  }, [targetDate, countdownEnabled]);
 
   // Formatage de la date cible en français selon la typographie de la charte
   const formattedTargetDate = useMemo(() => {
@@ -122,7 +126,7 @@ export function CountdownTimer({
             </p>
           )}
 
-          {formattedTargetDate && (
+          {countdownEnabled && formattedTargetDate && (
             <div className="inline-flex items-center gap-2 rounded-md border border-[#262626] bg-[#1a1a1a]/70 px-3.5 py-1 font-sans text-xs text-[#a3a39e]">
               <CalendarBlank className="size-3.5 text-[#d4af35]" />
               <span>{formattedTargetDate}</span>
@@ -131,36 +135,38 @@ export function CountdownTimer({
         </div>
 
         {/* Bloc Compte à Rebours - Cartes sobres de la charte avec chiffres en Anthropic Serif */}
-        {!timeLeft.isExpired ? (
-          <div className="grid w-full max-w-2xl grid-cols-4 gap-2.5 sm:gap-4 md:gap-5">
-            {units.map((unit) => (
-              <div
-                key={unit.label}
-                className="group relative flex flex-col items-center justify-center rounded-lg border border-[#262626] bg-[#1a1a1a]/90 p-3.5 shadow-sm transition-all duration-300 hover:border-[#d4af35]/40 hover:bg-[#1f1f1f] sm:p-5 md:p-6"
-              >
-                <span className="font-heading text-3xl font-normal tracking-normal text-[#f8f5e8] sm:text-5xl md:text-6xl">
-                  {mounted ? String(unit.value).padStart(2, "0") : "00"}
-                </span>
-                <span className="mt-2 font-sans text-[10px] font-semibold tracking-[0.25em] text-[#a3a39e] uppercase transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
-                  {unit.label}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          /* Écran d'ouverture du serveur */
-          <div className="flex flex-col items-center gap-3 rounded-lg border border-[#d4af35]/40 bg-[#1a1a1a]/90 p-6 shadow-xl sm:p-8">
-            <div className="inline-flex size-12 items-center justify-center rounded-full bg-[#d4af35]/15 text-[#e9d15c]">
-              <Sparkle className="size-6" weight="bold" />
+        {countdownEnabled && (
+          !timeLeft.isExpired ? (
+            <div className="grid w-full max-w-2xl grid-cols-4 gap-2.5 sm:gap-4 md:gap-5">
+              {units.map((unit) => (
+                <div
+                  key={unit.label}
+                  className="group relative flex flex-col items-center justify-center rounded-lg border border-[#262626] bg-[#1a1a1a]/90 p-3.5 shadow-sm transition-all duration-300 hover:border-[#d4af35]/40 hover:bg-[#1f1f1f] sm:p-5 md:p-6"
+                >
+                  <span className="font-heading text-3xl font-normal tracking-normal text-[#f8f5e8] sm:text-5xl md:text-6xl">
+                    {mounted ? String(unit.value).padStart(2, "0") : "00"}
+                  </span>
+                  <span className="mt-2 font-sans text-[10px] font-semibold tracking-[0.25em] text-[#a3a39e] uppercase transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
+                    {unit.label}
+                  </span>
+                </div>
+              ))}
             </div>
-            <h2 className="font-heading text-2xl font-normal text-[#f8f5e8] sm:text-3xl">
-              Le serveur est officiellement ouvert
-            </h2>
-            <p className="max-w-md font-sans text-sm leading-relaxed text-[#a3a39e]">
-              Rejoignez dès maintenant notre communauté sur Discord et plongez dans l&apos;univers
-              de Hyori RP.
-            </p>
-          </div>
+          ) : (
+            /* Écran d'ouverture du serveur */
+            <div className="flex flex-col items-center gap-3 rounded-lg border border-[#d4af35]/40 bg-[#1a1a1a]/90 p-6 shadow-xl sm:p-8">
+              <div className="inline-flex size-12 items-center justify-center rounded-full bg-[#d4af35]/15 text-[#e9d15c]">
+                <Sparkle className="size-6" weight="bold" />
+              </div>
+              <h2 className="font-heading text-2xl font-normal text-[#f8f5e8] sm:text-3xl">
+                Le serveur est officiellement ouvert
+              </h2>
+              <p className="max-w-md font-sans text-sm leading-relaxed text-[#a3a39e]">
+                Rejoignez dès maintenant notre communauté sur Discord et plongez dans l&apos;univers
+                de Hyori RP.
+              </p>
+            </div>
+          )
         )}
 
         {/* Boutons d'Action Rapide - Vrai Logo Discord Clyde & Typographie Anthropic Serif */}
