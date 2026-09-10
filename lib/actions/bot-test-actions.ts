@@ -15,6 +15,7 @@ import {
   type BotHealthResponse,
   type BotNotificationResult,
   type BotRoleSyncResult,
+  type CharacterSheetNotificationStatus,
 } from "@/lib/services/discord-bot-service";
 
 export async function testBotHealthAction(): Promise<BotHealthResponse> {
@@ -42,7 +43,7 @@ export async function testRegistrationNotificationAction(
 
 export async function testCharacterSheetNotificationAction(
   targetDiscordId: string,
-  status: CharacterSheetStatus
+  status: CharacterSheetNotificationStatus
 ): Promise<BotNotificationResult> {
   await requireRole([Role.ADMIN]);
 

@@ -84,7 +84,7 @@ const civilFields: {
   { key: "gender", label: "Genre" },
   {
     key: "civilStatus",
-    label: "Statut",
+    label: "Statut social",
     placeholder: "Ex: Maître forgeron",
     minLength: CIVIL_STATUS_MIN_LENGTH,
     maxLength: CIVIL_STATUS_MAX_LENGTH,

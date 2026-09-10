@@ -13,6 +13,7 @@ import { SkinHead } from "@/components/ui/skin-head";
 import { Plus, Trash, CircleNotch, CloudArrowUp } from "@phosphor-icons/react";
 import { createBdaReport } from "@/lib/actions/bda-actions";
 import { uploadBdaImage } from "@/lib/actions/upload-actions";
+import { validateImageFile } from "@/lib/upload-config";
 
 export interface BdaReportTicketOption {
   id: string;
@@ -79,8 +80,18 @@ export function BdaReportForm({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    setIsUploading(true);
     setError(null);
+
+    for (let i = 0; i < files.length; i++) {
+      const validation = validateImageFile(files[i]);
+      if (!validation.valid) {
+        setError(validation.error ?? "Fichier invalide.");
+        if (e.target) e.target.value = "";
+        return;
+      }
+    }
+
+    setIsUploading(true);
 
     try {
       const newAttachments = [...attachments];
@@ -92,7 +103,11 @@ export function BdaReportForm({
       }
       setAttachments(newAttachments);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur lors de l'upload des fichiers.";
+      const rawMessage =
+        err instanceof Error ? err.message : "Erreur lors de l'upload des fichiers.";
+      const msg = rawMessage.includes("unexpected response")
+        ? "Le serveur a rejeté l'image (taille trop volumineuse ou erreur réseau)."
+        : rawMessage;
       setError(msg);
     } finally {
       setIsUploading(false);
@@ -184,11 +199,15 @@ export function BdaReportForm({
               className="border-input ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex h-10 w-full rounded-md border bg-transparent px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">-- Aucun ticket lié --</option>
-              {tickets.map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.subject} (par {t.player.minecraftUsername || t.player.discordDisplayName})
-                </option>
-              ))}
+              {tickets.map((t) => {
+                const subject = t.subject.length > 60 ? `${t.subject.slice(0, 57)}…` : t.subject;
+                const author = t.player.minecraftUsername || t.player.discordDisplayName;
+                return (
+                  <option key={t.id} value={t.id}>
+                    {subject} (par {author})
+                  </option>
+                );
+              })}
             </select>
           </div>
         </CardContent>

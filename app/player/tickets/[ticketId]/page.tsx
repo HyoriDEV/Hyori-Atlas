@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { TicketBackLink } from "@/components/player/ticket-back-link";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
+import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 
 export default async function TicketDetailPage({
   params,
@@ -67,16 +68,27 @@ export default async function TicketDetailPage({
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
         <TicketBackLink />
-        <div className="flex flex-1 flex-col gap-0.5">
-          <span className="text-muted-foreground text-xs">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-muted-foreground max-w-[200px] truncate text-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
             {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
+          <span
+            className="font-heading max-w-[180px] truncate text-lg font-semibold sm:max-w-[280px] md:max-w-[360px] lg:max-w-[460px]"
+            title={ticket.subject}
+          >
+            {ticket.subject}
+          </span>
         </div>
-        <Badge variant={ticketStatusBadgeVariant(ticket.status)}>
+        <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
           {ticketStatusLabels[ticket.status]}
         </Badge>
+        <TicketMembersSheet
+          ticketId={ticket.id}
+          members={membersData}
+          readOnly
+          className="lg:hidden"
+        />
       </div>
 
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
@@ -88,13 +100,14 @@ export default async function TicketDetailPage({
             viewerIsStaff={isStaff}
             sendAction={async (cId, body, imageUrl) => {
               "use server";
-              await sendTicketMessage(ticket.id, body, imageUrl);
+              return await sendTicketMessage(ticket.id, body, imageUrl);
             }}
             disabled={ticket.status === TicketStatus.ARCHIVED}
+            disabledMessage="Ce ticket est archivé. Les réponses sont fermées."
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+        <div className="hidden min-h-0 lg:flex lg:col-span-2 lg:flex-col">
           <TicketMembersManager ticketId={ticket.id} members={membersData} readOnly />
         </div>
       </div>

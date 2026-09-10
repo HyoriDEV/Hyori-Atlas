@@ -52,13 +52,21 @@ export function CharacterSwitcher({
 
   return (
     <div className="border-border/70 bg-card/60 flex flex-wrap items-center justify-between gap-3 rounded-xl border p-3 shadow-xs">
-      <div className="flex items-center gap-2.5">
-        <User className="text-primary size-5" />
-        <div className="flex flex-col">
+      <div className="flex min-w-0 items-center gap-2.5">
+        <User className="text-primary size-5 shrink-0" />
+        <div className="flex min-w-0 flex-col">
           <span className="text-muted-foreground text-xs font-medium">Personnage sélectionné</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">{selected.name || "Nouveau personnage"}</span>
-            <Badge variant={characterStatusBadgeVariant(selected.status)} className="text-[10px] px-2 py-0.5">
+            <span
+              className="max-w-[180px] truncate text-sm font-semibold sm:max-w-xs"
+              title={selected.name || "Nouveau personnage"}
+            >
+              {selected.name || "Nouveau personnage"}
+            </span>
+            <Badge
+              variant={characterStatusBadgeVariant(selected.status)}
+              className="shrink-0 px-2 py-0.5 text-[10px]"
+            >
               {characterStatusLabels[selected.status]}
             </Badge>
           </div>

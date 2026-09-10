@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
 
@@ -38,6 +41,13 @@ export default async function StaffTeamPage(props: PageProps) {
   const currentAdmin = await requireRole([Role.ADMIN]);
 
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/staff-team");
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/staff-team", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
   const query = searchParams.q?.trim() ?? "";
   const roleParam = searchParams.role ?? "ALL";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
@@ -112,12 +122,7 @@ export default async function StaffTeamPage(props: PageProps) {
     <div className="flex flex-col gap-6">
       {/* En-tête de la page */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Équipe staff</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Membres actifs du staff Hyori RP et gestion des rôles de l&apos;équipe.
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">Équipe du staff</h1>
         <div className="flex flex-wrap items-center gap-3">
           <StaffTeamFilters query={query} roleFilter={roleParam} />
           <AddStaffMemberDialog availablePlayers={availablePlayers} />
@@ -127,84 +132,38 @@ export default async function StaffTeamPage(props: PageProps) {
       {/* Cartes statistiques synthétiques des pôles */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Équipe staff</span>
-            <Shield className="text-primary size-4" />
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Équipe staff</span>
           <span className="font-heading text-2xl font-semibold">{totalStaffCount}</span>
-          <span className="text-muted-foreground text-[11px]">membres actifs</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Admins</span>
-            <Badge variant="destructive" className="h-4 px-1 text-[10px]">
-              {adminCount}
-            </Badge>
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Admins</span>
           <span className="font-heading text-2xl font-semibold">{adminCount}</span>
-          <span className="text-muted-foreground text-[11px]">{staffRoleLabels[Role.ADMIN]}s</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Communication</span>
-            <Badge variant="default" className="h-4 px-1 text-[10px]">
-              {commCount}
-            </Badge>
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Communication</span>
           <span className="font-heading text-2xl font-semibold">{commCount}</span>
-          <span className="text-muted-foreground text-[11px]">membres</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Gestion conflits</span>
-            <Badge variant="default" className="h-4 px-1 text-[10px]">
-              {conflictCount}
-            </Badge>
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Gestion conflits</span>
           <span className="font-heading text-2xl font-semibold">{conflictCount}</span>
-          <span className="text-muted-foreground text-[11px]">pôle GC</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Suivi RP</span>
-            <Badge variant="default" className="h-4 px-1 text-[10px]">
-              {rpTrackingCount}
-            </Badge>
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Suivi RP</span>
           <span className="font-heading text-2xl font-semibold">{rpTrackingCount}</span>
-          <span className="text-muted-foreground text-[11px]">membres RP</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <div className="flex items-center justify-between">
-            <span className="text-muted-foreground text-xs font-medium">Développeurs</span>
-            <Badge variant="inverted" className="h-4 px-1 text-[10px]">
-              {devCount}
-            </Badge>
-          </div>
+          <span className="text-muted-foreground text-xs font-medium">Développeurs</span>
           <span className="font-heading text-2xl font-semibold">{devCount}</span>
-          <span className="text-muted-foreground text-[11px]">technique</span>
         </Card>
       </div>
 
       {/* Tableau des membres du staff */}
       <Card className="gap-0 overflow-hidden py-0">
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div className="flex items-center gap-2">
-            <Users className="text-muted-foreground size-4" />
-            <h2 className="text-sm font-medium">
-              Membres de l&apos;équipe staff{" "}
-              <span className="text-muted-foreground font-normal">
-                ({filteredStaffCount} {filteredStaffCount > 1 ? "membres" : "membre"})
-              </span>
-            </h2>
-          </div>
-        </div>
-
         <Table>
           <TableHeader>
             <TableRow>
@@ -232,11 +191,15 @@ export default async function StaffTeamPage(props: PageProps) {
                 return (
                   <TableRow key={member.id} className="group">
                     <TableCell className="pl-6">
-                      <div className="flex items-center gap-3">
+                      <div className="flex max-w-[240px] items-center gap-3">
                         {member.minecraftUsername ? (
-                          <SkinHead size="sm" username={member.minecraftUsername} />
+                          <SkinHead
+                            size="sm"
+                            username={member.minecraftUsername}
+                            className="shrink-0"
+                          />
                         ) : (
-                          <Avatar size="sm">
+                          <Avatar size="sm" className="shrink-0">
                             <AvatarImage
                               src={member.discordAvatarUrl ?? undefined}
                               alt={member.discordUsername}
@@ -246,19 +209,21 @@ export default async function StaffTeamPage(props: PageProps) {
                             </AvatarFallback>
                           </Avatar>
                         )}
-                        <div className="flex flex-col">
+                        <div className="flex min-w-0 flex-col">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-sm font-medium">{displayName}</span>
+                            <span className="truncate text-sm font-medium" title={displayName}>
+                              {displayName}
+                            </span>
                             {isCurrentAdminUser && (
                               <Badge
                                 variant="outline"
-                                className="border-primary/30 text-primary h-4 px-1 py-0 text-[10px]"
+                                className="border-primary/30 text-primary h-4 shrink-0 px-1 py-0 text-[10px]"
                               >
                                 Vous
                               </Badge>
                             )}
                           </div>
-                          <span className="text-muted-foreground text-xs">
+                          <span className="text-muted-foreground truncate text-xs">
                             {member.discordUsername}
                             {member.minecraftUsername &&
                               member.minecraftUsername !== member.discordUsername &&

@@ -39,6 +39,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { updateChapterContent, updateChapterTitle } from "@/lib/actions/chapter-actions";
 import { uploadChapterImage } from "@/lib/actions/upload-actions";
+import { validateImageFile } from "@/lib/upload-config";
 import { Toggle } from "@/components/ui/toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,6 +277,12 @@ export function ChapterEditor({
     event.target.value = "";
     if (!file || !editor) return;
 
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      toast.error(validation.error ?? "Fichier invalide.");
+      return;
+    }
+
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -284,7 +291,12 @@ export function ChapterEditor({
       editor.chain().focus().setImage({ src: url }).run();
       toast.success("Illustration insérée dans le chapitre.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Échec du téléversement de l'image.");
+      const rawMessage =
+        error instanceof Error ? error.message : "Échec du téléversement de l'image.";
+      const message = rawMessage.includes("unexpected response")
+        ? "L'image a été rejetée par le serveur (taille trop volumineuse ou erreur réseau)."
+        : rawMessage;
+      toast.error(message);
     } finally {
       setIsUploading(false);
     }

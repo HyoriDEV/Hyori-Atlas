@@ -18,6 +18,7 @@ import {
   deletePastUnbookedSlots,
 } from "@/lib/actions/interview-slot-actions";
 import { formatDate } from "@/lib/date";
+import { setClientPagePref } from "@/lib/table-preferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -45,6 +46,8 @@ import type { InterviewSlotItem, InterviewSlotsKPIs } from "./types";
 interface InterviewSlotsManagerProps {
   initialSlots: InterviewSlotItem[];
   kpis: InterviewSlotsKPIs;
+  initialViewMode?: ViewMode;
+  initialStatusFilter?: StatusFilter;
 }
 
 type StatusFilter = "all" | "today" | "upcoming" | "booked" | "available" | "past";
@@ -59,10 +62,25 @@ function isToday(date: Date): boolean {
   );
 }
 
-export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsManagerProps) {
-  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("upcoming");
+export function InterviewSlotsManager({
+  initialSlots,
+  kpis,
+  initialViewMode,
+  initialStatusFilter,
+}: InterviewSlotsManagerProps) {
+  const [viewMode, setViewMode] = useState<ViewMode>(initialViewMode ?? "calendar");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>(initialStatusFilter ?? "upcoming");
   const [searchQuery, setSearchQuery] = useState("");
+
+  function handleStatusFilterChange(newFilter: StatusFilter) {
+    setStatusFilter(newFilter);
+    setClientPagePref("/staff/interview-slots", { statusFilter: newFilter, viewMode });
+  }
+
+  function handleViewModeChange(newMode: ViewMode) {
+    setViewMode(newMode);
+    setClientPagePref("/staff/interview-slots", { statusFilter, viewMode: newMode });
+  }
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
   const [confirmCleanPast, setConfirmCleanPast] = useState(false);
   const [confirmBatchDelete, setConfirmBatchDelete] = useState(false);
@@ -332,7 +350,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "upcoming" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("upcoming")}
+            onClick={() => handleStatusFilterChange("upcoming")}
             className="h-8 text-xs font-medium"
           >
             À venir ({counts.upcoming})
@@ -340,7 +358,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "today" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("today")}
+            onClick={() => handleStatusFilterChange("today")}
             className="h-8 text-xs font-medium"
           >
             Aujourd&apos;hui ({counts.today})
@@ -348,7 +366,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "booked" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("booked")}
+            onClick={() => handleStatusFilterChange("booked")}
             className="h-8 text-xs font-medium"
           >
             Réservés ({counts.booked})
@@ -356,7 +374,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "available" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("available")}
+            onClick={() => handleStatusFilterChange("available")}
             className="h-8 text-xs font-medium"
           >
             Libres ({counts.available})
@@ -364,7 +382,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "past" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("past")}
+            onClick={() => handleStatusFilterChange("past")}
             className="h-8 text-xs font-medium"
           >
             Passés ({counts.past})
@@ -372,7 +390,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <Button
             variant={statusFilter === "all" ? "default" : "outline"}
             size="sm"
-            onClick={() => setStatusFilter("all")}
+            onClick={() => handleStatusFilterChange("all")}
             className="h-8 text-xs font-medium"
           >
             Tous ({counts.all})
@@ -395,7 +413,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
           <div className="bg-muted inline-flex items-center rounded-lg border p-0.5">
             <button
               type="button"
-              onClick={() => setViewMode("calendar")}
+              onClick={() => handleViewModeChange("calendar")}
               className={`flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                 viewMode === "calendar"
                   ? "bg-background text-foreground shadow-xs"
@@ -408,7 +426,7 @@ export function InterviewSlotsManager({ initialSlots, kpis }: InterviewSlotsMana
             </button>
             <button
               type="button"
-              onClick={() => setViewMode("table")}
+              onClick={() => handleViewModeChange("table")}
               className={`flex cursor-pointer items-center gap-1 rounded-md px-2.5 py-1 text-xs font-medium transition-all ${
                 viewMode === "table"
                   ? "bg-background text-foreground shadow-xs"

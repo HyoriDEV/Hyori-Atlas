@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserMinus, UserPlus } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
+import { cn } from "@/lib/utils";
 import { addTicketMember, removeTicketMember } from "@/lib/actions/ticket-actions";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -33,11 +34,13 @@ export function TicketMembersManager({
   members,
   availablePlayers = [],
   readOnly = false,
+  className,
 }: {
   ticketId?: string;
   members: MemberProps[];
   availablePlayers?: PlayerOption[];
   readOnly?: boolean;
+  className?: string;
 }) {
   const [loadingId, setLoadingId] = useState<string | null>(null);
   const [memberToRemove, setMemberToRemove] = useState<MemberProps | null>(null);
@@ -88,9 +91,19 @@ export function TicketMembersManager({
   };
 
   return (
-    <div className="bg-card text-card-foreground flex flex-col gap-4 rounded-xl border p-4">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold">Membres du ticket</h3>
+    <div
+      className={cn(
+        "bg-card text-card-foreground flex h-full min-h-0 flex-col gap-3 rounded-xl border p-4 shadow-xs",
+        className
+      )}
+    >
+      <div className="border-border/50 flex shrink-0 items-center justify-between pb-2.5 border-b">
+        <div className="flex items-center gap-2">
+          <h3 className="font-heading text-sm font-semibold">Membres</h3>
+          <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">
+            {members.length}
+          </span>
+        </div>
         {!readOnly && (
           <PlayerSelect
             multiple
@@ -115,7 +128,7 @@ export function TicketMembersManager({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
+      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pr-1">
         {members.length === 0 ? (
           <p className="text-muted-foreground py-4 text-center text-xs">
             Aucun membre dans ce ticket.

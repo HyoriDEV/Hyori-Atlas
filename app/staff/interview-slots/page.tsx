@@ -1,11 +1,16 @@
+import { cookies } from "next/headers";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { InterviewSlotsManager } from "@/components/staff/interview-slots/interview-slots-manager";
 import type { InterviewSlotItem, InterviewSlotsKPIs } from "@/components/staff/interview-slots/types";
 
 export default async function InterviewSlotsPage() {
   await requireRole([Role.ADMIN]);
+
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/interview-slots");
 
   const slots = await prisma.interviewSlot.findMany({
     include: {
@@ -91,5 +96,21 @@ export default async function InterviewSlotsPage() {
     };
   });
 
-  return <InterviewSlotsManager initialSlots={formattedSlots} kpis={kpis} />;
+  return (
+    <InterviewSlotsManager
+      initialSlots={formattedSlots}
+      kpis={kpis}
+      initialViewMode={savedPrefs.viewMode as "calendar" | "table" | undefined}
+      initialStatusFilter={
+        savedPrefs.statusFilter as
+          | "all"
+          | "today"
+          | "upcoming"
+          | "booked"
+          | "available"
+          | "past"
+          | undefined
+      }
+    />
+  );
 }

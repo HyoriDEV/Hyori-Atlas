@@ -21,7 +21,7 @@ export function CharacterSheetFeedbackSidebar({
     <Card className="flex max-h-[calc(100vh-6rem)] flex-col gap-4 lg:sticky lg:top-6">
       <div className="flex flex-col gap-1">
         <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-          Retours du staff
+          Retours de l&apos;équipe RP
         </span>
         <p className="text-muted-foreground text-xs">
           {editable

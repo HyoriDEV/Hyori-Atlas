@@ -13,6 +13,7 @@ import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
+import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 
 export default async function TicketStaffDetailPage({
   params,
@@ -81,16 +82,29 @@ export default async function TicketStaffDetailPage({
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
         <AtlasBackButton href="/staff/tickets" />
-        <div className="flex flex-1 flex-col gap-0.5">
-          <span className="text-muted-foreground text-xs">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="text-muted-foreground max-w-[200px] truncate text-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
             {playerName} · {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
+          <span
+            className="font-heading max-w-[180px] truncate text-lg font-semibold sm:max-w-[280px] md:max-w-[360px] lg:max-w-[460px]"
+            title={ticket.subject}
+          >
+            {ticket.subject}
+          </span>
         </div>
-        <Badge variant={ticketStatusBadgeVariant(ticket.status)}>
-          {ticketStatusLabels[ticket.status]}
-        </Badge>
+        {ticket.status !== TicketStatus.ARCHIVED && (
+          <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
+            {ticketStatusLabels[ticket.status]}
+          </Badge>
+        )}
+        <TicketMembersSheet
+          ticketId={ticket.id}
+          members={membersData}
+          availablePlayers={allPlayers}
+          className="lg:hidden"
+        />
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>
 
@@ -103,13 +117,14 @@ export default async function TicketStaffDetailPage({
             viewerIsStaff
             sendAction={async (cId, body, imageUrl) => {
               "use server";
-              await sendStaffTicketMessage(ticket.id, body, imageUrl);
+              return await sendStaffTicketMessage(ticket.id, body, imageUrl);
             }}
             disabled={ticket.status === TicketStatus.ARCHIVED}
+            disabledMessage="Ce ticket est archivé. Les réponses sont fermées."
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="min-h-0 overflow-y-auto lg:col-span-2">
+        <div className="hidden min-h-0 lg:flex lg:col-span-2 lg:flex-col">
           <TicketMembersManager
             ticketId={ticket.id}
             members={membersData}

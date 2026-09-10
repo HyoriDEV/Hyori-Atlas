@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
+import { setClientPagePref, clearClientPagePref } from "@/lib/table-preferences";
 
 const ALL_VALUE = "ALL";
 const QUERY_DEBOUNCE_MS = 200;
@@ -50,13 +51,26 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
 
   function updateParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
+    const prefsToUpdate: Record<string, string | undefined> = {};
+
     for (const [key, value] of Object.entries(next)) {
       if (value && value !== ALL_VALUE) {
         params.set(key, value);
+        if (key !== "q") {
+          prefsToUpdate[key] = value;
+        }
       } else {
         params.delete(key);
+        if (key !== "q") {
+          prefsToUpdate[key] = undefined;
+        }
       }
     }
+
+    if (Object.keys(prefsToUpdate).length > 0) {
+      setClientPagePref(pathname, prefsToUpdate);
+    }
+
     params.set("page", "1");
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -86,6 +100,7 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
+    clearClientPagePref(pathname);
     startTransition(() => {
       router.replace(pathname, { scroll: false });
     });
