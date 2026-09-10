@@ -28,6 +28,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^4.4.0",
     "isomorphic-dompurify": "^3.19.0",
+    "marked": "^18.0.12",
     "next": "16.2.12",
     "next-auth": "^5.0.0-beta.32",
     "pg": "^8.22.0",

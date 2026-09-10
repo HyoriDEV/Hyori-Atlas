@@ -216,6 +216,12 @@ export default async function StaffDashboardPage() {
       stat: registeredInterviewBookingsCount,
       statLabel: registeredInterviewBookingsCount > 1 ? "réservés" : "réservé",
     },
+    "/staff/interview-guide": {
+      title: "Guide d'entretien",
+      description: "Trame vocale des entretiens whitelist.",
+      href: "/staff/interview-guide",
+      iconKey: "scroll",
+    },
   };
 
   const seenHrefs = new Set<string>();
