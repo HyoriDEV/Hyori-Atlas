@@ -1,5 +1,8 @@
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +34,12 @@ export default async function BdaReportsPage(props: {
 }) {
   const searchParams = await props.searchParams;
   await requireRole(bdaRoles);
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/bda-reports");
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/bda-reports", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const isArchived = searchParams.tab === "archived";
@@ -105,11 +114,14 @@ export default async function BdaReportsPage(props: {
                 const isUnread = report.status === BdaReportStatus.UNREAD;
                 return (
                   <TicketTableRow key={report.id} href={`/staff/bda-reports/${report.id}`}>
-                    <TableCell className="relative pl-6 font-medium">
+                    <TableCell
+                      className="relative max-w-[180px] pl-6 font-medium sm:max-w-[260px] md:max-w-[360px] lg:max-w-[460px]"
+                      title={report.title}
+                    >
                       {isUnread && (
                         <UnreadDot variant="destructive" placement="table" title="Non lu" />
                       )}
-                      <span>{report.title}</span>
+                      <span className="block truncate">{report.title}</span>
                     </TableCell>
                     <TableCell>
                       <Badge

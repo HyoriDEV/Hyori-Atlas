@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, useTransition, type ChangeEvent } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   CircleNotch,
@@ -16,12 +17,13 @@ import {
 
 import { cn } from "@/lib/utils";
 import { uploadConversationImage } from "@/lib/actions/upload-actions";
+import { validateImageFile } from "@/lib/upload-config";
 import {
   editConversationMessage,
   deleteConversationMessage,
 } from "@/lib/actions/conversation-actions";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
-import { MessageAuthorType } from "@/lib/generated/prisma/enums";
+import { MessageAuthorType, TicketStatus } from "@/lib/generated/prisma/enums";
 import { formatDate, formatShortTime } from "@/lib/date";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -61,6 +63,7 @@ export function ConversationChat({
   viewerIsStaff,
   sendAction,
   disabled = false,
+  disabledMessage,
   emptyBadge,
   className,
 }: {
@@ -68,12 +71,19 @@ export function ConversationChat({
   initialMessages: SerializedConversationMessage[];
   viewerId: string;
   viewerIsStaff: boolean;
-  sendAction: (conversationId: string, body?: string, imageUrl?: string) => Promise<void>;
+  sendAction: (
+    conversationId: string,
+    body?: string,
+    imageUrl?: string
+  ) => Promise<{ success?: boolean; error?: string } | void>;
   disabled?: boolean;
+  disabledMessage?: string;
   emptyBadge?: string;
   className?: string;
 }) {
+  const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
+  const [isChatDisabled, setIsChatDisabled] = useState(disabled);
   const [body, setBody] = useState("");
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +97,10 @@ export function ConversationChat({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setIsChatDisabled(disabled);
+  }, [disabled]);
 
   useEffect(() => {
     const eventSource = new EventSource(`/api/conversations/${conversationId}/stream`);
@@ -120,6 +134,18 @@ export function ConversationChat({
               return data.message;
             })
           );
+        } else if (data.type === "STATUS_CHANGE") {
+          const isNowArchived = data.status === TicketStatus.ARCHIVED;
+          setIsChatDisabled(isNowArchived);
+          if (!viewerIsStaff) {
+            toast.info(
+              isNowArchived
+                ? "Ce ticket a été archivé par le staff. Les réponses sont maintenant fermées."
+                : "Ce ticket a été rouvert.",
+              { id: "ticket-status" }
+            );
+          }
+          router.refresh();
         } else {
           const message: SerializedConversationMessage =
             data.type === "CREATE" ? data.message : data;
@@ -135,7 +161,7 @@ export function ConversationChat({
       }
     };
     return () => eventSource.close();
-  }, [conversationId, viewerIsStaff]);
+  }, [conversationId, viewerIsStaff, router]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -157,6 +183,14 @@ export function ConversationChat({
 
   async function uploadFile(file: File) {
     setError(null);
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      const errorMsg = validation.error ?? "Fichier invalide.";
+      setError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+
     setIsUploading(true);
     try {
       const formData = new FormData();
@@ -164,10 +198,13 @@ export function ConversationChat({
       const { url } = await uploadConversationImage(formData, conversationId);
       setPendingImageUrl(url);
     } catch (uploadError) {
-      const message =
+      const rawMessage =
         uploadError instanceof Error
           ? uploadError.message
           : "Une erreur est survenue lors de l'envoi de l'image.";
+      const message = rawMessage.includes("unexpected response")
+        ? "L'image a été rejetée par le serveur (taille trop volumineuse pour le serveur web ou timeout réseau)."
+        : rawMessage;
       setError(message);
       toast.error(message);
     } finally {
@@ -201,7 +238,7 @@ export function ConversationChat({
 
   function handleDragOver(event: React.DragEvent) {
     event.preventDefault();
-    if (!disabled && !isPending && !isUploading) {
+    if (!isChatDisabled && !isPending && !isUploading) {
       setIsDragOver(true);
     }
   }
@@ -214,7 +251,7 @@ export function ConversationChat({
   async function handleDrop(event: React.DragEvent) {
     event.preventDefault();
     setIsDragOver(false);
-    if (disabled || isPending || isUploading) return;
+    if (isChatDisabled || isPending || isUploading) return;
 
     const file = event.dataTransfer.files?.[0];
     if (file && file.type.startsWith("image/")) {
@@ -222,26 +259,60 @@ export function ConversationChat({
     }
   }
 
+  function handleSendFailure(
+    errorMessage: string,
+    savedBody: string,
+    savedImageUrl: string | null
+  ) {
+    const isArchivedError = errorMessage.toLowerCase().includes("archivé");
+
+    if (isArchivedError) {
+      setIsChatDisabled(true);
+      setError(null);
+      toast.error("Ce ticket est archivé. Les réponses sont fermées.", { id: "ticket-status" });
+      router.refresh();
+    } else {
+      setBody(savedBody);
+      setPendingImageUrl(savedImageUrl);
+      setError(errorMessage);
+      toast.error(errorMessage);
+    }
+  }
+
   function handleSubmit() {
-    if ((!body.trim() && !pendingImageUrl) || isPending || isUploading) return;
+    if ((!body.trim() && !pendingImageUrl) || isPending || isUploading || isChatDisabled) return;
     setError(null);
     const trimmedBody = body.trim() || undefined;
     const imageUrl = pendingImageUrl ?? undefined;
+
+    const savedBody = body;
+    const savedImageUrl = pendingImageUrl;
 
     setBody("");
     setPendingImageUrl(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.focus();
     }
 
     startTransition(async () => {
       try {
-        await sendAction(conversationId, trimmedBody, imageUrl);
+        const result = await sendAction(conversationId, trimmedBody, imageUrl);
+        if (result && !result.success && result.error) {
+          handleSendFailure(result.error, savedBody, savedImageUrl);
+          return;
+        }
       } catch (sendError) {
-        const message = sendError instanceof Error ? sendError.message : "Une erreur est survenue.";
-        setError(message);
-        toast.error(message);
+        let message =
+          sendError instanceof Error
+            ? sendError.message
+            : "Une erreur est survenue lors de l'envoi du message.";
+        if (
+          message.includes("Server Components render") ||
+          message.includes("omitted in production")
+        ) {
+          message = "Une erreur est survenue lors de l'envoi du message.";
+        }
+        handleSendFailure(message, savedBody, savedImageUrl);
       } finally {
         textareaRef.current?.focus();
       }
@@ -289,7 +360,18 @@ export function ConversationChat({
         setEditingId(null);
         setEditBody("");
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erreur lors de la modification.";
+        let message = err instanceof Error ? err.message : "Erreur lors de la modification.";
+        if (
+          message.includes("Server Components render") ||
+          message.includes("omitted in production")
+        ) {
+          message = "Une erreur est survenue lors de la modification.";
+        }
+        if (message.toLowerCase().includes("archivé")) {
+          setIsChatDisabled(true);
+          message = "Ce ticket est archivé. Impossible de modifier ce message.";
+          router.refresh();
+        }
         setError(message);
         toast.error(message);
       }
@@ -313,7 +395,18 @@ export function ConversationChat({
         toast.success("Message supprimé.");
         setDeletingMessageId(null);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Erreur lors de la suppression.";
+        let message = err instanceof Error ? err.message : "Erreur lors de la suppression.";
+        if (
+          message.includes("Server Components render") ||
+          message.includes("omitted in production")
+        ) {
+          message = "Une erreur est survenue lors de la suppression.";
+        }
+        if (message.toLowerCase().includes("archivé")) {
+          setIsChatDisabled(true);
+          message = "Ce ticket est archivé. Impossible de supprimer ce message.";
+          router.refresh();
+        }
         setError(message);
         toast.error(message);
       }
@@ -681,7 +774,7 @@ export function ConversationChat({
                                 )}
                               </div>
 
-                              {!disabled && hasActions && (
+                              {!isChatDisabled && hasActions && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger
                                     render={
@@ -752,7 +845,13 @@ export function ConversationChat({
         </div>
       )}
 
-      {!disabled && (
+      {isChatDisabled ? (
+        <div className="bg-muted/30 text-muted-foreground border-border/60 flex items-center justify-center rounded-xl border border-dashed px-4 py-3.5 text-center text-xs font-medium select-none">
+          <span>
+            {disabledMessage ?? "Cette conversation est archivée. Les réponses sont fermées."}
+          </span>
+        </div>
+      ) : (
         <div
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}

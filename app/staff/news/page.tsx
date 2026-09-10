@@ -31,14 +31,22 @@ export default async function StaffNewsPage() {
         ) : (
           news.map((item) => (
             <Card key={item.id}>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="font-semibold">{item.title}</span>
-                  <Badge variant="outline">{item.type}</Badge>
+              <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span
+                    className="max-w-[180px] truncate font-semibold sm:max-w-[280px] md:max-w-[380px] lg:max-w-[480px]"
+                    title={item.title}
+                  >
+                    {item.title}
+                  </span>
+                  <Badge variant="outline" className="shrink-0">
+                    {item.type}
+                  </Badge>
                 </div>
                 <Button
                   variant="secondary"
                   size="sm"
+                  className="shrink-0"
                   render={<Link href={`/staff/news/${item.id}`} />}
                 >
                   Modifier

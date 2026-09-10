@@ -4,6 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { CaretDown, CaretUp, ArrowsDownUp, ArrowCounterClockwise } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
+import { setClientPagePref } from "@/lib/table-preferences";
 
 type SortDirection = "asc" | "desc";
 
@@ -71,6 +72,10 @@ function useSortNavigation({
       dirParamName,
       keyParamName,
       resetParamNames,
+    });
+    setClientPagePref(pathname, {
+      [dirParamName]: nextDir,
+      ...(sortKey ? { [keyParamName]: sortKey } : {}),
     });
     router.push(`${pathname}?${params.toString()}`);
   }
@@ -149,6 +154,10 @@ export function ResetSortButton({
     for (const paramName of resetParamNames) {
       params.set(paramName, "1");
     }
+    setClientPagePref(pathname, {
+      [dirParamName]: undefined,
+      [keyParamName]: undefined,
+    });
     router.push(`${pathname}?${params.toString()}`);
   }
 

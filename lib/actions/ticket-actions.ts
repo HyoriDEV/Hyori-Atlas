@@ -99,26 +99,34 @@ export async function createTicket(category: TicketCategory, subject: string, de
   return { id: ticket.id };
 }
 
-export async function sendTicketMessage(ticketId: string, body?: string, imageUrl?: string) {
+export async function sendTicketMessage(
+  ticketId: string,
+  body?: string,
+  imageUrl?: string
+): Promise<{ success: boolean; error?: string }> {
   const user = await requireActivePlayer();
 
   const trimmedBody = body?.trim();
   if (!trimmedBody && !imageUrl) {
-    throw new Error("Le message ne peut pas être vide.");
+    return { success: false, error: "Le message ne peut pas être vide." };
   }
 
-  const ticket = await prisma.ticket.findUniqueOrThrow({
+  const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
     include: { conversation: { include: { members: true } } },
   });
 
+  if (!ticket) {
+    return { success: false, error: "Ticket introuvable." };
+  }
+
   const isMember = ticket.conversation.members.some((m) => m.userId === user.id);
 
   if (!isMember) {
-    throw new Error("Tu n'as pas accès à ce ticket.");
+    return { success: false, error: "Tu n'as pas accès à ce ticket." };
   }
   if (ticket.status === TicketStatus.ARCHIVED) {
-    throw new Error("Ce ticket est archivé.");
+    return { success: false, error: "Ce ticket est archivé. Les réponses sont fermées." };
   }
 
   const message = await prisma.$transaction(async (tx) => {
@@ -145,19 +153,28 @@ export async function sendTicketMessage(ticketId: string, body?: string, imageUr
 
   revalidatePath("/player/tickets");
   revalidatePath("/staff/tickets");
+
+  return { success: true };
 }
 
-export async function sendStaffTicketMessage(ticketId: string, body?: string, imageUrl?: string) {
+export async function sendStaffTicketMessage(
+  ticketId: string,
+  body?: string,
+  imageUrl?: string
+): Promise<{ success: boolean; error?: string }> {
   const staffUser = await requireRole(ticketStaffRoles);
 
   const trimmedBody = body?.trim();
   if (!trimmedBody && !imageUrl) {
-    throw new Error("Le message ne peut pas être vide.");
+    return { success: false, error: "Le message ne peut pas être vide." };
   }
 
-  const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  if (!ticket) {
+    return { success: false, error: "Ticket introuvable." };
+  }
   if (ticket.status === TicketStatus.ARCHIVED) {
-    throw new Error("Ce ticket est archivé.");
+    return { success: false, error: "Ce ticket est archivé. Les réponses sont fermées." };
   }
 
   const message = await prisma.$transaction(async (tx) => {
@@ -184,14 +201,22 @@ export async function sendStaffTicketMessage(ticketId: string, body?: string, im
 
   revalidatePath("/player/tickets");
   revalidatePath("/staff/tickets");
+
+  return { success: true };
 }
 
 export async function archiveTicket(ticketId: string) {
   await requireRole(ticketStaffRoles);
 
-  await prisma.ticket.update({
+  const ticket = await prisma.ticket.update({
     where: { id: ticketId },
     data: { status: TicketStatus.ARCHIVED },
+  });
+
+  publish(ticket.conversationId, {
+    type: "STATUS_CHANGE",
+    status: TicketStatus.ARCHIVED,
+    conversationId: ticket.conversationId,
   });
 
   revalidatePath(`/staff/tickets/${ticketId}`);
@@ -203,9 +228,15 @@ export async function archiveTicket(ticketId: string) {
 export async function reopenTicket(ticketId: string) {
   await requireRole(ticketStaffRoles);
 
-  await prisma.ticket.update({
+  const ticket = await prisma.ticket.update({
     where: { id: ticketId },
     data: { status: TicketStatus.PENDING_STAFF },
+  });
+
+  publish(ticket.conversationId, {
+    type: "STATUS_CHANGE",
+    status: TicketStatus.PENDING_STAFF,
+    conversationId: ticket.conversationId,
   });
 
   revalidatePath(`/staff/tickets/${ticketId}`);

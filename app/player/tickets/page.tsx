@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
@@ -69,7 +72,7 @@ function TicketList({
             >
               {isPendingPlayer && <UnreadDot placement="card" title="En attente de ta réponse" />}
               <CardContent className="flex items-center justify-between gap-4">
-                <div className="flex flex-col gap-1">
+                <div className="flex min-w-0 flex-col gap-1">
                   <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
                     <span>
                       {ticketCategoryLabels[ticket.category]} ·{" "}
@@ -105,9 +108,14 @@ function TicketList({
                       </>
                     )}
                   </div>
-                  <span className="text-sm font-medium">{ticket.subject}</span>
+                  <span
+                    className="max-w-[200px] truncate text-sm font-medium sm:max-w-[320px] md:max-w-[440px] lg:max-w-[560px]"
+                    title={ticket.subject}
+                  >
+                    {ticket.subject}
+                  </span>
                 </div>
-                <Badge variant={ticketStatusBadgeVariant(ticket.status)}>
+                <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
                   {ticketStatusLabels[ticket.status]}
                 </Badge>
               </CardContent>
@@ -123,6 +131,13 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
   const user = await requireActivePlayer();
   const settings = await getGlobalSettings();
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/player/tickets");
+  const redirectUrl = checkRedirectWithSavedPrefs("/player/tickets", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
   const activeTab = searchParams.tab === "archived" ? "archived" : "active";
 
   const userFilter = {

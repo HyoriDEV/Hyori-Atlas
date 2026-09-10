@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import { TicketCategory } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels } from "@/lib/navigation";
+import { setClientPagePref } from "@/lib/table-preferences";
 
 const ALL_VALUE = "ALL";
 
@@ -28,13 +29,22 @@ export function TicketFilters({ category }: { category?: string }) {
 
   function updateParams(next: Record<string, string>) {
     const params = new URLSearchParams(searchParams.toString());
+    const prefsToUpdate: Record<string, string | undefined> = {};
+
     for (const [key, value] of Object.entries(next)) {
       if (value && value !== ALL_VALUE) {
         params.set(key, value);
+        prefsToUpdate[key] = value;
       } else {
         params.delete(key);
+        prefsToUpdate[key] = undefined;
       }
     }
+
+    if (Object.keys(prefsToUpdate).length > 0) {
+      setClientPagePref(pathname, prefsToUpdate);
+    }
+
     params.set("page", "1");
     startTransition(() => {
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });

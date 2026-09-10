@@ -87,7 +87,7 @@ export default async function CharacterSheetPage(props: {
             anchorSuffix: comment.anchorSuffix ?? "",
           }
         : null,
-    authorName: comment.author?.discordDisplayName ?? "Staff",
+    authorName: "Équipe RP",
     createdAt: comment.createdAt.toISOString(),
   }));
 
