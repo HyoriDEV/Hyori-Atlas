@@ -19,6 +19,11 @@ import {
   CharacterSheetFields,
   type CharacterSheetFieldValues,
 } from "@/components/character-sheet/character-sheet-fields";
+import {
+  AffiliationCard,
+  type AffiliationChoiceValues,
+} from "@/components/character-sheet/affiliation-fields";
+import type { PlayerClassWithStats } from "@/lib/services/player-class-service";
 import { HighlightableText } from "@/components/character-sheet/highlightable-text";
 import { SkillMap } from "@/components/character-sheet/skill-map";
 import {
@@ -38,7 +43,9 @@ export function SheetEvaluationWorkspace({
   sheetUpdatedAt,
   fieldValues,
   skillValues,
-  chosenClasses = [],
+  chosenClasses: _chosenClasses = [],
+  playerClasses = [],
+  affiliation,
   initialComments,
 }: {
   sheetId: string;
@@ -49,6 +56,8 @@ export function SheetEvaluationWorkspace({
   fieldValues: CharacterSheetFieldValues;
   skillValues: SkillValues;
   chosenClasses?: CharacterClass[];
+  playerClasses?: PlayerClassWithStats[];
+  affiliation?: AffiliationChoiceValues;
   initialComments: SheetComment[];
 }) {
   const router = useRouter();
@@ -158,7 +167,6 @@ export function SheetEvaluationWorkspace({
       <div className="flex flex-col gap-6">
         <CharacterSheetFields
           values={fieldValues}
-          chosenClasses={chosenClasses}
           commentedTargets={comments.map((comment) => comment.target)}
           activeTarget={activeComment?.target ?? null}
           onTargetClick={canEvaluate ? (target) => openComposer(target, null) : undefined}
@@ -181,21 +189,41 @@ export function SheetEvaluationWorkspace({
           )}
         />
 
-        <Card
-          id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
-          onClick={
-            canEvaluate ? () => openComposer(CharacterSheetCommentTarget.skillMap, null) : undefined
-          }
-          className={cn(
-            canEvaluate && "hover:ring-primary/50 cursor-pointer",
-            activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary",
-            "transition-colors"
-          )}
-        >
-          <CardContent>
-            <SkillMap values={skillValues} />
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-1">
+            <AffiliationCard
+              playerClasses={playerClasses}
+              values={
+                affiliation ?? {
+                  primaryClassId: null,
+                  primaryRoleId: null,
+                  secondaryClassId: null,
+                  secondaryRoleId: null,
+                }
+              }
+              interactive={false}
+              commentedTargets={comments.map((comment) => comment.target)}
+              activeTarget={activeComment?.target ?? null}
+              onTargetClick={canEvaluate ? (target) => openComposer(target, null) : undefined}
+            />
+          </div>
+
+          <Card
+            id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
+            onClick={
+              canEvaluate ? () => openComposer(CharacterSheetCommentTarget.skillMap, null) : undefined
+            }
+            className={cn(
+              "lg:col-span-2 transition-colors",
+              canEvaluate && "hover:ring-primary/50 cursor-pointer",
+              activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
+            )}
+          >
+            <CardContent>
+              <SkillMap values={skillValues} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       <SheetEvaluationSidebar

@@ -56,6 +56,10 @@ export default async function AtlasPlayerPage({
       characterSheets: {
         orderBy: { createdAt: "desc" },
         include: {
+          primaryClass: true,
+          primaryRole: true,
+          secondaryClass: true,
+          secondaryRole: true,
           reviewHistory: {
             orderBy: { createdAt: "desc" },
             include: { author: true },

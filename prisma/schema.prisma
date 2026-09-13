@@ -250,6 +250,15 @@ model CharacterSheet {
   chosenClasses CharacterClass[] @default([])
   assignedClass CharacterClass?
 
+  primaryClassId   String?
+  primaryClass     PlayerClass?     @relation("PrimaryClassSheets", fields: [primaryClassId], references: [id], onDelete: SetNull)
+  primaryRoleId    String?
+  primaryRole      PlayerClassRole? @relation("PrimaryRoleSheets", fields: [primaryRoleId], references: [id], onDelete: SetNull)
+  secondaryClassId String?
+  secondaryClass   PlayerClass?     @relation("SecondaryClassSheets", fields: [secondaryClassId], references: [id], onDelete: SetNull)
+  secondaryRoleId  String?
+  secondaryRole    PlayerClassRole? @relation("SecondaryRoleSheets", fields: [secondaryRoleId], references: [id], onDelete: SetNull)
+
   physicalForce        Int @default(1)
   physicalEndurance    Int @default(1)
   physicalStealth      Int @default(1)
@@ -273,6 +282,10 @@ model CharacterSheet {
   chapters      Chapter[]
 
   @@index([playerId])
+  @@index([primaryClassId])
+  @@index([primaryRoleId])
+  @@index([secondaryClassId])
+  @@index([secondaryRoleId])
   @@map("character_sheets")
 }
 
@@ -603,8 +616,10 @@ model PlayerClass {
   id        String            @id @default(cuid())
   name      String            @unique @db.VarChar(100)
   order     Int               @default(0)
-  roles     PlayerClassRole[]
-  createdAt DateTime          @default(now())
+  roles           PlayerClassRole[]
+  primarySheets   CharacterSheet[]  @relation("PrimaryClassSheets")
+  secondarySheets CharacterSheet[]  @relation("SecondaryClassSheets")
+  createdAt       DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
   @@map("player_classes")
@@ -618,7 +633,10 @@ model PlayerClassRole {
   ratio         Int         @default(1)
   order         Int         @default(0)
   createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  updatedAt           DateTime         @updatedAt
+
+  primaryRoleSheets   CharacterSheet[] @relation("PrimaryRoleSheets")
+  secondaryRoleSheets CharacterSheet[] @relation("SecondaryRoleSheets")
 
   @@unique([playerClassId, name])
   @@index([playerClassId])

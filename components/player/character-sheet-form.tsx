@@ -13,7 +13,6 @@ import {
   CharacterSheetStatus,
   type CharacterClass,
 } from "@/lib/generated/prisma/enums";
-import { REQUIRED_CLASS_CHOICES_COUNT } from "@/lib/character-classes";
 import { resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
@@ -41,6 +40,11 @@ import {
   CharacterSheetFields,
   type CharacterSheetFieldValues,
 } from "@/components/character-sheet/character-sheet-fields";
+import {
+  AffiliationCard,
+  type AffiliationChoiceValues,
+} from "@/components/character-sheet/affiliation-fields";
+import type { PlayerClassWithStats } from "@/lib/services/player-class-service";
 import { HighlightedTextarea } from "@/components/character-sheet/highlighted-textarea";
 import { SkillMap } from "@/components/character-sheet/skill-map";
 import {
@@ -70,6 +74,8 @@ export function CharacterSheetForm({
   initialValues,
   initialSkills,
   initialClasses = [],
+  playerClasses = [],
+  initialAffiliation,
   editable,
   status,
   comments,
@@ -79,6 +85,8 @@ export function CharacterSheetForm({
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
   initialClasses?: CharacterClass[];
+  playerClasses?: PlayerClassWithStats[];
+  initialAffiliation?: AffiliationChoiceValues;
   editable: boolean;
   status: CharacterSheetStatus;
   comments: SheetComment[];
@@ -86,7 +94,15 @@ export function CharacterSheetForm({
 }) {
   const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
   const [skills, setSkills] = useState<SkillValues>(initialSkills);
-  const [chosenClasses, setChosenClasses] = useState<CharacterClass[]>(initialClasses);
+  const [chosenClasses] = useState<CharacterClass[]>(initialClasses);
+  const [affiliation, setAffiliation] = useState<AffiliationChoiceValues>(
+    initialAffiliation ?? {
+      primaryClassId: null,
+      primaryRoleId: null,
+      secondaryClassId: null,
+      secondaryRoleId: null,
+    }
+  );
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
@@ -182,8 +198,16 @@ export function CharacterSheetForm({
     if (total > MAX_TOTAL_SKILL_POINTS)
       return `Attribue au plus ${MAX_TOTAL_SKILL_POINTS} points de compétences.`;
 
-    if (chosenClasses.length !== REQUIRED_CLASS_CHOICES_COUNT) {
-      return `Choisis ${REQUIRED_CLASS_CHOICES_COUNT} classes parmi les 5 disponibles.`;
+    if (!affiliation.primaryClassId || !affiliation.primaryRoleId) {
+      return "Sélectionne ton premier choix d'affiliation et son rôle.";
+    }
+
+    if (!affiliation.secondaryClassId || !affiliation.secondaryRoleId) {
+      return "Sélectionne ton deuxième choix d'affiliation et son rôle.";
+    }
+
+    if (affiliation.primaryClassId === affiliation.secondaryClassId) {
+      return "Le deuxième choix doit être une classe différente du premier choix.";
     }
 
     return null;
@@ -205,6 +229,10 @@ export function CharacterSheetForm({
       background: fields.background,
       additionalComments: fields.additionalComments,
       chosenClasses,
+      primaryClassId: affiliation.primaryClassId,
+      primaryRoleId: affiliation.primaryRoleId,
+      secondaryClassId: affiliation.secondaryClassId,
+      secondaryRoleId: affiliation.secondaryRoleId,
       skills,
     };
   }
@@ -269,10 +297,8 @@ export function CharacterSheetForm({
 
       <CharacterSheetFields
         values={fields}
-        chosenClasses={chosenClasses}
         interactive={editable}
         onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
-        onClassesChange={editable ? setChosenClasses : undefined}
         commentedTargets={comments.map((comment) => comment.target)}
         activeTarget={activeComment?.target ?? null}
         narrativeSlot={
@@ -296,20 +322,35 @@ export function CharacterSheetForm({
             : undefined
         }
       />
-      <Card
-        id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
-        className={cn(
-          activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
-        )}
-      >
-        <CardContent>
-          <SkillMap
-            values={skills}
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        <div className="lg:col-span-1">
+          <AffiliationCard
+            playerClasses={playerClasses}
+            values={affiliation}
             interactive={editable}
-            onChange={(field, value) => setSkills((prev) => ({ ...prev, [field]: value }))}
+            onChange={setAffiliation}
+            commentedTargets={comments.map((comment) => comment.target)}
+            activeTarget={activeComment?.target ?? null}
           />
-        </CardContent>
-      </Card>
+        </div>
+
+        <Card
+          id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
+          className={cn(
+            "lg:col-span-2",
+            activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
+          )}
+        >
+          <CardContent>
+            <SkillMap
+              values={skills}
+              interactive={editable}
+              onChange={(field, value) => setSkills((prev) => ({ ...prev, [field]: value }))}
+            />
+          </CardContent>
+        </Card>
+      </div>
       {editable && (
         <div className="flex flex-col items-end justify-end gap-3 sm:flex-row sm:items-center">
           {!isValid && validationError && (

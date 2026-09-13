@@ -16,6 +16,7 @@ import { CharacterSheetForm } from "@/components/player/character-sheet-form";
 import { CharacterSwitcher } from "@/components/player/character-switcher";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
 import { CHARACTER_CLASSES } from "@/lib/character-classes";
+import { getPlayerClassesWithStats } from "@/lib/services/player-class-service";
 
 export default async function CharacterSheetPage(props: {
   searchParams: Promise<{ characterId?: string }>;
@@ -36,7 +37,10 @@ export default async function CharacterSheetPage(props: {
     );
   }
 
-  const allCharacters = await getPlayerCharacters(user.id);
+  const [allCharacters, playerClasses] = await Promise.all([
+    getPlayerCharacters(user.id),
+    getPlayerClassesWithStats(),
+  ]);
 
   // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
   let sheet = allCharacters.find((c) => c.id === searchParams.characterId);
@@ -150,6 +154,13 @@ export default async function CharacterSheetPage(props: {
         initialValues={fieldValues}
         initialSkills={skillValues}
         initialClasses={sheet?.chosenClasses ?? []}
+        playerClasses={playerClasses}
+        initialAffiliation={{
+          primaryClassId: sheet?.primaryClassId ?? null,
+          primaryRoleId: sheet?.primaryRoleId ?? null,
+          secondaryClassId: sheet?.secondaryClassId ?? null,
+          secondaryRoleId: sheet?.secondaryRoleId ?? null,
+        }}
         editable={editable}
         status={currentReviewStatus}
         comments={comments}
