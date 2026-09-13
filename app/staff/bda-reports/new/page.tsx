@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
 import { BdaReportForm } from "@/components/dashboard/bda-report-form";
+import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 
 const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
 
@@ -47,11 +48,14 @@ export default async function NewBdaReportPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
-        <p className="text-muted-foreground text-sm">
-          Crée un nouveau dossier de litige et assigne les différentes parties.
-        </p>
+      <div className="flex items-center gap-3">
+        <AtlasBackButton href="/staff/bda-reports" />
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
+          <p className="text-muted-foreground text-sm">
+            Crée un nouveau dossier de litige et assigne les différentes parties.
+          </p>
+        </div>
       </div>
 
       <BdaReportForm

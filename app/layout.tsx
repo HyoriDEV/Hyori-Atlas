@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { Inter } from "next/font/google";
@@ -5,6 +6,7 @@ import "./globals.css";
 import { cn } from "@/lib/utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import { NavigationTracker } from "@/components/navigation-tracker";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -189,6 +191,9 @@ export default function RootLayout({
       )}
     >
       <body className="bg-background text-foreground flex min-h-full flex-col">
+        <Suspense fallback={null}>
+          <NavigationTracker />
+        </Suspense>
         <TooltipProvider>{children}</TooltipProvider>
         <Toaster />
       </body>

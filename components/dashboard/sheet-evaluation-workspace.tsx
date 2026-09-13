@@ -142,7 +142,7 @@ export function SheetEvaluationWorkspace({
         } else {
           toast.success("Fiche personnage validée avec succès !");
         }
-        router.push(`/staff/atlas/${playerId}`);
+        router.replace(`/staff/atlas/${playerId}`);
       } catch (submitError) {
         setIsApprovalDialogOpen(false);
         const message =

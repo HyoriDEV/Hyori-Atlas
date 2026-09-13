@@ -45,7 +45,7 @@ export function CharacterSwitcher({
     if (!characterId) return;
     const params = new URLSearchParams(searchParams.toString());
     params.set("characterId", characterId);
-    router.push(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`);
   }
 
   const selected = characters.find((c) => c.id === selectedCharacterId) ?? characters[0];
