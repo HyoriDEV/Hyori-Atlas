@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { formatPlaytime, getMockServerActivity } from "@/lib/mock-server-data";
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
@@ -37,7 +36,6 @@ import {
   AtlasTimelineTabs,
   type AtlasLogActor,
   type AtlasLogItem,
-  type AtlasSanctionHistoryItem,
 } from "@/components/dashboard/atlas-timeline-tabs";
 
 export default async function AtlasPlayerPage({
@@ -88,7 +86,6 @@ export default async function AtlasPlayerPage({
     activeSheet ??
     player.characterSheets[0] ??
     null;
-  const activity = getMockServerActivity(player.id, player.createdAt);
 
   const whitelistInProgressAt = player.registrationHistory.find(
     (entry) => entry.status === RegistrationStatus.WHITELIST_IN_PROGRESS
@@ -197,14 +194,6 @@ export default async function AtlasPlayerPage({
       })),
   ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
-  const sanctionHistory: AtlasSanctionHistoryItem[] = activity.sanctions
-    .map((sanction) => ({
-      date: sanction.date,
-      title: sanction.title,
-      reason: sanction.reason,
-    }))
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
-
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
@@ -292,24 +281,15 @@ export default async function AtlasPlayerPage({
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">1ère connexion serveur</span>
-                <p className="text-sm">
-                  {formatDate(activity.firstServerLoginAt, {
-                    style: "prefix-long",
-                    withTime: true,
-                  })}
-                </p>
+                <p className="text-sm">—</p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Temps de jeu total</span>
-                <p className="text-sm">
-                  {activity.lastLoginAt ? formatPlaytime(activity.totalPlaytimeMinutes) : "—"}
-                </p>
+                <p className="text-sm">—</p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Dernière connexion</span>
-                <p className="text-sm">
-                  {formatDate(activity.lastLoginAt, { style: "prefix-long", withTime: true })}
-                </p>
+                <p className="text-sm">—</p>
               </div>
             </div>
           </Card>
@@ -348,11 +328,7 @@ export default async function AtlasPlayerPage({
           />
         </div>
 
-        <AtlasTimelineTabs
-          logItems={logItems}
-          sanctionHistory={sanctionHistory}
-          sessionBlocks={activity.sessionBlocks}
-        />
+        <AtlasTimelineTabs logItems={logItems} />
       </div>
     </div>
   );

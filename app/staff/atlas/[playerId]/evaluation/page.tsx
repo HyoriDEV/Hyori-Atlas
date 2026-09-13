@@ -90,7 +90,7 @@ export default async function CharacterSheetEvaluationPage({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <AtlasBackButton />
+        <AtlasBackButton href={`/staff/atlas/${player.id}`} />
         <h1 className="font-heading flex-1 text-lg font-semibold">
           {sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF
             ? `Évaluation de la fiche de ${playerName}`

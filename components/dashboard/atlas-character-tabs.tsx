@@ -43,7 +43,7 @@ export function AtlasCharacterTabs({
   function handleSelect(sheetId: string) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("sheetId", sheetId);
-    router.push(`${pathname}?${params.toString()}`);
+    router.replace(`${pathname}?${params.toString()}`);
   }
 
   return (

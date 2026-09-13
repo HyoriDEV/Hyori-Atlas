@@ -142,7 +142,7 @@ export function BdaReportForm({
         parties,
         attachments,
       });
-      router.push(`/staff/bda-reports/${report.id}`);
+      router.replace(`/staff/bda-reports/${report.id}`);
     } catch (err: unknown) {
       const msg =
         err instanceof Error ? err.message : "Une erreur est survenue lors de la création.";

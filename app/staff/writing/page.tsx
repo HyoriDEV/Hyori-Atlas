@@ -1,10 +1,18 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { writingReviewerRoles } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Card } from "@/components/ui/card";
@@ -18,7 +26,7 @@ import {
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/dashboard/table-pagination";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 function countWords(html: string): number {
   if (!html) return 0;
@@ -31,11 +39,19 @@ function countWords(html: string): number {
 }
 
 export default async function WritingStaffListPage(props: {
-  searchParams: Promise<{ page?: string }>;
+  searchParams: Promise<{ page?: string; pageSize?: string }>;
 }) {
   await requireRole(writingReviewerRoles);
   const searchParams = await props.searchParams;
+  const cookieStore = await cookies();
+  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/writing");
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/writing", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
 
   const players = await prisma.user.findMany({
     where: {
@@ -75,8 +91,8 @@ export default async function WritingStaffListPage(props: {
   });
 
   const totalCount = sorted.length;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
-  const pagePlayers = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const pagePlayers = sorted.slice((page - 1) * pageSize, page * pageSize);
 
   return (
     <div className="flex flex-col gap-6">
@@ -153,8 +169,10 @@ export default async function WritingStaffListPage(props: {
           currentPage={page}
           totalPages={totalPages}
           totalCount={totalCount}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           paramName="page"
+          sizeParamName="pageSize"
+          pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
         />
       </Card>
     </div>

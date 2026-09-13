@@ -16,7 +16,7 @@ export function AtlasEvaluateSheetButton({
     : `/staff/atlas/${playerId}/evaluation`;
 
   return (
-    <Button size="sm" render={<Link href={href} />}>
+    <Button size="sm" render={<Link href={href} prefetch={false} />}>
       {label}
     </Button>
   );

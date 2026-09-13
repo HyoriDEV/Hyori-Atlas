@@ -180,3 +180,30 @@ export function checkRedirectWithSavedPrefs(
   if (!qs) return null;
   return `${pathname}?${qs}`;
 }
+
+export const DEFAULT_PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
+
+/**
+ * Resolves the effective page size for a table from searchParams, saved preferences, or fallback default.
+ * Validates the parsed value against allowed options to prevent invalid or out-of-bounds page sizes.
+ */
+export function resolvePageSize(
+  paramValue: string | undefined | null,
+  savedPrefValue: string | undefined | null,
+  defaultSize: number = 10,
+  allowedSizes: readonly number[] = DEFAULT_PAGE_SIZE_OPTIONS
+): number {
+  if (paramValue) {
+    const parsed = parseInt(paramValue, 10);
+    if (!isNaN(parsed) && allowedSizes.includes(parsed)) {
+      return parsed;
+    }
+  }
+  if (savedPrefValue) {
+    const parsed = parseInt(savedPrefValue, 10);
+    if (!isNaN(parsed) && allowedSizes.includes(parsed)) {
+      return parsed;
+    }
+  }
+  return defaultSize;
+}

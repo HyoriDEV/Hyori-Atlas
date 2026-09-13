@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { NewsForm } from "./news-form";
+import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 
 export default async function StaffNewsEditPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
@@ -31,9 +32,12 @@ export default async function StaffNewsEditPage(props: { params: Promise<{ id: s
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        {initialData ? "Modifier l'actualité" : "Nouvelle actualité"}
-      </h1>
+      <div className="flex items-center gap-3">
+        <AtlasBackButton href="/staff/news" />
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          {initialData ? "Modifier l'actualité" : "Nouvelle actualité"}
+        </h1>
+      </div>
       <NewsForm initialData={initialData} userRole={user.role} />
     </div>
   );
