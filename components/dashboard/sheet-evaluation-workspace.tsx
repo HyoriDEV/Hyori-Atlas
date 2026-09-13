@@ -23,7 +23,7 @@ import {
   AffiliationCard,
   type AffiliationChoiceValues,
 } from "@/components/character-sheet/affiliation-fields";
-import type { PlayerClassWithStats } from "@/lib/services/player-class-service";
+import type { PlayerClassWithStats } from "@/lib/role-balance";
 import { HighlightableText } from "@/components/character-sheet/highlightable-text";
 import { SkillMap } from "@/components/character-sheet/skill-map";
 import {

@@ -2,7 +2,7 @@
 
 import { Scales } from "@phosphor-icons/react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { PlayerClassWithStats } from "@/lib/services/player-class-service";
+import type { PlayerClassWithStats } from "@/lib/role-balance";
 
 const PALETTE = [
   { bg: "bg-amber-500", text: "text-amber-500", border: "border-amber-500/30", fill: "#f59e0b" },

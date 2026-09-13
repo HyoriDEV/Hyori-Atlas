@@ -20,7 +20,7 @@ import { PlayerClassRatioCard } from "@/components/character-sheet/player-class-
 import {
   getRoleStatusMeta,
   type PlayerClassWithStats,
-} from "@/lib/services/player-class-service";
+} from "@/lib/role-balance";
 
 export interface AffiliationChoiceValues {
   primaryClassId: string | null;
