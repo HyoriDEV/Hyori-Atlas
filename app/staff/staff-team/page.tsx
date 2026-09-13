@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
 
@@ -26,13 +26,15 @@ import { RemoveStaffMemberButton } from "@/components/staff/remove-staff-member-
 import { AddStaffMemberDialog } from "@/components/staff/add-staff-member-dialog";
 import { Shield, Users } from "@phosphor-icons/react/dist/ssr";
 
-const PAGE_SIZE = 15;
+const DEFAULT_PAGE_SIZE = 15;
+const STAFF_PAGE_SIZE_OPTIONS = [10, 15, 25, 50] as const;
 
 type PageProps = {
   searchParams: Promise<{
     q?: string;
     role?: string;
     page?: string;
+    pageSize?: string;
   }>;
 };
 
@@ -51,6 +53,12 @@ export default async function StaffTeamPage(props: PageProps) {
   const query = searchParams.q?.trim() ?? "";
   const roleParam = searchParams.role ?? "ALL";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(
+    searchParams.pageSize,
+    savedPrefs.pageSize,
+    DEFAULT_PAGE_SIZE,
+    STAFF_PAGE_SIZE_OPTIONS
+  );
 
   // Validation du filtre de rôle (rôles staff uniquement)
   const parsedRole =
@@ -95,8 +103,8 @@ export default async function StaffTeamPage(props: PageProps) {
     prisma.user.findMany({
       where: whereClause,
       orderBy: [{ role: "asc" }, { discordDisplayName: "asc" }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
     // Joueurs non-staff éligibles à être ajoutés dans l'équipe staff
     prisma.user.findMany({
@@ -115,7 +123,7 @@ export default async function StaffTeamPage(props: PageProps) {
     }),
   ]);
 
-  const totalPages = Math.ceil(filteredStaffCount / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(filteredStaffCount / pageSize) || 1;
   const hasActiveFilters = Boolean(query || roleParam !== "ALL");
 
   return (
@@ -262,13 +270,15 @@ export default async function StaffTeamPage(props: PageProps) {
           </TableBody>
         </Table>
 
-        {totalPages > 1 && (
+        {filteredStaffCount > 0 && (
           <TablePagination
             currentPage={page}
             totalPages={totalPages}
             totalCount={filteredStaffCount}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             paramName="page"
+            sizeParamName="pageSize"
+            pageSizeOptions={STAFF_PAGE_SIZE_OPTIONS}
           />
         )}
       </Card>

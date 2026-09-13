@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
@@ -23,10 +23,10 @@ import { TicketFilters } from "@/components/dashboard/ticket-filters";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 export default async function TicketsStaffListPage(props: {
-  searchParams: Promise<{ category?: string; tab?: string; page?: string }>;
+  searchParams: Promise<{ category?: string; tab?: string; page?: string; pageSize?: string }>;
 }) {
   const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   await requireRole(item.roles);
@@ -40,6 +40,7 @@ export default async function TicketsStaffListPage(props: {
   }
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
   const category = Object.values(TicketCategory).includes(searchParams.category as TicketCategory)
     ? (searchParams.category as TicketCategory)
     : undefined;
@@ -60,13 +61,13 @@ export default async function TicketsStaffListPage(props: {
       },
       include: { player: true },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
   ]);
 
   const totalCount = isArchived ? archivedCount : activeCount;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
     <div className="flex flex-col gap-6">
@@ -143,8 +144,10 @@ export default async function TicketsStaffListPage(props: {
           currentPage={page}
           totalPages={totalPages}
           totalCount={totalCount}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           paramName="page"
+          sizeParamName="pageSize"
+          pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
         />
       </Card>
     </div>
