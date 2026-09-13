@@ -8,7 +8,11 @@ import type { VariantProps } from "class-variance-authority";
 import { Card } from "@/components/ui/card";
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { MockSessionBlock } from "@/lib/mock-server-data";
+export interface AtlasSessionBlock {
+  debut: Date;
+  fin: Date;
+  dureeMinutes: number;
+}
 import { formatDate } from "@/lib/date";
 
 export type AtlasLogActor =
@@ -121,12 +125,12 @@ function TimelineRow({
 
 export function AtlasTimelineTabs({
   logItems,
-  sanctionHistory,
-  sessionBlocks,
+  sanctionHistory = [],
+  sessionBlocks = [],
 }: {
   logItems: AtlasLogItem[];
-  sanctionHistory: AtlasSanctionHistoryItem[];
-  sessionBlocks: MockSessionBlock[];
+  sanctionHistory?: AtlasSanctionHistoryItem[];
+  sessionBlocks?: AtlasSessionBlock[];
 }) {
   return (
     <Card className="flex flex-col gap-4">
