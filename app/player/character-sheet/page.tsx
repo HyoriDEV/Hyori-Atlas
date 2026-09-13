@@ -71,7 +71,7 @@ export default async function CharacterSheetPage(props: {
   ) as SkillValues;
 
   const currentReviewStatus = sheet?.reviewStatus ?? CharacterSheetStatus.PENDING_PLAYER;
-  const isCharacterActive = sheet?.status === CharacterStatus.ACTIVE;
+  const isCharacterActive = !sheet || sheet.status === CharacterStatus.ACTIVE;
   const editable = isCharacterActive && (!sheet || isCharacterSheetEditable(sheet.reviewStatus));
 
   const comments: SheetComment[] = (sheet?.comments ?? []).map((comment) => ({
