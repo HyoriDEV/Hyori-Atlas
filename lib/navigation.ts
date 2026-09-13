@@ -25,7 +25,8 @@ export type NavIconKey =
   | "gear"
   | "newspaper"
   | "book-bookmark"
-  | "scroll";
+  | "scroll"
+  | "scales";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -217,6 +218,13 @@ export const staffAtlasItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffDistributionItem: StaffNavItem = {
+  label: "Distribution",
+  href: "/staff/distribution",
+  iconKey: "scales",
+  roles: [Role.ADMIN, Role.RP_TRACKING],
+};
+
 export const staffWritingItem: StaffNavItem = {
   label: "Lore des joueurs",
   href: "/staff/writing",
@@ -284,7 +292,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffBdaReportsItem,
   staffStaffTeamItem,
   staffAtlasItem,
-  staffWritingItem,
+  staffDistributionItem,
   staffRpTrackingItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
@@ -310,15 +318,15 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       },
       {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
-      },
-      {
-        title: "Contenu",
-        items: [staffNewsItem, staffRulesItem],
+        items: [staffAtlasItem, staffDistributionItem, staffRpTrackingItem],
       },
       {
         title: "Admission",
         items: [staffWaitlistItem, staffInterviewSlotsItem, staffInterviewGuideItem],
+      },
+      {
+        title: "Contenu",
+        items: [staffNewsItem, staffRulesItem],
       },
     ];
   }
@@ -348,7 +356,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffWritingItem, staffRpTrackingItem],
+        items: [staffAtlasItem, staffDistributionItem, staffRpTrackingItem],
       },
     ];
   }
@@ -363,7 +371,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
 export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
 
 export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
-export const writingReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
 export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 export const ticketStaffRoles: Role[] = [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT];
 

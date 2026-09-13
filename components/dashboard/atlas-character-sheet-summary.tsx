@@ -15,6 +15,8 @@ import { characterSheetStatusLabels, characterStatusLabels } from "@/lib/navigat
 import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
 import { CharacterClassCircles } from "@/components/character-sheet/character-class-circles";
@@ -91,10 +93,34 @@ export function AtlasCharacterSheetSummary({
             {canReview && isValidated && (
               <AtlasReopenSheetButton sheetId={sheet.id} pseudo={pseudo ?? sheet.name} />
             )}
-            {canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
-              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer la fiche personnage" />
+            {isValidated ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  render={
+                    <Link
+                      href={`/staff/writing/${playerId}?characterId=${sheet.id}`}
+                      prefetch={false}
+                    />
+                  }
+                >
+                  Lire la narration
+                </Button>
+                <AtlasEvaluateSheetButton
+                  playerId={playerId}
+                  sheetId={sheet.id}
+                  label="Lire la fiche"
+                />
+              </>
+            ) : canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
+              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer" />
             ) : (
-              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Lire la fiche personnage" />
+              <AtlasEvaluateSheetButton
+                playerId={playerId}
+                sheetId={sheet.id}
+                label="Lire la fiche"
+              />
             )}
           </div>
         )}
@@ -123,24 +149,28 @@ export function AtlasCharacterSheetSummary({
               />
             </div>
 
-            {sheet.assignedClass && (() => {
-              const assignedDef = CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass);
-              if (!assignedDef) return null;
-              const IconComponent = assignedDef.icon;
-              return (
-                <div className="flex flex-col gap-2">
-                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                    Classe définitive attribuée
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1.5 text-sm font-medium">
-                      <IconComponent size={18} className="shrink-0" />
-                      {assignedDef.singularLabel}
-                    </Badge>
+            {sheet.assignedClass &&
+              (() => {
+                const assignedDef = CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass);
+                if (!assignedDef) return null;
+                const IconComponent = assignedDef.icon;
+                return (
+                  <div className="flex flex-col gap-2">
+                    <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                      Classe définitive attribuée
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <Badge
+                        variant="secondary"
+                        className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1.5 text-sm font-medium"
+                      >
+                        <IconComponent size={18} className="shrink-0" />
+                        {assignedDef.singularLabel}
+                      </Badge>
+                    </div>
                   </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
           </div>
 
           <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
