@@ -158,7 +158,124 @@ export interface CharacterSheetCommentProps {
   ) => React.ReactNode;
 }
 
-export function CharacterSheetFields({
+function fieldWrapperProps(
+  key: CharacterSheetFieldKey,
+  clickable: boolean,
+  activeTarget: CharacterSheetCommentTarget | null,
+  onTargetClick?: (target: CharacterSheetCommentTarget) => void
+) {
+  const target = key as CharacterSheetCommentTarget;
+  const isActive = activeTarget === target;
+
+  return {
+    id: commentTargetElementId(target),
+    onClick: clickable && onTargetClick ? () => onTargetClick(target) : undefined,
+    className: cn(
+      "flex flex-col gap-1.5 rounded-md border border-transparent transition-colors",
+      (clickable && onTargetClick) || isActive ? "-m-2 p-2" : undefined,
+      clickable && onTargetClick && "hover:border-primary/50 cursor-pointer",
+      isActive && "border-primary bg-primary/5"
+    ),
+  };
+}
+
+function renderLabelRow(
+  key: CharacterSheetFieldKey,
+  label: string,
+  commentedTargets: CharacterSheetCommentTarget[],
+  trailing?: React.ReactNode
+) {
+  const target = key as CharacterSheetCommentTarget;
+
+  return (
+    <div className="flex min-h-6 items-center justify-between gap-2">
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={key} className="text-sm font-medium">
+          {label}
+        </Label>
+        {commentedTargets.includes(target) && (
+          <ChatCircleDots className="text-primary size-3.5 shrink-0" />
+        )}
+      </div>
+      {trailing}
+    </div>
+  );
+}
+
+export function CivilFieldsCard({
+  values,
+  interactive = false,
+  onChange,
+  commentedTargets = [],
+  activeTarget = null,
+  onTargetClick,
+  className,
+}: CharacterSheetCommentProps & {
+  values: CharacterSheetFieldValues;
+  interactive?: boolean;
+  onChange?: (key: CharacterSheetFieldKey, value: string) => void;
+  className?: string;
+}) {
+  return (
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Informations civiles</CardTitle>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
+        {civilFields.map((field) => (
+          <div
+            key={field.key}
+            {...fieldWrapperProps(field.key, true, activeTarget, onTargetClick)}
+          >
+            {renderLabelRow(field.key, field.label, commentedTargets)}
+            {field.key === "gender" ? (
+              interactive ? (
+                <Select
+                  items={genderItems}
+                  value={values.gender}
+                  onValueChange={(val) => onChange?.("gender", val ?? "")}
+                >
+                  <SelectTrigger id="gender" className="w-full">
+                    <SelectValue placeholder="Sélectionner..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {genderItems.map((item) => (
+                      <SelectItem key={item.value} value={item.value}>
+                        {item.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <p className="text-sm">{values.gender || "—"}</p>
+              )
+            ) : interactive ? (
+              <Input
+                id={field.key}
+                type={field.type ?? "text"}
+                min={field.min}
+                max={field.max}
+                minLength={field.minLength}
+                maxLength={field.maxLength}
+                step={field.step}
+                placeholder={field.placeholder}
+                value={values[field.key]}
+                onChange={(event) => onChange?.(field.key, event.target.value)}
+              />
+            ) : (
+              <p className="text-sm">
+                {values[field.key] || "—"}
+                {field.key === "heightCm" && values[field.key] ? " cm" : ""}
+              </p>
+            )}
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function NarrativeFieldsCard({
   values,
   interactive = false,
   onChange,
@@ -166,162 +283,94 @@ export function CharacterSheetFields({
   activeTarget = null,
   onTargetClick,
   narrativeSlot,
+  className,
 }: CharacterSheetCommentProps & {
   values: CharacterSheetFieldValues;
   interactive?: boolean;
   onChange?: (key: CharacterSheetFieldKey, value: string) => void;
+  className?: string;
 }) {
-  function fieldWrapperProps(key: CharacterSheetFieldKey, clickable: boolean) {
-    const target = key as CharacterSheetCommentTarget;
-    const isActive = activeTarget === target;
-
-    return {
-      id: commentTargetElementId(target),
-      onClick: clickable && onTargetClick ? () => onTargetClick(target) : undefined,
-      className: cn(
-        "flex flex-col gap-1.5 rounded-md border border-transparent transition-colors",
-        (clickable && onTargetClick) || isActive ? "-m-2 p-2" : undefined,
-        clickable && onTargetClick && "hover:border-primary/50 cursor-pointer",
-        isActive && "border-primary bg-primary/5"
-      ),
-    };
-  }
-
-  function renderLabelRow(key: CharacterSheetFieldKey, label: string, trailing?: React.ReactNode) {
-    const target = key as CharacterSheetCommentTarget;
-
-    return (
-      <div className="flex min-h-6 items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <Label htmlFor={key} className="text-sm font-medium">
-            {label}
-          </Label>
-          {commentedTargets.includes(target) && (
-            <ChatCircleDots className="text-primary size-3.5 shrink-0" />
-          )}
-        </div>
-        {trailing}
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <Card className="lg:col-span-1">
-        <CardHeader>
-          <CardTitle>Informations civiles</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          {civilFields.map((field) => (
-            <div key={field.key} {...fieldWrapperProps(field.key, true)}>
-              {renderLabelRow(field.key, field.label)}
-              {field.key === "gender" ? (
-                interactive ? (
-                  <Select
-                    items={genderItems}
-                    value={values.gender}
-                    onValueChange={(val) => onChange?.("gender", val ?? "")}
+    <Card className={className}>
+      <CardHeader>
+        <CardTitle>Personnage</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-4">
+        {textFields.map((field) => {
+          const target = field.key as CharacterSheetCommentTarget;
+          const isNarrative = isNarrativeCommentTarget(target);
+          const slot = isNarrative ? narrativeSlot?.(target, field) : undefined;
+
+          return (
+            <div
+              key={field.key}
+              {...fieldWrapperProps(field.key, !isNarrative, activeTarget, onTargetClick)}
+            >
+              {renderLabelRow(
+                field.key,
+                field.label,
+                commentedTargets,
+                isNarrative && onTargetClick ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="xs"
+                    onClick={() => onTargetClick(target)}
                   >
-                    <SelectTrigger id="gender" className="w-full">
-                      <SelectValue placeholder="Sélectionner..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {genderItems.map((item) => (
-                        <SelectItem key={item.value} value={item.value}>
-                          {item.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    Commenter la section
+                  </Button>
+                ) : undefined
+              )}
+
+              {slot ??
+                (interactive ? (
+                  <Textarea
+                    id={field.key}
+                    rows={field.rows}
+                    minLength={field.minLength}
+                    maxLength={field.maxLength}
+                    className={field.className}
+                    placeholder={field.placeholder}
+                    value={values[field.key]}
+                    onChange={(event) => onChange?.(field.key, event.target.value)}
+                  />
                 ) : (
-                  <p className="text-sm">{values.gender || "—"}</p>
-                )
-              ) : interactive ? (
-                <Input
-                  id={field.key}
-                  type={field.type ?? "text"}
-                  min={field.min}
-                  max={field.max}
-                  minLength={field.minLength}
-                  maxLength={field.maxLength}
-                  step={field.step}
-                  placeholder={field.placeholder}
-                  value={values[field.key]}
-                  onChange={(event) => onChange?.(field.key, event.target.value)}
-                />
-              ) : (
-                <p className="text-sm">
-                  {values[field.key] || "—"}
-                  {field.key === "heightCm" && values[field.key] ? " cm" : ""}
-                </p>
+                  <p className="text-sm whitespace-pre-wrap">{values[field.key] || "—"}</p>
+                ))}
+
+              {interactive && (
+                <div className="text-muted-foreground flex justify-end text-xs">
+                  {field.minLength ? (
+                    <span>
+                      {values[field.key].length} / {field.maxLength} caractères (min.{" "}
+                      {field.minLength})
+                    </span>
+                  ) : (
+                    <span>
+                      {values[field.key].length} / {field.maxLength} caractères
+                    </span>
+                  )}
+                </div>
               )}
             </div>
-          ))}
-        </CardContent>
-      </Card>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
 
-      <Card className="lg:col-span-2">
-        <CardHeader>
-          <CardTitle>Personnage</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          {textFields.map((field) => {
-            const target = field.key as CharacterSheetCommentTarget;
-            const isNarrative = isNarrativeCommentTarget(target);
-            const slot = isNarrative ? narrativeSlot?.(target, field) : undefined;
-
-            return (
-              <div key={field.key} {...fieldWrapperProps(field.key, !isNarrative)}>
-                {renderLabelRow(
-                  field.key,
-                  field.label,
-                  isNarrative && onTargetClick ? (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="xs"
-                      onClick={() => onTargetClick(target)}
-                    >
-                      Commenter la section
-                    </Button>
-                  ) : undefined
-                )}
-
-                {slot ??
-                  (interactive ? (
-                    <Textarea
-                      id={field.key}
-                      rows={field.rows}
-                      minLength={field.minLength}
-                      maxLength={field.maxLength}
-                      className={field.className}
-                      placeholder={field.placeholder}
-                      value={values[field.key]}
-                      onChange={(event) => onChange?.(field.key, event.target.value)}
-                    />
-                  ) : (
-                    <p className="text-sm whitespace-pre-wrap">{values[field.key] || "—"}</p>
-                  ))}
-
-                {interactive && (
-                  <div className="text-muted-foreground flex justify-end text-xs">
-                    {field.minLength ? (
-                      <span>
-                        {values[field.key].length} / {field.maxLength} caractères (min.{" "}
-                        {field.minLength})
-                      </span>
-                    ) : (
-                      <span>
-                        {values[field.key].length} / {field.maxLength} caractères
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+export function CharacterSheetFields(
+  props: CharacterSheetCommentProps & {
+    values: CharacterSheetFieldValues;
+    interactive?: boolean;
+    onChange?: (key: CharacterSheetFieldKey, value: string) => void;
+  }
+) {
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <CivilFieldsCard {...props} className="lg:col-span-1" />
+      <NarrativeFieldsCard {...props} className="lg:col-span-2" />
     </div>
   );
 }
