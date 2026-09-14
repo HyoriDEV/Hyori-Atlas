@@ -36,6 +36,10 @@ interface CharacterSheetSummaryData extends SkillValues {
   chosenClasses: CharacterClass[];
   status: CharacterStatus;
   assignedClass?: CharacterClass | null;
+  primaryClass?: { id: string; name: string } | null;
+  primaryRole?: { id: string; name: string } | null;
+  secondaryClass?: { id: string; name: string } | null;
+  secondaryRole?: { id: string; name: string } | null;
   reviewStatus: CharacterSheetStatus;
 }
 
@@ -138,16 +142,46 @@ export function AtlasCharacterSheetSummary({
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                Classes souhaitées (indicatives)
-              </span>
-              <CharacterClassCircles
-                selectedClasses={sheet.chosenClasses ?? []}
-                interactive={false}
-                size="md"
-              />
-            </div>
+            {sheet.primaryClass ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Affiliation souhaitée
+                </span>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <div className="border-border/70 bg-muted/30 flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs">
+                    <span className="text-muted-foreground">1er choix :</span>
+                    <span className="font-semibold text-foreground">{sheet.primaryClass.name}</span>
+                    {sheet.primaryRole && (
+                      <Badge variant="secondary" className="h-4.5 px-1.5 py-0 text-[10px]">
+                        {sheet.primaryRole.name}
+                      </Badge>
+                    )}
+                  </div>
+                  {sheet.secondaryClass && (
+                    <div className="border-border/70 bg-muted/30 flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs">
+                      <span className="text-muted-foreground">2e choix :</span>
+                      <span className="font-semibold text-foreground">{sheet.secondaryClass.name}</span>
+                      {sheet.secondaryRole && (
+                        <Badge variant="secondary" className="h-4.5 px-1.5 py-0 text-[10px]">
+                          {sheet.secondaryRole.name}
+                        </Badge>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Classes souhaitées (indicatives)
+                </span>
+                <CharacterClassCircles
+                  selectedClasses={sheet.chosenClasses ?? []}
+                  interactive={false}
+                  size="md"
+                />
+              </div>
+            )}
 
             {sheet.assignedClass &&
               (() => {
