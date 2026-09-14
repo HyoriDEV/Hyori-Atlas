@@ -15,6 +15,8 @@ import { characterSheetStatusLabels, characterStatusLabels } from "@/lib/navigat
 import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
 import { CharacterClassCircles } from "@/components/character-sheet/character-class-circles";
@@ -34,6 +36,10 @@ interface CharacterSheetSummaryData extends SkillValues {
   chosenClasses: CharacterClass[];
   status: CharacterStatus;
   assignedClass?: CharacterClass | null;
+  primaryClass?: { id: string; name: string } | null;
+  primaryRole?: { id: string; name: string } | null;
+  secondaryClass?: { id: string; name: string } | null;
+  secondaryRole?: { id: string; name: string } | null;
   reviewStatus: CharacterSheetStatus;
 }
 
@@ -42,16 +48,11 @@ const skillPoints = Array.from({ length: MAX_SKILL_POINTS }, (_, index) => index
 const EXCERPT_MAX_LENGTH = 280;
 
 function buildCivilFieldEntries(sheet: CharacterSheetSummaryData) {
-  const heightCm =
-    sheet.heightMeters > 10 ? Math.round(sheet.heightMeters) : Math.round(sheet.heightMeters * 100);
-
   return [
     { label: "Nom", value: sheet.name },
     { label: "Surnom", value: sheet.nickname ?? "—" },
     { label: "Âge", value: `${sheet.age} ans` },
-    { label: "Genre", value: sheet.gender },
     { label: "Statut", value: sheet.civilStatus },
-    { label: "Taille", value: `${heightCm} cm` },
   ];
 }
 
@@ -69,17 +70,15 @@ export function AtlasCharacterSheetSummary({
   const isValidated = sheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
   return (
-    <Card className="flex flex-col gap-12">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-2.5">
+    <Card className="flex flex-col gap-5">
+      {/* En-tête */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Fiche personnage
           </span>
           {sheet && (
             <div className="flex items-center gap-1.5">
-              <Badge variant={characterStatusBadgeVariant(sheet.status)}>
-                {characterStatusLabels[sheet.status]}
-              </Badge>
               <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
                 {characterSheetStatusLabels[sheet.reviewStatus]}
               </Badge>
@@ -91,10 +90,34 @@ export function AtlasCharacterSheetSummary({
             {canReview && isValidated && (
               <AtlasReopenSheetButton sheetId={sheet.id} pseudo={pseudo ?? sheet.name} />
             )}
-            {canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
-              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer la fiche personnage" />
+            {isValidated ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  render={
+                    <Link
+                      href={`/staff/writing/${playerId}?characterId=${sheet.id}`}
+                      prefetch={false}
+                    />
+                  }
+                >
+                  Lire la narration
+                </Button>
+                <AtlasEvaluateSheetButton
+                  playerId={playerId}
+                  sheetId={sheet.id}
+                  label="Lire la fiche"
+                />
+              </>
+            ) : canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
+              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer" />
             ) : (
-              <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Lire la fiche personnage" />
+              <AtlasEvaluateSheetButton
+                playerId={playerId}
+                sheetId={sheet.id}
+                label="Lire la fiche"
+              />
             )}
           </div>
         )}
@@ -102,92 +125,141 @@ export function AtlasCharacterSheetSummary({
 
       {sheet ? (
         <>
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-3">
-            {buildCivilFieldEntries(sheet).map((entry) => (
-              <div key={entry.label} className="flex flex-col gap-1">
-                <span className="text-muted-foreground text-xs">{entry.label}</span>
-                <p className="text-sm">{entry.value}</p>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                Classes souhaitées (indicatives)
-              </span>
-              <CharacterClassCircles
-                selectedClasses={sheet.chosenClasses ?? []}
-                interactive={false}
-                size="md"
-              />
+          {/* Identité & Affiliation */}
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {buildCivilFieldEntries(sheet).map((entry) => (
+                <div key={entry.label} className="flex flex-col gap-0.5">
+                  <span className="text-muted-foreground text-xs">{entry.label}</span>
+                  <p className="truncate text-sm font-semibold">{entry.value}</p>
+                </div>
+              ))}
             </div>
 
-            {sheet.assignedClass && (() => {
-              const assignedDef = CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass);
-              if (!assignedDef) return null;
-              const IconComponent = assignedDef.icon;
-              return (
-                <div className="flex flex-col gap-2">
-                  <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                    Classe définitive attribuée
+            {(sheet.primaryClass ||
+              (sheet.chosenClasses && sheet.chosenClasses.length > 0) ||
+              sheet.assignedClass) && (
+              <div className="border-border/50 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
+                {sheet.primaryClass ? (
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="text-muted-foreground font-medium">
+                      Affiliation souhaitée :
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="border-border/70 bg-muted/30 flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs">
+                        <span className="text-muted-foreground">1er choix :</span>
+                        <span className="text-foreground font-semibold">
+                          {sheet.primaryClass.name}
+                        </span>
+                        {sheet.primaryRole && (
+                          <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[10px]">
+                            {sheet.primaryRole.name}
+                          </Badge>
+                        )}
+                      </div>
+                      {sheet.secondaryClass && (
+                        <div className="border-border/70 bg-muted/30 flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs">
+                          <span className="text-muted-foreground">2e choix :</span>
+                          <span className="text-foreground font-semibold">
+                            {sheet.secondaryClass.name}
+                          </span>
+                          {sheet.secondaryRole && (
+                            <Badge variant="secondary" className="h-4 px-1.5 py-0 text-[10px]">
+                              {sheet.secondaryRole.name}
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : sheet.chosenClasses && sheet.chosenClasses.length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                      Classes souhaitées :
+                    </span>
+                    <CharacterClassCircles
+                      selectedClasses={sheet.chosenClasses}
+                      interactive={false}
+                      size="sm"
+                    />
+                  </div>
+                ) : null}
+
+                {sheet.assignedClass &&
+                  (() => {
+                    const assignedDef = CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass);
+                    if (!assignedDef) return null;
+                    const IconComponent = assignedDef.icon;
+                    return (
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground text-xs">Classe attribuée :</span>
+                        <Badge
+                          variant="secondary"
+                          className="border-primary/40 bg-primary/10 text-primary gap-1.5 px-2.5 py-1 text-xs font-medium"
+                        >
+                          <IconComponent size={14} className="shrink-0" />
+                          {assignedDef.singularLabel}
+                        </Badge>
+                      </div>
+                    );
+                  })()}
+              </div>
+            )}
+          </div>
+
+          {/* Description & Histoire */}
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                Description
+              </span>
+              <p className="text-foreground/90 text-xs leading-relaxed whitespace-pre-wrap">
+                {sheet.description?.trim() ? (
+                  truncateAtWordBoundary(sheet.description, EXCERPT_MAX_LENGTH)
+                ) : (
+                  <span className="text-muted-foreground italic">
+                    Aucune description renseignée.
                   </span>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1.5 text-sm font-medium">
-                      <IconComponent size={18} className="shrink-0" />
-                      {assignedDef.singularLabel}
-                    </Badge>
+                )}
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                Histoire
+              </span>
+              <p className="text-foreground/90 text-xs leading-relaxed whitespace-pre-wrap">
+                {sheet.background?.trim() ? (
+                  truncateAtWordBoundary(sheet.background, EXCERPT_MAX_LENGTH)
+                ) : (
+                  <span className="text-muted-foreground italic">Aucune histoire renseignée.</span>
+                )}
+              </p>
+            </div>
+          </div>
+
+          {/* Compétences */}
+          <div className="flex flex-col gap-2">
+            <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+              Compétences
+            </span>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-5">
+              {SKILL_DEFINITIONS.map((skill) => (
+                <div key={skill.field} className="flex flex-col gap-1.5">
+                  <span className="text-muted-foreground truncate text-xs">{skill.label}</span>
+                  <div className="flex items-center gap-1">
+                    {skillPoints.map((point) => (
+                      <div
+                        key={point}
+                        className={cn(
+                          "size-2.5 rounded-xs transition-colors",
+                          point <= sheet[skill.field] ? "bg-primary" : "border-border border"
+                        )}
+                      />
+                    ))}
                   </div>
                 </div>
-              );
-            })()}
-          </div>
-
-          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
-            <div className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-xs">Description</span>
-              <p className="text-justify text-xs whitespace-pre-wrap">
-                {truncateAtWordBoundary(sheet.description, EXCERPT_MAX_LENGTH)}
-              </p>
+              ))}
             </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-xs">Histoire</span>
-              <p className="text-justify text-xs whitespace-pre-wrap">
-                {truncateAtWordBoundary(sheet.background, EXCERPT_MAX_LENGTH)}
-              </p>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-xs">Membres du groupe RP</span>
-              <p
-                className={cn(
-                  "text-justify text-xs whitespace-pre-wrap",
-                  !sheet.additionalComments?.trim() && "text-muted-foreground"
-                )}
-              >
-                {sheet.additionalComments?.trim()
-                  ? truncateAtWordBoundary(sheet.additionalComments, EXCERPT_MAX_LENGTH)
-                  : "Aucun membre de groupe RP renseigné."}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-5">
-            {SKILL_DEFINITIONS.map((skill) => (
-              <div key={skill.field} className="flex flex-col gap-1.5">
-                <span className="text-muted-foreground text-xs">{skill.label}</span>
-                <div className="flex gap-1">
-                  {skillPoints.map((point) => (
-                    <div
-                      key={point}
-                      className={cn(
-                        "size-2.5 rounded-xs",
-                        point <= sheet[skill.field] ? "bg-primary" : "border-border border"
-                      )}
-                    />
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         </>
       ) : (

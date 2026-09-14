@@ -12,11 +12,7 @@ import {
   CharacterClass,
 } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
-import {
-  MAX_CLASS_CHOICES_COUNT,
-  REQUIRED_CLASS_CHOICES_COUNT,
-  isCharacterClass,
-} from "@/lib/character-classes";
+import { isCharacterClass } from "@/lib/character-classes";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
   AGE_MAX,
@@ -51,7 +47,11 @@ export interface CharacterSheetInput {
   description: string;
   background: string;
   additionalComments: string;
-  chosenClasses: CharacterClass[];
+  chosenClasses?: CharacterClass[];
+  primaryClassId?: string | null;
+  primaryRoleId?: string | null;
+  secondaryClassId?: string | null;
+  secondaryRoleId?: string | null;
   skills: SkillValues;
 }
 
@@ -79,6 +79,11 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
       chosenClasses.push(cls);
     }
   }
+
+  const primaryClassId = input.primaryClassId?.trim() || null;
+  const primaryRoleId = input.primaryRoleId?.trim() || null;
+  const secondaryClassId = input.secondaryClassId?.trim() || null;
+  const secondaryRoleId = input.secondaryRoleId?.trim() || null;
 
   if (strict) {
     if (!name || !gender || !civilStatus || !description || !background) {
@@ -142,16 +147,14 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
         `La carte de compétences doit totaliser entre ${MIN_TOTAL_SKILL_POINTS} et ${MAX_TOTAL_SKILL_POINTS} points.`
       );
     }
-    if (chosenClasses.length !== REQUIRED_CLASS_CHOICES_COUNT) {
-      throw new Error(
-        `Tu dois choisir exactement ${REQUIRED_CLASS_CHOICES_COUNT} classes souhaitées parmi les 5 disponibles.`
-      );
+    if (!primaryClassId || !primaryRoleId) {
+      throw new Error("Veuillez sélectionner votre premier choix de classe et son rôle.");
     }
-  } else {
-    if (chosenClasses.length > MAX_CLASS_CHOICES_COUNT) {
-      throw new Error(
-        `Tu ne peux pas sélectionner plus de ${MAX_CLASS_CHOICES_COUNT} classes souhaitées.`
-      );
+    if (!secondaryClassId || !secondaryRoleId) {
+      throw new Error("Veuillez sélectionner votre deuxième choix de classe et son rôle.");
+    }
+    if (primaryClassId === secondaryClassId) {
+      throw new Error("Le deuxième choix doit être une classe différente du premier choix.");
     }
   }
 
@@ -168,6 +171,10 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
     background: background || "",
     additionalComments: additionalComments || null,
     chosenClasses,
+    primaryClassId,
+    primaryRoleId,
+    secondaryClassId,
+    secondaryRoleId,
     ...input.skills,
   };
 }

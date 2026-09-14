@@ -1,21 +1,19 @@
 import { requireActivePlayer } from "@/lib/dal";
 import { getPlayerCharacters } from "@/lib/services/character-service";
 import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
-import { characterSheetStatusLabels, characterStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
-import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
+import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import {
   SKILL_DEFINITIONS,
   isCharacterSheetEditable,
   type SkillValues,
 } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { CharacterSheetForm } from "@/components/player/character-sheet-form";
 import { CharacterSwitcher } from "@/components/player/character-switcher";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
-import { CHARACTER_CLASSES } from "@/lib/character-classes";
+import { getPlayerClassesWithStats } from "@/lib/services/player-class-service";
 
 export default async function CharacterSheetPage(props: {
   searchParams: Promise<{ characterId?: string }>;
@@ -36,17 +34,16 @@ export default async function CharacterSheetPage(props: {
     );
   }
 
-  const allCharacters = await getPlayerCharacters(user.id);
+  const [allCharacters, playerClasses] = await Promise.all([
+    getPlayerCharacters(user.id),
+    getPlayerClassesWithStats(),
+  ]);
 
   // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
   let sheet = allCharacters.find((c) => c.id === searchParams.characterId);
   if (!sheet) {
     sheet = allCharacters.find((c) => c.status === CharacterStatus.ACTIVE) ?? allCharacters[0] ?? null;
   }
-
-  const assignedClassDef = sheet?.assignedClass
-    ? CHARACTER_CLASSES.find((c) => c.id === sheet.assignedClass)
-    : null;
 
   const fieldValues: CharacterSheetFieldValues = {
     name: sheet?.name ?? "",
@@ -92,33 +89,24 @@ export default async function CharacterSheetPage(props: {
   }));
 
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
-        {sheet && (
-          <div className="flex items-center gap-2">
-            <Badge variant={characterStatusBadgeVariant(sheet.status)}>
-              {characterStatusLabels[sheet.status]}
-            </Badge>
-            <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
-              {characterSheetStatusLabels[sheet.reviewStatus]}
-            </Badge>
-          </div>
-        )}
-
-        {assignedClassDef && (
-          <div className="flex items-center gap-2">
-            <Badge
-              variant="secondary"
-              className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1 text-sm font-medium"
-            >
-              <assignedClassDef.icon size={18} className="shrink-0" />
-              Classe attribuée : {assignedClassDef.singularLabel}
-            </Badge>
-          </div>
-        )}
-      </div>
-
+    <CharacterSheetForm
+      sheetId={sheet?.id}
+      initialValues={fieldValues}
+      initialSkills={skillValues}
+      initialClasses={sheet?.chosenClasses ?? []}
+      playerClasses={playerClasses}
+      initialAffiliation={{
+        primaryClassId: sheet?.primaryClassId ?? null,
+        primaryRoleId: sheet?.primaryRoleId ?? null,
+        secondaryClassId: sheet?.secondaryClassId ?? null,
+        secondaryRoleId: sheet?.secondaryRoleId ?? null,
+      }}
+      assignedClass={sheet?.assignedClass ?? null}
+      editable={editable}
+      status={currentReviewStatus}
+      comments={comments}
+      minecraftUsername={user.minecraftUsername}
+    >
       {allCharacters.length > 1 && sheet && (
         <CharacterSwitcher
           characters={allCharacters.map((c) => ({
@@ -144,17 +132,6 @@ export default async function CharacterSheetPage(props: {
           </p>
         </Card>
       )}
-
-      <CharacterSheetForm
-        sheetId={sheet?.id}
-        initialValues={fieldValues}
-        initialSkills={skillValues}
-        initialClasses={sheet?.chosenClasses ?? []}
-        editable={editable}
-        status={currentReviewStatus}
-        comments={comments}
-        minecraftUsername={user.minecraftUsername}
-      />
-    </div>
+    </CharacterSheetForm>
   );
 }

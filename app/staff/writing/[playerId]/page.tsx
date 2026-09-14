@@ -54,7 +54,7 @@ export default async function WritingStaffDetailPage(props: {
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <AtlasBackButton href="/staff/writing" />
+          <AtlasBackButton href={`/staff/atlas/${playerId}`} />
           <div className="flex min-w-0 items-center gap-2">
             <h1 className="font-heading truncate text-lg font-semibold">
               Trame écrite de {playerName}

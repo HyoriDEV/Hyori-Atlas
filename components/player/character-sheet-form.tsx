@@ -13,7 +13,6 @@ import {
   CharacterSheetStatus,
   type CharacterClass,
 } from "@/lib/generated/prisma/enums";
-import { REQUIRED_CLASS_CHOICES_COUNT } from "@/lib/character-classes";
 import { resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
@@ -38,9 +37,16 @@ import {
   type SkillValues,
 } from "@/lib/character-sheet";
 import {
-  CharacterSheetFields,
+  CivilFieldsCard,
+  NarrativeFieldsCard,
   type CharacterSheetFieldValues,
 } from "@/components/character-sheet/character-sheet-fields";
+import {
+  AffiliationCard,
+  type AffiliationChoiceValues,
+} from "@/components/character-sheet/affiliation-fields";
+import type { PlayerClassWithStats } from "@/lib/role-balance";
+import { CHARACTER_CLASSES } from "@/lib/character-classes";
 import { HighlightedTextarea } from "@/components/character-sheet/highlighted-textarea";
 import { SkillMap } from "@/components/character-sheet/skill-map";
 import {
@@ -49,6 +55,7 @@ import {
 } from "@/components/character-sheet/use-comment-target-scroll";
 import { CharacterSheetFeedbackSidebar } from "@/components/player/character-sheet-feedback-sidebar";
 import { CharacterSkinPreview } from "@/components/player/character-skin-preview";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -70,27 +77,47 @@ export function CharacterSheetForm({
   initialValues,
   initialSkills,
   initialClasses = [],
+  playerClasses = [],
+  initialAffiliation,
+  assignedClass,
   editable,
   status,
   comments,
   minecraftUsername,
+  children,
 }: {
   sheetId?: string;
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
   initialClasses?: CharacterClass[];
+  playerClasses?: PlayerClassWithStats[];
+  initialAffiliation?: AffiliationChoiceValues;
+  assignedClass?: CharacterClass | null;
   editable: boolean;
   status: CharacterSheetStatus;
   comments: SheetComment[];
   minecraftUsername?: string | null;
+  children?: React.ReactNode;
 }) {
   const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
   const [skills, setSkills] = useState<SkillValues>(initialSkills);
-  const [chosenClasses, setChosenClasses] = useState<CharacterClass[]>(initialClasses);
+  const [chosenClasses] = useState<CharacterClass[]>(initialClasses);
+  const [affiliation, setAffiliation] = useState<AffiliationChoiceValues>(
+    initialAffiliation ?? {
+      primaryClassId: null,
+      primaryRoleId: null,
+      secondaryClassId: null,
+      secondaryRoleId: null,
+    }
+  );
   const [activeCommentId, setActiveCommentId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  const assignedClassDef = assignedClass
+    ? CHARACTER_CLASSES.find((c) => c.id === assignedClass)
+    : null;
 
   const activeComment = comments.find((comment) => comment.id === activeCommentId) ?? null;
   useCommentTargetScroll(activeComment?.target ?? null);
@@ -182,8 +209,16 @@ export function CharacterSheetForm({
     if (total > MAX_TOTAL_SKILL_POINTS)
       return `Attribue au plus ${MAX_TOTAL_SKILL_POINTS} points de compétences.`;
 
-    if (chosenClasses.length !== REQUIRED_CLASS_CHOICES_COUNT) {
-      return `Choisis ${REQUIRED_CLASS_CHOICES_COUNT} classes parmi les 5 disponibles.`;
+    if (!affiliation.primaryClassId || !affiliation.primaryRoleId) {
+      return "Sélectionne ton premier choix d'affiliation et son rôle.";
+    }
+
+    if (!affiliation.secondaryClassId || !affiliation.secondaryRoleId) {
+      return "Sélectionne ton deuxième choix d'affiliation et son rôle.";
+    }
+
+    if (affiliation.primaryClassId === affiliation.secondaryClassId) {
+      return "Le deuxième choix doit être une classe différente du premier choix.";
     }
 
     return null;
@@ -205,6 +240,10 @@ export function CharacterSheetForm({
       background: fields.background,
       additionalComments: fields.additionalComments,
       chosenClasses,
+      primaryClassId: affiliation.primaryClassId,
+      primaryRoleId: affiliation.primaryRoleId,
+      secondaryClassId: affiliation.secondaryClassId,
+      secondaryRoleId: affiliation.secondaryRoleId,
       skills,
     };
   }
@@ -267,109 +306,154 @@ export function CharacterSheetForm({
         </Card>
       )}
 
-      <CharacterSheetFields
-        values={fields}
-        chosenClasses={chosenClasses}
-        interactive={editable}
-        onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
-        onClassesChange={editable ? setChosenClasses : undefined}
-        commentedTargets={comments.map((comment) => comment.target)}
-        activeTarget={activeComment?.target ?? null}
-        narrativeSlot={
-          hasFeedback && editable
-            ? (target, field) => (
-                <HighlightedTextarea
-                  id={field.key}
-                  rows={field.rows}
-                  className={field.className}
-                  placeholder={field.placeholder}
-                  minLength={field.minLength}
-                  maxLength={field.maxLength}
-                  value={fields[field.key]}
-                  ranges={rangesByTarget[target] ?? []}
-                  activeCommentId={activeCommentId}
-                  onChange={(event) =>
-                    setFields((prev) => ({ ...prev, [field.key]: event.target.value }))
-                  }
-                />
-              )
-            : undefined
-        }
-      />
-      <Card
-        id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
-        className={cn(
-          activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
-        )}
-      >
-        <CardContent>
-          <SkillMap
-            values={skills}
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+        {/* Colonne gauche (1/3) : Informations civiles + Affiliation */}
+        <div className="flex flex-col gap-6 lg:col-span-1">
+          <CivilFieldsCard
+            values={fields}
             interactive={editable}
-            onChange={(field, value) => setSkills((prev) => ({ ...prev, [field]: value }))}
+            onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
+            commentedTargets={comments.map((comment) => comment.target)}
+            activeTarget={activeComment?.target ?? null}
           />
-        </CardContent>
-      </Card>
-      {editable && (
-        <div className="flex flex-col items-end justify-end gap-3 sm:flex-row sm:items-center">
-          {!isValid && validationError && (
-            <p className="text-muted-foreground text-right text-xs sm:text-sm">{validationError}</p>
-          )}
-          {error && <p className="text-destructive text-right text-sm">{error}</p>}
-          <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isPending}>
-            Enregistrer le brouillon
-          </Button>
-          <AlertDialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
-            <AlertDialogTrigger
-              render={
-                <Button type="button" disabled={isPending || !isValid}>
-                  Soumettre la fiche
-                </Button>
-              }
-            />
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Soumettre la fiche personnage</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Une fois soumise, ta fiche sera transmise à l&apos;équipe pour évaluation et
-                  verrouillée en attendant leur retour. Es-tu sûr de vouloir l&apos;envoyer ?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
-                <AlertDialogAction
-                  disabled={isPending || !isValid}
-                  onClick={() => {
-                    setIsSubmitDialogOpen(false);
-                    handleSubmit();
-                  }}
-                >
-                  Soumettre
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+
+          <AffiliationCard
+            playerClasses={playerClasses}
+            values={affiliation}
+            interactive={editable}
+            onChange={setAffiliation}
+            commentedTargets={comments.map((comment) => comment.target)}
+            activeTarget={activeComment?.target ?? null}
+          />
         </div>
-      )}
+
+        {/* Colonne droite (2/3) : Personnage + Carte de compétences */}
+        <div className="flex flex-col gap-6 lg:col-span-2">
+          <NarrativeFieldsCard
+            values={fields}
+            interactive={editable}
+            onChange={(key, value) => setFields((prev) => ({ ...prev, [key]: value }))}
+            commentedTargets={comments.map((comment) => comment.target)}
+            activeTarget={activeComment?.target ?? null}
+            narrativeSlot={
+              hasFeedback && editable
+                ? (target, field) => (
+                    <HighlightedTextarea
+                      id={field.key}
+                      rows={field.rows}
+                      className={field.className}
+                      placeholder={field.placeholder}
+                      minLength={field.minLength}
+                      maxLength={field.maxLength}
+                      value={fields[field.key]}
+                      ranges={rangesByTarget[target] ?? []}
+                      activeCommentId={activeCommentId}
+                      onChange={(event) =>
+                        setFields((prev) => ({ ...prev, [field.key]: event.target.value }))
+                      }
+                    />
+                  )
+                : undefined
+            }
+          />
+
+          <Card
+            id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
+            className={cn(
+              activeComment?.target === CharacterSheetCommentTarget.skillMap && "ring-primary"
+            )}
+          >
+            <CardContent>
+              <SkillMap
+                values={skills}
+                interactive={editable}
+                onChange={(field, value) => setSkills((prev) => ({ ...prev, [field]: value }))}
+              />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 
   return (
-    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_minmax(300px,22rem)]">
-      {sheet}
-      <div className="flex flex-col gap-6 lg:sticky lg:top-6">
-        {pendingStaffNotice}
-        {hasFeedback ? (
-          <CharacterSheetFeedbackSidebar
-            comments={comments}
-            orphanedCommentIds={orphanedCommentIds}
-            activeCommentId={activeCommentId}
-            onSelectComment={setActiveCommentId}
-            editable={editable}
-          />
-        ) : (
-          <CharacterSkinPreview username={minecraftUsername} />
+    <div className="flex flex-col gap-6">
+      {/* En-tête de la page avec titre et boutons d'action */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <h1 className="font-heading text-2xl font-semibold">Fiche personnage</h1>
+          {assignedClassDef && (
+            <Badge
+              variant="secondary"
+              className="border-primary/40 bg-primary/10 text-primary gap-2 px-3 py-1 text-sm font-medium"
+            >
+              <assignedClassDef.icon size={18} className="shrink-0" />
+              Classe attribuée : {assignedClassDef.singularLabel}
+            </Badge>
+          )}
+        </div>
+
+        {editable && (
+          <div className="flex flex-wrap items-center gap-3">
+            {error && <p className="text-destructive text-sm">{error}</p>}
+            {!isValid && validationError && (
+              <p className="text-muted-foreground text-xs sm:text-sm">{validationError}</p>
+            )}
+            <Button type="button" variant="outline" onClick={handleSaveDraft} disabled={isPending}>
+              Enregistrer le brouillon
+            </Button>
+            <AlertDialog open={isSubmitDialogOpen} onOpenChange={setIsSubmitDialogOpen}>
+              <AlertDialogTrigger
+                render={
+                  <Button type="button" disabled={isPending || !isValid}>
+                    Soumettre la fiche
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Soumettre la fiche personnage</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Une fois soumise, ta fiche sera transmise à l&apos;équipe pour évaluation et
+                    verrouillée en attendant leur retour. Es-tu sûr de vouloir l&apos;envoyer ?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isPending || !isValid}
+                    onClick={() => {
+                      setIsSubmitDialogOpen(false);
+                      handleSubmit();
+                    }}
+                  >
+                    Soumettre
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
+      </div>
+
+      {children}
+
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[1fr_minmax(300px,22rem)]">
+        {sheet}
+        <div className="flex flex-col gap-6 lg:sticky lg:top-6">
+          {pendingStaffNotice}
+          {hasFeedback ? (
+            <CharacterSheetFeedbackSidebar
+              comments={comments}
+              orphanedCommentIds={orphanedCommentIds}
+              activeCommentId={activeCommentId}
+              onSelectComment={setActiveCommentId}
+              editable={editable}
+            />
+          ) : (
+            <CharacterSkinPreview username={minecraftUsername} />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -31,6 +31,7 @@ import { AtlasPromoteButton } from "@/components/dashboard/atlas-promote-button"
 import { AtlasCharacterSheetSummary } from "@/components/dashboard/atlas-character-sheet-summary";
 import { AtlasCharacterTabs } from "@/components/dashboard/atlas-character-tabs";
 import { AtlasCreateCharacterDialog } from "@/components/dashboard/atlas-create-character-dialog";
+import { AtlasPlayerGroupCard } from "@/components/dashboard/atlas-player-group-card";
 import { AtlasStaffNotes } from "@/components/dashboard/atlas-staff-notes";
 import {
   AtlasTimelineTabs,
@@ -50,30 +51,68 @@ export default async function AtlasPlayerPage({
   const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
-  const player = await prisma.user.findUnique({
-    where: { id: playerId },
-    include: {
-      characterSheets: {
-        orderBy: { createdAt: "desc" },
-        include: {
-          reviewHistory: {
-            orderBy: { createdAt: "desc" },
-            include: { author: true },
+  const [player, allGroups] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: playerId },
+      include: {
+        rpGroup: {
+          include: {
+            members: {
+              select: {
+                id: true,
+                discordDisplayName: true,
+                minecraftUsername: true,
+                discordAvatarUrl: true,
+                registrationStatus: true,
+                characterSheets: {
+                  where: { status: CharacterStatus.ACTIVE },
+                  take: 1,
+                  select: {
+                    name: true,
+                    reviewStatus: true,
+                    assignedClass: true,
+                    chosenClasses: true,
+                  },
+                },
+              },
+              orderBy: { createdAt: "asc" },
+            },
           },
         },
+        characterSheets: {
+          orderBy: { createdAt: "desc" },
+          include: {
+            primaryClass: true,
+            primaryRole: true,
+            secondaryClass: true,
+            secondaryRole: true,
+            reviewHistory: {
+              orderBy: { createdAt: "desc" },
+              include: { author: true },
+            },
+          },
+        },
+        interviewBookings: {
+          orderBy: { createdAt: "desc" },
+          include: { slot: true, reviewer: true },
+        },
+        registrationHistory: {
+          orderBy: { createdAt: "asc" },
+          include: { author: true },
+        },
+        tickets: { orderBy: { createdAt: "desc" } },
+        staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
       },
-      interviewBookings: {
-        orderBy: { createdAt: "desc" },
-        include: { slot: true, reviewer: true },
+    }),
+    prisma.rpGroup.findMany({
+      select: {
+        id: true,
+        name: true,
+        _count: { select: { members: true } },
       },
-      registrationHistory: {
-        orderBy: { createdAt: "asc" },
-        include: { author: true },
-      },
-      tickets: { orderBy: { createdAt: "desc" } },
-      staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
-    },
-  });
+      orderBy: { name: "asc" },
+    }),
+  ]);
 
   if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
     notFound();
@@ -212,7 +251,7 @@ export default async function AtlasPlayerPage({
         )}
       </div>
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[2fr_minmax(300px,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-4 min-[1600px]:grid-cols-[2fr_minmax(300px,1fr)]">
         <div className="flex flex-col gap-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Card className="flex flex-row items-center gap-3.5">
@@ -256,27 +295,85 @@ export default async function AtlasPlayerPage({
             </Card>
           </div>
 
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {player.characterSheets.length > 0 && sheet ? (
+              <AtlasCharacterTabs
+                playerId={player.id}
+                pseudo={playerName}
+                characters={player.characterSheets.map((c) => ({
+                  id: c.id,
+                  name: c.name,
+                  status: c.status,
+                  reviewStatus: c.reviewStatus,
+                  createdAt: c.createdAt,
+                }))}
+                selectedSheetId={sheet.id}
+                canManageCharacters={canManageCharacters}
+              />
+            ) : (
+              <Card className="flex flex-col justify-between gap-4">
+                <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                  Personnages
+                </span>
+                <p className="text-muted-foreground text-xs">Aucun personnage.</p>
+                {canManageCharacters && (
+                  <div className="flex justify-end">
+                    <AtlasCreateCharacterDialog playerId={player.id} pseudo={playerName} />
+                  </div>
+                )}
+              </Card>
+            )}
+
+            <AtlasPlayerGroupCard
+              playerId={player.id}
+              playerPseudo={playerName}
+              group={player.rpGroup}
+              declaredGroupMembers={sheet?.additionalComments ?? null}
+              allGroups={allGroups.map((g) => ({
+                id: g.id,
+                name: g.name,
+                memberCount: g._count.members,
+              }))}
+              canManageGroups={canManageCharacters}
+            />
+          </div>
+
+          <AtlasCharacterSheetSummary
+            sheet={sheet}
+            playerId={player.id}
+            pseudo={playerName}
+            canReview={canReviewSheet}
+          />
+
+          <AtlasStaffNotes
+            playerId={player.id}
+            notes={player.staffNotes}
+            currentUserId={staffUser.id}
+          />
+        </div>
+
+        <div className="flex flex-col gap-4">
           <Card className="flex flex-col gap-4">
             <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               Statistiques
             </span>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 min-[1600px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3">
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Inscription site</span>
                 <p className="text-sm">
-                  {formatDate(player.createdAt, { style: "prefix-long", withTime: true })}
+                  {formatDate(player.createdAt, { style: "prefix-short", withTime: true })}
                 </p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Inscription whitelist</span>
                 <p className="text-sm">
-                  {formatDate(whitelistInProgressAt, { style: "prefix-long", withTime: true })}
+                  {formatDate(whitelistInProgressAt, { style: "prefix-short", withTime: true })}
                 </p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Acceptation whitelist</span>
                 <p className="text-sm">
-                  {formatDate(whitelistedAt, { style: "prefix-long", withTime: true })}
+                  {formatDate(whitelistedAt, { style: "prefix-short", withTime: true })}
                 </p>
               </div>
               <div className="flex flex-col gap-1">
@@ -294,41 +391,8 @@ export default async function AtlasPlayerPage({
             </div>
           </Card>
 
-          {player.characterSheets.length > 0 && sheet ? (
-            <AtlasCharacterTabs
-              playerId={player.id}
-              pseudo={playerName}
-              characters={player.characterSheets.map((c) => ({
-                id: c.id,
-                name: c.name,
-                status: c.status,
-                reviewStatus: c.reviewStatus,
-                createdAt: c.createdAt,
-              }))}
-              selectedSheetId={sheet.id}
-              canManageCharacters={canManageCharacters}
-            />
-          ) : canManageCharacters ? (
-            <div className="flex justify-end">
-              <AtlasCreateCharacterDialog playerId={player.id} pseudo={playerName} />
-            </div>
-          ) : null}
-
-          <AtlasCharacterSheetSummary
-            sheet={sheet}
-            playerId={player.id}
-            pseudo={playerName}
-            canReview={canReviewSheet}
-          />
-
-          <AtlasStaffNotes
-            playerId={player.id}
-            notes={player.staffNotes}
-            currentUserId={staffUser.id}
-          />
+          <AtlasTimelineTabs logItems={logItems} />
         </div>
-
-        <AtlasTimelineTabs logItems={logItems} />
       </div>
     </div>
   );

@@ -23,6 +23,7 @@ import {
   Newspaper,
   BookBookmark,
   Scroll,
+  Scales,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
@@ -76,6 +77,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   newspaper: Newspaper,
   "book-bookmark": BookBookmark,
   scroll: Scroll,
+  scales: Scales,
 };
 
 export interface AppShellNavEntry {

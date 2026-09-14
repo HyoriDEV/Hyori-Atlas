@@ -84,7 +84,7 @@ export function TablePagination({
 
         {showPageSizeSelector && pageSizeOptions && pageSizeOptions.length > 0 && (
           <div className="flex items-center gap-2">
-            <span>Lignes par page :</span>
+            <span>Résultats/page</span>
             <Select
               items={pageSizeItems}
               value={String(pageSize)}
@@ -132,4 +132,3 @@ export function TablePagination({
     </div>
   );
 }
-
