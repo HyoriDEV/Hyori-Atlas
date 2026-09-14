@@ -533,19 +533,12 @@ export function ReturnSheetsDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Renvoyer toutes les fiches en attente ?</AlertDialogTitle>
+          <AlertDialogTitle>Renvoyer les fiches en attente ?</AlertDialogTitle>
           <AlertDialogDescription className="flex flex-col gap-2">
             <span>
-              Cette action va renvoyer au statut <strong>« En rédaction (joueur) »</strong> l&apos;ensemble
-              des fiches actuellement <strong>« En attente (staff) »</strong> des joueurs ayant le
-              statut d&apos;inscription <strong>« En whitelist »</strong>.
-            </span>
-            <span>
-              Un commentaire automatique sera ajouté sur le champ <strong>Nom RP</strong> :
-              <br />
-              <em className="text-foreground">
-                &laquo; Merci de remplir la section Affiliation de ta fiche personnage ! &raquo;
-              </em>
+              Cette action va renvoyer au statut<strong> « En rédaction (joueur) » </strong>
+              l&apos;ensemble des fiches actuellement<strong> « En attente (staff) » </strong>
+              des joueurs ayant le statut d&apos;inscription<strong> « En whitelist »</strong>.
             </span>
             <span className="text-destructive font-medium">
               Attention : cette action est irréversible et modifiera le statut de toutes les fiches
@@ -560,7 +553,7 @@ export function ReturnSheetsDialog({
             disabled={isPending}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {isPending ? "Renvoi en cours..." : "Renvoyer les fiches"}
+            {isPending ? "Renvoi..." : "Renvoyer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
