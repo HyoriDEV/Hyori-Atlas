@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { SheetEvaluationWorkspace } from "@/components/dashboard/sheet-evaluation-workspace";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
+import { getPlayerClassesWithStats } from "@/lib/services/player-class-service";
 
 export default async function CharacterSheetEvaluationPage({
   params,
@@ -87,10 +88,12 @@ export default async function CharacterSheetEvaluationPage({
     createdAt: comment.createdAt.toISOString(),
   }));
 
+  const playerClasses = await getPlayerClassesWithStats();
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
-        <AtlasBackButton />
+        <AtlasBackButton href={`/staff/atlas/${player.id}`} />
         <h1 className="font-heading flex-1 text-lg font-semibold">
           {sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF
             ? `Évaluation de la fiche de ${playerName}`
@@ -110,6 +113,13 @@ export default async function CharacterSheetEvaluationPage({
         fieldValues={fieldValues}
         skillValues={skillValues}
         chosenClasses={sheet.chosenClasses}
+        playerClasses={playerClasses}
+        affiliation={{
+          primaryClassId: sheet.primaryClassId ?? null,
+          primaryRoleId: sheet.primaryRoleId ?? null,
+          secondaryClassId: sheet.secondaryClassId ?? null,
+          secondaryRoleId: sheet.secondaryRoleId ?? null,
+        }}
         initialComments={comments}
       />
     </div>

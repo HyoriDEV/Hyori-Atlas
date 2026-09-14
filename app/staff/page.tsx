@@ -32,7 +32,7 @@ const atlasRoles: Role[] = [
 ];
 const waitlistRoles: Role[] = [Role.ADMIN];
 const interviewSlotRoles: Role[] = [Role.ADMIN];
-const writingRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+const distributionRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 const rpTrackingRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 const bdaRoles: Role[] = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
 
@@ -43,7 +43,7 @@ export default async function StaffDashboardPage() {
   const canAccessAtlas = atlasRoles.includes(user.role);
   const canAccessWaitlist = waitlistRoles.includes(user.role);
   const canAccessInterviewSlots = interviewSlotRoles.includes(user.role);
-  const canAccessWriting = writingRoles.includes(user.role);
+  const canAccessDistribution = distributionRoles.includes(user.role);
   const canAccessRpTracking = rpTrackingRoles.includes(user.role);
   const canAccessBdaReports = bdaRoles.includes(user.role);
   const canAccessStaffTeam = user.role === Role.ADMIN;
@@ -55,7 +55,7 @@ export default async function StaffDashboardPage() {
     pendingSheetsCount,
     waitlistCount,
     registeredInterviewBookingsCount,
-    totalChaptersCount,
+    totalPlayerClassesCount,
     activeRpTrackingConversationsCount,
     bdaReportsCount,
     staffMembersCount,
@@ -86,7 +86,7 @@ export default async function StaffDashboardPage() {
           where: { status: InterviewBookingStatus.REGISTERED },
         })
       : 0,
-    canAccessWriting ? prisma.chapter.count() : 0,
+    canAccessDistribution ? prisma.playerClass.count() : 0,
     canAccessRpTracking
       ? prisma.conversation.count({
           where: { type: ConversationType.RP_TRACKING },
@@ -181,13 +181,13 @@ export default async function StaffDashboardPage() {
             }
           : undefined,
     },
-    "/staff/writing": {
-      title: "Lore des joueurs",
-      description: "Chapitres rédigés par la communauté.",
-      href: "/staff/writing",
-      iconKey: "pen",
-      stat: totalChaptersCount,
-      statLabel: totalChaptersCount > 1 ? "chapitres" : "chapitre",
+    "/staff/distribution": {
+      title: "Distribution",
+      description: "Classes de joueurs et équilibre des rôles.",
+      href: "/staff/distribution",
+      iconKey: "scales",
+      stat: totalPlayerClassesCount,
+      statLabel: totalPlayerClassesCount > 1 ? "classes" : "classe",
     },
     "/staff/rp-tracking": {
       title: "Suivi RP",

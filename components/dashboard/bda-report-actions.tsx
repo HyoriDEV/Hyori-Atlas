@@ -51,7 +51,7 @@ export function BdaReportActions({
       await deleteBdaReport(reportId);
       toast.success("Rapport supprimé avec succès.");
       setDeleteDialogOpen(false);
-      router.push("/staff/bda-reports");
+      router.replace("/staff/bda-reports");
     } catch (err) {
       console.error(err);
       toast.error(err instanceof Error ? err.message : "Erreur lors de la suppression du rapport.");

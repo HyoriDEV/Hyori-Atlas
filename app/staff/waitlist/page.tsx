@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { staffNavItems } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
@@ -23,13 +23,15 @@ import { RejectedRowActions } from "@/components/dashboard/rejected-row-actions"
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { SortHeader, SortToggle } from "@/components/dashboard/waitlist-sort-controls";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 type PageProps = {
   searchParams: Promise<{
     sort?: string;
     page?: string;
+    pageSize?: string;
     rejectedPage?: string;
+    rejectedPageSize?: string;
   }>;
 };
 
@@ -47,7 +49,9 @@ export default async function WaitlistPage(props: PageProps) {
 
   const sortOrder: "asc" | "desc" = searchParams.sort === "asc" ? "asc" : "desc";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
   const rejectedPage = Math.max(1, parseInt(searchParams.rejectedPage ?? "1", 10) || 1);
+  const rejectedPageSize = resolvePageSize(searchParams.rejectedPageSize, savedPrefs.rejectedPageSize, DEFAULT_PAGE_SIZE);
 
   const [waitlistPlayers, rejectedPlayersAll] = await Promise.all([
     prisma.user.findMany({
@@ -94,13 +98,13 @@ export default async function WaitlistPage(props: PageProps) {
   const waitlistCount = sortedWaitlistPlayers.length;
   const rejectedCount = sortedRejectedPlayers.length;
 
-  const waitlistTotalPages = Math.ceil(waitlistCount / PAGE_SIZE) || 1;
-  const rejectedTotalPages = Math.ceil(rejectedCount / PAGE_SIZE) || 1;
+  const waitlistTotalPages = Math.ceil(waitlistCount / pageSize) || 1;
+  const rejectedTotalPages = Math.ceil(rejectedCount / rejectedPageSize) || 1;
 
-  const players = sortedWaitlistPlayers.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const players = sortedWaitlistPlayers.slice((page - 1) * pageSize, page * pageSize);
   const rejectedPlayers = sortedRejectedPlayers.slice(
-    (rejectedPage - 1) * PAGE_SIZE,
-    rejectedPage * PAGE_SIZE
+    (rejectedPage - 1) * rejectedPageSize,
+    rejectedPage * rejectedPageSize
   );
 
   return (
@@ -192,8 +196,10 @@ export default async function WaitlistPage(props: PageProps) {
             currentPage={page}
             totalPages={waitlistTotalPages}
             totalCount={waitlistCount}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             paramName="page"
+            sizeParamName="pageSize"
+            pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
           />
         </Card>
       </div>
@@ -286,8 +292,10 @@ export default async function WaitlistPage(props: PageProps) {
                 currentPage={rejectedPage}
                 totalPages={rejectedTotalPages}
                 totalCount={rejectedCount}
-                pageSize={PAGE_SIZE}
+                pageSize={rejectedPageSize}
                 paramName="rejectedPage"
+                sizeParamName="rejectedPageSize"
+                pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
               />
             </Card>
           </div>

@@ -2,15 +2,23 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
-import { getMockServerActivity, formatPlaytime } from "@/lib/mock-server-data";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
   characterStatusBadgeVariant,
   registrationStatusBadgeVariant,
 } from "@/lib/atlas-status";
-import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  CharacterStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import {
   characterSheetStatusLabels,
   characterStatusLabels,
@@ -35,16 +43,10 @@ import { TablePagination } from "@/components/dashboard/table-pagination";
 import { SortHeader } from "@/components/dashboard/waitlist-sort-controls";
 import { UnreadDot } from "@/components/ui/unread-dot";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 type SortKey =
-  | "player"
-  | "rpName"
-  | "sheetUpdatedAt"
-  | "sheetStatus"
-  | "playtime"
-  | "lastLogin"
-  | "status";
+  "player" | "rpName" | "sheetUpdatedAt" | "sheetStatus" | "playtime" | "lastLogin" | "status";
 type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = [
@@ -65,6 +67,7 @@ type PageProps = {
     sort?: string;
     dir?: string;
     page?: string;
+    pageSize?: string;
   }>;
 };
 
@@ -102,6 +105,7 @@ export default async function AtlasPage(props: PageProps) {
     rawSortKey && VALID_SORT_KEYS.includes(rawSortKey) ? rawSortKey : null;
   const sortDir: SortDirection = searchParams.dir === "desc" ? "desc" : "asc";
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
 
   const hasActiveFilters = Boolean(
     query ||
@@ -148,7 +152,7 @@ export default async function AtlasPage(props: PageProps) {
     orderBy: { createdAt: "desc" },
   });
 
-  const playersWithActivity = players.map((player) => {
+  const playersWithSheet = players.map((player) => {
     const activeSheet =
       player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE) ??
       player.characterSheets[0] ??
@@ -156,12 +160,11 @@ export default async function AtlasPage(props: PageProps) {
     return {
       player,
       activeSheet,
-      activity: getMockServerActivity(player.id, player.createdAt),
     };
   });
 
   if (sortKey) {
-    playersWithActivity.sort((a, b) => {
+    playersWithSheet.sort((a, b) => {
       let comparison = 0;
       if (sortKey === "player") {
         const nameA = a.player.minecraftUsername ?? a.player.discordDisplayName;
@@ -191,19 +194,11 @@ export default async function AtlasPage(props: PageProps) {
           [CharacterSheetStatus.DRAFT]: 2,
           [CharacterSheetStatus.VALIDATED]: 1,
         };
-        const rankA = a.activeSheet
-          ? (rankMap[a.activeSheet.reviewStatus] ?? 0)
-          : 0;
-        const rankB = b.activeSheet
-          ? (rankMap[b.activeSheet.reviewStatus] ?? 0)
-          : 0;
+        const rankA = a.activeSheet ? (rankMap[a.activeSheet.reviewStatus] ?? 0) : 0;
+        const rankB = b.activeSheet ? (rankMap[b.activeSheet.reviewStatus] ?? 0) : 0;
         comparison = rankA - rankB;
-      } else if (sortKey === "playtime") {
-        comparison = a.activity.totalPlaytimeMinutes - b.activity.totalPlaytimeMinutes;
-      } else if (sortKey === "lastLogin") {
-        const timeA = a.activity.lastLoginAt?.getTime() ?? 0;
-        const timeB = b.activity.lastLoginAt?.getTime() ?? 0;
-        comparison = timeA - timeB;
+      } else if (sortKey === "playtime" || sortKey === "lastLogin") {
+        comparison = 0;
       } else if (sortKey === "status") {
         const rankA = registrationStatusRank[a.player.registrationStatus] ?? 0;
         const rankB = registrationStatusRank[b.player.registrationStatus] ?? 0;
@@ -213,9 +208,9 @@ export default async function AtlasPage(props: PageProps) {
     });
   }
 
-  const totalCount = playersWithActivity.length;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
-  const pagePlayers = playersWithActivity.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const totalCount = playersWithSheet.length;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
+  const pagePlayers = playersWithSheet.slice((page - 1) * pageSize, page * pageSize);
 
   const sortHeaderProps = {
     activeSortKey: sortKey ?? undefined,
@@ -256,15 +251,6 @@ export default async function AtlasPage(props: PageProps) {
                   defaultDirection="asc"
                   currentSort={sortDir}
                   label="Nom RP"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
-                  sortKey="playtime"
-                  defaultDirection="desc"
-                  currentSort={sortDir}
-                  label="Temps de jeu"
                 />
               </TableHead>
               <TableHead>
@@ -316,7 +302,7 @@ export default async function AtlasPage(props: PageProps) {
                 </TableCell>
               </TableRow>
             ) : (
-              pagePlayers.map(({ player, activeSheet, activity }) => {
+              pagePlayers.map(({ player, activeSheet }) => {
                 const playerName = player.minecraftUsername ?? player.discordDisplayName;
                 const sheet = activeSheet;
                 const isPendingStaffSheet = player.characterSheets.some(
@@ -340,14 +326,7 @@ export default async function AtlasPage(props: PageProps) {
                     >
                       <span className="block truncate">{sheet?.name || "—"}</span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {activity.lastLoginAt ? formatPlaytime(activity.totalPlaytimeMinutes) : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {activity.lastLoginAt
-                        ? formatDate(activity.lastLoginAt, { style: "prefix-long", withTime: true })
-                        : "—"}
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">—</TableCell>
                     <TableCell className="text-muted-foreground">
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
@@ -356,10 +335,10 @@ export default async function AtlasPage(props: PageProps) {
                     <TableCell>
                       {sheet ? (
                         <div className="flex items-center gap-1.5">
-                          <Badge variant={characterStatusBadgeVariant(sheet.status)} className="text-[10px] px-1.5 py-0">
-                            {characterStatusLabels[sheet.status]}
-                          </Badge>
-                          <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)} className="text-[10px] px-1.5 py-0">
+                          <Badge
+                            variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}
+                            className="px-1.5 py-0 text-[10px]"
+                          >
                             {characterSheetStatusLabels[sheet.reviewStatus]}
                           </Badge>
                         </div>
@@ -382,8 +361,10 @@ export default async function AtlasPage(props: PageProps) {
           currentPage={page}
           totalPages={totalPages}
           totalCount={totalCount}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           paramName="page"
+          sizeParamName="pageSize"
+          pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
         />
       </Card>
     </div>

@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
+import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
@@ -25,12 +25,12 @@ import { UnreadDot } from "@/components/ui/unread-dot";
 import { bdaReportStatusBadgeVariant } from "@/lib/atlas-status";
 import { bdaReportStatusLabels } from "@/lib/navigation";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 10;
 
 const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
 
 export default async function BdaReportsPage(props: {
-  searchParams: Promise<{ tab?: string; page?: string }>;
+  searchParams: Promise<{ tab?: string; page?: string; pageSize?: string }>;
 }) {
   const searchParams = await props.searchParams;
   await requireRole(bdaRoles);
@@ -42,6 +42,7 @@ export default async function BdaReportsPage(props: {
   }
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
   const isArchived = searchParams.tab === "archived";
 
   const [activeCount, archivedCount, reports] = await Promise.all([
@@ -56,13 +57,13 @@ export default async function BdaReportsPage(props: {
         status: isArchived ? BdaReportStatus.ARCHIVED : { not: BdaReportStatus.ARCHIVED },
       },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      skip: (page - 1) * PAGE_SIZE,
-      take: PAGE_SIZE,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     }),
   ]);
 
   const totalCount = isArchived ? archivedCount : activeCount;
-  const totalPages = Math.ceil(totalCount / PAGE_SIZE) || 1;
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   const { getGlobalSettings } = await import("@/lib/services/settings-service");
   const settings = await getGlobalSettings();
@@ -144,8 +145,10 @@ export default async function BdaReportsPage(props: {
           currentPage={page}
           totalPages={totalPages}
           totalCount={totalCount}
-          pageSize={PAGE_SIZE}
+          pageSize={pageSize}
           paramName="page"
+          sizeParamName="pageSize"
+          pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
         />
       </Card>
     </div>
