@@ -46,8 +46,18 @@ export function AtlasCharacterStatusSelect({
 
   return (
     <Select value={currentStatus} onValueChange={handleChange} disabled={disabled || isPending}>
-      <SelectTrigger className="h-8 w-[140px] text-xs font-medium">
-        <SelectValue placeholder="Changer le statut" />
+      <SelectTrigger size="sm" className="w-[125px] text-xs font-medium">
+        <SelectValue placeholder="Changer le statut">
+          {currentStatus === CharacterStatus.ACTIVE && (
+            <span className="font-medium text-emerald-500 dark:text-emerald-400">Actif</span>
+          )}
+          {currentStatus === CharacterStatus.DEAD && (
+            <span className="font-medium text-destructive">Mort</span>
+          )}
+          {currentStatus === CharacterStatus.DISABLED && (
+            <span className="font-medium text-muted-foreground">Désactivé</span>
+          )}
+        </SelectValue>
       </SelectTrigger>
       <SelectContent align="end">
         <SelectItem value={CharacterStatus.ACTIVE}>

@@ -218,6 +218,14 @@ export const staffAtlasItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffRpGroupsItem: StaffNavItem = {
+  label: "Groupes RP",
+  href: "/staff/groups",
+  iconKey: "users",
+  roles: [Role.ADMIN, Role.RP_TRACKING],
+  fullWidth: true,
+};
+
 export const staffDistributionItem: StaffNavItem = {
   label: "Distribution",
   href: "/staff/distribution",
@@ -292,6 +300,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffBdaReportsItem,
   staffStaffTeamItem,
   staffAtlasItem,
+  staffRpGroupsItem,
   staffDistributionItem,
   staffRpTrackingItem,
   staffWaitlistItem,
@@ -318,7 +327,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       },
       {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffDistributionItem, staffRpTrackingItem],
+        items: [staffAtlasItem, staffRpGroupsItem, staffDistributionItem, staffRpTrackingItem],
       },
       {
         title: "Admission",
@@ -356,7 +365,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffDistributionItem, staffRpTrackingItem],
+        items: [staffAtlasItem, staffRpGroupsItem, staffDistributionItem, staffRpTrackingItem],
       },
     ];
   }

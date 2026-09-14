@@ -141,7 +141,11 @@ model User {
   bdaStaffMemberships   BdaStaffMember[]
   updatedGlobalSettings GlobalSettings[]
   minecraftAuthCodes    MinecraftAuthCode[]
+  rpGroupId             String?
+  rpGroup               RpGroup?                    @relation("RpGroupMembers", fields: [rpGroupId], references: [id], onDelete: SetNull)
+  createdRpGroups       RpGroup[]                   @relation("RpGroupCreator")
 
+  @@index([rpGroupId])
   @@map("users")
 }
 
@@ -641,5 +645,19 @@ model PlayerClassRole {
   @@unique([playerClassId, name])
   @@index([playerClassId])
   @@map("player_class_roles")
+}
+
+model RpGroup {
+  id          String   @id @default(cuid())
+  name        String   @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  createdById String?
+  createdBy   User?    @relation("RpGroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members     User[]   @relation("RpGroupMembers")
+
+  @@map("rp_groups")
 }
 

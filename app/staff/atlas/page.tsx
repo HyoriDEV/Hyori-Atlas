@@ -2,14 +2,23 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
   characterStatusBadgeVariant,
   registrationStatusBadgeVariant,
 } from "@/lib/atlas-status";
-import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  CharacterStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import {
   characterSheetStatusLabels,
   characterStatusLabels,
@@ -37,13 +46,7 @@ import { UnreadDot } from "@/components/ui/unread-dot";
 const DEFAULT_PAGE_SIZE = 10;
 
 type SortKey =
-  | "player"
-  | "rpName"
-  | "sheetUpdatedAt"
-  | "sheetStatus"
-  | "playtime"
-  | "lastLogin"
-  | "status";
+  "player" | "rpName" | "sheetUpdatedAt" | "sheetStatus" | "playtime" | "lastLogin" | "status";
 type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = [
@@ -67,7 +70,6 @@ type PageProps = {
     pageSize?: string;
   }>;
 };
-
 
 function parseEnumParam<T extends string>(
   value: string | undefined,
@@ -192,12 +194,8 @@ export default async function AtlasPage(props: PageProps) {
           [CharacterSheetStatus.DRAFT]: 2,
           [CharacterSheetStatus.VALIDATED]: 1,
         };
-        const rankA = a.activeSheet
-          ? (rankMap[a.activeSheet.reviewStatus] ?? 0)
-          : 0;
-        const rankB = b.activeSheet
-          ? (rankMap[b.activeSheet.reviewStatus] ?? 0)
-          : 0;
+        const rankA = a.activeSheet ? (rankMap[a.activeSheet.reviewStatus] ?? 0) : 0;
+        const rankB = b.activeSheet ? (rankMap[b.activeSheet.reviewStatus] ?? 0) : 0;
         comparison = rankA - rankB;
       } else if (sortKey === "playtime" || sortKey === "lastLogin") {
         comparison = 0;
@@ -253,15 +251,6 @@ export default async function AtlasPage(props: PageProps) {
                   defaultDirection="asc"
                   currentSort={sortDir}
                   label="Nom RP"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
-                  sortKey="playtime"
-                  defaultDirection="desc"
-                  currentSort={sortDir}
-                  label="Temps de jeu"
                 />
               </TableHead>
               <TableHead>
@@ -338,7 +327,6 @@ export default async function AtlasPage(props: PageProps) {
                       <span className="block truncate">{sheet?.name || "—"}</span>
                     </TableCell>
                     <TableCell className="text-muted-foreground">—</TableCell>
-                    <TableCell className="text-muted-foreground">—</TableCell>
                     <TableCell className="text-muted-foreground">
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
@@ -347,10 +335,10 @@ export default async function AtlasPage(props: PageProps) {
                     <TableCell>
                       {sheet ? (
                         <div className="flex items-center gap-1.5">
-                          <Badge variant={characterStatusBadgeVariant(sheet.status)} className="text-[10px] px-1.5 py-0">
-                            {characterStatusLabels[sheet.status]}
-                          </Badge>
-                          <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)} className="text-[10px] px-1.5 py-0">
+                          <Badge
+                            variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}
+                            className="px-1.5 py-0 text-[10px]"
+                          >
                             {characterSheetStatusLabels[sheet.reviewStatus]}
                           </Badge>
                         </div>
