@@ -31,6 +31,7 @@ import {
   createPlayerClassRoleAction,
   updatePlayerClassRoleAction,
   deletePlayerClassRoleAction,
+  returnPendingSheetsForAffiliationAction,
 } from "@/lib/actions/distribution-actions";
 
 export function CreateClassDialog({
@@ -491,6 +492,75 @@ export function DeleteRoleDialog({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isPending ? "Suppression..." : "Supprimer le rôle"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+export function ReturnSheetsDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const [isPending, startTransition] = useTransition();
+
+  function handleConfirm() {
+    startTransition(async () => {
+      const res = await returnPendingSheetsForAffiliationAction();
+      if (!res.success) {
+        toast.error(res.error || "Erreur lors du renvoi des fiches.");
+        return;
+      }
+
+      const count = res.data?.count ?? 0;
+      if (count > 0) {
+        toast.success(
+          `${count} fiche${count > 1 ? "s" : ""} personnage renvoyée${count > 1 ? "s" : ""} aux joueurs avec succès !`
+        );
+      } else {
+        toast.info("Aucune fiche en attente d'évaluation trouvée pour les joueurs en whitelist.");
+      }
+
+      onOpenChange(false);
+    });
+  }
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Renvoyer toutes les fiches en attente ?</AlertDialogTitle>
+          <AlertDialogDescription className="flex flex-col gap-2">
+            <span>
+              Cette action va renvoyer au statut <strong>« En rédaction (joueur) »</strong> l&apos;ensemble
+              des fiches actuellement <strong>« En attente (staff) »</strong> des joueurs ayant le
+              statut d&apos;inscription <strong>« En whitelist »</strong>.
+            </span>
+            <span>
+              Un commentaire automatique sera ajouté sur le champ <strong>Nom RP</strong> :
+              <br />
+              <em className="text-foreground">
+                &laquo; Merci de remplir la section Affiliation de ta fiche personnage ! &raquo;
+              </em>
+            </span>
+            <span className="text-destructive font-medium">
+              Attention : cette action est irréversible et modifiera le statut de toutes les fiches
+              concernées.
+            </span>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleConfirm}
+            disabled={isPending}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isPending ? "Renvoi en cours..." : "Renvoyer les fiches"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

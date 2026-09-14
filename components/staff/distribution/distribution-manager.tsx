@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, MagnifyingGlass, Scales, UsersThree } from "@phosphor-icons/react";
+import { Plus, MagnifyingGlass, Scales, ArrowCounterClockwise } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,10 @@ import {
   PlayerClassCard,
   type SerializedPlayerClass,
 } from "@/components/staff/distribution/player-class-card";
-import { CreateClassDialog } from "@/components/staff/distribution/class-dialogs";
+import {
+  CreateClassDialog,
+  ReturnSheetsDialog,
+} from "@/components/staff/distribution/class-dialogs";
 
 export function DistributionManager({
   initialClasses,
@@ -19,6 +22,7 @@ export function DistributionManager({
 }) {
   const [search, setSearch] = useState("");
   const [createClassOpen, setCreateClassOpen] = useState(false);
+  const [returnSheetsOpen, setReturnSheetsOpen] = useState(false);
 
   const filteredClasses = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -30,10 +34,6 @@ export function DistributionManager({
       return matchClassName || matchRoleName;
     });
   }, [initialClasses, search]);
-
-  const totalRolesCount = useMemo(() => {
-    return initialClasses.reduce((sum, c) => sum + c.roles.length, 0);
-  }, [initialClasses]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -48,10 +48,22 @@ export function DistributionManager({
           />
         </div>
 
-        <Button onClick={() => setCreateClassOpen(true)} className="gap-2 shadow-xs" size="sm">
-          <Plus className="size-4" />
-          <span>Nouvelle classe</span>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            onClick={() => setReturnSheetsOpen(true)}
+            className="border-destructive/40 text-destructive hover:bg-destructive/10 hover:text-destructive gap-2 shadow-xs"
+            size="sm"
+          >
+            <ArrowCounterClockwise className="size-4" />
+            <span>Renvoyer les fiches</span>
+          </Button>
+
+          <Button onClick={() => setCreateClassOpen(true)} className="gap-2 shadow-xs" size="sm">
+            <Plus className="size-4" />
+            <span>Nouvelle classe</span>
+          </Button>
+        </div>
       </div>
 
       {initialClasses.length === 0 ? (
@@ -92,6 +104,7 @@ export function DistributionManager({
       )}
 
       <CreateClassDialog open={createClassOpen} onOpenChange={setCreateClassOpen} />
+      <ReturnSheetsDialog open={returnSheetsOpen} onOpenChange={setReturnSheetsOpen} />
     </div>
   );
 }
