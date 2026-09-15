@@ -112,6 +112,10 @@ export const BACKGROUND_MAX_LENGTH = 2000;
 
 export const ADDITIONAL_COMMENTS_MAX_LENGTH = 300;
 
+/** Valeur sentinelle envoyée par le formulaire quand le joueur choisit "Autre" pour un rôle.
+ *  Elle est convertie en `null` côté serveur avant toute écriture en base. */
+export const OTHER_ROLE_ID = "__other__";
+
 export function sumSkillPoints(values: SkillValues): number {
   return SKILL_DEFINITIONS.reduce((total, skill) => total + values[skill.field], 0);
 }

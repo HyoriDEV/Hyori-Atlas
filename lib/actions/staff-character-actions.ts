@@ -71,7 +71,6 @@ export async function createCharacterForPlayer(playerId: string) {
         description: "",
         background: "",
         additionalComments: null,
-        chosenClasses: [],
         physicalForce: 1,
         physicalEndurance: 1,
         physicalStealth: 1,

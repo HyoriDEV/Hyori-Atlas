@@ -19,7 +19,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
-import { CharacterClassCircles } from "@/components/character-sheet/character-class-circles";
 import { CHARACTER_CLASSES } from "@/lib/character-classes";
 
 interface CharacterSheetSummaryData extends SkillValues {
@@ -33,7 +32,6 @@ interface CharacterSheetSummaryData extends SkillValues {
   description: string;
   background: string;
   additionalComments: string | null;
-  chosenClasses: CharacterClass[];
   status: CharacterStatus;
   assignedClass?: CharacterClass | null;
   primaryClass?: { id: string; name: string } | null;
@@ -52,7 +50,7 @@ function buildCivilFieldEntries(sheet: CharacterSheetSummaryData) {
     { label: "Nom", value: sheet.name },
     { label: "Surnom", value: sheet.nickname ?? "—" },
     { label: "Âge", value: `${sheet.age} ans` },
-    { label: "Statut", value: sheet.civilStatus },
+    { label: "Métier", value: sheet.civilStatus },
   ];
 }
 
@@ -136,9 +134,7 @@ export function AtlasCharacterSheetSummary({
               ))}
             </div>
 
-            {(sheet.primaryClass ||
-              (sheet.chosenClasses && sheet.chosenClasses.length > 0) ||
-              sheet.assignedClass) && (
+            {(sheet.primaryClass || sheet.assignedClass) && (
               <div className="border-border/50 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
                 {sheet.primaryClass ? (
                   <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -171,17 +167,6 @@ export function AtlasCharacterSheetSummary({
                         </div>
                       )}
                     </div>
-                  </div>
-                ) : sheet.chosenClasses && sheet.chosenClasses.length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-                      Classes souhaitées :
-                    </span>
-                    <CharacterClassCircles
-                      selectedClasses={sheet.chosenClasses}
-                      interactive={false}
-                      size="sm"
-                    />
                   </div>
                 ) : null}
 

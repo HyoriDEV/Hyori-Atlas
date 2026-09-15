@@ -21,7 +21,6 @@ export interface RpGroupMemberSheet {
   hasUnreadFeedback: boolean;
   additionalComments: string | null;
   assignedClass: CharacterClass | null;
-  chosenClasses: CharacterClass[];
 }
 
 export interface RpGroupMemberBooking {

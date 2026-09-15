@@ -93,7 +93,6 @@ export default async function CharacterSheetPage(props: {
       sheetId={sheet?.id}
       initialValues={fieldValues}
       initialSkills={skillValues}
-      initialClasses={sheet?.chosenClasses ?? []}
       playerClasses={playerClasses}
       initialAffiliation={{
         primaryClassId: sheet?.primaryClassId ?? null,

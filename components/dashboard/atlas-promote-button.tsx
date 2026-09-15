@@ -22,29 +22,32 @@ export interface AtlasPromoteButtonProps {
   playerId: string;
   pseudo: string;
   characterSheetId?: string;
-  preferredClasses?: CharacterClass[];
+  primaryClassId?: string | null;
+  secondaryClassId?: string | null;
 }
 
 export function AtlasPromoteButton({
   playerId,
   pseudo,
   characterSheetId,
-  preferredClasses = [],
+  primaryClassId = null,
+  secondaryClassId = null,
 }: AtlasPromoteButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(
-    preferredClasses[0] ?? null
+    (primaryClassId as CharacterClass | null) ?? null
   );
   const [isPending, startTransition] = useTransition();
 
-  const primaryChoice = preferredClasses[0] ?? null;
-  const secondaryChoice = preferredClasses[1] ?? null;
+  const primaryChoice = primaryClassId as CharacterClass | null;
+  const secondaryChoice = secondaryClassId as CharacterClass | null;
+  const hasPreferences = !!(primaryChoice || secondaryChoice);
 
   function handleOpenChange(newOpen: boolean) {
     if (!isPending) {
       setOpen(newOpen);
       if (newOpen) {
-        setSelectedClass(preferredClasses[0] ?? null);
+        setSelectedClass((primaryClassId as CharacterClass | null) ?? null);
       }
     }
   }
@@ -87,7 +90,7 @@ export function AtlasPromoteButton({
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">
-            {preferredClasses.length > 0 && (
+            {hasPreferences && (
               <div className="bg-muted/40 rounded-lg border p-3 text-xs">
                 <span className="text-muted-foreground font-semibold">
                   Souhaits formulés par le joueur :

@@ -112,7 +112,6 @@ export default async function CharacterSheetEvaluationPage({
         sheetUpdatedAt={sheet.updatedAt.toISOString()}
         fieldValues={fieldValues}
         skillValues={skillValues}
-        chosenClasses={sheet.chosenClasses}
         playerClasses={playerClasses}
         affiliation={{
           primaryClassId: sheet.primaryClassId ?? null,

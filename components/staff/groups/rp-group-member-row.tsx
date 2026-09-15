@@ -136,9 +136,6 @@ export function RpGroupMemberRow({ member, canManageGroups = true }: RpGroupMemb
                   {sheet.assignedClass && (
                     <span className="text-primary ml-1">({sheet.assignedClass})</span>
                   )}
-                  {!sheet.assignedClass && sheet.chosenClasses.length > 0 && (
-                    <span className="ml-1">(Souhait : {sheet.chosenClasses.join(", ")})</span>
-                  )}
                 </>
               ) : (
                 <span className="italic">Aucune fiche personnage</span>

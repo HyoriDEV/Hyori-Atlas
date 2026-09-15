@@ -31,7 +31,6 @@ export interface AtlasPlayerGroupMember {
     name: string;
     reviewStatus: CharacterSheetStatus;
     assignedClass?: CharacterClass | null;
-    chosenClasses?: CharacterClass[];
   }>;
 }
 

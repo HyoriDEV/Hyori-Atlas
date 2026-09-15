@@ -96,7 +96,6 @@ export default async function StaffGroupsPage() {
           hasUnreadFeedback: s.hasUnreadFeedback,
           additionalComments: s.additionalComments,
           assignedClass: s.assignedClass,
-          chosenClasses: s.chosenClasses,
         })),
         activeSheet: activeSheet
           ? {
@@ -107,7 +106,6 @@ export default async function StaffGroupsPage() {
               hasUnreadFeedback: activeSheet.hasUnreadFeedback,
               additionalComments: activeSheet.additionalComments,
               assignedClass: activeSheet.assignedClass,
-              chosenClasses: activeSheet.chosenClasses,
             }
           : null,
         interviewBookings: m.interviewBookings.map((b) => ({
