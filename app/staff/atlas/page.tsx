@@ -46,13 +46,21 @@ import { UnreadDot } from "@/components/ui/unread-dot";
 const DEFAULT_PAGE_SIZE = 10;
 
 type SortKey =
-  "player" | "rpName" | "sheetUpdatedAt" | "sheetStatus" | "playtime" | "lastLogin" | "status";
+  | "player"
+  | "rpName"
+  | "sheetUpdatedAt"
+  | "sheetComments"
+  | "sheetStatus"
+  | "playtime"
+  | "lastLogin"
+  | "status";
 type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = [
   "player",
   "rpName",
   "sheetUpdatedAt",
+  "sheetComments",
   "sheetStatus",
   "playtime",
   "lastLogin",
@@ -78,6 +86,12 @@ function parseEnumParam<T extends string>(
   if (!value) return null;
   const values = Object.values(enumObj) as string[];
   return values.includes(value) ? (value as T) : null;
+}
+
+function formatCommentCount(count?: number): string {
+  if (!count || count <= 0) return "—";
+  if (count === 1) return "1 retour";
+  return `${count} retours`;
 }
 
 export default async function AtlasPage(props: PageProps) {
@@ -147,6 +161,11 @@ export default async function AtlasPage(props: PageProps) {
     include: {
       characterSheets: {
         orderBy: { createdAt: "desc" },
+        include: {
+          _count: {
+            select: { comments: true },
+          },
+        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -187,6 +206,10 @@ export default async function AtlasPage(props: PageProps) {
           const diff = timeA - timeB;
           return sortDir === "asc" ? diff : -diff;
         }
+      } else if (sortKey === "sheetComments") {
+        const countA = a.activeSheet?._count.comments ?? 0;
+        const countB = b.activeSheet?._count.comments ?? 0;
+        comparison = countA - countB;
       } else if (sortKey === "sheetStatus") {
         const rankMap: Record<CharacterSheetStatus, number> = {
           [CharacterSheetStatus.PENDING_STAFF]: 4,
@@ -274,6 +297,15 @@ export default async function AtlasPage(props: PageProps) {
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
+                  sortKey="sheetComments"
+                  defaultDirection="desc"
+                  currentSort={sortDir}
+                  label="Retours"
+                />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  {...sortHeaderProps}
                   sortKey="sheetStatus"
                   defaultDirection="desc"
                   currentSort={sortDir}
@@ -331,6 +363,9 @@ export default async function AtlasPage(props: PageProps) {
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
                         : "—"}
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {formatCommentCount(sheet?._count.comments)}
                     </TableCell>
                     <TableCell>
                       {sheet ? (
