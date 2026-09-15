@@ -8,7 +8,7 @@ export const commentTargetLabels: Record<CharacterSheetCommentTarget, string> = 
   [CharacterSheetCommentTarget.nickname]: "Surnom",
   [CharacterSheetCommentTarget.age]: "Âge",
   [CharacterSheetCommentTarget.gender]: "Genre",
-  [CharacterSheetCommentTarget.civilStatus]: "Statut",
+  [CharacterSheetCommentTarget.civilStatus]: "Métier",
   [CharacterSheetCommentTarget.heightCm]: "Taille",
   [CharacterSheetCommentTarget.description]: "Description",
   [CharacterSheetCommentTarget.background]: "Histoire",

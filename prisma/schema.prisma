@@ -251,7 +251,6 @@ model CharacterSheet {
   background         String  @db.VarChar(2000)
   additionalComments String? @db.VarChar(300)
 
-  chosenClasses CharacterClass[] @default([])
   assignedClass CharacterClass?
 
   primaryClassId   String?

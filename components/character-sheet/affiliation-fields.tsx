@@ -21,6 +21,7 @@ import {
   getRoleStatusMeta,
   type PlayerClassWithStats,
 } from "@/lib/role-balance";
+import { OTHER_ROLE_ID } from "@/lib/character-sheet";
 
 export interface AffiliationChoiceValues {
   primaryClassId: string | null;
@@ -178,7 +179,9 @@ export function AffiliationCard({
                 >
                   <SelectTrigger id="primary-role" className="w-full">
                     <SelectValue placeholder="Sélectionner un rôle...">
-                      {selectedPrimaryRole && (
+                      {values.primaryRoleId === OTHER_ROLE_ID ? (
+                        <span>Autre (préciser dans le métier)</span>
+                      ) : selectedPrimaryRole ? (
                         <div className="flex w-full items-center justify-between gap-2">
                           <span className="truncate">{selectedPrimaryRole.name}</span>
                           {(() => {
@@ -193,7 +196,7 @@ export function AffiliationCard({
                             );
                           })()}
                         </div>
-                      )}
+                      ) : null}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -213,8 +216,13 @@ export function AffiliationCard({
                         </SelectItem>
                       );
                     })}
+                    <SelectItem key={OTHER_ROLE_ID} value={OTHER_ROLE_ID}>
+                      Autre (préciser dans le métier)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              ) : values.primaryRoleId === OTHER_ROLE_ID ? (
+                <p className="text-sm">Autre</p>
               ) : selectedPrimaryRole ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm">{selectedPrimaryRole.name}</span>
@@ -290,7 +298,9 @@ export function AffiliationCard({
                 >
                   <SelectTrigger id="secondary-role" className="w-full">
                     <SelectValue placeholder="Sélectionner un rôle...">
-                      {selectedSecondaryRole && (
+                      {values.secondaryRoleId === OTHER_ROLE_ID ? (
+                        <span>Autre (préciser dans le métier)</span>
+                      ) : selectedSecondaryRole ? (
                         <div className="flex w-full items-center justify-between gap-2">
                           <span className="truncate">{selectedSecondaryRole.name}</span>
                           {(() => {
@@ -305,7 +315,7 @@ export function AffiliationCard({
                             );
                           })()}
                         </div>
-                      )}
+                      ) : null}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -325,8 +335,13 @@ export function AffiliationCard({
                         </SelectItem>
                       );
                     })}
+                    <SelectItem key={OTHER_ROLE_ID} value={OTHER_ROLE_ID}>
+                      Autre (préciser dans le métier)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
+              ) : values.secondaryRoleId === OTHER_ROLE_ID ? (
+                <p className="text-sm">Autre</p>
               ) : selectedSecondaryRole ? (
                 <div className="flex items-center gap-2">
                   <span className="text-sm">{selectedSecondaryRole.name}</span>

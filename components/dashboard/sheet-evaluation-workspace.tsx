@@ -11,7 +11,6 @@ import type { SheetComment } from "@/lib/character-sheet-comments";
 import {
   CharacterSheetCommentTarget,
   CharacterSheetStatus,
-  type CharacterClass,
 } from "@/lib/generated/prisma/enums";
 import { createTextAnchor, resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import { Card, CardContent } from "@/components/ui/card";
@@ -44,7 +43,6 @@ export function SheetEvaluationWorkspace({
   sheetUpdatedAt,
   fieldValues,
   skillValues,
-  chosenClasses: _chosenClasses = [],
   playerClasses = [],
   affiliation,
   initialComments,
@@ -56,7 +54,6 @@ export function SheetEvaluationWorkspace({
   sheetUpdatedAt: string;
   fieldValues: CharacterSheetFieldValues;
   skillValues: SkillValues;
-  chosenClasses?: CharacterClass[];
   playerClasses?: PlayerClassWithStats[];
   affiliation?: AffiliationChoiceValues;
   initialComments: SheetComment[];

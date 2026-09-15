@@ -9,10 +9,8 @@ import {
   CharacterStatus,
   Gender,
   RegistrationStatus,
-  CharacterClass,
 } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
-import { isCharacterClass } from "@/lib/character-classes";
 import {
   ADDITIONAL_COMMENTS_MAX_LENGTH,
   AGE_MAX,
@@ -30,6 +28,7 @@ import {
   NAME_MAX_LENGTH,
   NAME_MIN_LENGTH,
   NICKNAME_MAX_LENGTH,
+  OTHER_ROLE_ID,
   SKILL_DEFINITIONS,
   isSkillValueValid,
   isTotalSkillPointsValid,
@@ -47,7 +46,6 @@ export interface CharacterSheetInput {
   description: string;
   background: string;
   additionalComments: string;
-  chosenClasses?: CharacterClass[];
   primaryClassId?: string | null;
   primaryRoleId?: string | null;
   secondaryClassId?: string | null;
@@ -72,18 +70,15 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
   const description = input.description.trim();
   const background = input.background.trim();
   const additionalComments = input.additionalComments.trim();
-  const rawClasses = Array.isArray(input.chosenClasses) ? input.chosenClasses : [];
-  const chosenClasses: CharacterClass[] = [];
-  for (const cls of rawClasses) {
-    if (isCharacterClass(cls) && !chosenClasses.includes(cls)) {
-      chosenClasses.push(cls);
-    }
-  }
-
   const primaryClassId = input.primaryClassId?.trim() || null;
-  const primaryRoleId = input.primaryRoleId?.trim() || null;
+  const rawPrimaryRoleId = input.primaryRoleId?.trim() || null;
+  const primaryRoleIsOther = rawPrimaryRoleId === OTHER_ROLE_ID;
+  const primaryRoleId = primaryRoleIsOther ? null : rawPrimaryRoleId;
+
   const secondaryClassId = input.secondaryClassId?.trim() || null;
-  const secondaryRoleId = input.secondaryRoleId?.trim() || null;
+  const rawSecondaryRoleId = input.secondaryRoleId?.trim() || null;
+  const secondaryRoleIsOther = rawSecondaryRoleId === OTHER_ROLE_ID;
+  const secondaryRoleId = secondaryRoleIsOther ? null : rawSecondaryRoleId;
 
   if (strict) {
     if (!name || !gender || !civilStatus || !description || !background) {
@@ -147,10 +142,10 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
         `La carte de compétences doit totaliser entre ${MIN_TOTAL_SKILL_POINTS} et ${MAX_TOTAL_SKILL_POINTS} points.`
       );
     }
-    if (!primaryClassId || !primaryRoleId) {
+    if (!primaryClassId || (!primaryRoleId && !primaryRoleIsOther)) {
       throw new Error("Veuillez sélectionner votre premier choix de classe et son rôle.");
     }
-    if (!secondaryClassId || !secondaryRoleId) {
+    if (!secondaryClassId || (!secondaryRoleId && !secondaryRoleIsOther)) {
       throw new Error("Veuillez sélectionner votre deuxième choix de classe et son rôle.");
     }
     if (primaryClassId === secondaryClassId) {
@@ -170,7 +165,6 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
     description: description || "",
     background: background || "",
     additionalComments: additionalComments || null,
-    chosenClasses,
     primaryClassId,
     primaryRoleId,
     secondaryClassId,

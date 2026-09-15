@@ -56,7 +56,6 @@ export async function acceptWaitlistPlayer(userId: string) {
           description: "",
           background: "",
           additionalComments: null,
-          chosenClasses: [],
           physicalForce: 1,
           physicalEndurance: 1,
           physicalStealth: 1,

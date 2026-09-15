@@ -71,7 +71,8 @@ export default async function AtlasPlayerPage({
                     name: true,
                     reviewStatus: true,
                     assignedClass: true,
-                    chosenClasses: true,
+                    primaryClassId: true,
+                    secondaryClassId: true,
                   },
                 },
               },
@@ -246,7 +247,8 @@ export default async function AtlasPlayerPage({
             playerId={player.id}
             pseudo={playerName}
             characterSheetId={sheet?.id}
-            preferredClasses={sheet?.chosenClasses ?? []}
+            primaryClassId={sheet?.primaryClassId ?? null}
+            secondaryClassId={sheet?.secondaryClassId ?? null}
           />
         )}
       </div>

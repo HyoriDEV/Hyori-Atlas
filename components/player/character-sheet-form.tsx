@@ -76,7 +76,6 @@ export function CharacterSheetForm({
   sheetId,
   initialValues,
   initialSkills,
-  initialClasses = [],
   playerClasses = [],
   initialAffiliation,
   assignedClass,
@@ -89,7 +88,6 @@ export function CharacterSheetForm({
   sheetId?: string;
   initialValues: CharacterSheetFieldValues;
   initialSkills: SkillValues;
-  initialClasses?: CharacterClass[];
   playerClasses?: PlayerClassWithStats[];
   initialAffiliation?: AffiliationChoiceValues;
   assignedClass?: CharacterClass | null;
@@ -101,7 +99,6 @@ export function CharacterSheetForm({
 }) {
   const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
   const [skills, setSkills] = useState<SkillValues>(initialSkills);
-  const [chosenClasses] = useState<CharacterClass[]>(initialClasses);
   const [affiliation, setAffiliation] = useState<AffiliationChoiceValues>(
     initialAffiliation ?? {
       primaryClassId: null,
@@ -239,7 +236,6 @@ export function CharacterSheetForm({
       description: fields.description,
       background: fields.background,
       additionalComments: fields.additionalComments,
-      chosenClasses,
       primaryClassId: affiliation.primaryClassId,
       primaryRoleId: affiliation.primaryRoleId,
       secondaryClassId: affiliation.secondaryClassId,
