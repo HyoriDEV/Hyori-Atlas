@@ -262,6 +262,11 @@ model CharacterSheet {
   secondaryRoleId  String?
   secondaryRole    PlayerClassRole? @relation("SecondaryRoleSheets", fields: [secondaryRoleId], references: [id], onDelete: SetNull)
 
+  overrideClassId String?
+  overrideClass   PlayerClass?     @relation("OverrideClassSheets", fields: [overrideClassId], references: [id], onDelete: SetNull)
+  overrideRoleId  String?
+  overrideRole    PlayerClassRole? @relation("OverrideRoleSheets", fields: [overrideRoleId], references: [id], onDelete: SetNull)
+
   physicalForce        Int @default(1)
   physicalEndurance    Int @default(1)
   physicalStealth      Int @default(1)
@@ -289,6 +294,8 @@ model CharacterSheet {
   @@index([primaryRoleId])
   @@index([secondaryClassId])
   @@index([secondaryRoleId])
+  @@index([overrideClassId])
+  @@index([overrideRoleId])
   @@map("character_sheets")
 }
 
@@ -622,6 +629,7 @@ model PlayerClass {
   roles           PlayerClassRole[]
   primarySheets   CharacterSheet[]  @relation("PrimaryClassSheets")
   secondarySheets CharacterSheet[]  @relation("SecondaryClassSheets")
+  overrideSheets  CharacterSheet[]  @relation("OverrideClassSheets")
   createdAt       DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 
@@ -640,6 +648,7 @@ model PlayerClassRole {
 
   primaryRoleSheets   CharacterSheet[] @relation("PrimaryRoleSheets")
   secondaryRoleSheets CharacterSheet[] @relation("SecondaryRoleSheets")
+  overrideRoleSheets  CharacterSheet[] @relation("OverrideRoleSheets")
 
   @@unique([playerClassId, name])
   @@index([playerClassId])

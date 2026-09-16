@@ -31,7 +31,6 @@ import {
   createPlayerClassRoleAction,
   updatePlayerClassRoleAction,
   deletePlayerClassRoleAction,
-  returnPendingSheetsForAffiliationAction,
 } from "@/lib/actions/distribution-actions";
 
 export function CreateClassDialog({
@@ -277,7 +276,7 @@ export function CreateRoleDialog({
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="role-ratio">Ratio / Poids d'équilibre</Label>
+              <Label htmlFor="role-ratio">Ratio / Poids d&apos;équilibre</Label>
               <span className="text-muted-foreground text-xs">Minimum : 1</span>
             </div>
             <div className="flex items-center gap-2">
@@ -394,7 +393,7 @@ export function EditRoleDialog({
 
           <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="edit-role-ratio">Ratio / Poids d'équilibre</Label>
+              <Label htmlFor="edit-role-ratio">Ratio / Poids d&apos;équilibre</Label>
               <span className="text-muted-foreground text-xs">Minimum : 1</span>
             </div>
             <div className="flex items-center gap-2">
@@ -481,7 +480,7 @@ export function DeleteRoleDialog({
           <AlertDialogTitle>Supprimer le rôle &quot;{role.name}&quot; ?</AlertDialogTitle>
           <AlertDialogDescription>
             Ce rôle sera retiré de la classe et ne sera plus pris en compte dans le calcul du ratio
-            d'équilibre.
+            d&apos;équilibre.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
@@ -492,68 +491,6 @@ export function DeleteRoleDialog({
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isPending ? "Suppression..." : "Supprimer le rôle"}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
-  );
-}
-
-export function ReturnSheetsDialog({
-  open,
-  onOpenChange,
-}: {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-}) {
-  const [isPending, startTransition] = useTransition();
-
-  function handleConfirm() {
-    startTransition(async () => {
-      const res = await returnPendingSheetsForAffiliationAction();
-      if (!res.success) {
-        toast.error(res.error || "Erreur lors du renvoi des fiches.");
-        return;
-      }
-
-      const count = res.data?.count ?? 0;
-      if (count > 0) {
-        toast.success(
-          `${count} fiche${count > 1 ? "s" : ""} personnage renvoyée${count > 1 ? "s" : ""} aux joueurs avec succès !`
-        );
-      } else {
-        toast.info("Aucune fiche en attente d'évaluation trouvée pour les joueurs en whitelist.");
-      }
-
-      onOpenChange(false);
-    });
-  }
-
-  return (
-    <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>Renvoyer les fiches en attente ?</AlertDialogTitle>
-          <AlertDialogDescription className="flex flex-col gap-2">
-            <span>
-              Cette action va renvoyer au statut<strong> « En rédaction (joueur) » </strong>
-              l&apos;ensemble des fiches actuellement<strong> « En attente (staff) » </strong>
-              des joueurs ayant le statut d&apos;inscription<strong> « En whitelist »</strong>.
-            </span>
-            <span className="text-destructive font-medium">
-              Attention : cette action est irréversible et modifiera le statut de toutes les fiches
-              concernées.
-            </span>
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleConfirm}
-            disabled={isPending}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {isPending ? "Renvoi..." : "Renvoyer"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

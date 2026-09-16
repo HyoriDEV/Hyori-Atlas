@@ -231,6 +231,7 @@ export const staffDistributionItem: StaffNavItem = {
   href: "/staff/distribution",
   iconKey: "scales",
   roles: [Role.ADMIN, Role.RP_TRACKING],
+  fullWidth: true,
 };
 
 export const staffWritingItem: StaffNavItem = {
