@@ -4,16 +4,9 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { DotsThreeVertical, PencilSimple, Trash, UserPlus, Users } from "@phosphor-icons/react";
 
-import {
-  computeGroupStats,
-  rpGroupStatusLabels,
-  rpGroupStatusVariants,
-  type RpGroupWithMembers,
-} from "@/lib/rp-groups";
+import { computeGroupStats, rpGroupStatusLabels, type RpGroupWithMembers } from "@/lib/rp-groups";
 import { deleteRpGroupAction } from "@/lib/actions/rp-group-actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,6 +28,23 @@ import { RpGroupMemberRow } from "./rp-group-member-row";
 import { EditRpGroupDialog } from "./edit-rp-group-dialog";
 import { AddGroupMemberDialog } from "./add-group-member-dialog";
 import type { PlayerOption } from "@/components/player-select";
+import type { RpGroupStatus } from "@/lib/rp-groups";
+
+// Compact colored dot for group status
+function StatusDot({ status }: { status: RpGroupStatus }) {
+  const colorMap: Record<RpGroupStatus, string> = {
+    ALL_WHITELISTED: "bg-emerald-500",
+    READY_FOR_WHITELIST: "bg-primary",
+    PENDING_REVIEW: "bg-amber-500",
+    IN_PROGRESS: "bg-muted-foreground/50",
+  };
+  return (
+    <span
+      className={`inline-block size-2 shrink-0 rounded-full ${colorMap[status]}`}
+      title={rpGroupStatusLabels[status]}
+    />
+  );
+}
 
 interface RpGroupCardProps {
   group: RpGroupWithMembers;
@@ -64,96 +74,86 @@ export function RpGroupCard({ group, availablePlayers, canManageGroups = true }:
 
   return (
     <>
-      <Card className="border-border/80 flex flex-col gap-0 overflow-hidden transition-shadow hover:shadow-sm">
-        {/* Card Header */}
-        <CardHeader className="flex flex-col gap-3 pb-3">
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-wrap items-center gap-2.5">
-              <span className="font-heading text-foreground text-lg font-semibold tracking-tight">
-                {group.name}
-              </span>
-              <Badge variant={rpGroupStatusVariants[stats.status]}>
-                {rpGroupStatusLabels[stats.status]}
-              </Badge>
-            </div>
+      <div className="border-border/70 bg-card overflow-hidden rounded-lg border">
+        {/* Header */}
+        <div className="border-border/50 bg-muted/20 flex items-center gap-2 border-b px-3.5 py-2.5">
+          <span className="text-foreground flex-1 truncate text-sm font-semibold">
+            {group.name}
+          </span>
 
-            {canManageGroups && (
-              <div className="flex items-center gap-1.5 self-end sm:self-auto">
-                {/* Progress overview */}
-                {stats.totalMembers > 0 && (
-                  <div className="mr-4 flex flex-col gap-1.5">
-                    <div className="text-muted-foreground flex items-center justify-between gap-1.5 text-xs">
-                      <span className="text-foreground font-semibold">
-                        {stats.whitelistedCount + stats.validatedCount} / {stats.totalMembers}
-                      </span>
-                      <span>membres validés</span>
-                    </div>
-                    <div className="bg-muted h-1.5 w-full overflow-hidden rounded-full">
-                      <div
-                        className="bg-primary h-full transition-all duration-300"
-                        style={{ width: `${stats.progressPercent}%` }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="h-8 gap-1.5 text-xs"
-                  onClick={() => setIsAddMemberDialogOpen(true)}
-                >
-                  <UserPlus className="size-3.5" />
-                  <span>Ajouter un membre</span>
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button size="icon-sm" variant="ghost" className="size-8">
-                        <DotsThreeVertical className="size-4" />
-                      </Button>
-                    }
-                  />
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
-                      <PencilSimple className="mr-2 size-4" />
-                      <span>Modifier</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                      className="text-destructive focus:text-destructive"
-                    >
-                      <Trash className="mr-2 size-4" />
-                      <span>Dissoudre</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+          {stats.totalMembers > 0 && (
+            <div className="text-foreground flex shrink-0 items-center gap-1.5 text-xs font-semibold tabular-nums">
+              {stats.whitelistedCount + stats.validatedCount} / {stats.totalMembers}
+              <div className="bg-muted h-1.5 w-14 overflow-hidden rounded-full">
+                <div
+                  className="bg-primary h-full transition-all duration-300"
+                  style={{ width: `${stats.progressPercent}%` }}
+                />
               </div>
-            )}
-          </div>
-        </CardHeader>
+            </div>
+          )}
 
-        {/* Card Body: Member Rows */}
-        <CardContent className="flex flex-col gap-2 pt-0">
+          {canManageGroups && (
+            <div className="flex shrink-0 items-center gap-0.5">
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                className="text-muted-foreground hover:text-foreground size-7"
+                onClick={() => setIsAddMemberDialogOpen(true)}
+                title="Ajouter un membre"
+              >
+                <UserPlus className="size-4" />
+              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <Button
+                      size="icon-sm"
+                      variant="ghost"
+                      className="text-muted-foreground hover:text-foreground size-7"
+                    >
+                      <DotsThreeVertical className="size-4" />
+                    </Button>
+                  }
+                />
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditDialogOpen(true)}>
+                    <PencilSimple className="mr-2 size-4" />
+                    <span>Modifier</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    className="text-destructive focus:text-destructive"
+                  >
+                    <Trash className="mr-2 size-4" />
+                    <span>Dissoudre</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
+        </div>
+
+        {/* Members list */}
+        <div className="px-2 py-1.5">
           {group.members.length === 0 ? (
-            <div className="text-muted-foreground flex flex-col items-center justify-center rounded-lg border border-dashed p-6 text-center">
-              <Users className="mb-2 size-8 stroke-[1.5] opacity-50" />
-              <p className="text-xs font-medium">Ce groupe n&apos;a aucun membre pour le moment.</p>
+            <div className="text-muted-foreground flex items-center gap-2 px-1 py-2 text-xs">
+              <Users className="size-4 shrink-0 opacity-50" />
+              <span className="italic">Aucun membre</span>
               {canManageGroups && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-3 text-xs"
+                <button
+                  type="button"
                   onClick={() => setIsAddMemberDialogOpen(true)}
+                  className="text-primary ml-1 text-xs font-medium hover:underline"
                 >
-                  Ajouter un premier joueur
-                </Button>
+                  Ajouter un joueur
+                </button>
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
+            <div className="divide-border/30 flex flex-col divide-y">
               {group.members.map((member) => (
                 <RpGroupMemberRow
                   key={member.id}
@@ -164,8 +164,8 @@ export function RpGroupCard({ group, availablePlayers, canManageGroups = true }:
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Dialogs */}
       <EditRpGroupDialog
