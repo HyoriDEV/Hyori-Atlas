@@ -54,50 +54,48 @@ export default async function PlayerDashboardPage() {
     },
   });
 
-  const latestSheet = activeSheet ?? await prisma.characterSheet.findFirst({
-    where: { playerId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      status: true,
-      reviewStatus: true,
-      hasUnreadFeedback: true,
-      _count: { select: { comments: true } },
-    },
-  });
+  const latestSheet =
+    activeSheet ??
+    (await prisma.characterSheet.findFirst({
+      where: { playerId: user.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        status: true,
+        reviewStatus: true,
+        hasUnreadFeedback: true,
+        _count: { select: { comments: true } },
+      },
+    }));
 
   const characterSheet = latestSheet;
 
-  const [
-    activeTicketsCount,
-    pendingStaffTicketsCount,
-    latestBooking,
-    chapterCount,
-  ] = await Promise.all([
-    prisma.ticket.count({
-      where: {
-        playerId: user.id,
-        status: { not: TicketStatus.ARCHIVED },
-      },
-    }),
-    prisma.ticket.count({
-      where: {
-        playerId: user.id,
-        status: TicketStatus.PENDING_STAFF,
-      },
-    }),
-    prisma.interviewBooking.findFirst({
-      where: { playerId: user.id },
-      include: { slot: true },
-      orderBy: { createdAt: "desc" },
-    }),
-    isWhitelisted && characterSheet
-      ? prisma.chapter.count({
-          where: { playerId: user.id, characterSheetId: characterSheet.id },
-        })
-      : 0,
-  ]);
+  const [activeTicketsCount, pendingStaffTicketsCount, latestBooking, chapterCount] =
+    await Promise.all([
+      prisma.ticket.count({
+        where: {
+          playerId: user.id,
+          status: { not: TicketStatus.ARCHIVED },
+        },
+      }),
+      prisma.ticket.count({
+        where: {
+          playerId: user.id,
+          status: TicketStatus.PENDING_STAFF,
+        },
+      }),
+      prisma.interviewBooking.findFirst({
+        where: { playerId: user.id },
+        include: { slot: true },
+        orderBy: { createdAt: "desc" },
+      }),
+      isWhitelisted && characterSheet
+        ? prisma.chapter.count({
+            where: { playerId: user.id, characterSheetId: characterSheet.id },
+          })
+        : 0,
+    ]);
 
   const isSheetValidated = characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
@@ -115,6 +113,9 @@ export default async function PlayerDashboardPage() {
             {user.minecraftUuid ? (
               <SkinHead
                 username={user.minecraftUsername ?? displayName}
+                uuid={user.minecraftUuid}
+                avatarUrl={user.minecraftAvatarUrl}
+                updatedAt={user.minecraftSkinUpdatedAt}
                 size="xl"
                 className="ring-border shadow-xs ring-1"
               />
@@ -156,10 +157,12 @@ export default async function PlayerDashboardPage() {
         <div className="border-border/80 bg-muted/40 flex flex-wrap items-center justify-between gap-4 rounded-xl border p-4 shadow-xs">
           <div className="flex flex-col gap-1">
             <span className="text-foreground text-sm font-semibold">
-              Ton personnage « {characterSheet.name || "Sans nom"} » est {characterStatusLabels[characterSheet.status].toLowerCase()}.
+              Ton personnage « {characterSheet.name || "Sans nom"} » est{" "}
+              {characterStatusLabels[characterSheet.status].toLowerCase()}.
             </span>
             <p className="text-muted-foreground text-xs">
-              L&apos;équipe de modération ou de suivi RP t&apos;attribuera prochainement un nouveau personnage vierge pour continuer ton aventure.
+              L&apos;équipe de modération ou de suivi RP t&apos;attribuera prochainement un nouveau
+              personnage vierge pour continuer ton aventure.
             </p>
           </div>
           <Badge variant={characterStatusBadgeVariant(characterSheet.status)}>

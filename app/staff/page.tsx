@@ -255,6 +255,9 @@ export default async function StaffDashboardPage() {
             {user.minecraftUuid ? (
               <SkinHead
                 username={user.minecraftUsername ?? displayName}
+                uuid={user.minecraftUuid}
+                avatarUrl={user.minecraftAvatarUrl}
+                updatedAt={user.minecraftSkinUpdatedAt}
                 size="xl"
                 className="ring-border shadow-xs ring-1"
               />
@@ -286,9 +289,7 @@ export default async function StaffDashboardPage() {
           <h2 className="font-heading text-foreground text-base font-semibold tracking-tight">
             Modules staff
           </h2>
-          <span className="text-muted-foreground text-xs">
-            Tu as accès aux modules ci-dessous.
-          </span>
+          <span className="text-muted-foreground text-xs">Tu as accès aux modules ci-dessous.</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">

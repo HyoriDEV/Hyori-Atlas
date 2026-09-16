@@ -7,9 +7,11 @@ import { WarningCircle } from "@phosphor-icons/react";
 
 interface CharacterSkinPreviewProps {
   username?: string | null;
+  skinUrl?: string | null;
+  model?: "classic" | "slim" | string | null;
 }
 
-export function CharacterSkinPreview({ username }: CharacterSkinPreviewProps) {
+export function CharacterSkinPreview({ username, skinUrl, model }: CharacterSkinPreviewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const viewerRef = useRef<SkinViewer | null>(null);
@@ -17,7 +19,9 @@ export function CharacterSkinPreview({ username }: CharacterSkinPreviewProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   const cleanUsername = username?.trim() || "MHF_Steve";
-  const skinUrl = `https://mc-heads.net/skin/${encodeURIComponent(cleanUsername)}`;
+  // Prioritize direct official Mojang texture URL if available, fallback to mc-heads.net
+  const resolvedSkinUrl =
+    skinUrl?.trim() || `https://mc-heads.net/skin/${encodeURIComponent(cleanUsername)}`;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -66,7 +70,9 @@ export function CharacterSkinPreview({ username }: CharacterSkinPreviewProps) {
       resizeObserver.observe(container);
 
       viewer
-        .loadSkin(skinUrl)
+        .loadSkin(resolvedSkinUrl, {
+          model: model === "slim" ? "slim" : "default",
+        })
         .then(() => {
           if (!isDisposed) {
             setIsLoading(false);
@@ -74,8 +80,26 @@ export function CharacterSkinPreview({ username }: CharacterSkinPreviewProps) {
         })
         .catch(() => {
           if (!isDisposed) {
-            setHasError(true);
-            setIsLoading(false);
+            // Fallback to mc-heads if official texture failed
+            if (
+              skinUrl &&
+              resolvedSkinUrl !== `https://mc-heads.net/skin/${encodeURIComponent(cleanUsername)}`
+            ) {
+              viewer
+                ?.loadSkin(`https://mc-heads.net/skin/${encodeURIComponent(cleanUsername)}`)
+                .then(() => {
+                  if (!isDisposed) setIsLoading(false);
+                })
+                .catch(() => {
+                  if (!isDisposed) {
+                    setHasError(true);
+                    setIsLoading(false);
+                  }
+                });
+            } else {
+              setHasError(true);
+              setIsLoading(false);
+            }
           }
         });
     } catch {
@@ -97,7 +121,7 @@ export function CharacterSkinPreview({ username }: CharacterSkinPreviewProps) {
         viewerRef.current = null;
       }
     };
-  }, [skinUrl]);
+  }, [resolvedSkinUrl, model, cleanUsername, skinUrl]);
 
   return (
     <Card className="flex flex-col overflow-hidden">

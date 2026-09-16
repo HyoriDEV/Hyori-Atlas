@@ -168,7 +168,7 @@ export function RpGroupsDashboard({
           )}
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 min-[1600px]:grid-cols-3">
           {filteredGroups.map(({ group }) => (
             <RpGroupCard
               key={group.id}

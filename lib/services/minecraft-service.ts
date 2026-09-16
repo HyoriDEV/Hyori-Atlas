@@ -219,7 +219,7 @@ export async function verifyAndLinkMinecraftAccount(params: {
   }
 
   try {
-    await prisma.$transaction(async (tx) => {
+    const txResult = await prisma.$transaction(async (tx) => {
       // 1. Check if UUID is already linked to another user
       const existingUserWithUuid = await tx.user.findUnique({
         where: { minecraftUuid: normalizedUuid },
@@ -275,8 +275,15 @@ export async function verifyAndLinkMinecraftAccount(params: {
         },
       });
 
-      return { user: updatedUser };
+      return { user: updatedUser, userId: authCode.userId };
     });
+
+    // Synchroniser immédiatement le skin du joueur en arrière-plan
+    import("./minecraft-skin-service")
+      .then((mod) => mod.syncUserMinecraftSkin(txResult.userId))
+      .catch((err) => {
+        console.error("[MinecraftService] Background skin sync failed:", err);
+      });
 
     return {
       success: true,

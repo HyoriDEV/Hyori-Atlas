@@ -2,7 +2,7 @@
 
 import { useActionState, useState, useTransition, useMemo } from "react";
 import { toast } from "sonner";
-import { Check, UploadSimple, Link as LinkIcon, Trash } from "@phosphor-icons/react";
+import { Check, UploadSimple, Trash, ArrowsClockwise } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { saveGlobalSettingsAction } from "@/lib/actions/settings-actions";
 import { uploadCountdownVideoAction } from "@/lib/actions/countdown-video-actions";
+import { refreshAllSkinsStaffAction } from "@/lib/actions/minecraft-actions";
 import { GlobalSettings } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/utils";
 
@@ -57,6 +58,24 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
   const [videoType, setVideoType] = useState(defaultValues.countdownVideoType || "URL");
   const [videoUrl, setVideoUrl] = useState(defaultValues.countdownVideoUrl || "");
   const [isUploadingVideo, startUploadTransition] = useTransition();
+  const [isSyncingSkins, startSkinSync] = useTransition();
+
+  const handleSyncAllSkins = () => {
+    startSkinSync(async () => {
+      try {
+        const res = await refreshAllSkinsStaffAction();
+        if (res.success && res.summary) {
+          toast.success(
+            `Synchronisation terminée : ${res.summary.synced} skins mis à jour sur ${res.summary.totalEligible}.`
+          );
+        } else {
+          toast.error(res.error || "Échec de la synchronisation des skins.");
+        }
+      } catch {
+        toast.error("Erreur inattendue lors de la synchronisation.");
+      }
+    });
+  };
 
   const combinedTargetDate = useMemo(() => {
     if (!datePart) return "";
@@ -165,7 +184,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
         {/* 1. MODULES */}
         <TabsContent value="modules" keepMounted={true}>
-          <div className="divide-y rounded-lg border bg-card">
+          <div className="bg-card divide-y rounded-lg border">
             <SettingRow
               name="registrationEnabled"
               label="Inscriptions (via Discord)"
@@ -201,7 +220,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
         {/* 2. PAGES PUBLIQUES */}
         <TabsContent value="public" keepMounted={true}>
-          <div className="divide-y rounded-lg border bg-card">
+          <div className="bg-card divide-y rounded-lg border">
             <SettingRow
               name="publicNewsEnabled"
               label="Page Actualités (/news)"
@@ -227,10 +246,10 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
         {/* 3. ACCUEIL & COMPTE À REBOURS */}
         <TabsContent value="countdown" keepMounted={true} className="flex flex-col gap-6">
-          <div className="divide-y rounded-lg border bg-card">
+          <div className="bg-card divide-y rounded-lg border">
             <div
               onClick={() => setCountdownEnabled(!countdownEnabled)}
-              className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/40 transition-colors select-none"
+              className="hover:bg-muted/40 flex cursor-pointer items-center justify-between p-4 transition-colors select-none"
             >
               <span className="text-sm font-medium">
                 Activer le compte à rebours sur l&apos;accueil
@@ -251,21 +270,29 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             <CardContent className="space-y-4 pt-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label htmlFor="countdownBadgeText" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="countdownBadgeText"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     En-tête éditorial
                   </label>
                   <input
                     type="text"
                     id="countdownBadgeText"
                     name="countdownBadgeText"
-                    defaultValue={defaultValues.countdownBadgeText || "Hyori RP — Lancement Officiel"}
+                    defaultValue={
+                      defaultValues.countdownBadgeText || "Hyori RP — Lancement Officiel"
+                    }
                     placeholder="Hyori RP — Lancement Officiel"
                     className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="countdownTitle" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="countdownTitle"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Titre principal
                   </label>
                   <input
@@ -281,7 +308,10 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label htmlFor="countdownSubtitle" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="countdownSubtitle"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Sous-titre
                   </label>
                   <input
@@ -298,7 +328,10 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="countdownDiscordUrl" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="countdownDiscordUrl"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Lien d&apos;invitation Discord
                   </label>
                   <input
@@ -315,7 +348,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
               {/* Date & Heure */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-muted-foreground text-xs font-medium">
                     Date &amp; heure d&apos;échéance
                   </span>
                   {datePart && (
@@ -393,7 +426,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
               {/* Vidéo d'ambiance */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-muted-foreground text-xs font-medium">
                     Vidéo d&apos;arrière-plan
                   </span>
 
@@ -444,15 +477,17 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                         size="icon"
                         onClick={() => setVideoUrl("")}
                       >
-                        <Trash className="size-4 text-destructive" />
+                        <Trash className="text-destructive size-4" />
                       </Button>
                     )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-3">
                     <label className="border-input bg-muted/30 hover:bg-muted/50 flex cursor-pointer items-center gap-2 rounded-md border border-dashed px-4 py-2 text-xs font-medium transition-colors">
-                      <UploadSimple className="size-4 text-muted-foreground" />
-                      <span>{isUploadingVideo ? "Téléversement..." : "Sélectionner un fichier vidéo"}</span>
+                      <UploadSimple className="text-muted-foreground size-4" />
+                      <span>
+                        {isUploadingVideo ? "Téléversement..." : "Sélectionner un fichier vidéo"}
+                      </span>
                       <input
                         type="file"
                         accept="video/mp4,video/webm,video/ogg,video/quicktime"
@@ -462,13 +497,13 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                       />
                     </label>
                     {videoUrl && (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="text-muted-foreground flex items-center gap-2 text-xs">
                         <Check className="size-3.5 text-emerald-500" />
                         <span className="max-w-[240px] truncate">{videoUrl}</span>
                         <button
                           type="button"
                           onClick={() => setVideoUrl("")}
-                          className="text-destructive hover:underline ml-1"
+                          className="text-destructive ml-1 hover:underline"
                         >
                           Supprimer
                         </button>
@@ -507,7 +542,10 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
             <CardContent className="space-y-4 pt-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
-                  <label htmlFor="minecraftServerAddress" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="minecraftServerAddress"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Adresse du serveur (IP ou domaine)
                   </label>
                   <input
@@ -516,12 +554,15 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                     name="minecraftServerAddress"
                     defaultValue={defaultValues.minecraftServerAddress}
                     placeholder="auth.hyori-rp.fr"
-                    className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none font-mono"
+                    className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 font-mono text-sm focus:ring-2 focus:outline-none"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label htmlFor="minecraftServerVersion" className="text-xs font-medium text-muted-foreground">
+                  <label
+                    htmlFor="minecraftServerVersion"
+                    className="text-muted-foreground text-xs font-medium"
+                  >
                     Version recommandée
                   </label>
                   <input
@@ -530,13 +571,16 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                     name="minecraftServerVersion"
                     defaultValue={defaultValues.minecraftServerVersion}
                     placeholder="1.21.11"
-                    className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none font-mono"
+                    className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 font-mono text-sm focus:ring-2 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <label htmlFor="minecraftAuthCommand" className="text-xs font-medium text-muted-foreground">
+                <label
+                  htmlFor="minecraftAuthCommand"
+                  className="text-muted-foreground text-xs font-medium"
+                >
                   Préfixe de commande de liaison en jeu
                 </label>
                 <div className="flex items-center">
@@ -553,6 +597,34 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
                   />
                 </div>
               </div>
+
+              {/* Synchronisation des skins Minecraft */}
+              <div className="flex flex-col gap-3 border-t pt-4">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">Synchronisation des skins</span>
+                    <span className="text-muted-foreground text-xs">
+                      Tâche automatique planifiée toutes les 1h. Vous pouvez également forcer la
+                      synchronisation de tous les skins maintenant.
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={isSyncingSkins}
+                    onClick={handleSyncAllSkins}
+                    className="mt-2 shrink-0 sm:mt-0"
+                  >
+                    <ArrowsClockwise className={cn("size-4", isSyncingSkins && "animate-spin")} />
+                    <span>
+                      {isSyncingSkins
+                        ? "Synchronisation en cours..."
+                        : "Synchroniser tous les skins"}
+                    </span>
+                  </Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -560,7 +632,7 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
 
       {/* BARRE DE SAUVEGARDE ÉPURÉE */}
       <div className="flex items-center justify-between border-t pt-4">
-        <span className="text-xs text-muted-foreground">
+        <span className="text-muted-foreground text-xs">
           {lastUpdatedFormatted ? `Dernière sauvegarde : ${lastUpdatedFormatted}` : ""}
         </span>
         <Button type="submit" disabled={isPending || isUploadingVideo}>
@@ -586,11 +658,9 @@ function SettingRow({
   return (
     <div
       onClick={() => setChecked(!checked)}
-      className="flex items-center justify-between p-4 cursor-pointer hover:bg-muted/40 transition-colors select-none"
+      className="hover:bg-muted/40 flex cursor-pointer items-center justify-between p-4 transition-colors select-none"
     >
-      <span className="text-sm font-medium">
-        {label}
-      </span>
+      <span className="text-sm font-medium">{label}</span>
       <div onClick={(e) => e.stopPropagation()} className="flex items-center">
         <Switch
           id={`setting-${name}`}

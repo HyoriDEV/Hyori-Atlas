@@ -83,6 +83,8 @@ export function CharacterSheetForm({
   status,
   comments,
   minecraftUsername,
+  minecraftSkinUrl,
+  minecraftSkinModel,
   children,
 }: {
   sheetId?: string;
@@ -95,6 +97,8 @@ export function CharacterSheetForm({
   status: CharacterSheetStatus;
   comments: SheetComment[];
   minecraftUsername?: string | null;
+  minecraftSkinUrl?: string | null;
+  minecraftSkinModel?: string | null;
   children?: React.ReactNode;
 }) {
   const [fields, setFields] = useState<CharacterSheetFieldValues>(initialValues);
@@ -447,7 +451,11 @@ export function CharacterSheetForm({
               editable={editable}
             />
           ) : (
-            <CharacterSkinPreview username={minecraftUsername} />
+            <CharacterSkinPreview
+              username={minecraftUsername}
+              skinUrl={minecraftSkinUrl}
+              model={minecraftSkinModel}
+            />
           )}
         </div>
       </div>
