@@ -5,7 +5,11 @@ import { getPlayerCharacters } from "@/lib/services/character-service";
 export const metadata: Metadata = {
   title: "Fiche personnage",
 };
-import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  CharacterStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import {
   SKILL_DEFINITIONS,
@@ -47,7 +51,8 @@ export default async function CharacterSheetPage(props: {
   // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
   let sheet = allCharacters.find((c) => c.id === searchParams.characterId);
   if (!sheet) {
-    sheet = allCharacters.find((c) => c.status === CharacterStatus.ACTIVE) ?? allCharacters[0] ?? null;
+    sheet =
+      allCharacters.find((c) => c.status === CharacterStatus.ACTIVE) ?? allCharacters[0] ?? null;
   }
 
   const fieldValues: CharacterSheetFieldValues = {
@@ -110,6 +115,8 @@ export default async function CharacterSheetPage(props: {
       status={currentReviewStatus}
       comments={comments}
       minecraftUsername={user.minecraftUsername}
+      minecraftSkinUrl={user.minecraftSkinUrl}
+      minecraftSkinModel={user.minecraftSkinModel}
     >
       {allCharacters.length > 1 && sheet && (
         <CharacterSwitcher
@@ -132,7 +139,8 @@ export default async function CharacterSheetPage(props: {
               : "Ce personnage a été désactivé par l'équipe d'administration."}
           </p>
           <p className="text-muted-foreground text-xs">
-            Cette fiche est archivée en lecture seule. Tu peux consulter les informations et commentaires d&apos;évaluation, mais elle ne peut plus être modifiée.
+            Cette fiche est archivée en lecture seule. Tu peux consulter les informations et
+            commentaires d&apos;évaluation, mais elle ne peut plus être modifiée.
           </p>
         </Card>
       )}

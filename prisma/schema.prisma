@@ -111,8 +111,12 @@ model User {
   discordUsername    String
   discordDisplayName String
   discordAvatarUrl   String?
-  minecraftUuid      String?            @unique
-  minecraftUsername  String?
+  minecraftUuid          String?            @unique
+  minecraftUsername      String?
+  minecraftSkinUrl       String?
+  minecraftSkinModel     String?
+  minecraftSkinUpdatedAt DateTime?
+  minecraftAvatarUrl     String?
   role               Role               @default(PLAYER)
   registrationStatus RegistrationStatus @default(NEW)
   createdAt          DateTime           @default(now())

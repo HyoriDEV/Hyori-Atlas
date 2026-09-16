@@ -19,6 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { SkinHead } from "@/components/ui/skin-head";
 import { CopyButton } from "@/components/player/copy-button";
 import { MinecraftLinkDialog } from "@/components/player/minecraft-link-dialog";
+import { RefreshSkinButton } from "@/components/player/refresh-skin-button";
 import { StepIcon } from "@/components/player/step-icon";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +139,10 @@ export default async function GettingStartedPage() {
               <div className="flex items-center gap-3">
                 <SkinHead
                   size="xl"
-                  username={user.minecraftUsername ?? user.minecraftUuid ?? undefined}
+                  username={user.minecraftUsername ?? undefined}
+                  uuid={user.minecraftUuid ?? undefined}
+                  avatarUrl={user.minecraftAvatarUrl ?? undefined}
+                  updatedAt={user.minecraftSkinUpdatedAt}
                 />
                 <div className="flex flex-col">
                   <span className="text-base font-medium">
@@ -152,12 +156,15 @@ export default async function GettingStartedPage() {
                   </div>
                 </div>
               </div>
-              <MinecraftLinkDialog
-                linked={minecraftLinked}
-                serverAddress={settings.minecraftServerAddress}
-                serverVersion={settings.minecraftServerVersion}
-                authCommand={settings.minecraftAuthCommand}
-              />
+              <div className="flex items-center gap-2">
+                {minecraftLinked && <RefreshSkinButton />}
+                <MinecraftLinkDialog
+                  linked={minecraftLinked}
+                  serverAddress={settings.minecraftServerAddress}
+                  serverVersion={settings.minecraftServerVersion}
+                  authCommand={settings.minecraftAuthCommand}
+                />
+              </div>
             </CardContent>
           </Card>
         </div>
