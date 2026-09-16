@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { requireRole, requireUser } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { BotTestClient } from "@/components/staff/bot-test-client";
+
+export const metadata: Metadata = {
+  title: "Test du bot",
+};
 
 export default async function BotTestPage() {
   await requireRole([Role.ADMIN]);

@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { BookOpen } from "@phosphor-icons/react/dist/ssr";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Écriture de trame",
+};
 import { getPlayerCharacters } from "@/lib/services/character-service";
 import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { characterStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";

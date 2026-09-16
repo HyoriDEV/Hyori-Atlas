@@ -86,7 +86,7 @@ export function RpGroupsDashboard({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="font-heading text-2xl font-semibold tracking-tight">Groupes RP</h1>
-          <p className="text-muted-foreground mt-0.5 text-xs">
+          <p className="text-muted-foreground mt-0.5 text-sm">
             Suivez l&apos;avancement de la whitelist des équipes de joueurs pour éviter de les
             bloquer.
           </p>
@@ -103,7 +103,7 @@ export function RpGroupsDashboard({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher par groupe ou joueur..."
-            className="h-9 pr-8 pl-9 text-xs"
+            className="h-9 pr-8 pl-9 text-sm"
           />
           {searchQuery && (
             <button
@@ -117,9 +117,9 @@ export function RpGroupsDashboard({
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-xs whitespace-nowrap">Filtrer par :</span>
+          <span className="text-muted-foreground text-sm whitespace-nowrap">Filtrer par :</span>
           <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val ?? "ALL")}>
-            <SelectTrigger className="h-9 w-[190px] text-xs">
+            <SelectTrigger className="h-9 w-[190px] text-sm">
               <SelectValue placeholder="Tous les états" />
             </SelectTrigger>
             <SelectContent>
@@ -168,7 +168,7 @@ export function RpGroupsDashboard({
           )}
         </Card>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {filteredGroups.map(({ group }) => (
             <RpGroupCard
               key={group.id}

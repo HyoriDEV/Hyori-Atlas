@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { UserMinus, UserPlus } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -141,7 +142,11 @@ export function TicketMembersManager({
                 key={member.userId}
                 className="flex items-center justify-between rounded-lg border p-2"
               >
-                <div className="flex items-center gap-3">
+                <Link
+                  href={`/staff/atlas/${member.userId}`}
+                  className="flex items-center gap-3 transition-opacity hover:opacity-80"
+                  title={`Voir la fiche Atlas de ${name}`}
+                >
                   {member.minecraftUsername ? (
                     <SkinHead size="sm" username={member.minecraftUsername} />
                   ) : (
@@ -151,9 +156,9 @@ export function TicketMembersManager({
                     </Avatar>
                   )}
                   <div className="flex flex-col">
-                    <span className="text-sm font-medium">{name}</span>
+                    <span className="text-sm font-medium hover:underline">{name}</span>
                   </div>
-                </div>
+                </Link>
                 {!readOnly && (
                   <Button
                     variant="ghost"

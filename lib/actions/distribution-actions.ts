@@ -4,13 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import {
-  CharacterSheetCommentTarget,
-  CharacterSheetStatus,
-  RegistrationStatus,
-  Role,
-} from "@/lib/generated/prisma/enums";
-import { notifyPlayerCharacterSheetStatus } from "@/lib/services/discord-bot-service";
+import { Role } from "@/lib/generated/prisma/enums";
 
 const distributionAllowedRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 
@@ -18,93 +12,6 @@ export interface DistributionActionResult<T = unknown> {
   success: boolean;
   error?: string;
   data?: T;
-}
-
-export async function returnPendingSheetsForAffiliationAction(): Promise<
-  DistributionActionResult<{ count: number }>
-> {
-  try {
-    const staffUser = await requireRole(distributionAllowedRoles);
-
-    const sheetsToReturn = await prisma.characterSheet.findMany({
-      where: {
-        reviewStatus: CharacterSheetStatus.PENDING_STAFF,
-        player: {
-          registrationStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
-        },
-      },
-      include: {
-        player: true,
-      },
-    });
-
-    if (sheetsToReturn.length === 0) {
-      return { success: true, data: { count: 0 } };
-    }
-
-    const commentBody = "Merci de remplir la section Affiliation de ta fiche personnage !";
-
-    await prisma.$transaction(async (tx) => {
-      for (const sheet of sheetsToReturn) {
-        await tx.characterSheetComment.deleteMany({
-          where: { sheetId: sheet.id },
-        });
-
-        await tx.characterSheetComment.create({
-          data: {
-            sheetId: sheet.id,
-            authorId: staffUser.id,
-            target: CharacterSheetCommentTarget.name,
-            body: commentBody,
-          },
-        });
-
-        await tx.characterSheet.update({
-          where: { id: sheet.id },
-          data: {
-            reviewStatus: CharacterSheetStatus.PENDING_PLAYER,
-            hasUnreadFeedback: true,
-          },
-        });
-
-        await tx.characterSheetReviewHistory.create({
-          data: {
-            sheetId: sheet.id,
-            authorId: staffUser.id,
-            status: CharacterSheetStatus.PENDING_PLAYER,
-            commentCount: 1,
-            note: "Renvoi groupé : complétion de la section Affiliation",
-          },
-        });
-      }
-    });
-
-    // Notify players on Discord if configured
-    for (const sheet of sheetsToReturn) {
-      if (sheet.player?.discordId) {
-        try {
-          await notifyPlayerCharacterSheetStatus(
-            sheet.player.discordId,
-            CharacterSheetStatus.PENDING_PLAYER
-          );
-        } catch {
-          // Ignore individual notification failure
-        }
-      }
-    }
-
-    revalidatePath("/staff/distribution");
-    revalidatePath("/staff/atlas");
-    revalidatePath("/player/character-sheet");
-    revalidatePath("/player", "layout");
-
-    return { success: true, data: { count: sheetsToReturn.length } };
-  } catch (err) {
-    return {
-      success: false,
-      error: err instanceof Error ? err.message : "Erreur lors du renvoi des fiches.",
-    };
-  }
 }
 
 export async function createPlayerClassAction(data: {

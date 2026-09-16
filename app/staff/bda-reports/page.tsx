@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Rapports GC",
+};
 import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
@@ -115,14 +120,11 @@ export default async function BdaReportsPage(props: {
                 const isUnread = report.status === BdaReportStatus.UNREAD;
                 return (
                   <TicketTableRow key={report.id} href={`/staff/bda-reports/${report.id}`}>
-                    <TableCell
-                      className="relative max-w-[180px] pl-6 font-medium sm:max-w-[260px] md:max-w-[360px] lg:max-w-[460px]"
-                      title={report.title}
-                    >
+                    <TableCell className="relative pl-6 font-medium">
                       {isUnread && (
                         <UnreadDot variant="destructive" placement="table" title="Non lu" />
                       )}
-                      <span className="block truncate">{report.title}</span>
+                      <span>{report.title}</span>
                     </TableCell>
                     <TableCell>
                       <Badge

@@ -269,7 +269,11 @@ export function InterviewCalendarView({ slots }: InterviewCalendarViewProps) {
                           {/* Corps de carte : Joueur ou libre */}
                           {booking && player ? (
                             <div className="bg-muted/30 flex items-center justify-between gap-3 rounded-lg border p-2.5">
-                              <div className="flex min-w-0 items-center gap-2.5">
+                              <Link
+                                href={`/staff/atlas/${player.id}`}
+                                className="flex min-w-0 items-center gap-2.5 transition-opacity hover:opacity-80"
+                                title={`Voir la fiche Atlas de ${player.minecraftUsername ?? player.discordDisplayName}`}
+                              >
                                 {player.minecraftUuid ? (
                                   <SkinHead
                                     username={player.minecraftUsername ?? player.discordDisplayName}
@@ -290,7 +294,7 @@ export function InterviewCalendarView({ slots }: InterviewCalendarViewProps) {
 
                                 <div className="flex min-w-0 flex-col">
                                   <div className="flex items-center gap-1.5">
-                                    <span className="text-foreground truncate text-xs font-semibold">
+                                    <span className="text-foreground truncate text-xs font-semibold hover:underline">
                                       {player.minecraftUsername ?? player.discordDisplayName}
                                     </span>
                                   </div>
@@ -298,7 +302,7 @@ export function InterviewCalendarView({ slots }: InterviewCalendarViewProps) {
                                     @{player.discordUsername}
                                   </span>
                                 </div>
-                              </div>
+                              </Link>
 
                               <div className="flex shrink-0 items-center gap-1">
                                 <Button

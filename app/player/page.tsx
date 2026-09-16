@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Tableau de bord",
+};
 import {
   CharacterSheetStatus,
   CharacterStatus,
@@ -120,7 +125,7 @@ export default async function PlayerDashboardPage() {
               </Avatar>
             )}
             <div className="flex min-w-0 flex-col">
-              <h1 className="font-heading text-foreground truncate text-xl font-semibold">
+              <h1 className="font-heading text-foreground text-xl font-semibold">
                 Coucou, {displayName} !
               </h1>
               <p className="text-muted-foreground text-xs">

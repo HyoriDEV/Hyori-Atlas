@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Premiers pas",
+};
 import {
   CharacterSheetStatus,
   InterviewBookingStatus,

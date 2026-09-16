@@ -19,7 +19,16 @@ export function AtlasTableRow({
   const router = useRouter();
 
   return (
-    <TableRow onClick={() => router.push(href)} className={cn("cursor-pointer", className)}>
+    <TableRow
+      onClick={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest("a, button")) {
+          return;
+        }
+        router.push(href);
+      }}
+      className={cn("cursor-pointer", className)}
+    >
       {children}
       <TableCell className="text-muted-foreground w-8">
         <CaretRight className="size-3.5" />

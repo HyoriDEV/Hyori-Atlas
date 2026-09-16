@@ -1,10 +1,11 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { getInterviewGuides } from "@/lib/services/interview-guide-service";
 import { InterviewGuideView } from "./interview-guide-view";
 
-export const metadata = {
-  title: "Guide d'entretien Whitelist",
+export const metadata: Metadata = {
+  title: "Guide d'entretien",
 };
 
 export default async function StaffInterviewGuidePage() {

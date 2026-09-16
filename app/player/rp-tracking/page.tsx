@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Suivi RP",
+};
 import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { serializeConversationMessage } from "@/lib/conversation";

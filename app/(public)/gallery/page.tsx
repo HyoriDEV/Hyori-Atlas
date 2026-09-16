@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ComingSoonCard } from "@/components/coming-soon-card";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+
+export const metadata: Metadata = {
+  title: "Galerie",
+};
 
 export default async function GalleryPage() {
   const settings = await getGlobalSettings();

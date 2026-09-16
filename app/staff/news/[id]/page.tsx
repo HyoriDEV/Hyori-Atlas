@@ -1,7 +1,31 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata(props: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  if (params.id === "new") {
+    return { title: "Nouvelle actualité" };
+  }
+
+  const news = await prisma.news.findUnique({
+    where: { id: params.id },
+    select: { title: true },
+  });
+
+  if (!news?.title) {
+    return { title: "Modifier l'actualité" };
+  }
+
+  const cleanTitle = news.title.length > 50 ? `${news.title.slice(0, 47)}...` : news.title;
+  return {
+    title: `Modifier : ${cleanTitle}`,
+  };
+}
 import { NewsForm } from "./news-form";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 

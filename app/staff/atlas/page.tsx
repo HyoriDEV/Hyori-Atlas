@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Atlas des joueurs",
+};
 import {
   getServerPagePrefs,
   checkRedirectWithSavedPrefs,
@@ -347,16 +352,13 @@ export default async function AtlasPage(props: PageProps) {
                       {isPendingStaffSheet && (
                         <UnreadDot placement="table" title="Fiche RP en attente de relecture" />
                       )}
-                      <div className="flex max-w-[180px] items-center gap-2.5" title={playerName}>
+                      <div className="flex items-center gap-2.5">
                         <SkinHead size="sm" username={player.minecraftUsername ?? undefined} />
-                        <span className="truncate font-medium">{playerName}</span>
+                        <span className="font-medium">{playerName}</span>
                       </div>
                     </TableCell>
-                    <TableCell
-                      className="max-w-[180px] font-medium"
-                      title={sheet?.name || undefined}
-                    >
-                      <span className="block truncate">{sheet?.name || "—"}</span>
+                    <TableCell className="font-medium">
+                      {sheet?.name || "—"}
                     </TableCell>
                     <TableCell className="text-muted-foreground">—</TableCell>
                     <TableCell className="text-muted-foreground">

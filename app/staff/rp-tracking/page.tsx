@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Suivi RP Staff",
+};
 import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { rpTrackingStaffRoles } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
@@ -25,6 +30,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/dashboard/table-pagination";
+import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -105,15 +111,17 @@ export default async function RpTrackingStaffListPage(props: {
               pagePlayers.map((player) => {
                 const lastMessage = player.conversationMemberships[0]?.conversation.messages[0];
                 const isPendingReply = lastMessage && lastMessage.authorId === player.id;
+                const playerName = player.minecraftUsername ?? player.discordDisplayName;
                 return (
-                  <TableRow key={player.id} className="cursor-pointer">
-                    <TableCell className="relative p-0 pl-6">
+                  <TicketTableRow key={player.id} href={`/staff/rp-tracking/${player.id}`}>
+                    <TableCell className="relative py-3 pl-6">
                       {isPendingReply && (
                         <UnreadDot placement="table" title="Réponse du staff attendue" />
                       )}
                       <Link
-                        href={`/staff/rp-tracking/${player.id}`}
-                        className="flex items-center gap-2 py-3 pr-4"
+                        href={`/staff/atlas/${player.id}`}
+                        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+                        title={`Voir la fiche Atlas de ${playerName}`}
                       >
                         {player.minecraftUsername ? (
                           <SkinHead size="sm" username={player.minecraftUsername} />
@@ -121,14 +129,14 @@ export default async function RpTrackingStaffListPage(props: {
                           <Avatar size="sm">
                             <AvatarImage
                               src={player.discordAvatarUrl ?? undefined}
-                              alt={player.discordDisplayName}
+                              alt={playerName}
                             />
                             <AvatarFallback>
-                              {player.discordDisplayName.charAt(0).toUpperCase()}
+                              {playerName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                         )}
-                        <span>{player.minecraftUsername ?? player.discordDisplayName}</span>
+                        <span className="font-medium hover:underline">{playerName}</span>
                       </Link>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
@@ -139,7 +147,7 @@ export default async function RpTrackingStaffListPage(props: {
                           })
                         : "—"}
                     </TableCell>
-                  </TableRow>
+                  </TicketTableRow>
                 );
               })
             )}

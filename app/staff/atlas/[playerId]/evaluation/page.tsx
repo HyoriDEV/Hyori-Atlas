@@ -1,7 +1,26 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ playerId: string }>;
+}): Promise<Metadata> {
+  const { playerId } = await params;
+  const player = await prisma.user.findUnique({
+    where: { id: playerId },
+    select: { minecraftUsername: true, discordDisplayName: true, discordUsername: true },
+  });
+
+  const playerName =
+    player?.minecraftUsername || player?.discordDisplayName || player?.discordUsername;
+  return {
+    title: playerName ? `Évaluation de ${playerName}` : "Évaluation de la fiche",
+  };
+}
 import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { characterSheetReviewerRoles, characterSheetStatusLabels } from "@/lib/navigation";
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";

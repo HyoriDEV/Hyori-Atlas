@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { CharacterStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
@@ -5,8 +6,8 @@ import type { PlayerOption } from "@/components/player-select";
 import type { RpGroupWithMembers } from "@/lib/rp-groups";
 import { RpGroupsDashboard } from "@/components/staff/groups/rp-groups-dashboard";
 
-export const metadata = {
-  title: "Groupes RP RP | Hyori Staff",
+export const metadata: Metadata = {
+  title: "Groupes RP",
 };
 
 export default async function StaffGroupsPage() {

@@ -1,7 +1,27 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata(props: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const report = await prisma.bdaReport.findUnique({
+    where: { id: params.id },
+    select: { title: true },
+  });
+
+  if (!report?.title) {
+    return { title: "Rapport GC" };
+  }
+
+  const cleanTitle = report.title.length > 50 ? `${report.title.slice(0, 47)}...` : report.title;
+  return {
+    title: `Rapport : ${cleanTitle}`,
+  };
+}
 import { Role } from "@/lib/generated/prisma/enums";
 import { formatDate } from "@/lib/date";
 import { bdaReportStatusBadgeVariant } from "@/lib/atlas-status";
@@ -50,14 +70,11 @@ export default async function BdaReportDetailPage(props: { params: Promise<{ id:
     <div className="flex flex-col gap-6">
       <div className="flex shrink-0 items-center gap-3">
         <AtlasBackButton href="/staff/bda-reports" />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-muted-foreground max-w-[200px] truncate text-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+        <div className="flex flex-1 flex-col gap-0.5">
+          <span className="text-muted-foreground text-xs">
             {formatDate(report.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span
-            className="font-heading max-w-[180px] truncate text-lg font-semibold sm:max-w-[280px] md:max-w-[360px] lg:max-w-[460px]"
-            title={report.title}
-          >
+          <span className="font-heading text-lg font-semibold">
             {report.title}
           </span>
         </div>
@@ -201,8 +218,7 @@ export default async function BdaReportDetailPage(props: { params: Promise<{ id:
                     href={`/staff/tickets/${report.ticket.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary block max-w-[200px] truncate font-medium underline sm:max-w-[300px] md:max-w-[420px]"
-                    title={report.ticket.subject}
+                    className="text-primary font-medium underline"
                   >
                     {report.ticket.subject}
                   </Link>

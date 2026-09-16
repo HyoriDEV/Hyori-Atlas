@@ -16,7 +16,9 @@ export interface AtlasSessionBlock {
 import { formatDate } from "@/lib/date";
 
 export type AtlasLogActor =
-  { type: "player" } | { type: "staff"; name: string; role?: string } | { type: "system" };
+  | { type: "player" }
+  | { type: "staff"; id?: string; name: string; role?: string }
+  | { type: "system" };
 
 export type AtlasLogBadgeVariant = NonNullable<VariantProps<typeof badgeVariants>["variant"]>;
 
@@ -100,7 +102,22 @@ function TimelineRow({
           )}
           {actor && (
             <span className="text-muted-foreground text-xs font-normal">
-              {actor.type === "staff" && <>par {actor.name}</>}
+              {actor.type === "staff" && (
+                <>
+                  par{" "}
+                  {actor.id ? (
+                    <Link
+                      href={`/staff/atlas/${actor.id}`}
+                      className="hover:text-foreground font-medium hover:underline"
+                      title={`Voir la fiche Atlas de ${actor.name}`}
+                    >
+                      {actor.name}
+                    </Link>
+                  ) : (
+                    actor.name
+                  )}
+                </>
+              )}
               {actor.type === "player" && <>(joueur)</>}
               {actor.type === "system" && <>(automatique)</>}
             </span>

@@ -207,23 +207,29 @@ export function InterviewTableView({
                   <TableCell>
                     {booking && player ? (
                       <div className="flex items-center gap-2.5">
-                        {player.minecraftUuid ? (
-                          <SkinHead
-                            username={player.minecraftUsername ?? player.discordDisplayName}
-                            size="sm"
-                            className="ring-border shrink-0 ring-1"
-                          />
-                        ) : (
-                          <Avatar className="ring-border size-7 shrink-0 ring-1">
-                            <AvatarImage
-                              src={player.discordAvatarUrl ?? undefined}
-                              alt={player.discordDisplayName}
+                        <Link
+                          href={`/staff/atlas/${player.id}`}
+                          className="shrink-0 transition-opacity hover:opacity-80"
+                          title={`Voir la fiche Atlas de ${player.minecraftUsername ?? player.discordDisplayName}`}
+                        >
+                          {player.minecraftUuid ? (
+                            <SkinHead
+                              username={player.minecraftUsername ?? player.discordDisplayName}
+                              size="sm"
+                              className="ring-border shrink-0 ring-1"
                             />
-                            <AvatarFallback className="text-xs">
-                              {player.discordDisplayName[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
+                          ) : (
+                            <Avatar className="ring-border size-7 shrink-0 ring-1">
+                              <AvatarImage
+                                src={player.discordAvatarUrl ?? undefined}
+                                alt={player.discordDisplayName}
+                              />
+                              <AvatarFallback className="text-xs">
+                                {player.discordDisplayName[0]}
+                              </AvatarFallback>
+                            </Avatar>
+                          )}
+                        </Link>
 
                         <div className="flex min-w-0 flex-col">
                           <div className="flex items-center gap-1.5">

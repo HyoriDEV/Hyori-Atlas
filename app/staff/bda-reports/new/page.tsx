@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Nouveau rapport GC",
+};
 import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
 import { BdaReportForm } from "@/components/dashboard/bda-report-form";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";

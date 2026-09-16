@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getPlayerState } from "@/lib/dal";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+export const metadata: Metadata = {
+  title: "Statut d'inscription",
+};
 
 export default async function RejectionPage() {
   const user = await getPlayerState();

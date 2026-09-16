@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Tableau de bord Staff",
+};
 import {
   CharacterSheetStatus,
   ConversationType,
@@ -241,7 +247,11 @@ export default async function StaffDashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="border-border/80 from-card to-card/60 flex flex-col gap-4 rounded-xl border bg-gradient-to-r p-5 shadow-xs">
         <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-          <div className="flex items-center gap-3.5">
+          <Link
+            href={`/staff/atlas/${user.id}`}
+            className="group flex items-center gap-3.5 transition-opacity hover:opacity-85"
+            title="Voir mon profil Atlas"
+          >
             {user.minecraftUuid ? (
               <SkinHead
                 username={user.minecraftUsername ?? displayName}
@@ -255,14 +265,14 @@ export default async function StaffDashboardPage() {
               </Avatar>
             )}
             <div className="flex min-w-0 flex-col">
-              <h1 className="font-heading text-foreground truncate text-xl font-semibold">
+              <h1 className="font-heading text-foreground text-xl font-semibold group-hover:underline">
                 Espace staff de {displayName}
               </h1>
               <p className="text-muted-foreground text-xs">
                 Accède aux modules de gestion du serveur sur cet espace.
               </p>
             </div>
-          </div>
+          </Link>
           <div className="flex shrink-0 items-center gap-2 self-start sm:self-center">
             <Badge variant="default" className="px-2.5 py-1 text-xs font-medium">
               {staffRoleLabels[user.role]}

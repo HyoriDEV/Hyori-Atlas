@@ -1,7 +1,26 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ playerId: string }>;
+}): Promise<Metadata> {
+  const { playerId } = await params;
+  const player = await prisma.user.findUnique({
+    where: { id: playerId },
+    select: { minecraftUsername: true, discordDisplayName: true, discordUsername: true },
+  });
+
+  const playerName =
+    player?.minecraftUsername || player?.discordDisplayName || player?.discordUsername;
+  return {
+    title: playerName ? `Fiche de ${playerName}` : "Fiche joueur",
+  };
+}
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
@@ -149,6 +168,7 @@ export default async function AtlasPlayerPage({
       } else if (entry.author) {
         actor = {
           type: "staff",
+          id: entry.author.id,
           name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
         };
       } else {
@@ -174,6 +194,7 @@ export default async function AtlasPlayerPage({
         } else if (entry.author) {
           actor = {
             type: "staff",
+            id: entry.author.id,
             name: entry.author.minecraftUsername ?? entry.author.discordDisplayName,
           };
         } else {
@@ -220,6 +241,7 @@ export default async function AtlasPlayerPage({
         actor: booking.reviewer
           ? {
               type: "staff" as const,
+              id: booking.reviewer.id,
               name: booking.reviewer.minecraftUsername ?? booking.reviewer.discordDisplayName,
             }
           : { type: "staff" as const, name: "Staff" },
