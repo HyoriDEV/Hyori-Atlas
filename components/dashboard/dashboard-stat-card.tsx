@@ -110,7 +110,7 @@ export function DashboardStatCard({
               <Icon className="size-4.5 shrink-0" />
             </div>
             <div className="flex min-w-0 items-center gap-2">
-              <h3 className="font-heading text-foreground truncate text-base font-semibold tracking-tight">
+              <h3 className="font-heading text-foreground text-base font-semibold tracking-tight">
                 {title}
               </h3>
               {hasNotification && (

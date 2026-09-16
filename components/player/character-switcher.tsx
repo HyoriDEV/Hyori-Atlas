@@ -57,10 +57,7 @@ export function CharacterSwitcher({
         <div className="flex min-w-0 flex-col">
           <span className="text-muted-foreground text-xs font-medium">Personnage sélectionné</span>
           <div className="flex items-center gap-2">
-            <span
-              className="max-w-[180px] truncate text-sm font-semibold sm:max-w-xs"
-              title={selected.name || "Nouveau personnage"}
-            >
+            <span className="text-sm font-semibold">
               {selected.name || "Nouveau personnage"}
             </span>
             <Badge

@@ -18,7 +18,16 @@ export function TicketTableRow({
   const router = useRouter();
 
   return (
-    <TableRow onClick={() => router.push(href)} className={cn("cursor-pointer", className)}>
+    <TableRow
+      onClick={(e) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest("a, button")) {
+          return;
+        }
+        router.push(href);
+      }}
+      className={cn("cursor-pointer", className)}
+    >
       {children}
     </TableRow>
   );

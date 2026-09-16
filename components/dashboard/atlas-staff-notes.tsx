@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import Link from "next/link";
 import { PencilSimple, TrashSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
@@ -116,7 +117,17 @@ export function AtlasStaffNotes({
                     className="border-border flex flex-col gap-2 border-b pb-3 last:border-b-0 last:pb-0"
                   >
                     <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                      <span>{note.author?.discordDisplayName ?? "Ex-staff"}</span>
+                      {note.authorId ? (
+                        <Link
+                          href={`/staff/atlas/${note.authorId}`}
+                          className="hover:text-foreground font-medium hover:underline"
+                          title={`Voir la fiche Atlas de ${note.author?.discordDisplayName ?? "ce staff"}`}
+                        >
+                          {note.author?.discordDisplayName ?? "Ex-staff"}
+                        </Link>
+                      ) : (
+                        <span>{note.author?.discordDisplayName ?? "Ex-staff"}</span>
+                      )}
                       {"•"}
                       <span>
                         {formatDate(note.createdAt, { style: "prefix-long", withTime: true })}

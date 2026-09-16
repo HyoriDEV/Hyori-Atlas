@@ -143,14 +143,20 @@ export function AtlasPlayerGroupCard({
                       }`}
                     >
                       <div className="flex min-w-0 items-center gap-2">
-                        {m.minecraftUsername ? (
-                          <SkinHead size="sm" username={m.minecraftUsername} />
-                        ) : (
-                          <Avatar size="sm">
-                            <AvatarImage src={m.discordAvatarUrl ?? undefined} alt={name} />
-                            <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
-                          </Avatar>
-                        )}
+                        <Link
+                          href={`/staff/atlas/${m.id}`}
+                          className="shrink-0 transition-opacity hover:opacity-80"
+                          title={`Voir la fiche Atlas de ${name}`}
+                        >
+                          {m.minecraftUsername ? (
+                            <SkinHead size="sm" username={m.minecraftUsername} />
+                          ) : (
+                            <Avatar size="sm">
+                              <AvatarImage src={m.discordAvatarUrl ?? undefined} alt={name} />
+                              <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                          )}
+                        </Link>
                         <div className="flex min-w-0 flex-col">
                           <div className="flex items-center gap-1">
                             <Link

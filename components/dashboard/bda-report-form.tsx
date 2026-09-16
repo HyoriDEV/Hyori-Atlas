@@ -200,11 +200,10 @@ export function BdaReportForm({
             >
               <option value="">-- Aucun ticket lié --</option>
               {tickets.map((t) => {
-                const subject = t.subject.length > 60 ? `${t.subject.slice(0, 57)}…` : t.subject;
                 const author = t.player.minecraftUsername || t.player.discordDisplayName;
                 return (
                   <option key={t.id} value={t.id}>
-                    {subject} (par {author})
+                    {t.subject} (par {author})
                   </option>
                 );
               })}

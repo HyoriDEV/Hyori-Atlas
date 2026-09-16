@@ -575,7 +575,37 @@ export function ConversationChat({
                         )}
                       >
                         {isFirst ? (
-                          group.authorType === MessageAuthorType.STAFF ? (
+                          viewerIsStaff && group.authorId ? (
+                            <Link
+                              href={`/staff/atlas/${group.authorId}`}
+                              className="transition-opacity hover:opacity-80"
+                              title={`Voir la fiche Atlas de ${group.displayName}`}
+                            >
+                              {group.authorType === MessageAuthorType.STAFF ? (
+                                <Avatar size="sm">
+                                  <AvatarImage
+                                    src={group.avatarUrl ?? undefined}
+                                    alt={group.displayName}
+                                  />
+                                  <AvatarFallback>
+                                    {group.displayName.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              ) : group.minecraftUsername ? (
+                                <SkinHead size="sm" username={group.minecraftUsername} />
+                              ) : (
+                                <Avatar size="sm">
+                                  <AvatarImage
+                                    src={group.avatarUrl ?? undefined}
+                                    alt={group.displayName}
+                                  />
+                                  <AvatarFallback>
+                                    {group.displayName.charAt(0).toUpperCase()}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                            </Link>
+                          ) : group.authorType === MessageAuthorType.STAFF ? (
                             <Avatar size="sm">
                               <AvatarImage
                                 src={group.avatarUrl ?? undefined}
@@ -618,16 +648,31 @@ export function ConversationChat({
                               group.isOwn && "flex-row-reverse"
                             )}
                           >
-                            <span
-                              className={cn(
-                                "text-sm font-medium",
-                                (group.displayName === "Staff" ||
-                                  (group.authorType === MessageAuthorType.STAFF && !group.isOwn)) &&
-                                  "text-primary font-semibold"
-                              )}
-                            >
-                              {group.displayName}
-                            </span>
+                            {viewerIsStaff && group.authorId ? (
+                              <Link
+                                href={`/staff/atlas/${group.authorId}`}
+                                className={cn(
+                                  "text-sm font-medium hover:underline",
+                                  (group.displayName === "Staff" ||
+                                    (group.authorType === MessageAuthorType.STAFF && !group.isOwn)) &&
+                                    "text-primary font-semibold"
+                                )}
+                                title={`Voir la fiche Atlas de ${group.displayName}`}
+                              >
+                                {group.displayName}
+                              </Link>
+                            ) : (
+                              <span
+                                className={cn(
+                                  "text-sm font-medium",
+                                  (group.displayName === "Staff" ||
+                                    (group.authorType === MessageAuthorType.STAFF && !group.isOwn)) &&
+                                    "text-primary font-semibold"
+                                )}
+                              >
+                                {group.displayName}
+                              </span>
+                            )}
                             <span className="text-muted-foreground text-xs">
                               {formatDate(message.createdAt, { style: "chat" })}
                             </span>
