@@ -1,7 +1,29 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ ticketId: string }>;
+}): Promise<Metadata> {
+  const { ticketId } = await params;
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { subject: true },
+  });
+
+  if (!ticket?.subject) {
+    return { title: "Détail du ticket" };
+  }
+
+  const cleanSubject = ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
+  return {
+    title: `Ticket : ${cleanSubject}`,
+  };
+}
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
@@ -68,15 +90,12 @@ export default async function TicketDetailPage({
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
         <TicketBackLink />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-muted-foreground max-w-[200px] truncate text-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
+        <div className="flex flex-1 flex-col gap-0.5">
+          <span className="text-muted-foreground text-xs">
             {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span
-            className="font-heading max-w-[180px] truncate text-lg font-semibold sm:max-w-[280px] md:max-w-[360px] lg:max-w-[460px]"
-            title={ticket.subject}
-          >
+          <span className="font-heading text-lg font-semibold">
             {ticket.subject}
           </span>
         </div>

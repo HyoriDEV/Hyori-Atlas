@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import { SettingsForm } from "@/components/staff/settings-form";
+
+export const metadata: Metadata = {
+  title: "Paramètres",
+};
 
 export default async function SettingsPage() {
   await requireRole([Role.ADMIN]);

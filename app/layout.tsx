@@ -169,7 +169,10 @@ const sourceSerif = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Hyori Atlas",
+  title: {
+    default: "Hyori Atlas",
+    template: "%s | Hyori Atlas",
+  },
   description: "Site officiel du projet Hyori RP.",
 };
 

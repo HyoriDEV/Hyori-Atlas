@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export const metadata: Metadata = {
-  title: "Lore de Hyori RP",
+  title: "Lore",
   description:
     "Découvre l'histoire du monde de Hyori RP, les récits ancestraux et les villages qui le composent.",
 };

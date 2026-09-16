@@ -1,7 +1,43 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ ticketId: string }>;
+}): Promise<Metadata> {
+  const { ticketId } = await params;
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: {
+      subject: true,
+      player: {
+        select: {
+          minecraftUsername: true,
+          discordDisplayName: true,
+          discordUsername: true,
+        },
+      },
+    },
+  });
+
+  if (ticket?.subject) {
+    const cleanSubject = ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
+    return { title: `Ticket : ${cleanSubject}` };
+  }
+
+  const playerName =
+    ticket?.player?.minecraftUsername ||
+    ticket?.player?.discordDisplayName ||
+    ticket?.player?.discordUsername;
+  return {
+    title: playerName ? `Ticket de ${playerName}` : "Ticket Staff",
+  };
+}
 import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
@@ -82,15 +118,19 @@ export default async function TicketStaffDetailPage({
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 items-center gap-3">
         <AtlasBackButton href="/staff/tickets" />
-        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-muted-foreground max-w-[200px] truncate text-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-            {playerName} · {ticketCategoryLabels[ticket.category]} ·{" "}
+        <div className="flex flex-1 flex-col gap-0.5">
+          <span className="text-muted-foreground text-xs">
+            <Link
+              href={`/staff/atlas/${ticket.playerId}`}
+              className="hover:text-foreground font-medium underline-offset-4 hover:underline"
+              title={`Voir la fiche Atlas de ${playerName}`}
+            >
+              {playerName}
+            </Link>{" "}
+            · {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span
-            className="font-heading max-w-[180px] truncate text-lg font-semibold sm:max-w-[280px] md:max-w-[360px] lg:max-w-[460px]"
-            title={ticket.subject}
-          >
+          <span className="font-heading text-lg font-semibold">
             {ticket.subject}
           </span>
         </div>

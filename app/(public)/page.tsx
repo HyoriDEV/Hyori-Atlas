@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import { VideoBackground } from "@/components/countdown/video-background";
 import { CountdownTimer } from "@/components/countdown/countdown-timer";
 import { LockScroll } from "@/components/countdown/lock-scroll";
+
+export const metadata: Metadata = {
+  title: "Accueil",
+};
 
 export default async function HomePage() {
   const settings = await getGlobalSettings();

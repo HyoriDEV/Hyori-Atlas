@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Créneaux d'entretien",
+};
 import { getServerPagePrefs } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { InterviewSlotsManager } from "@/components/staff/interview-slots/interview-slots-manager";

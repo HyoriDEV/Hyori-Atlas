@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { RulesManager } from "./rules-manager";
+
+export const metadata: Metadata = {
+  title: "Gestion du règlement",
+};
 
 export default async function StaffRulesPage() {
   await requireRole([Role.ADMIN]);

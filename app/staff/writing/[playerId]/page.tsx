@@ -1,7 +1,25 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export async function generateMetadata(props: {
+  params: Promise<{ playerId: string }>;
+}): Promise<Metadata> {
+  const { playerId } = await props.params;
+  const player = await prisma.user.findUnique({
+    where: { id: playerId },
+    select: { minecraftUsername: true, discordDisplayName: true, discordUsername: true },
+  });
+
+  const playerName =
+    player?.minecraftUsername || player?.discordDisplayName || player?.discordUsername;
+  return {
+    title: playerName ? `Écrits de ${playerName}` : "Écrits du joueur",
+  };
+}
 import { writingReviewerRoles, characterStatusLabels } from "@/lib/navigation";
 import { characterStatusBadgeVariant } from "@/lib/atlas-status";
 import { CharacterStatus } from "@/lib/generated/prisma/enums";
@@ -10,6 +28,8 @@ import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ChapterReader } from "@/components/dashboard/chapter-reader";
 import { ChapterSelect } from "@/components/dashboard/chapter-select";
 import { CharacterSwitcher } from "@/components/player/character-switcher";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SkinHead } from "@/components/ui/skin-head";
 
 export default async function WritingStaffDetailPage(props: {
   params: Promise<{ playerId: string }>;
@@ -55,10 +75,24 @@ export default async function WritingStaffDetailPage(props: {
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <AtlasBackButton href={`/staff/atlas/${playerId}`} />
-          <div className="flex min-w-0 items-center gap-2">
-            <h1 className="font-heading truncate text-lg font-semibold">
-              Trame écrite de {playerName}
-            </h1>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Link
+              href={`/staff/atlas/${playerId}`}
+              className="flex min-w-0 items-center gap-2 transition-opacity hover:opacity-85"
+              title={`Voir la fiche Atlas de ${playerName}`}
+            >
+              {player.minecraftUsername ? (
+                <SkinHead size="sm" username={player.minecraftUsername} />
+              ) : (
+                <Avatar size="sm">
+                  <AvatarImage src={player.discordAvatarUrl ?? undefined} alt={playerName} />
+                  <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
+                </Avatar>
+              )}
+              <h1 className="font-heading text-lg font-semibold hover:underline">
+                Trame écrite de {playerName}
+              </h1>
+            </Link>
             {selectedCharacter && (
               <Badge variant={characterStatusBadgeVariant(selectedCharacter.status)} className="text-xs">
                 {selectedCharacter.name || "Nouveau personnage"} ({characterStatusLabels[selectedCharacter.status]})

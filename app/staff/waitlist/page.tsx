@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Liste d'attente",
+};
 import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { staffNavItems } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
@@ -149,21 +155,21 @@ export default async function WaitlistPage(props: PageProps) {
                     <TableRow key={player.id}>
                       <TableCell>
                         {player.minecraftUsername ? (
-                          <div
-                            className="flex max-w-[160px] items-center gap-2"
-                            title={player.minecraftUsername}
+                          <Link
+                            href={`/staff/atlas/${player.id}`}
+                            className="flex items-center gap-2 transition-opacity hover:opacity-80"
                           >
                             <SkinHead size="sm" username={player.minecraftUsername} />
-                            <span className="truncate">{player.minecraftUsername}</span>
-                          </div>
+                            <span className="hover:underline">{player.minecraftUsername}</span>
+                          </Link>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
                       </TableCell>
                       <TableCell>
-                        <div
-                          className="flex max-w-[240px] items-center gap-2"
-                          title={`${player.discordDisplayName} (${player.discordUsername})`}
+                        <Link
+                          href={`/staff/atlas/${player.id}`}
+                          className="flex items-center gap-2 transition-opacity hover:opacity-80"
                         >
                           <Avatar size="sm" className="shrink-0">
                             <AvatarImage
@@ -174,11 +180,11 @@ export default async function WaitlistPage(props: PageProps) {
                               {player.discordUsername.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="truncate">{player.discordDisplayName}</span>
-                          <span className="text-muted-foreground shrink-0 text-xs">
+                          <span className="hover:underline">{player.discordDisplayName}</span>
+                          <span className="text-muted-foreground text-xs">
                             ({player.discordUsername})
                           </span>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
                         {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}
@@ -245,21 +251,21 @@ export default async function WaitlistPage(props: PageProps) {
                         <TableRow key={player.id}>
                           <TableCell>
                             {player.minecraftUsername ? (
-                              <div
-                                className="flex max-w-[160px] items-center gap-2"
-                                title={player.minecraftUsername}
+                              <Link
+                                href={`/staff/atlas/${player.id}`}
+                                className="flex items-center gap-2 transition-opacity hover:opacity-80"
                               >
                                 <SkinHead size="sm" username={player.minecraftUsername} />
-                                <span className="truncate">{player.minecraftUsername}</span>
-                              </div>
+                                <span className="hover:underline">{player.minecraftUsername}</span>
+                              </Link>
                             ) : (
                               <span className="text-muted-foreground">—</span>
                             )}
                           </TableCell>
                           <TableCell>
-                            <div
-                              className="flex max-w-[240px] items-center gap-2"
-                              title={`${player.discordDisplayName} (${player.discordUsername})`}
+                            <Link
+                              href={`/staff/atlas/${player.id}`}
+                              className="flex items-center gap-2 transition-opacity hover:opacity-80"
                             >
                               <Avatar size="sm" className="shrink-0">
                                 <AvatarImage
@@ -270,11 +276,11 @@ export default async function WaitlistPage(props: PageProps) {
                                   {player.discordUsername.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="truncate">{player.discordDisplayName}</span>
-                              <span className="text-muted-foreground shrink-0 text-xs">
+                              <span className="hover:underline">{player.discordDisplayName}</span>
+                              <span className="text-muted-foreground text-xs">
                                 ({player.discordUsername})
                               </span>
-                            </div>
+                            </Link>
                           </TableCell>
                           <TableCell className="text-muted-foreground">
                             {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}

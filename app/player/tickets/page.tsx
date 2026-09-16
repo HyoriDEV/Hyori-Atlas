@@ -1,14 +1,20 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Tickets",
+};
 import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
+import { truncate } from "@/lib/utils";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -108,11 +114,8 @@ function TicketList({
                       </>
                     )}
                   </div>
-                  <span
-                    className="max-w-[200px] truncate text-sm font-medium sm:max-w-[320px] md:max-w-[440px] lg:max-w-[560px]"
-                    title={ticket.subject}
-                  >
-                    {ticket.subject}
+                  <span className="text-sm font-medium" title={ticket.subject}>
+                    {truncate(ticket.subject, 50)}
                   </span>
                 </div>
                 <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">

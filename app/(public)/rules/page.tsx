@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import { ComingSoonCard } from "@/components/coming-soon-card";
 import { RulesView } from "./rules-view";
+
+export const metadata: Metadata = {
+  title: "Règlement",
+};
 
 export default async function RulesPage() {
   const settings = await getGlobalSettings();

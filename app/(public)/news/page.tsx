@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { NewsType } from "@/lib/generated/prisma/enums";
@@ -6,6 +7,10 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/date";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+
+export const metadata: Metadata = {
+  title: "Actualités",
+};
 
 function NewsFeed({ items }: { items: Awaited<ReturnType<typeof getNews>> }) {
   if (items.length === 0) {

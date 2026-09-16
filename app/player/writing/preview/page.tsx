@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Aperçu de la trame",
+};
 import { CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
@@ -46,7 +51,7 @@ export default async function WritingPlayerPreviewPage(props: {
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <AtlasBackButton href={character ? `/player/writing?characterId=${character.id}` : "/player/writing"} />
-          <h1 className="font-heading truncate text-lg font-semibold">
+          <h1 className="font-heading text-lg font-semibold">
             Trame écrite de {playerName}{characterLabel}
           </h1>
         </div>

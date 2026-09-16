@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Équipe staff",
+};
 import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
@@ -199,7 +205,11 @@ export default async function StaffTeamPage(props: PageProps) {
                 return (
                   <TableRow key={member.id} className="group">
                     <TableCell className="pl-6">
-                      <div className="flex max-w-[240px] items-center gap-3">
+                      <Link
+                        href={`/staff/atlas/${member.id}`}
+                        className="flex items-center gap-3 transition-opacity hover:opacity-80"
+                        title={`Voir la fiche Atlas de ${displayName}`}
+                      >
                         {member.minecraftUsername ? (
                           <SkinHead
                             size="sm"
@@ -217,9 +227,9 @@ export default async function StaffTeamPage(props: PageProps) {
                             </AvatarFallback>
                           </Avatar>
                         )}
-                        <div className="flex min-w-0 flex-col">
+                        <div className="flex flex-col">
                           <div className="flex items-center gap-1.5">
-                            <span className="truncate text-sm font-medium" title={displayName}>
+                            <span className="text-sm font-medium hover:underline">
                               {displayName}
                             </span>
                             {isCurrentAdminUser && (
@@ -231,14 +241,14 @@ export default async function StaffTeamPage(props: PageProps) {
                               </Badge>
                             )}
                           </div>
-                          <span className="text-muted-foreground truncate text-xs">
+                          <span className="text-muted-foreground text-xs">
                             {member.discordUsername}
                             {member.minecraftUsername &&
                               member.minecraftUsername !== member.discordUsername &&
                               ` • MC: ${member.minecraftUsername}`}
                           </span>
                         </div>
-                      </div>
+                      </Link>
                     </TableCell>
 
                     <TableCell>

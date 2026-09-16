@@ -1,8 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus } from "@phosphor-icons/react/dist/ssr";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Gestion des actualités",
+};
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,11 +37,8 @@ export default async function StaffNewsPage() {
           news.map((item) => (
             <Card key={item.id}>
               <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
-                <div className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="max-w-[180px] truncate font-semibold sm:max-w-[280px] md:max-w-[380px] lg:max-w-[480px]"
-                    title={item.title}
-                  >
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">
                     {item.title}
                   </span>
                   <Badge variant="outline" className="shrink-0">

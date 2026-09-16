@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import { requireActivePlayer } from "@/lib/dal";
 import { getPlayerCharacters } from "@/lib/services/character-service";
+
+export const metadata: Metadata = {
+  title: "Fiche personnage",
+};
 import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import {

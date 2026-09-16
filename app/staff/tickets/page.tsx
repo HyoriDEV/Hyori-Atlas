@@ -1,14 +1,23 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+
+export const metadata: Metadata = {
+  title: "Tickets Staff",
+};
 import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
+import { truncate } from "@/lib/utils";
 import { TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SkinHead } from "@/components/ui/skin-head";
 import {
   Table,
   TableBody,
@@ -109,22 +118,38 @@ export default async function TicketsStaffListPage(props: {
                   ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
                 return (
                   <TicketTableRow key={ticket.id} href={`/staff/tickets/${ticket.id}`}>
-                    <TableCell className="relative max-w-[180px] pl-6" title={playerName}>
+                    <TableCell className="relative pl-6">
                       {isPendingStaff && (
                         <UnreadDot placement="table" title="En attente du staff" />
                       )}
-                      <span className="block truncate font-medium">{playerName}</span>
+                      <Link
+                        href={`/staff/atlas/${ticket.player.id}`}
+                        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+                        title={`Voir la fiche Atlas de ${playerName}`}
+                      >
+                        {ticket.player.minecraftUsername ? (
+                          <SkinHead size="sm" username={ticket.player.minecraftUsername} className="shrink-0" />
+                        ) : (
+                          <Avatar size="sm" className="shrink-0">
+                            <AvatarImage
+                              src={ticket.player.discordAvatarUrl ?? undefined}
+                              alt={playerName}
+                            />
+                            <AvatarFallback>
+                              {playerName.charAt(0).toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        )}
+                        <span className="font-medium hover:underline">{playerName}</span>
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="text-xs">
                         {ticketCategoryLabels[ticket.category]}
                       </Badge>
                     </TableCell>
-                    <TableCell
-                      className="max-w-[180px] sm:max-w-[240px] md:max-w-[320px] lg:max-w-[420px] xl:max-w-[520px]"
-                      title={ticket.subject}
-                    >
-                      <span className="block truncate font-medium">{ticket.subject}</span>
+                    <TableCell className="font-medium" title={ticket.subject}>
+                      {truncate(ticket.subject, 50)}
                     </TableCell>
                     <TableCell>
                       <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
