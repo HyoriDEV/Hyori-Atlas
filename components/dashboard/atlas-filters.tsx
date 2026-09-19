@@ -18,7 +18,7 @@ import { ResetSortButton } from "@/components/dashboard/waitlist-sort-controls";
 import { setClientPagePref } from "@/lib/table-preferences";
 
 const ALL_VALUE = "ALL";
-const QUERY_DEBOUNCE_MS = 200;
+const QUERY_DEBOUNCE_MS = 400;
 
 const statusItems = [
   { value: ALL_VALUE, label: "Tous les statuts" },
@@ -77,12 +77,18 @@ export function AtlasFilters({
   const searchParams = useSearchParams();
   const [prevQuery, setPrevQuery] = useState(query);
   const [queryInput, setQueryInput] = useState(query);
+  const [lastDispatchedQuery, setLastDispatchedQuery] = useState(query);
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (prevQuery !== query) {
     setPrevQuery(query);
-    setQueryInput(query);
+    // Only synchronize local input if the query changed from an external source
+    // (e.g. navigation, back/forward button). Do not overwrite active user typing.
+    if (query !== lastDispatchedQuery) {
+      setQueryInput(query);
+      setLastDispatchedQuery(query);
+    }
   }
 
   function updateParams(next: Record<string, string>) {
@@ -119,12 +125,15 @@ export function AtlasFilters({
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      updateParams({ q: value.trim() });
+      const trimmed = value.trim();
+      setLastDispatchedQuery(trimmed);
+      updateParams({ q: trimmed });
     }, QUERY_DEBOUNCE_MS);
   }
 
   function handleClearQuery() {
     setQueryInput("");
+    setLastDispatchedQuery("");
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
