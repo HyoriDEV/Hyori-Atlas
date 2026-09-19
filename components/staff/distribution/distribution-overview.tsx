@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { CaretDown, CaretUp, CaretUpDown, MagnifyingGlass, Users } from "@phosphor-icons/react";
+import { CaretDown, CaretUp, CaretUpDown, MagnifyingGlass, Users, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
@@ -15,9 +15,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Checkbox } from "@/components/ui/checkbox";
+import { TablePagination } from "@/components/dashboard/table-pagination";
+import { getClientPagePrefs, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { getClassPaletteColor, NEUTRAL_PALETTE_COLOR } from "@/lib/class-palette";
 import { PlayerOverrideCell } from "@/components/staff/distribution/player-override-cell";
 import { toggleDistributionProcessedAction } from "@/lib/actions/player-affiliation-actions";
@@ -26,6 +35,13 @@ import type { PlayerAffiliationOverview } from "@/lib/services/player-affiliatio
 
 type SortColumn = "processed" | "player" | "choice1" | "choice2" | "effective";
 type SortDirection = "asc" | "desc";
+type ProcessedFilterValue = "ALL" | "UNPROCESSED" | "PROCESSED";
+
+const PROCESSED_FILTER_OPTIONS = [
+  { value: "ALL", label: "Tous les statuts" },
+  { value: "UNPROCESSED", label: "Non traités" },
+  { value: "PROCESSED", label: "Traités" },
+];
 
 interface OverrideState {
   classId: string;
@@ -42,6 +58,17 @@ export function DistributionOverview({
   playerClasses: SerializedPlayerClass[];
 }) {
   const [search, setSearch] = useState("");
+  const [processedFilter, setProcessedFilter] = useState<ProcessedFilterValue>("ALL");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    if (typeof window === "undefined") return 10;
+    const prefs = getClientPagePrefs(window.location.pathname);
+    const parsed = parseInt(prefs.pageSize ?? "", 10);
+    if (DEFAULT_PAGE_SIZE_OPTIONS.includes(parsed as (typeof DEFAULT_PAGE_SIZE_OPTIONS)[number])) {
+      return parsed;
+    }
+    return 10;
+  });
   const [processedState, setProcessedState] = useState<Record<string, boolean>>({});
   const [overrideState, setOverrideState] = useState<Record<string, OverrideState>>({});
   const [editingSheetId, setEditingSheetId] = useState<string | null>(null);
@@ -153,12 +180,18 @@ export function DistributionOverview({
     return <CaretDown className="text-primary size-3.5" weight="bold" />;
   }
 
-  const processedPlayers = useMemo(() => {
+  const filteredAndSortedPlayers = useMemo(() => {
     let list = players;
 
     const q = search.trim().toLowerCase();
     if (q) {
       list = list.filter((p) => p.playerName.toLowerCase().includes(q));
+    }
+
+    if (processedFilter === "PROCESSED") {
+      list = list.filter((p) => p.distributionProcessed);
+    } else if (processedFilter === "UNPROCESSED") {
+      list = list.filter((p) => !p.distributionProcessed);
     }
 
     if (!sortColumn) {
@@ -204,7 +237,16 @@ export function DistributionOverview({
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
-  }, [players, search, sortColumn, sortDirection]);
+  }, [players, search, processedFilter, sortColumn, sortDirection]);
+
+  const totalCount = filteredAndSortedPlayers.length;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const safeCurrentPage = Math.min(Math.max(1, currentPage), totalPages);
+
+  const paginatedPlayers = useMemo(() => {
+    const start = (safeCurrentPage - 1) * pageSize;
+    return filteredAndSortedPlayers.slice(start, start + pageSize);
+  }, [filteredAndSortedPlayers, safeCurrentPage, pageSize]);
 
   if (overview.totalPlayers === 0) {
     return (
@@ -312,14 +354,52 @@ export function DistributionOverview({
       </div>
 
       <div className="flex flex-col gap-4">
-        <div className="relative max-w-sm">
-          <MagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-          <Input
-            placeholder="Rechercher un joueur..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 text-sm"
-          />
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-72">
+            <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
+            <Input
+              placeholder="Rechercher un joueur..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-72 pr-8 pl-8 text-sm"
+            />
+            {search ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setCurrentPage(1);
+                }}
+                className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer p-0.5"
+                title="Effacer la recherche"
+              >
+                <X className="size-3.5" />
+              </button>
+            ) : null}
+          </div>
+
+          <Select
+            items={PROCESSED_FILTER_OPTIONS}
+            value={processedFilter}
+            onValueChange={(val) => {
+              setProcessedFilter((val ?? "ALL") as ProcessedFilterValue);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-48 text-sm">
+              <SelectValue placeholder="Statut de traitement" />
+            </SelectTrigger>
+            <SelectContent>
+              {PROCESSED_FILTER_OPTIONS.map((item) => (
+                <SelectItem key={item.value} value={item.value} className="text-sm">
+                  {item.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <Card className="gap-0 overflow-hidden border py-0">
@@ -374,14 +454,16 @@ export function DistributionOverview({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {processedPlayers.length === 0 ? (
+              {filteredAndSortedPlayers.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-muted-foreground py-8 text-center text-sm">
-                    Aucun joueur ne correspond à votre recherche.
+                    {search || processedFilter !== "ALL"
+                      ? "Aucun joueur ne correspond à votre recherche."
+                      : "Aucun joueur trouvé."}
                   </TableCell>
                 </TableRow>
               ) : (
-                processedPlayers.map((row) => (
+                paginatedPlayers.map((row) => (
                   <TableRow key={row.sheetId}>
                     <TableCell>
                       <Link
@@ -438,6 +520,19 @@ export function DistributionOverview({
               )}
             </TableBody>
           </Table>
+
+          <TablePagination
+            currentPage={safeCurrentPage}
+            totalPages={totalPages}
+            totalCount={totalCount}
+            pageSize={pageSize}
+            pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={(newSize) => {
+              setPageSize(newSize);
+              setCurrentPage(1);
+            }}
+          />
         </Card>
       </div>
     </div>
