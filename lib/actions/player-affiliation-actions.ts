@@ -62,3 +62,27 @@ export async function setStaffOverrideChoiceAction(
     };
   }
 }
+
+export async function toggleDistributionProcessedAction(
+  sheetId: string,
+  distributionProcessed: boolean
+): Promise<PlayerAffiliationActionResult> {
+  try {
+    await requireRole(distributionAllowedRoles);
+
+    await prisma.characterSheet.update({
+      where: { id: sheetId },
+      data: {
+        distributionProcessed,
+      },
+    });
+
+    revalidatePath("/staff/distribution");
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Erreur lors de la mise à jour du statut traité.",
+    };
+  }
+}
