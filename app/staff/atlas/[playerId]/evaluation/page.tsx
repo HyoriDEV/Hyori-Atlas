@@ -26,11 +26,14 @@ import { characterSheetReviewerRoles, characterSheetStatusLabels } from "@/lib/n
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { SKILL_DEFINITIONS, type SkillValues } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { SheetEvaluationWorkspace } from "@/components/dashboard/sheet-evaluation-workspace";
 import type { CharacterSheetFieldValues } from "@/components/character-sheet/character-sheet-fields";
 import { getPlayerClassesWithStats } from "@/lib/services/player-class-service";
+import { PencilSimple } from "@phosphor-icons/react/dist/ssr";
 
 export default async function CharacterSheetEvaluationPage({
   params,
@@ -121,6 +124,20 @@ export default async function CharacterSheetEvaluationPage({
         <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
           {characterSheetStatusLabels[sheet.reviewStatus]}
         </Badge>
+        <Button
+          size="sm"
+          variant="outline"
+          className="gap-1.5"
+          render={
+            <Link
+              href={`/staff/atlas/${player.id}/edit?sheetId=${sheet.id}`}
+              prefetch={false}
+            />
+          }
+        >
+          <PencilSimple size={14} />
+          Éditer la fiche
+        </Button>
       </div>
 
       <SheetEvaluationWorkspace
