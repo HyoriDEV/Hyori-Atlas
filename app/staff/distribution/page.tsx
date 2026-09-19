@@ -28,13 +28,14 @@ export default async function DistributionStaffPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold">Distribution des classes</h1>
-
       <Tabs defaultValue="equilibrage" className="flex min-h-0 flex-1 flex-col gap-6">
-        <TabsList className="bg-muted/70 w-fit p-1">
-          <TabsTrigger value="equilibrage">Équilibrage</TabsTrigger>
-          <TabsTrigger value="vue-ensemble">Vue d&apos;ensemble</TabsTrigger>
-        </TabsList>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="font-heading text-2xl font-semibold">Distribution des classes</h1>
+          <TabsList className="bg-muted/70 w-fit p-1">
+            <TabsTrigger value="equilibrage">Équilibrage</TabsTrigger>
+            <TabsTrigger value="vue-ensemble">Vue d&apos;ensemble</TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="equilibrage" className="mt-0">
           <DistributionManager initialClasses={classes} />
