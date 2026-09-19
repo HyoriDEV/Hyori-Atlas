@@ -18,7 +18,7 @@ import { staffRoleLabels } from "@/lib/navigation";
 import { setClientPagePref, clearClientPagePref } from "@/lib/table-preferences";
 
 const ALL_VALUE = "ALL";
-const QUERY_DEBOUNCE_MS = 200;
+const QUERY_DEBOUNCE_MS = 400;
 
 const roleFilterItems = [
   { value: ALL_VALUE, label: "Tous les pôles" },
@@ -41,12 +41,18 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
 
   const [prevQuery, setPrevQuery] = useState(query);
   const [queryInput, setQueryInput] = useState(query);
+  const [lastDispatchedQuery, setLastDispatchedQuery] = useState(query);
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   if (prevQuery !== query) {
     setPrevQuery(query);
-    setQueryInput(query);
+    // Only synchronize local input if the query changed from an external source
+    // (e.g. navigation, back/forward button). Do not overwrite active user typing.
+    if (query !== lastDispatchedQuery) {
+      setQueryInput(query);
+      setLastDispatchedQuery(query);
+    }
   }
 
   function updateParams(next: Record<string, string>) {
@@ -83,12 +89,15 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
       clearTimeout(debounceRef.current);
     }
     debounceRef.current = setTimeout(() => {
-      updateParams({ q: value.trim() });
+      const trimmed = value.trim();
+      setLastDispatchedQuery(trimmed);
+      updateParams({ q: trimmed });
     }, QUERY_DEBOUNCE_MS);
   }
 
   function handleClearQuery() {
     setQueryInput("");
+    setLastDispatchedQuery("");
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
@@ -97,6 +106,7 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
 
   function handleResetFilters() {
     setQueryInput("");
+    setLastDispatchedQuery("");
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
