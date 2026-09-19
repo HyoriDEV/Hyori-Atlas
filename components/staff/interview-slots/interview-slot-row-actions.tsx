@@ -123,80 +123,86 @@ export function InterviewSlotRowActions({ slot }: InterviewSlotRowActionsProps) 
         <DropdownMenuContent align="end" className="w-56">
           {booking && player ? (
             <>
-              <DropdownMenuLabel>Statut de l&apos;entretien</DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={() => handleStatusChange(InterviewBookingStatus.ACCEPTED)}
-                disabled={isPending || booking.status === InterviewBookingStatus.ACCEPTED}
-                className="gap-2 text-emerald-500 focus:text-emerald-500"
-              >
-                <CheckCircle className="size-4" />
-                Marquer comme Accepté
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleStatusChange(InterviewBookingStatus.CHANGES_REQUESTED)}
-                disabled={isPending || booking.status === InterviewBookingStatus.CHANGES_REQUESTED}
-                className="gap-2 text-amber-500 focus:text-amber-500"
-              >
-                <WarningCircle className="size-4" />
-                Demander modifications
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => handleStatusChange(InterviewBookingStatus.REGISTERED)}
-                disabled={isPending || booking.status === InterviewBookingStatus.REGISTERED}
-                className="gap-2 text-blue-500 focus:text-blue-500"
-              >
-                <Clock className="size-4" />
-                Remettre en Attente (Inscrit)
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Statut de l&apos;entretien</DropdownMenuLabel>
+                <DropdownMenuItem
+                  onClick={() => handleStatusChange(InterviewBookingStatus.ACCEPTED)}
+                  disabled={isPending || booking.status === InterviewBookingStatus.ACCEPTED}
+                  className="gap-2 text-emerald-500 focus:text-emerald-500"
+                >
+                  <CheckCircle className="size-4" />
+                  Marquer comme Accepté
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleStatusChange(InterviewBookingStatus.CHANGES_REQUESTED)}
+                  disabled={isPending || booking.status === InterviewBookingStatus.CHANGES_REQUESTED}
+                  className="gap-2 text-amber-500 focus:text-amber-500"
+                >
+                  <WarningCircle className="size-4" />
+                  Demander modifications
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => handleStatusChange(InterviewBookingStatus.REGISTERED)}
+                  disabled={isPending || booking.status === InterviewBookingStatus.REGISTERED}
+                  className="gap-2 text-blue-500 focus:text-blue-500"
+                >
+                  <Clock className="size-4" />
+                  Remettre en Attente (Inscrit)
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuLabel>Joueur</DropdownMenuLabel>
-              <DropdownMenuItem
-                render={<Link href={`/staff/atlas/${player.id}`} />}
-                className="gap-2"
-              >
-                <User className="size-4" />
-                Voir le dossier Atlas
-              </DropdownMenuItem>
-
-              {player.characterSheet && (
+              <DropdownMenuGroup>
+                <DropdownMenuLabel>Joueur</DropdownMenuLabel>
                 <DropdownMenuItem
                   render={<Link href={`/staff/atlas/${player.id}`} />}
                   className="gap-2"
                 >
-                  <Scroll className="size-4" />
-                  Fiche personnage
+                  <User className="size-4" />
+                  Voir le dossier Atlas
                 </DropdownMenuItem>
-              )}
 
-              <DropdownMenuItem
-                onClick={() => handleCopy(player.discordUsername, "Tag Discord")}
-                className="gap-2"
-              >
-                <Copy className="size-4" />
-                Copier Discord (@{player.discordUsername})
-              </DropdownMenuItem>
+                {player.characterSheet && (
+                  <DropdownMenuItem
+                    render={<Link href={`/staff/atlas/${player.id}`} />}
+                    className="gap-2"
+                  >
+                    <Scroll className="size-4" />
+                    Fiche personnage
+                  </DropdownMenuItem>
+                )}
 
-              {player.minecraftUsername && (
                 <DropdownMenuItem
-                  onClick={() => handleCopy(player.minecraftUsername!, "Pseudo Minecraft")}
+                  onClick={() => handleCopy(player.discordUsername, "Tag Discord")}
                   className="gap-2"
                 >
                   <Copy className="size-4" />
-                  Copier Minecraft ({player.minecraftUsername})
+                  Copier Discord (@{player.discordUsername})
                 </DropdownMenuItem>
-              )}
+
+                {player.minecraftUsername && (
+                  <DropdownMenuItem
+                    onClick={() => handleCopy(player.minecraftUsername!, "Pseudo Minecraft")}
+                    className="gap-2"
+                  >
+                    <Copy className="size-4" />
+                    Copier Minecraft ({player.minecraftUsername})
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuGroup>
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem
-                onClick={() => setConfirmCancelBooking(true)}
-                className="text-destructive focus:text-destructive gap-2"
-              >
-                <XCircle className="size-4" />
-                Annuler la réservation
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuItem
+                  onClick={() => setConfirmCancelBooking(true)}
+                  className="text-destructive focus:text-destructive gap-2"
+                >
+                  <XCircle className="size-4" />
+                  Annuler la réservation
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </>
           ) : (
             <DropdownMenuGroup>
