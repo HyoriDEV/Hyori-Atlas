@@ -23,6 +23,8 @@ interface TablePaginationProps {
   sizeParamName?: string;
   pageSizeOptions?: readonly number[];
   showPageSizeSelector?: boolean;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export function TablePagination({
@@ -34,6 +36,8 @@ export function TablePagination({
   sizeParamName = "pageSize",
   pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS,
   showPageSizeSelector = true,
+  onPageChange,
+  onPageSizeChange,
 }: TablePaginationProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -52,6 +56,10 @@ export function TablePagination({
   }, [pageSizeOptions]);
 
   function goToPage(page: number) {
+    if (onPageChange) {
+      onPageChange(page);
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.set(paramName, page.toString());
     router.push(`${pathname}?${params.toString()}`);
@@ -62,13 +70,18 @@ export function TablePagination({
     const newSize = parseInt(newSizeStr, 10);
     if (isNaN(newSize)) return;
 
+    // Save user preference in cookie & localStorage
+    setClientPagePref(pathname, { [sizeParamName]: newSize.toString() });
+
+    if (onPageSizeChange) {
+      onPageSizeChange(newSize);
+      return;
+    }
+
     const params = new URLSearchParams(searchParams.toString());
     params.set(sizeParamName, newSize.toString());
     // Reset to page 1 on page size change
     params.set(paramName, "1");
-
-    // Save user preference in cookie & localStorage
-    setClientPagePref(pathname, { [sizeParamName]: newSize.toString() });
 
     router.push(`${pathname}?${params.toString()}`);
   }
