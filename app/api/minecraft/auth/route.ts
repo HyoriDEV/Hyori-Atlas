@@ -1,23 +1,7 @@
-import crypto from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
+import { verifyBearerToken } from "@/lib/api/plugin-auth";
 import { verifyAndLinkMinecraftAccount } from "@/lib/services/minecraft-service";
 import { checkRateLimit } from "@/lib/rate-limiter";
-
-function verifyApiKey(authHeader: string | null, expectedKey?: string): boolean {
-  if (!authHeader || !expectedKey) return false;
-  if (!authHeader.startsWith("Bearer ")) return false;
-  const token = authHeader.slice(7).trim();
-  if (!token) return false;
-
-  const bufToken = Buffer.from(token);
-  const bufExpected = Buffer.from(expectedKey);
-
-  if (bufToken.length !== bufExpected.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(bufToken, bufExpected);
-}
 
 export async function POST(request: NextRequest) {
   const apiKey = process.env.MINECRAFT_API_KEY;
@@ -32,7 +16,7 @@ export async function POST(request: NextRequest) {
 
   // 1. Verify authorization header
   const authHeader = request.headers.get("authorization");
-  if (!verifyApiKey(authHeader, apiKey)) {
+  if (!verifyBearerToken(authHeader, apiKey)) {
     return NextResponse.json({ success: false, message: "Non autorisé." }, { status: 401 });
   }
 
