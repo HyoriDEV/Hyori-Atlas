@@ -8,6 +8,7 @@ export interface PlayerAffiliationRow {
   playerId: string;
   playerName: string;
   minecraftUsername: string | null;
+  distributionProcessed: boolean;
   primaryClassId: string | null;
   primaryClassName: string | null;
   primaryRoleId: string | null;
@@ -75,6 +76,7 @@ export async function getPlayerAffiliationOverview(): Promise<PlayerAffiliationO
       playerId: sheet.player.id,
       playerName: sheet.player.minecraftUsername ?? sheet.player.discordDisplayName,
       minecraftUsername: sheet.player.minecraftUsername,
+      distributionProcessed: sheet.distributionProcessed ?? false,
       primaryClassId: sheet.primaryClassId,
       primaryClassName: sheet.primaryClass?.name ?? null,
       primaryRoleId: sheet.primaryRoleId,
@@ -106,30 +108,24 @@ export async function getPlayerAffiliationOverview(): Promise<PlayerAffiliationO
   const totalPlayers = players.length;
 
   const classStats: OverviewClassStat[] = classes.map((playerClass) => {
+    // All players in this class (including those marked as "Autre", for phantom total count)
     const classPlayers = players.filter((p) => p.effectiveClassId === playerClass.id);
     const count = classPlayers.length;
 
+    // Only players with a specific role defined (excluding "Autre") for role percentages
+    const classPlayersWithRole = classPlayers.filter((p) => p.effectiveRoleId !== null);
+    const countWithRole = classPlayersWithRole.length;
+
     const roleStats: OverviewRoleStat[] = playerClass.roles.map((role) => {
-      const roleCount = classPlayers.filter((p) => p.effectiveRoleId === role.id).length;
+      const roleCount = classPlayersWithRole.filter((p) => p.effectiveRoleId === role.id).length;
       return {
         id: role.id,
         name: role.name,
         count: roleCount,
-        percentOfClass: count > 0 ? (roleCount / count) * 100 : 0,
+        percentOfClass: countWithRole > 0 ? (roleCount / countWithRole) * 100 : 0,
         percentOfTotal: totalPlayers > 0 ? (roleCount / totalPlayers) * 100 : 0,
       };
     });
-
-    const unspecifiedCount = classPlayers.filter((p) => p.effectiveRoleId === null).length;
-    if (unspecifiedCount > 0) {
-      roleStats.push({
-        id: null,
-        name: UNSPECIFIED_ROLE_LABEL,
-        count: unspecifiedCount,
-        percentOfClass: count > 0 ? (unspecifiedCount / count) * 100 : 0,
-        percentOfTotal: totalPlayers > 0 ? (unspecifiedCount / totalPlayers) * 100 : 0,
-      });
-    }
 
     return {
       id: playerClass.id,
