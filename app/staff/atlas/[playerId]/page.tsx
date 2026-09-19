@@ -32,6 +32,8 @@ import {
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
+  SanctionSource,
+  SanctionType,
 } from "@/lib/generated/prisma/enums";
 import {
   characterSheetReviewerRoles,
@@ -52,11 +54,29 @@ import { AtlasCharacterTabs } from "@/components/dashboard/atlas-character-tabs"
 import { AtlasCreateCharacterDialog } from "@/components/dashboard/atlas-create-character-dialog";
 import { AtlasPlayerGroupCard } from "@/components/dashboard/atlas-player-group-card";
 import { AtlasStaffNotes } from "@/components/dashboard/atlas-staff-notes";
+import { AtlasSanctionCard } from "@/components/dashboard/atlas-sanction-card";
 import {
   AtlasTimelineTabs,
   type AtlasLogActor,
   type AtlasLogItem,
+  type AtlasSanctionHistoryItem,
+  type AtlasSessionBlock,
 } from "@/components/dashboard/atlas-timeline-tabs";
+import { getGameSessionStats } from "@/lib/services/game-session-service";
+import { getActiveBan, listSanctions } from "@/lib/services/sanction-service";
+
+const sanctionTypeLabels: Record<SanctionType, string> = {
+  [SanctionType.WARNING]: "Avertissement",
+  [SanctionType.SUSPENSION]: "Suspension",
+  [SanctionType.EXCLUSION]: "Exclusion",
+};
+
+function formatPlaytime(totalMinutes: number): string {
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours === 0) return `${minutes} min`;
+  return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+}
 
 export default async function AtlasPlayerPage({
   params,
@@ -70,7 +90,7 @@ export default async function AtlasPlayerPage({
   const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
-  const [player, allGroups] = await Promise.all([
+  const [player, allGroups, sanctions, activeBan, sessionStats] = await Promise.all([
     prisma.user.findUnique({
       where: { id: playerId },
       include: {
@@ -132,6 +152,9 @@ export default async function AtlasPlayerPage({
       },
       orderBy: { name: "asc" },
     }),
+    listSanctions(playerId),
+    getActiveBan(playerId),
+    getGameSessionStats(playerId),
   ]);
 
   if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
@@ -159,6 +182,47 @@ export default async function AtlasPlayerPage({
   const isAdmin = staffUser.role === Role.ADMIN;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
   const canManageCharacters = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
+  const canSanction = player.role === Role.PLAYER;
+
+  const now = new Date();
+  const sanctionHistory: AtlasSanctionHistoryItem[] = sanctions.map((sanction) => {
+    const expired = !!sanction.expiresAt && sanction.expiresAt <= now;
+    const details = [
+      sanction.source === SanctionSource.GAME ? "Depuis le jeu" : "Depuis l'atlas",
+      sanction.expiresAt
+        ? `${expired ? "Expirée" : "Expire"} ${formatDate(sanction.expiresAt, { style: "prefix-short", withTime: true, withYear: true }).toLowerCase()}`
+        : null,
+      sanction.revokedAt
+        ? `Levée ${formatDate(sanction.revokedAt, { style: "prefix-short", withTime: true, withYear: true }).toLowerCase()}${sanction.revokedByName ? ` par ${sanction.revokedByName}` : ""}`
+        : null,
+    ];
+
+    return {
+      id: `sanction-${sanction.id}`,
+      date: sanction.createdAt,
+      title: sanctionTypeLabels[sanction.type],
+      actor: sanction.issuedById
+        ? { type: "staff", id: sanction.issuedById, name: sanction.issuedByName ?? "Staff" }
+        : { type: "staff", name: sanction.issuedByName ?? "Staff" },
+      badge: sanction.revokedAt
+        ? { label: "Levée", variant: "outline" }
+        : expired
+          ? { label: "Expirée", variant: "secondary" }
+          : { label: "Active", variant: "destructive" },
+      reason: sanction.reason,
+      metadata: details.filter(Boolean).join(" · "),
+    };
+  });
+
+  const sessionBlocks: AtlasSessionBlock[] = sessionStats.sessions.map((session) => ({
+    id: session.id,
+    debut: session.connectedAt,
+    fin: session.disconnectedAt,
+    dureeMinutes: session.durationMinutes,
+    minecraftUsername: session.minecraftUsername,
+    ipAddress: session.ipAddress,
+    metadata: `${session.minecraftUsername} · IP ${session.ipAddress}`,
+  }));
 
   const logItems: AtlasLogItem[] = [
     ...player.registrationHistory.map((entry) => {
@@ -382,6 +446,24 @@ export default async function AtlasPlayerPage({
         </div>
 
         <div className="flex flex-col gap-4">
+          {canSanction && (
+            <AtlasSanctionCard
+              playerId={player.id}
+              pseudo={playerName}
+              canRevokeWhitelist={isAdmin && player.registrationStatus === RegistrationStatus.WHITELISTED}
+              activeBan={
+                activeBan
+                  ? {
+                      id: activeBan.id,
+                      isExclusion: activeBan.type === SanctionType.EXCLUSION,
+                      reason: activeBan.reason,
+                      expiresAt: activeBan.expiresAt,
+                    }
+                  : null
+              }
+            />
+          )}
+
           <Card className="flex flex-col gap-4">
             <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
               Statistiques
@@ -407,20 +489,38 @@ export default async function AtlasPlayerPage({
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">1ère connexion serveur</span>
-                <p className="text-sm">—</p>
+                <p className="text-sm">
+                  {formatDate(sessionStats.firstConnectedAt, {
+                    style: "prefix-short",
+                    withTime: true,
+                  })}
+                </p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Temps de jeu total</span>
-                <p className="text-sm">—</p>
+                <p className="text-sm">
+                  {sessionStats.sessions.length > 0
+                    ? formatPlaytime(sessionStats.totalMinutes)
+                    : "—"}
+                </p>
               </div>
               <div className="flex flex-col gap-1">
                 <span className="text-muted-foreground text-xs">Dernière connexion</span>
-                <p className="text-sm">—</p>
+                <p className="text-sm">
+                  {formatDate(sessionStats.lastConnectedAt, {
+                    style: "prefix-short",
+                    withTime: true,
+                  })}
+                </p>
               </div>
             </div>
           </Card>
 
-          <AtlasTimelineTabs logItems={logItems} />
+          <AtlasTimelineTabs
+            logItems={logItems}
+            sanctionHistory={sanctionHistory}
+            sessionBlocks={sessionBlocks}
+          />
         </div>
       </div>
     </div>
