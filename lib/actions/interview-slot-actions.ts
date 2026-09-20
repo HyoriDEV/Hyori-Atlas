@@ -305,7 +305,9 @@ export async function getEligibleInterviewReminderCandidatesAction(): Promise<
  * Envoie une notification Discord privée à tous les joueurs éligibles pour les inviter
  * à réserver leur créneau d'entretien.
  */
-export async function sendInterviewRemindersAction(): Promise<InterviewReminderResult> {
+export async function sendInterviewRemindersAction(
+  targetUserIds?: string[]
+): Promise<InterviewReminderResult> {
   await requireRole([Role.ADMIN]);
 
   const candidates = await getEligibleInterviewReminderCandidatesAction();
@@ -320,7 +322,24 @@ export async function sendInterviewRemindersAction(): Promise<InterviewReminderR
     };
   }
 
-  const discordIds = candidates.map((c) => c.discordId);
+  // Si une liste d'utilisateurs cibles est spécifiée, filtrer selon ces IDs
+  const filteredCandidates =
+    targetUserIds && targetUserIds.length > 0
+      ? candidates.filter((c) => targetUserIds.includes(c.id))
+      : candidates;
+
+  if (filteredCandidates.length === 0) {
+    return {
+      success: true,
+      total: 0,
+      sent: 0,
+      dmClosed: 0,
+      failed: 0,
+      message: "Aucun joueur sélectionné à relancer.",
+    };
+  }
+
+  const discordIds = filteredCandidates.map((c) => c.discordId);
   const result = await sendInterviewReminders(discordIds);
 
   revalidatePath("/staff/interview-slots");
