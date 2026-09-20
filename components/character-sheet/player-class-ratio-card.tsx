@@ -5,11 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import type { PlayerClassWithStats } from "@/lib/role-balance";
 import { getClassPaletteColor } from "@/lib/class-palette";
 
-export function PlayerClassRatioCard({
-  playerClass,
-}: {
-  playerClass: PlayerClassWithStats;
-}) {
+export function PlayerClassRatioCard({ playerClass }: { playerClass: PlayerClassWithStats }) {
   const totalRatio = playerClass.totalRatio;
 
   if (playerClass.roles.length === 0 || totalRatio <= 0) {
@@ -44,10 +40,7 @@ export function PlayerClassRatioCard({
               />
               <TooltipContent side="top" className="text-xs">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="size-2 rounded-full"
-                    style={{ backgroundColor: color.fill }}
-                  />
+                  <span className="size-2 rounded-full" style={{ backgroundColor: color.fill }} />
                   <span className="font-semibold">{role.name}</span>
                   <span>
                     Ratio {role.ratio} ({percentage}%)

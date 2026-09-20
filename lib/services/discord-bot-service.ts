@@ -1,4 +1,8 @@
-import { CharacterClass, CharacterSheetStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterClass,
+  CharacterSheetStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 
 export interface BotNotificationResult {
   success: boolean;
@@ -245,4 +249,3 @@ export async function checkBotHealth(): Promise<BotHealthResponse> {
   }
   return result.data;
 }
-

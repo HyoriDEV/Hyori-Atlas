@@ -8,10 +8,7 @@ import {
 } from "@/lib/generated/prisma/enums";
 
 export type RpGroupStatus =
-  | "READY_FOR_WHITELIST"
-  | "PENDING_REVIEW"
-  | "IN_PROGRESS"
-  | "ALL_WHITELISTED";
+  "READY_FOR_WHITELIST" | "PENDING_REVIEW" | "IN_PROGRESS" | "ALL_WHITELISTED";
 
 export interface RpGroupMemberSheet {
   id: string;
@@ -109,7 +106,11 @@ export function computeGroupStats(members: RpGroupMemberInfo[]): RpGroupComputed
     }
 
     const sheet = member.activeSheet;
-    if (!sheet || sheet.reviewStatus === CharacterSheetStatus.DRAFT || sheet.reviewStatus === CharacterSheetStatus.PENDING_PLAYER) {
+    if (
+      !sheet ||
+      sheet.reviewStatus === CharacterSheetStatus.DRAFT ||
+      sheet.reviewStatus === CharacterSheetStatus.PENDING_PLAYER
+    ) {
       draftingCount++;
     } else if (sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF) {
       pendingStaffCount++;
@@ -130,9 +131,7 @@ export function computeGroupStats(members: RpGroupMemberInfo[]): RpGroupComputed
     status = "IN_PROGRESS";
   }
 
-  const progressPercent = Math.round(
-    ((whitelistedCount + validatedCount) / totalMembers) * 100
-  );
+  const progressPercent = Math.round(((whitelistedCount + validatedCount) / totalMembers) * 100);
 
   return {
     totalMembers,

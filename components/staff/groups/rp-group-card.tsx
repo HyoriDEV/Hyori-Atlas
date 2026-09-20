@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { DotsThreeVertical, PencilSimple, Trash, UserPlus, Users } from "@phosphor-icons/react";
 
-import { computeGroupStats, rpGroupStatusLabels, type RpGroupWithMembers } from "@/lib/rp-groups";
+import { computeGroupStats, type RpGroupWithMembers } from "@/lib/rp-groups";
 import { deleteRpGroupAction } from "@/lib/actions/rp-group-actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,23 +28,6 @@ import { RpGroupMemberRow } from "./rp-group-member-row";
 import { EditRpGroupDialog } from "./edit-rp-group-dialog";
 import { AddGroupMemberDialog } from "./add-group-member-dialog";
 import type { PlayerOption } from "@/components/player-select";
-import type { RpGroupStatus } from "@/lib/rp-groups";
-
-// Compact colored dot for group status
-function StatusDot({ status }: { status: RpGroupStatus }) {
-  const colorMap: Record<RpGroupStatus, string> = {
-    ALL_WHITELISTED: "bg-emerald-500",
-    READY_FOR_WHITELIST: "bg-primary",
-    PENDING_REVIEW: "bg-amber-500",
-    IN_PROGRESS: "bg-muted-foreground/50",
-  };
-  return (
-    <span
-      className={`inline-block size-2 shrink-0 rounded-full ${colorMap[status]}`}
-      title={rpGroupStatusLabels[status]}
-    />
-  );
-}
 
 interface RpGroupCardProps {
   group: RpGroupWithMembers;

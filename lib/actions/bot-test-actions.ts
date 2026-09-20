@@ -1,12 +1,7 @@
 "use server";
 
 import { requireRole } from "@/lib/dal";
-import {
-  CharacterClass,
-  CharacterSheetStatus,
-  RegistrationStatus,
-  Role,
-} from "@/lib/generated/prisma/enums";
+import { CharacterClass, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
 import {
   checkBotHealth,
   notifyPlayerCharacterSheetStatus,

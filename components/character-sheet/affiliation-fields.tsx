@@ -17,10 +17,7 @@ import {
 } from "@/components/ui/select";
 import { commentTargetElementId } from "@/components/character-sheet/use-comment-target-scroll";
 import { PlayerClassRatioCard } from "@/components/character-sheet/player-class-ratio-card";
-import {
-  getRoleStatusMeta,
-  type PlayerClassWithStats,
-} from "@/lib/role-balance";
+import { getRoleStatusMeta, type PlayerClassWithStats } from "@/lib/role-balance";
 import { OTHER_ROLE_ID } from "@/lib/character-sheet";
 
 export interface AffiliationChoiceValues {
@@ -115,7 +112,9 @@ export function AffiliationCard({
   return (
     <Card
       id={commentTargetElementId(CharacterSheetCommentTarget.chosenClasses)}
-      onClick={isClickable ? () => onTargetClick(CharacterSheetCommentTarget.chosenClasses) : undefined}
+      onClick={
+        isClickable ? () => onTargetClick(CharacterSheetCommentTarget.chosenClasses) : undefined
+      }
       className={cn(
         "flex flex-col gap-0 transition-colors",
         isClickable && "hover:border-primary/50 cursor-pointer",

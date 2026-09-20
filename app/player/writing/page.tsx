@@ -9,8 +9,12 @@ export const metadata: Metadata = {
   title: "Écriture de trame",
 };
 import { getPlayerCharacters } from "@/lib/services/character-service";
-import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
-import { characterStatusLabels, isRegistrationStatusAtLeast } from "@/lib/navigation";
+import {
+  CharacterSheetStatus,
+  CharacterStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
+import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
@@ -81,11 +85,7 @@ export default async function WritingPage(props: {
             variant="outline"
             size="sm"
             className="h-8.5 gap-2 text-xs font-medium shadow-xs sm:text-sm"
-            render={
-              <Link
-                href={`/player/writing/preview?characterId=${selectedCharacter.id}`}
-              />
-            }
+            render={<Link href={`/player/writing/preview?characterId=${selectedCharacter.id}`} />}
           >
             <BookOpen className="text-primary size-4" />
             <span>Prévisualiser</span>
@@ -114,7 +114,8 @@ export default async function WritingPage(props: {
               : "Trame archivée d'un personnage désactivé."}
           </p>
           <p className="text-muted-foreground text-xs">
-            Ces chapitres sont conservés pour votre historique et restent consultables en lecture seule.
+            Ces chapitres sont conservés pour votre historique et restent consultables en lecture
+            seule.
           </p>
         </Card>
       )}
@@ -122,9 +123,13 @@ export default async function WritingPage(props: {
       {!isSheetValidated ? (
         <Card className="border-border/60 bg-muted/30 flex flex-col items-center justify-center p-8 text-center">
           <BookOpen className="text-muted-foreground size-10 opacity-60" />
-          <h3 className="font-heading mt-3 text-lg font-semibold">Fiche personnage en attente de validation</h3>
+          <h3 className="font-heading mt-3 text-lg font-semibold">
+            Fiche personnage en attente de validation
+          </h3>
           <p className="text-muted-foreground mt-1 max-w-md text-xs leading-relaxed">
-            La fiche de ton personnage « {selectedCharacter.name || "Nouveau personnage"} » doit d&apos;abord être validée par le staff avant de pouvoir commencer la rédaction de sa trame narrative.
+            La fiche de ton personnage « {selectedCharacter.name || "Nouveau personnage"} » doit
+            d&apos;abord être validée par le staff avant de pouvoir commencer la rédaction de sa
+            trame narrative.
           </p>
           <Button
             variant="default"

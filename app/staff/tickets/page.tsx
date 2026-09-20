@@ -8,9 +8,13 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Tickets Staff",
 };
-import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
-import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
-import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
+import { staffNavItems, ticketCategoryLabels } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
 import { truncate } from "@/lib/utils";
 import { TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
@@ -100,8 +104,7 @@ export default async function TicketsStaffListPage(props: {
               <TableHead className="pl-6">Joueur</TableHead>
               <TableHead>Catégorie</TableHead>
               <TableHead>Intitulé</TableHead>
-              <TableHead>Statut</TableHead>
-              <TableHead>Dernier message</TableHead>
+              <TableHead>Modification</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -128,16 +131,18 @@ export default async function TicketsStaffListPage(props: {
                         title={`Voir la fiche Atlas de ${playerName}`}
                       >
                         {ticket.player.minecraftUsername ? (
-                          <SkinHead size="sm" username={ticket.player.minecraftUsername} className="shrink-0" />
+                          <SkinHead
+                            size="sm"
+                            username={ticket.player.minecraftUsername}
+                            className="shrink-0"
+                          />
                         ) : (
                           <Avatar size="sm" className="shrink-0">
                             <AvatarImage
                               src={ticket.player.discordAvatarUrl ?? undefined}
                               alt={playerName}
                             />
-                            <AvatarFallback>
-                              {playerName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
+                            <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                         )}
                         <span className="font-medium hover:underline">{playerName}</span>
@@ -151,13 +156,8 @@ export default async function TicketsStaffListPage(props: {
                     <TableCell className="font-medium" title={ticket.subject}>
                       {truncate(ticket.subject, 50)}
                     </TableCell>
-                    <TableCell>
-                      <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
-                        {ticketStatusLabels[ticket.status]}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {formatDate(ticket.updatedAt, { style: "prefix-long", withTime: true })}
+                      {formatDate(ticket.updatedAt, { style: "prefix-short", withTime: true })}
                     </TableCell>
                   </TicketTableRow>
                 );

@@ -52,10 +52,10 @@ export function AtlasCharacterStatusSelect({
             <span className="font-medium text-emerald-500 dark:text-emerald-400">Actif</span>
           )}
           {currentStatus === CharacterStatus.DEAD && (
-            <span className="font-medium text-destructive">Mort</span>
+            <span className="text-destructive font-medium">Mort</span>
           )}
           {currentStatus === CharacterStatus.DISABLED && (
-            <span className="font-medium text-muted-foreground">Désactivé</span>
+            <span className="text-muted-foreground font-medium">Désactivé</span>
           )}
         </SelectValue>
       </SelectTrigger>
@@ -64,10 +64,10 @@ export function AtlasCharacterStatusSelect({
           <span className="font-medium text-emerald-500 dark:text-emerald-400">Actif</span>
         </SelectItem>
         <SelectItem value={CharacterStatus.DEAD}>
-          <span className="font-medium text-destructive">Mort</span>
+          <span className="text-destructive font-medium">Mort</span>
         </SelectItem>
         <SelectItem value={CharacterStatus.DISABLED}>
-          <span className="font-medium text-muted-foreground">Désactivé</span>
+          <span className="text-muted-foreground font-medium">Désactivé</span>
         </SelectItem>
       </SelectContent>
     </Select>

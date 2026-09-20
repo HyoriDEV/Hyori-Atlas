@@ -5,11 +5,9 @@ import { toast } from "sonner";
 
 import { addMemberToGroupAction } from "@/lib/actions/rp-group-actions";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,

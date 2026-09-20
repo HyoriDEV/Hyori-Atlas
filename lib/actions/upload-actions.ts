@@ -8,7 +8,7 @@ import sharp from "sharp";
 
 import { requireActivePlayer, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES, validateImageFile } from "@/lib/upload-config";
+import { validateImageFile } from "@/lib/upload-config";
 
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
 

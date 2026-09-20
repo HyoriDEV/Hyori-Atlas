@@ -30,7 +30,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import type { BotHealthResponse } from "@/lib/services/discord-bot-service";
 
 interface LogEntry {
@@ -59,7 +58,17 @@ export function BotTestClient({
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isPending, startTransition] = useTransition();
 
-  function addLog(action: string, result: { success: boolean; notified?: boolean; dmClosed?: boolean; message?: string; error?: string; raw?: unknown }) {
+  function addLog(
+    action: string,
+    result: {
+      success: boolean;
+      notified?: boolean;
+      dmClosed?: boolean;
+      message?: string;
+      error?: string;
+      raw?: unknown;
+    }
+  ) {
     const entry: LogEntry = {
       id: Math.random().toString(36).substring(2, 9),
       time: new Date().toLocaleTimeString(),
@@ -86,7 +95,9 @@ export function BotTestClient({
       }
       addLog("Health Check (/health)", {
         success: res.success,
-        message: res.status ? `Status: ${res.status}, Discord Ready: ${res.discord?.ready}` : undefined,
+        message: res.status
+          ? `Status: ${res.status}, Discord Ready: ${res.discord?.ready}`
+          : undefined,
         error: res.error,
         raw: res,
       });
@@ -177,7 +188,9 @@ export function BotTestClient({
       try {
         const res = await testRoleSyncAction(targetId, selectedClass);
         if (res.success) {
-          toast.success(`Rôles Whitelist et ${selectedClass} synchronisés avec succès sur Discord !`);
+          toast.success(
+            `Rôles Whitelist et ${selectedClass} synchronisés avec succès sur Discord !`
+          );
         } else {
           toast.error(`Échec de synchronisation des rôles : ${res.error}`);
         }
@@ -202,7 +215,7 @@ export function BotTestClient({
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
             <CardTitle className="flex items-center gap-2 text-base">
-              <Pulse className="size-5 text-primary" />
+              <Pulse className="text-primary size-5" />
               État de la passerelle HyoriBot
             </CardTitle>
             <CardDescription className="text-xs">
@@ -216,7 +229,7 @@ export function BotTestClient({
             disabled={healthLoading}
             className="gap-1.5"
           >
-            <ArrowClockwise className={healthLoading ? "animate-spin size-3.5" : "size-3.5"} />
+            <ArrowClockwise className={healthLoading ? "size-3.5 animate-spin" : "size-3.5"} />
             {healthLoading ? "Vérification..." : "Tester la connexion"}
           </Button>
         </CardHeader>
@@ -227,7 +240,10 @@ export function BotTestClient({
                 <span className="text-muted-foreground block text-[11px]">Serveur HTTP Bot</span>
                 <div className="mt-1 flex items-center gap-1.5">
                   {health.success ? (
-                    <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600">
+                    <Badge
+                      variant="outline"
+                      className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                    >
                       En ligne ({health.status ?? "ok"})
                     </Badge>
                   ) : (
@@ -240,7 +256,7 @@ export function BotTestClient({
                 <span className="text-muted-foreground block text-[11px]">Passerelle Discord</span>
                 <div className="mt-1 flex items-center gap-1.5 font-medium">
                   {health.discord?.ready ? (
-                    <span className="text-emerald-600 flex items-center gap-1">
+                    <span className="flex items-center gap-1 text-emerald-600">
                       <CheckCircle className="size-3.5" /> Prête ({health.discord.pingMs} ms)
                     </span>
                   ) : (
@@ -259,15 +275,19 @@ export function BotTestClient({
               </div>
 
               <div className="bg-muted/40 rounded-lg border p-2.5">
-                <span className="text-muted-foreground block text-[11px]">File d&apos;attente Bot</span>
+                <span className="text-muted-foreground block text-[11px]">
+                  File d&apos;attente Bot
+                </span>
                 <span className="mt-1 block font-medium">
-                  {health.queue?.totalProcessed ?? 0} traitées (échecs: {health.queue?.totalFailed ?? 0})
+                  {health.queue?.totalProcessed ?? 0} traitées (échecs:{" "}
+                  {health.queue?.totalFailed ?? 0})
                 </span>
               </div>
             </div>
           ) : (
             <p className="text-muted-foreground text-xs">
-              Cliquez sur &quot;Tester la connexion&quot; pour sonder l&apos;API interne de HyoriBot.
+              Cliquez sur &quot;Tester la connexion&quot; pour sonder l&apos;API interne de
+              HyoriBot.
             </p>
           )}
         </CardContent>
@@ -297,17 +317,15 @@ export function BotTestClient({
               />
             </div>
             {targetId !== currentDiscordId && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setTargetId(currentDiscordId)}
-              >
+              <Button variant="outline" size="sm" onClick={() => setTargetId(currentDiscordId)}>
                 Mon compte ({currentDiscordUsername})
               </Button>
             )}
           </div>
           <p className="text-muted-foreground text-[11px]">
-            Compte administrateur actif : <strong className="text-foreground">{currentDiscordUsername}</strong> (ID : <code>{currentDiscordId}</code>)
+            Compte administrateur actif :{" "}
+            <strong className="text-foreground">{currentDiscordUsername}</strong> (ID :{" "}
+            <code>{currentDiscordId}</code>)
           </p>
         </CardContent>
       </Card>
@@ -318,11 +336,12 @@ export function BotTestClient({
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 text-sm">
-              <PaperPlaneTilt className="size-4 text-primary" />
+              <PaperPlaneTilt className="text-primary size-4" />
               Notifications d&apos;Inscription (MP Discord)
             </CardTitle>
             <CardDescription className="text-xs">
-              Simulez les messages privés reçus lors de l&apos;avancement du joueur dans le processus d&apos;inscription.
+              Simulez les messages privés reçus lors de l&apos;avancement du joueur dans le
+              processus d&apos;inscription.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-2.5">
@@ -330,10 +349,15 @@ export function BotTestClient({
               variant="outline"
               size="sm"
               className="justify-start gap-2 text-xs"
-              onClick={() => handleRegistrationTest(RegistrationStatus.WHITELIST_IN_PROGRESS, "Candidature acceptée")}
+              onClick={() =>
+                handleRegistrationTest(
+                  RegistrationStatus.WHITELIST_IN_PROGRESS,
+                  "Candidature acceptée"
+                )
+              }
               disabled={isPending}
             >
-              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 text-[10px]">
+              <Badge variant="outline" className="bg-emerald-500/10 text-[10px] text-emerald-600">
                 Acceptée
               </Badge>
               Candidature acceptée (passage entretien & fiche)
@@ -343,7 +367,9 @@ export function BotTestClient({
               variant="outline"
               size="sm"
               className="justify-start gap-2 text-xs"
-              onClick={() => handleRegistrationTest(RegistrationStatus.REJECTED, "Candidature refusée")}
+              onClick={() =>
+                handleRegistrationTest(RegistrationStatus.REJECTED, "Candidature refusée")
+              }
               disabled={isPending}
             >
               <Badge variant="outline" className="bg-destructive/10 text-destructive text-[10px]">
@@ -356,10 +382,12 @@ export function BotTestClient({
               variant="outline"
               size="sm"
               className="justify-start gap-2 text-xs"
-              onClick={() => handleRegistrationTest(RegistrationStatus.WAITLIST, "Réintégration liste d'attente")}
+              onClick={() =>
+                handleRegistrationTest(RegistrationStatus.WAITLIST, "Réintégration liste d'attente")
+              }
               disabled={isPending}
             >
-              <Badge variant="outline" className="bg-amber-500/10 text-amber-600 text-[10px]">
+              <Badge variant="outline" className="bg-amber-500/10 text-[10px] text-amber-600">
                 Waitlist
               </Badge>
               Réintégration sur la liste d&apos;attente
@@ -369,7 +397,9 @@ export function BotTestClient({
               variant="outline"
               size="sm"
               className="justify-start gap-2 text-xs"
-              onClick={() => handleRegistrationTest(RegistrationStatus.WHITELISTED, "Validation définitive")}
+              onClick={() =>
+                handleRegistrationTest(RegistrationStatus.WHITELISTED, "Validation définitive")
+              }
               disabled={isPending}
             >
               <Badge variant="outline" className="bg-primary/10 text-primary text-[10px]">
@@ -385,7 +415,7 @@ export function BotTestClient({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <PaperPlaneTilt className="size-4 text-primary" />
+                <PaperPlaneTilt className="text-primary size-4" />
                 Notification Fiche Personnage (MP Discord)
               </CardTitle>
               <CardDescription className="text-xs">
@@ -400,7 +430,7 @@ export function BotTestClient({
                 onClick={() => handleSheetTest(CharacterSheetStatus.VALIDATED, "Fiche validée")}
                 disabled={isPending}
               >
-                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 text-[10px]">
+                <Badge variant="outline" className="bg-emerald-500/10 text-[10px] text-emerald-600">
                   Validée
                 </Badge>
                 Fiche personnage validée par le staff
@@ -409,10 +439,12 @@ export function BotTestClient({
                 variant="outline"
                 size="sm"
                 className="w-full justify-start gap-2 text-xs"
-                onClick={() => handleSheetTest(CharacterSheetStatus.PENDING_PLAYER, "Retours disponibles")}
+                onClick={() =>
+                  handleSheetTest(CharacterSheetStatus.PENDING_PLAYER, "Retours disponibles")
+                }
                 disabled={isPending}
               >
-                <Badge variant="outline" className="bg-amber-500/10 text-amber-600 text-[10px]">
+                <Badge variant="outline" className="bg-amber-500/10 text-[10px] text-amber-600">
                   Retours
                 </Badge>
                 Retours disponibles sur la fiche personnage
@@ -424,7 +456,7 @@ export function BotTestClient({
                 onClick={() => handleSheetTest("REOPENED", "Fiche rouverte")}
                 disabled={isPending}
               >
-                <Badge variant="outline" className="bg-blue-500/10 text-blue-600 text-[10px]">
+                <Badge variant="outline" className="bg-blue-500/10 text-[10px] text-blue-600">
                   Réouverture
                 </Badge>
                 Fiche personnage rouverte par le staff
@@ -435,7 +467,7 @@ export function BotTestClient({
           <Card>
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
-                <ShieldCheck className="size-4 text-primary" />
+                <ShieldCheck className="text-primary size-4" />
                 Synchronisation Rôles Discord (Whitelist + Classe)
               </CardTitle>
               <CardDescription className="text-xs">
@@ -494,7 +526,7 @@ export function BotTestClient({
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
-            <p className="text-muted-foreground text-xs py-4 text-center">
+            <p className="text-muted-foreground py-4 text-center text-xs">
               Aucun test déclenché pour le moment. Cliquez sur un des boutons ci-dessus pour tester.
             </p>
           ) : (
@@ -507,26 +539,33 @@ export function BotTestClient({
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       {log.success ? (
-                        <CheckCircle className="text-emerald-500 size-4 shrink-0" />
+                        <CheckCircle className="size-4 shrink-0 text-emerald-500" />
                       ) : (
                         <WarningCircle className="text-destructive size-4 shrink-0" />
                       )}
-                      <span className="font-semibold text-foreground">{log.action}</span>
+                      <span className="text-foreground font-semibold">{log.action}</span>
                     </div>
                     <span className="text-muted-foreground text-[10px]">{log.time}</span>
                   </div>
 
-                  <div className="text-[11px] text-muted-foreground flex flex-wrap gap-2">
+                  <div className="text-muted-foreground flex flex-wrap gap-2 text-[11px]">
                     {log.notified !== undefined && (
-                      <span>Notifié par MP : <strong>{log.notified ? "Oui" : "Non"}</strong></span>
+                      <span>
+                        Notifié par MP : <strong>{log.notified ? "Oui" : "Non"}</strong>
+                      </span>
                     )}
                     {log.dmClosed && (
-                      <Badge variant="outline" className="text-amber-500 border-amber-500/30 text-[10px]">
+                      <Badge
+                        variant="outline"
+                        className="border-amber-500/30 text-[10px] text-amber-500"
+                      >
                         MP fermés / Bot bloqué
                       </Badge>
                     )}
                     {log.message && <span className="text-foreground">{log.message}</span>}
-                    {log.error && <span className="text-destructive font-semibold">{log.error}</span>}
+                    {log.error && (
+                      <span className="text-destructive font-semibold">{log.error}</span>
+                    )}
                   </div>
                 </div>
               ))}

@@ -122,10 +122,7 @@ export async function rejectWaitlistPlayer(userId: string) {
   ]);
 
   if (targetUser?.discordId) {
-    await notifyPlayerRegistrationStatus(
-      targetUser.discordId,
-      RegistrationStatus.REJECTED
-    );
+    await notifyPlayerRegistrationStatus(targetUser.discordId, RegistrationStatus.REJECTED);
   }
 
   revalidatePath("/staff/waitlist");
@@ -154,10 +151,7 @@ export async function restoreWaitlistPlayer(userId: string) {
   ]);
 
   if (targetUser?.discordId) {
-    await notifyPlayerRegistrationStatus(
-      targetUser.discordId,
-      RegistrationStatus.WAITLIST
-    );
+    await notifyPlayerRegistrationStatus(targetUser.discordId, RegistrationStatus.WAITLIST);
   }
 
   revalidatePath("/staff/waitlist");

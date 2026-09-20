@@ -82,7 +82,7 @@ export function DistributionManager({
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 min-[1600px]:grid-cols-3">
+        <div className="grid grid-cols-1 gap-5 min-[1600px]:grid-cols-3 lg:grid-cols-2">
           {filteredClasses.map((playerClass) => (
             <PlayerClassCard key={playerClass.id} playerClass={playerClass} />
           ))}

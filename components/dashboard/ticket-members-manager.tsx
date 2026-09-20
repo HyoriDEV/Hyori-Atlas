@@ -98,7 +98,7 @@ export function TicketMembersManager({
         className
       )}
     >
-      <div className="border-border/50 flex shrink-0 items-center justify-between pb-2.5 border-b">
+      <div className="border-border/50 flex shrink-0 items-center justify-between border-b pb-2.5">
         <div className="flex items-center gap-2">
           <h3 className="font-heading text-sm font-semibold">Membres</h3>
           <span className="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-xs font-medium">

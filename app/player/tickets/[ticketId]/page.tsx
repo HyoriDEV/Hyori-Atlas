@@ -19,7 +19,8 @@ export async function generateMetadata({
     return { title: "Détail du ticket" };
   }
 
-  const cleanSubject = ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
+  const cleanSubject =
+    ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
   return {
     title: `Ticket : ${cleanSubject}`,
   };
@@ -95,9 +96,7 @@ export default async function TicketDetailPage({
             {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span className="font-heading text-lg font-semibold">
-            {ticket.subject}
-          </span>
+          <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
         </div>
         <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
           {ticketStatusLabels[ticket.status]}
@@ -126,7 +125,7 @@ export default async function TicketDetailPage({
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="hidden min-h-0 lg:flex lg:col-span-2 lg:flex-col">
+        <div className="hidden min-h-0 lg:col-span-2 lg:flex lg:flex-col">
           <TicketMembersManager ticketId={ticket.id} members={membersData} readOnly />
         </div>
       </div>

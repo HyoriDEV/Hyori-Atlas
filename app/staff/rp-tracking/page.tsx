@@ -131,9 +131,7 @@ export default async function RpTrackingStaffListPage(props: {
                               src={player.discordAvatarUrl ?? undefined}
                               alt={playerName}
                             />
-                            <AvatarFallback>
-                              {playerName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
+                            <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                         )}
                         <span className="font-medium hover:underline">{playerName}</span>

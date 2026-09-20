@@ -8,9 +8,12 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Équipe staff",
 };
-import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize } from "@/lib/table-preferences";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+} from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
-import { staffRoleLabels } from "@/lib/navigation";
 
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +33,6 @@ import { StaffRoleBadge } from "@/components/staff/staff-role-badge";
 import { RoleAssignmentCell } from "@/components/staff/role-assignment-cell";
 import { RemoveStaffMemberButton } from "@/components/staff/remove-staff-member-button";
 import { AddStaffMemberDialog } from "@/components/staff/add-staff-member-dialog";
-import { Shield, Users } from "@phosphor-icons/react/dist/ssr";
 
 const DEFAULT_PAGE_SIZE = 15;
 const STAFF_PAGE_SIZE_OPTIONS = [10, 15, 25, 50] as const;

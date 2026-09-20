@@ -135,7 +135,9 @@ export function InterviewSlotRowActions({ slot }: InterviewSlotRowActionsProps) 
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => handleStatusChange(InterviewBookingStatus.CHANGES_REQUESTED)}
-                  disabled={isPending || booking.status === InterviewBookingStatus.CHANGES_REQUESTED}
+                  disabled={
+                    isPending || booking.status === InterviewBookingStatus.CHANGES_REQUESTED
+                  }
                   className="gap-2 text-amber-500 focus:text-amber-500"
                 >
                   <WarningCircle className="size-4" />

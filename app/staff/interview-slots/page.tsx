@@ -9,7 +9,10 @@ export const metadata: Metadata = {
 import { getServerPagePrefs } from "@/lib/table-preferences";
 import { Role } from "@/lib/generated/prisma/enums";
 import { InterviewSlotsManager } from "@/components/staff/interview-slots/interview-slots-manager";
-import type { InterviewSlotItem, InterviewSlotsKPIs } from "@/components/staff/interview-slots/types";
+import type {
+  InterviewSlotItem,
+  InterviewSlotsKPIs,
+} from "@/components/staff/interview-slots/types";
 
 export default async function InterviewSlotsPage() {
   await requireRole([Role.ADMIN]);
@@ -108,13 +111,7 @@ export default async function InterviewSlotsPage() {
       initialViewMode={savedPrefs.viewMode as "calendar" | "table" | undefined}
       initialStatusFilter={
         savedPrefs.statusFilter as
-          | "all"
-          | "today"
-          | "upcoming"
-          | "booked"
-          | "available"
-          | "past"
-          | undefined
+          "all" | "today" | "upcoming" | "booked" | "available" | "past" | undefined
       }
     />
   );

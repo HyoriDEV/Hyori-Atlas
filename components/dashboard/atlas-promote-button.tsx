@@ -134,9 +134,9 @@ export function AtlasPromoteButton({
                       className={cn(
                         "relative flex items-center gap-3 rounded-lg border p-3 text-left transition-all",
                         isSelected
-                          ? "border-primary bg-primary/10 ring-primary/25 ring-2 shadow-xs"
+                          ? "border-primary bg-primary/10 ring-primary/25 shadow-xs ring-2"
                           : "border-border/70 hover:border-primary/40 hover:bg-muted/40 bg-card",
-                        isPending && "opacity-50 cursor-not-allowed"
+                        isPending && "cursor-not-allowed opacity-50"
                       )}
                     >
                       <div
@@ -166,14 +166,12 @@ export function AtlasPromoteButton({
                             </span>
                           )}
                         </div>
-                        <span className="text-muted-foreground text-[11px] line-clamp-1">
+                        <span className="text-muted-foreground line-clamp-1 text-[11px]">
                           {cls.description}
                         </span>
                       </div>
 
-                      {isSelected && (
-                        <Check className="text-primary size-4 shrink-0 font-bold" />
-                      )}
+                      {isSelected && <Check className="text-primary size-4 shrink-0 font-bold" />}
                     </button>
                   );
                 })}
@@ -190,11 +188,7 @@ export function AtlasPromoteButton({
             >
               Annuler
             </Button>
-            <Button
-              type="button"
-              onClick={handleConfirm}
-              disabled={!selectedClass || isPending}
-            >
+            <Button type="button" onClick={handleConfirm} disabled={!selectedClass || isPending}>
               {isPending ? "Validation en cours..." : "Valider la whitelist"}
             </Button>
           </DialogFooter>

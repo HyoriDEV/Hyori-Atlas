@@ -41,7 +41,7 @@ interface NewsFormProps {
   userRole: Role;
 }
 
-export function NewsForm({ initialData, userRole }: NewsFormProps) {
+export function NewsForm({ initialData }: NewsFormProps) {
   const router = useRouter();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -99,10 +99,7 @@ export function NewsForm({ initialData, userRole }: NewsFormProps) {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="type">Type d&apos;actualité</Label>
-          <Select
-            name="type"
-            defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}
-          >
+          <Select name="type" defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}>
             <SelectTrigger>
               <SelectValue placeholder="Sélectionnez un type" />
             </SelectTrigger>
@@ -145,11 +142,7 @@ export function NewsForm({ initialData, userRole }: NewsFormProps) {
           <AlertDialog>
             <AlertDialogTrigger
               render={
-                <Button
-                  type="button"
-                  variant="destructive"
-                  disabled={isLoading}
-                >
+                <Button type="button" variant="destructive" disabled={isLoading}>
                   Supprimer
                 </Button>
               }

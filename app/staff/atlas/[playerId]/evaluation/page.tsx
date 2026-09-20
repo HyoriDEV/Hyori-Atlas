@@ -21,7 +21,11 @@ export async function generateMetadata({
     title: playerName ? `Évaluation de ${playerName}` : "Évaluation de la fiche",
   };
 }
-import { CharacterSheetStatus, CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  CharacterStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 import { characterSheetReviewerRoles, characterSheetStatusLabels } from "@/lib/navigation";
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { SKILL_DEFINITIONS, type SkillValues } from "@/lib/character-sheet";
@@ -129,10 +133,7 @@ export default async function CharacterSheetEvaluationPage({
           variant="outline"
           className="gap-1.5"
           render={
-            <Link
-              href={`/staff/atlas/${player.id}/edit?sheetId=${sheet.id}`}
-              prefetch={false}
-            />
+            <Link href={`/staff/atlas/${player.id}/edit?sheetId=${sheet.id}`} prefetch={false} />
           }
         >
           <PencilSimple size={14} />
