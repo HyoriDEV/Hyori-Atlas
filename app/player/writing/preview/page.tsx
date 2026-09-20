@@ -50,9 +50,12 @@ export default async function WritingPlayerPreviewPage(props: {
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <AtlasBackButton href={character ? `/player/writing?characterId=${character.id}` : "/player/writing"} />
+          <AtlasBackButton
+            href={character ? `/player/writing?characterId=${character.id}` : "/player/writing"}
+          />
           <h1 className="font-heading text-lg font-semibold">
-            Trame écrite de {playerName}{characterLabel}
+            Trame écrite de {playerName}
+            {characterLabel}
           </h1>
         </div>
         {chapters.length > 0 && <ChapterSelect chapters={chapters} />}

@@ -39,8 +39,7 @@ export function NavigationTracker() {
       const isInternalReferrer = (() => {
         try {
           return Boolean(
-            document.referrer &&
-              new URL(document.referrer).origin === window.location.origin
+            document.referrer && new URL(document.referrer).origin === window.location.origin
           );
         } catch {
           return false;

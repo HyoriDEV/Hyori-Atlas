@@ -116,9 +116,7 @@ export async function updateRpGroupAction(
   }
 }
 
-export async function deleteRpGroupAction(
-  groupId: string
-): Promise<RpGroupActionResult<void>> {
+export async function deleteRpGroupAction(groupId: string): Promise<RpGroupActionResult<void>> {
   try {
     await requireRole(groupManagerRoles);
 

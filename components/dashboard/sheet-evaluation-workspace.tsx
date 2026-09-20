@@ -8,10 +8,7 @@ import { cn } from "@/lib/utils";
 import { submitCharacterSheetEvaluation } from "@/lib/actions/staff-review-actions";
 import type { SkillValues } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
-import {
-  CharacterSheetCommentTarget,
-  CharacterSheetStatus,
-} from "@/lib/generated/prisma/enums";
+import { CharacterSheetCommentTarget, CharacterSheetStatus } from "@/lib/generated/prisma/enums";
 import { createTextAnchor, resolveTextAnchor, type HighlightRange } from "@/lib/text-anchor";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -218,7 +215,9 @@ export function SheetEvaluationWorkspace({
           <Card
             id={commentTargetElementId(CharacterSheetCommentTarget.skillMap)}
             onClick={
-              canEvaluate ? () => openComposer(CharacterSheetCommentTarget.skillMap, null) : undefined
+              canEvaluate
+                ? () => openComposer(CharacterSheetCommentTarget.skillMap, null)
+                : undefined
             }
             className={cn(
               "transition-colors",

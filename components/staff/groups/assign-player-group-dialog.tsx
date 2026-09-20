@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus } from "@phosphor-icons/react";
 
@@ -49,13 +49,15 @@ export function AssignPlayerGroupDialog({
   const [newGroupName, setNewGroupName] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
       setSelectedGroupId(currentGroupId ?? "none");
       setIsCreatingNew(availableGroups.length === 0);
       setNewGroupName("");
     }
-  }, [open, currentGroupId, availableGroups.length]);
+  }
 
   const selectedGroup = availableGroups.find((g) => g.id === selectedGroupId);
   const hasNoGroups = availableGroups.length === 0;
@@ -126,7 +128,7 @@ export function AssignPlayerGroupDialog({
               hasNoGroups ? (
                 <div className="flex flex-col items-center justify-center gap-2.5 rounded-lg border border-dashed p-6 text-center">
                   <p className="text-muted-foreground text-xs">
-                    Aucun groupe RP n'existe pour le moment.
+                    Aucun groupe RP n&apos;existe pour le moment.
                   </p>
                   <Button
                     type="button"

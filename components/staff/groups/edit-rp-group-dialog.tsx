@@ -27,11 +27,7 @@ interface EditRpGroupDialogProps {
   };
 }
 
-export function EditRpGroupDialog({
-  open,
-  onOpenChange,
-  group,
-}: EditRpGroupDialogProps) {
+export function EditRpGroupDialog({ open, onOpenChange, group }: EditRpGroupDialogProps) {
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description ?? "");
   const [isPending, startTransition] = useTransition();
@@ -66,9 +62,7 @@ export function EditRpGroupDialog({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>Modifier le groupe RP</DialogTitle>
-            <DialogDescription>
-              Modifiez le nom et la description du groupe.
-            </DialogDescription>
+            <DialogDescription>Modifiez le nom et la description du groupe.</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">

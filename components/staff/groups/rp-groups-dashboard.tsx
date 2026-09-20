@@ -1,11 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import {
-  MagnifyingGlass,
-  Users,
-  X,
-} from "@phosphor-icons/react";
+import { MagnifyingGlass, Users, X } from "@phosphor-icons/react";
 
 import { computeGroupStats, type RpGroupWithMembers } from "@/lib/rp-groups";
 import { Button } from "@/components/ui/button";
@@ -168,7 +164,7 @@ export function RpGroupsDashboard({
           )}
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 min-[1600px]:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 min-[1600px]:grid-cols-3 md:grid-cols-2">
           {filteredGroups.map(({ group }) => (
             <RpGroupCard
               key={group.id}

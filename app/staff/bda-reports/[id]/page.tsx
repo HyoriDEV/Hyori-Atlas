@@ -74,9 +74,7 @@ export default async function BdaReportDetailPage(props: { params: Promise<{ id:
           <span className="text-muted-foreground text-xs">
             {formatDate(report.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span className="font-heading text-lg font-semibold">
-            {report.title}
-          </span>
+          <span className="font-heading text-lg font-semibold">{report.title}</span>
         </div>
         <Badge variant={bdaReportStatusBadgeVariant(report.status)} className="shrink-0">
           {bdaReportStatusLabels[report.status]}

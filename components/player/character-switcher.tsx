@@ -5,10 +5,7 @@ import { User, Skull, Prohibit, CheckCircle } from "@phosphor-icons/react";
 
 import { CharacterSheetStatus, CharacterStatus } from "@/lib/generated/prisma/enums";
 import { characterSheetStatusLabels, characterStatusLabels } from "@/lib/navigation";
-import {
-  characterSheetStatusBadgeVariant,
-  characterStatusBadgeVariant,
-} from "@/lib/atlas-status";
+import { characterStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -57,9 +54,7 @@ export function CharacterSwitcher({
         <div className="flex min-w-0 flex-col">
           <span className="text-muted-foreground text-xs font-medium">Personnage sélectionné</span>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold">
-              {selected.name || "Nouveau personnage"}
-            </span>
+            <span className="text-sm font-semibold">{selected.name || "Nouveau personnage"}</span>
             <Badge
               variant={characterStatusBadgeVariant(selected.status)}
               className="shrink-0 px-2 py-0.5 text-[10px]"
@@ -71,7 +66,9 @@ export function CharacterSwitcher({
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="text-muted-foreground hidden text-xs sm:inline">Changer de personnage :</span>
+        <span className="text-muted-foreground hidden text-xs sm:inline">
+          Changer de personnage :
+        </span>
         <Select value={selected.id} onValueChange={handleSelect}>
           <SelectTrigger className="h-9 min-w-[200px] text-xs sm:text-sm">
             <SelectValue placeholder="Choisir un personnage" />
@@ -93,7 +90,8 @@ export function CharacterSwitcher({
                     )}
                     <span className="font-medium">{displayName}</span>
                     <span className="text-muted-foreground text-xs">
-                      ({characterStatusLabels[character.status]} — {characterSheetStatusLabels[character.reviewStatus]})
+                      ({characterStatusLabels[character.status]} —{" "}
+                      {characterSheetStatusLabels[character.reviewStatus]})
                     </span>
                   </div>
                 </SelectItem>

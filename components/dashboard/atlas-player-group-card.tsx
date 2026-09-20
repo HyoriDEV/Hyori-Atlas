@@ -204,9 +204,7 @@ export function AtlasPlayerGroupCard({
             </div>
           </div>
         ) : (
-          <p className="text-muted-foreground text-xs">
-            Aucun groupe RP assigné à ce joueur.
-          </p>
+          <p className="text-muted-foreground text-xs">Aucun groupe RP assigné à ce joueur.</p>
         )}
       </Card>
 

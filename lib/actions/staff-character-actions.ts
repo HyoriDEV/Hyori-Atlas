@@ -298,4 +298,3 @@ export async function updateCharacterSheetAsStaff(
   revalidatePlayerAndStaff(sheet.playerId);
   return { success: true };
 }
-

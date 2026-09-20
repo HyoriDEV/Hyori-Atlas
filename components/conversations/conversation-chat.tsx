@@ -100,9 +100,11 @@ export function ConversationChat({
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const isInitialMount = useRef(true);
 
-  useEffect(() => {
+  const [prevDisabled, setPrevDisabled] = useState(disabled);
+  if (disabled !== prevDisabled) {
+    setPrevDisabled(disabled);
     setIsChatDisabled(disabled);
-  }, [disabled]);
+  }
 
   useEffect(() => {
     const eventSource = new EventSource(`/api/conversations/${conversationId}/stream`);
@@ -654,7 +656,8 @@ export function ConversationChat({
                                 className={cn(
                                   "text-sm font-medium hover:underline",
                                   (group.displayName === "Staff" ||
-                                    (group.authorType === MessageAuthorType.STAFF && !group.isOwn)) &&
+                                    (group.authorType === MessageAuthorType.STAFF &&
+                                      !group.isOwn)) &&
                                     "text-primary font-semibold"
                                 )}
                                 title={`Voir la fiche Atlas de ${group.displayName}`}
@@ -666,7 +669,8 @@ export function ConversationChat({
                                 className={cn(
                                   "text-sm font-medium",
                                   (group.displayName === "Staff" ||
-                                    (group.authorType === MessageAuthorType.STAFF && !group.isOwn)) &&
+                                    (group.authorType === MessageAuthorType.STAFF &&
+                                      !group.isOwn)) &&
                                     "text-primary font-semibold"
                                 )}
                               >

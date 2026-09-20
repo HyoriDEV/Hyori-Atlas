@@ -1,11 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { DotsThreeVertical, PencilSimple, Plus, Trash, Minus, Scales } from "@phosphor-icons/react";
+import { DotsThreeVertical, PencilSimple, Plus, Trash, Minus } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -171,8 +170,6 @@ export function PlayerClassCard({ playerClass }: { playerClass: SerializedPlayer
               <div className="border-border/60 overflow-hidden rounded-lg border">
                 <div className="divide-border/60 divide-y">
                   {playerClass.roles.map((role, idx) => {
-                    const percentage =
-                      totalRatio > 0 ? ((role.ratio / totalRatio) * 100).toFixed(1) : "0";
                     const color = getClassPaletteColor(idx);
 
                     return (

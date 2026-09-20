@@ -72,8 +72,7 @@ export function getRoleStatusMeta(status: RoleBalanceStatus) {
       return {
         label: "Équilibré",
         badgeVariant: "outline" as const,
-        className:
-          "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium",
+        className: "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium",
       };
     case "SATURE":
       return {

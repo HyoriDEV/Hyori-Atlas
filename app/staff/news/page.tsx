@@ -38,9 +38,7 @@ export default async function StaffNewsPage() {
             <Card key={item.id}>
               <CardHeader className="flex flex-row items-center justify-between gap-4 pb-2">
                 <div className="flex items-center gap-2">
-                  <span className="font-semibold">
-                    {item.title}
-                  </span>
+                  <span className="font-semibold">{item.title}</span>
                   <Badge variant="outline" className="shrink-0">
                     {item.type}
                   </Badge>

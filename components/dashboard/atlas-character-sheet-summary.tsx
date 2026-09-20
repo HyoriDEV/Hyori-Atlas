@@ -11,8 +11,8 @@ import {
   type CharacterClass,
   type Gender,
 } from "@/lib/generated/prisma/enums";
-import { characterSheetStatusLabels, characterStatusLabels } from "@/lib/navigation";
-import { characterSheetStatusBadgeVariant, characterStatusBadgeVariant } from "@/lib/atlas-status";
+import { characterSheetStatusLabels } from "@/lib/navigation";
+import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import Link from "next/link";

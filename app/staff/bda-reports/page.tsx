@@ -7,7 +7,12 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Rapports GC",
 };
-import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
 import { Badge } from "@/components/ui/badge";

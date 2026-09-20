@@ -23,7 +23,9 @@ async function requireActiveValidatedCharacter(userId: string) {
   });
 
   if (!activeCharacter) {
-    throw new Error("Aucun personnage actif trouvé. Attends que le staff t'attribue un personnage.");
+    throw new Error(
+      "Aucun personnage actif trouvé. Attends que le staff t'attribue un personnage."
+    );
   }
 
   if (activeCharacter.reviewStatus !== CharacterSheetStatus.VALIDATED) {
@@ -43,7 +45,9 @@ function assertOwnsChapter(
     throw new Error("Ce chapitre ne t'appartient pas.");
   }
   if (chapter.characterSheet && chapter.characterSheet.status !== CharacterStatus.ACTIVE) {
-    throw new Error("Ce chapitre appartient à un personnage inactif ou décédé et ne peut plus être modifié.");
+    throw new Error(
+      "Ce chapitre appartient à un personnage inactif ou décédé et ne peut plus être modifié."
+    );
   }
 }
 
@@ -172,7 +176,10 @@ export async function reorderChapters(orderedChapterIds: string[]) {
   if (!firstChapter || firstChapter.playerId !== user.id) {
     throw new Error("Liste de chapitres invalide.");
   }
-  if (firstChapter.characterSheet && firstChapter.characterSheet.status !== CharacterStatus.ACTIVE) {
+  if (
+    firstChapter.characterSheet &&
+    firstChapter.characterSheet.status !== CharacterStatus.ACTIVE
+  ) {
     throw new Error("Impossible de réordonner les chapitres d'un personnage inactif.");
   }
 

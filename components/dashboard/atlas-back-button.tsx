@@ -23,13 +23,7 @@ export function AtlasBackButton({ href = "/staff/atlas" }: { href?: string }) {
 
   return (
     <Button
-      render={
-        <Link
-          href={href}
-          aria-label="Retour"
-          onClick={handleClick}
-        />
-      }
+      render={<Link href={href} aria-label="Retour" onClick={handleClick} />}
       variant="outline"
       size="icon"
     >

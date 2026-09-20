@@ -135,8 +135,8 @@ export function CountdownTimer({
         </div>
 
         {/* Bloc Compte à Rebours - Cartes sobres de la charte avec chiffres en Anthropic Serif */}
-        {countdownEnabled && (
-          !timeLeft.isExpired ? (
+        {countdownEnabled &&
+          (!timeLeft.isExpired ? (
             <div className="grid w-full max-w-2xl grid-cols-4 gap-2.5 sm:gap-4 md:gap-5">
               {units.map((unit) => (
                 <div
@@ -166,8 +166,7 @@ export function CountdownTimer({
                 de Hyori RP.
               </p>
             </div>
-          )
-        )}
+          ))}
 
         {/* Boutons d'Action Rapide - Vrai Logo Discord Clyde & Typographie Anthropic Serif */}
         <div className="flex flex-wrap items-center justify-center gap-3.5 pt-2">

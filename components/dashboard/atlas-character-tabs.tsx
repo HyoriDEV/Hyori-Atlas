@@ -47,9 +47,7 @@ export function AtlasCharacterTabs({
         <span className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
           Personnages ({characters.length})
         </span>
-        {canManageCharacters && (
-          <AtlasCreateCharacterDialog playerId={playerId} pseudo={pseudo} />
-        )}
+        {canManageCharacters && <AtlasCreateCharacterDialog playerId={playerId} pseudo={pseudo} />}
       </div>
 
       <div className="flex flex-col gap-1.5">
@@ -73,16 +71,13 @@ export function AtlasCharacterTabs({
               <span
                 className={cn(
                   "truncate text-sm",
-                  isSelected ? "font-semibold text-primary" : "font-medium"
+                  isSelected ? "text-primary font-semibold" : "font-medium"
                 )}
               >
                 {charName}
               </span>
 
-              <div
-                className="flex shrink-0 items-center"
-                onClick={(e) => e.stopPropagation()}
-              >
+              <div className="flex shrink-0 items-center" onClick={(e) => e.stopPropagation()}>
                 {canManageCharacters ? (
                   <AtlasCharacterStatusSelect
                     sheetId={char.id}

@@ -80,11 +80,7 @@ function getRegistrationStatusLabel(status: RegistrationStatus): string {
   }
 }
 
-export function RpGroupMemberRow({
-  member,
-  groupId: _groupId,
-  canManageGroups = true,
-}: RpGroupMemberRowProps) {
+export function RpGroupMemberRow({ member, canManageGroups = true }: RpGroupMemberRowProps) {
   const [isPending, startTransition] = useTransition();
 
   const playerName = member.minecraftUsername ?? member.discordDisplayName;

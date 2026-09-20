@@ -195,14 +195,14 @@ export async function promoteToWhitelisted(
     ? await prisma.characterSheet.findFirst({
         where: { id: characterSheetId, playerId: userId },
       })
-    : (await prisma.characterSheet.findFirst({
+    : ((await prisma.characterSheet.findFirst({
         where: { playerId: userId, status: CharacterStatus.ACTIVE },
         orderBy: { createdAt: "desc" },
       })) ??
       (await prisma.characterSheet.findFirst({
         where: { playerId: userId },
         orderBy: { createdAt: "desc" },
-      }));
+      })));
 
   if (!sheet) {
     throw new Error("Ce joueur n'a pas encore de fiche personnage.");

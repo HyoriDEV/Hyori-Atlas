@@ -16,7 +16,6 @@ import {
 import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
-  characterStatusBadgeVariant,
   registrationStatusBadgeVariant,
 } from "@/lib/atlas-status";
 import {
@@ -26,7 +25,6 @@ import {
 } from "@/lib/generated/prisma/enums";
 import {
   characterSheetStatusLabels,
-  characterStatusLabels,
   registrationStatusLabels,
   registrationStatusRank,
   staffNavItems,
@@ -357,9 +355,7 @@ export default async function AtlasPage(props: PageProps) {
                         <span className="font-medium">{playerName}</span>
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">
-                      {sheet?.name || "—"}
-                    </TableCell>
+                    <TableCell className="font-medium">{sheet?.name || "—"}</TableCell>
                     <TableCell className="text-muted-foreground">—</TableCell>
                     <TableCell className="text-muted-foreground">
                       {sheet?.updatedAt

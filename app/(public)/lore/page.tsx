@@ -241,21 +241,22 @@ export default async function LorePage() {
               <h3 className="font-heading text-2xl font-semibold tracking-tight">Grande Ville</h3>
 
               <p>
-                La grande ville concentre tout ce qui est visible, contrôlé et affiché. C'est là que
-                les taxes sont levées, que les ordres sont écrits, que les registres sont tenus, que
-                les rumeurs prennent forme, que les marchés s'ouvrent et que les tensions se
-                croisent. Les quartiers y sont probablement plus marqués qu'ailleurs :
-                administratif, marchand, résidentiel, samouraï, portuaire, basse-ville. C'est le
-                lieu où les influences de tout le territoire se rencontrent.
+                La grande ville concentre tout ce qui est visible, contrôlé et affiché. C&apos;est
+                là que les taxes sont levées, que les ordres sont écrits, que les registres sont
+                tenus, que les rumeurs prennent forme, que les marchés s&apos;ouvrent et que les
+                tensions se croisent. Les quartiers y sont probablement plus marqués
+                qu&apos;ailleurs : administratif, marchand, résidentiel, samouraï, portuaire,
+                basse-ville. C&apos;est le lieu où les influences de tout le territoire se
+                rencontrent.
               </p>
 
               <p>
-                La ville donne l'image d'une province qui fonctionne. On y voit les rues nettoyées,
-                les bâtiments tenus, les gardes, les fonctionnaires, les allées et venues. Mais en
-                dessous, il y a les dettes, les marchés gris, les affaires non déclarées, les
-                familles sous pression, les registres falsifiés, les caisses qui passent au port
-                sans être notées et les alliances invisibles. C'est le cœur de Hyori, mais un cœur
-                malade.
+                La ville donne l&apos;image d&apos;une province qui fonctionne. On y voit les rues
+                nettoyées, les bâtiments tenus, les gardes, les fonctionnaires, les allées et
+                venues. Mais en dessous, il y a les dettes, les marchés gris, les affaires non
+                déclarées, les familles sous pression, les registres falsifiés, les caisses qui
+                passent au port sans être notées et les alliances invisibles. C&apos;est le cœur de
+                Hyori, mais un cœur malade.
               </p>
             </div>
           </div>
@@ -280,16 +281,16 @@ export default async function LorePage() {
 
               <p>
                 Sur la côte, le village de Pêche vit au rythme de la mer. Les départs ont lieu avant
-                l'aube, souvent dans un silence presque religieux. Les hommes, les femmes et parfois
-                les plus jeunes connaissent les marées comme d'autres connaissent les routes : ils
-                savent quand sortir, quand rentrer, quand éviter certains courants, quand la météo
-                annonce le danger. Le poisson, le sel, les filets, les réparations des embarcations
-                et les livraisons au port rythment la vie du village.
+                l&apos;aube, souvent dans un silence presque religieux. Les hommes, les femmes et
+                parfois les plus jeunes connaissent les marées comme d&apos;autres connaissent les
+                routes : ils savent quand sortir, quand rentrer, quand éviter certains courants,
+                quand la météo annonce le danger. Le poisson, le sel, les filets, les réparations
+                des embarcations et les livraisons au port rythment la vie du village.
               </p>
 
               <p>
-                Depuis les réformes et les taxes, les pêcheurs n'appartiennent plus tout à fait à
-                eux-mêmes. Une part des prises est réquisitionnée, une autre vendue au port, et le
+                Depuis les réformes et les taxes, les pêcheurs n&apos;appartiennent plus tout à fait
+                à eux-mêmes. Une part des prises est réquisitionnée, une autre vendue au port, et le
                 reste doit suffire à nourrir les familles. Cela crée des habitudes très
                 particulières : on cache parfois une partie des paniers, on échange du poisson
                 contre des services, on garde des contacts secrets avec certains marchands ou
@@ -298,8 +299,8 @@ export default async function LorePage() {
 
               <p>
                 Le village est exposé, vulnérable, mais aussi mobile et difficile à contrôler
-                totalement. C'est un lieu idéal pour les rumeurs, les arrivages clandestins, les
-                messages transportés entre quartiers et les marchandises qui ne devraient jamais
+                totalement. C&apos;est un lieu idéal pour les rumeurs, les arrivages clandestins,
+                les messages transportés entre quartiers et les marchandises qui ne devraient jamais
                 passer par les registres officiels.
               </p>
             </div>
@@ -327,7 +328,7 @@ export default async function LorePage() {
                 Dans les terres plus intérieures, les villages agricoles forment la base de Hyori.
                 Les rizières, les champs et les zones boisées plus épaisses déterminent leur rythme.
                 Là, la vie se mesure en saisons, en récoltes, en pluies, en pénuries et en taxes.
-                Les paysans travaillent tôt, très tôt, souvent avant que la lumière n'ait
+                Les paysans travaillent tôt, très tôt, souvent avant que la lumière n&apos;ait
                 complètement envahi les plaines. Les éleveurs, eux, gardent les bêtes, organisent
                 les abris, protègent les jeunes animaux et négocient les déplacements. Les bûcherons
                 vivent un peu à part, plus près des lisières, avec leurs coupes, leurs charrettes,
@@ -335,14 +336,14 @@ export default async function LorePage() {
               </p>
 
               <p>
-                Dans ces villages, tout le monde sait qu'il faut paraître loyal. On remet le tribut.
-                On s'incline. On évite les mots dangereux. Mais en coulisse, les familles
-                développent des habitudes de survie très nettes : cacher une partie des grains,
-                enterrer des réserves, répartir la nourriture entre plusieurs maisons, prévenir les
-                voisins quand les collecteurs approchent, faire semblant d'avoir moins que ce qu'on
-                a réellement. Les paysans de Hyori ne vivent pas dans le confort ; ils vivent dans
-                l'endurance et la retenue. Ils sont ceux qui nourrissent tout le reste, tout en
-                étant les premiers à manquer.
+                Dans ces villages, tout le monde sait qu&apos;il faut paraître loyal. On remet le
+                tribut. On s&apos;incline. On évite les mots dangereux. Mais en coulisse, les
+                familles développent des habitudes de survie très nettes : cacher une partie des
+                grains, enterrer des réserves, répartir la nourriture entre plusieurs maisons,
+                prévenir les voisins quand les collecteurs approchent, faire semblant d&apos;avoir
+                moins que ce qu&apos;on a réellement. Les paysans de Hyori ne vivent pas dans le
+                confort ; ils vivent dans l&apos;endurance et la retenue. Ils sont ceux qui
+                nourrissent tout le reste, tout en étant les premiers à manquer.
               </p>
 
               <p>
@@ -373,7 +374,7 @@ export default async function LorePage() {
               </h3>
 
               <p>
-                Le village des Mines est l'un des plus importants de la province, même si son
+                Le village des Mines est l&apos;un des plus importants de la province, même si son
                 prestige reste inférieur à celui de la grande ville. Il vit de feu, de sueur et de
                 précision. On y forge les lames, mais aussi les outils agricoles, les pièces de
                 charpente, les clous, les crochets, les serrures, les charnières, les cerclages et
@@ -386,7 +387,7 @@ export default async function LorePage() {
                 feu presque sans arrêt, on travaille dans le bruit du métal et des marteaux, on
                 refroidit, on ajuste, on recommence. Le village a aussi ses règles internes : tout y
                 est compté, pesé, réparé, vérifié. Les commandes venues du clan ont priorité, mais
-                ce n'est pas toujours celles-là qui rapportent le plus. Certains forgerons
+                ce n&apos;est pas toujours celles-là qui rapportent le plus. Certains forgerons
                 travaillent donc pour le public le jour, et pour des clients plus discrets la nuit.
               </p>
             </div>
@@ -411,23 +412,23 @@ export default async function LorePage() {
               </h3>
 
               <p>
-                À l'origine, ce lieu n'était qu'un simple point de passage. On y croisait des
-                artisans, des guérisseurs, des commerçants de route et des voyageurs qui
-                s'arrêtaient une nuit ou deux avant de repartir. Puis, peu à peu, le village a pris
-                une autre importance. Les maîtres qui y passaient ont commencé à rester plus
-                longtemps. Les apprentis aussi. Les ateliers se sont multipliés, les remèdes se sont
-                accumulés, les techniques se sont affinées. À force d'être un lieu où l'on apprend,
-                où l'on échange et où l'on répare, le village est devenu le principal centre de
-                savoir pratique de Hyori.
+                À l&apos;origine, ce lieu n&apos;était qu&apos;un simple point de passage. On y
+                croisait des artisans, des guérisseurs, des commerçants de route et des voyageurs
+                qui s&apos;arrêtaient une nuit ou deux avant de repartir. Puis, peu à peu, le
+                village a pris une autre importance. Les maîtres qui y passaient ont commencé à
+                rester plus longtemps. Les apprentis aussi. Les ateliers se sont multipliés, les
+                remèdes se sont accumulés, les techniques se sont affinées. À force d&apos;être un
+                lieu où l&apos;on apprend, où l&apos;on échange et où l&apos;on répare, le village
+                est devenu le principal centre de savoir pratique de Hyori.
               </p>
 
               <p>
-                Le village est pourtant loin d'être uni. Deux visions s'y confrontent constamment.
-                D'un côté, ceux qui pensent que le savoir doit circuler librement, parce qu'une
-                technique utile à tous ne devrait pas rester enfermée dans une seule main. De
-                l'autre, ceux qui considèrent qu'un secret vaut de l'or, et qu'un remède, une
-                teinture ou une méthode de conservation peut rapporter davantage s'il est protégé,
-                vendu ou réservé à quelques familles.
+                Le village est pourtant loin d&apos;être uni. Deux visions s&apos;y confrontent
+                constamment. D&apos;un côté, ceux qui pensent que le savoir doit circuler librement,
+                parce qu&apos;une technique utile à tous ne devrait pas rester enfermée dans une
+                seule main. De l&apos;autre, ceux qui considèrent qu&apos;un secret vaut de
+                l&apos;or, et qu&apos;un remède, une teinture ou une méthode de conservation peut
+                rapporter davantage s&apos;il est protégé, vendu ou réservé à quelques familles.
               </p>
             </div>
           </div>

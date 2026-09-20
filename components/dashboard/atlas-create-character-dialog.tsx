@@ -55,8 +55,9 @@ export function AtlasCreateCharacterDialog({
         <AlertDialogHeader>
           <AlertDialogTitle>Ajouter un nouveau personnage</AlertDialogTitle>
           <AlertDialogDescription>
-            Un nouveau personnage avec une fiche vierge va être accordé à <strong className="text-foreground">{pseudo}</strong>.
-            Le joueur pourra immédiatement commencer la rédaction de sa nouvelle fiche.
+            Un nouveau personnage avec une fiche vierge va être accordé à{" "}
+            <strong className="text-foreground">{pseudo}</strong>. Le joueur pourra immédiatement
+            commencer la rédaction de sa nouvelle fiche.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

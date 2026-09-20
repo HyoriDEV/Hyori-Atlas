@@ -223,10 +223,7 @@ export function CivilFieldsCard({
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-1">
         {civilFields.map((field) => (
-          <div
-            key={field.key}
-            {...fieldWrapperProps(field.key, true, activeTarget, onTargetClick)}
-          >
+          <div key={field.key} {...fieldWrapperProps(field.key, true, activeTarget, onTargetClick)}>
             {renderLabelRow(field.key, field.label, commentedTargets)}
             {field.key === "gender" ? (
               interactive ? (

@@ -4,7 +4,6 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { CHARACTER_CLASSES, type CharacterClass } from "@/lib/character-classes";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Label } from "@/components/ui/label";
 
 export interface CharacterClassDualSelectorProps {
   selectedClasses?: CharacterClass[];
@@ -21,9 +20,6 @@ export function CharacterClassDualSelector({
 }: CharacterClassDualSelectorProps) {
   const primaryClass = selectedClasses[0] ?? null;
   const secondaryClass = selectedClasses[1] ?? null;
-
-  const primaryDef = CHARACTER_CLASSES.find((c) => c.id === primaryClass);
-  const secondaryDef = CHARACTER_CLASSES.find((c) => c.id === secondaryClass);
 
   function handleSelectPrimary(clsId: CharacterClass) {
     if (!interactive || !onChange) return;
@@ -65,14 +61,10 @@ export function CharacterClassDualSelector({
   }
 
   function renderChoiceRow({
-    title,
-    selectedDef,
     currentChoiceId,
     disabledId,
     onSelect,
   }: {
-    title: string;
-    selectedDef?: (typeof CHARACTER_CLASSES)[number];
     currentChoiceId: CharacterClass | null;
     disabledId?: CharacterClass | null;
     onSelect: (id: CharacterClass) => void;
@@ -122,15 +114,11 @@ export function CharacterClassDualSelector({
   return (
     <div className={cn("flex flex-col gap-3.5", className)}>
       {renderChoiceRow({
-        title: "Classe principale",
-        selectedDef: primaryDef,
         currentChoiceId: primaryClass,
         onSelect: handleSelectPrimary,
       })}
 
       {renderChoiceRow({
-        title: "Classe secondaire",
-        selectedDef: secondaryDef,
         currentChoiceId: secondaryClass,
         disabledId: primaryClass,
         onSelect: handleSelectSecondary,

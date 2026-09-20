@@ -8,7 +8,12 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Liste d'attente",
 };
-import { getServerPagePrefs, checkRedirectWithSavedPrefs, resolvePageSize, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
+import {
+  getServerPagePrefs,
+  checkRedirectWithSavedPrefs,
+  resolvePageSize,
+  DEFAULT_PAGE_SIZE_OPTIONS,
+} from "@/lib/table-preferences";
 import { staffNavItems } from "@/lib/navigation";
 import { formatDate } from "@/lib/date";
 import { RegistrationStatus } from "@/lib/generated/prisma/enums";
@@ -57,7 +62,11 @@ export default async function WaitlistPage(props: PageProps) {
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
   const rejectedPage = Math.max(1, parseInt(searchParams.rejectedPage ?? "1", 10) || 1);
-  const rejectedPageSize = resolvePageSize(searchParams.rejectedPageSize, savedPrefs.rejectedPageSize, DEFAULT_PAGE_SIZE);
+  const rejectedPageSize = resolvePageSize(
+    searchParams.rejectedPageSize,
+    savedPrefs.rejectedPageSize,
+    DEFAULT_PAGE_SIZE
+  );
 
   const [waitlistPlayers, rejectedPlayersAll] = await Promise.all([
     prisma.user.findMany({

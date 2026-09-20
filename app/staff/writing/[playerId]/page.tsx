@@ -94,8 +94,12 @@ export default async function WritingStaffDetailPage(props: {
               </h1>
             </Link>
             {selectedCharacter && (
-              <Badge variant={characterStatusBadgeVariant(selectedCharacter.status)} className="text-xs">
-                {selectedCharacter.name || "Nouveau personnage"} ({characterStatusLabels[selectedCharacter.status]})
+              <Badge
+                variant={characterStatusBadgeVariant(selectedCharacter.status)}
+                className="text-xs"
+              >
+                {selectedCharacter.name || "Nouveau personnage"} (
+                {characterStatusLabels[selectedCharacter.status]})
               </Badge>
             )}
           </div>
