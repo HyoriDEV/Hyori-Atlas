@@ -39,6 +39,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { CreateInterviewSlotDialog } from "./create-interview-slot-dialog";
+import { InterviewReminderDialog } from "./interview-reminder-dialog";
 import { InterviewCalendarView } from "./interview-calendar-view";
 import { InterviewTableView } from "./interview-table-view";
 import type { InterviewSlotItem, InterviewSlotsKPIs } from "./types";
@@ -226,6 +227,8 @@ export function InterviewSlotsManager({
         </div>
 
         <div className="flex items-center gap-2">
+          <InterviewReminderDialog />
+
           <DropdownMenu>
             <DropdownMenuTrigger
               render={<Button variant="outline" size="sm" className="gap-1.5" />}

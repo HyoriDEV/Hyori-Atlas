@@ -48,7 +48,8 @@ export function getPlayerSpaceUrl(path = "/player"): string {
 export async function callDiscordBot<T = unknown>(
   endpoint: string,
   method: "GET" | "POST" = "POST",
-  body?: unknown
+  body?: unknown,
+  timeoutMs: number = REQUEST_TIMEOUT_MS
 ): Promise<{ success: boolean; data?: T; error?: string }> {
   const { apiUrl, apiKey } = getBotConfig();
 
@@ -72,7 +73,7 @@ export async function callDiscordBot<T = unknown>(
       },
       body: body !== undefined ? JSON.stringify(body) : undefined,
       cache: "no-store",
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
 
     const responseData = (await res.json().catch(() => null)) as T | null;
@@ -247,5 +248,49 @@ export async function checkBotHealth(): Promise<BotHealthResponse> {
       error: result.error || "Impossible de contacter l'API du bot Discord",
     };
   }
+  return result.data;
+}
+
+export interface InterviewReminderResult {
+  success: boolean;
+  total: number;
+  sent: number;
+  dmClosed: number;
+  failed: number;
+  errors?: string[];
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Notifie un ou plusieurs joueurs par message privé Discord pour les inviter à réserver leur créneau d'entretien.
+ */
+export async function sendInterviewReminders(
+  discordIds: string[],
+  customInterviewUrl?: string
+): Promise<InterviewReminderResult> {
+  const interviewUrl = customInterviewUrl || getPlayerSpaceUrl("/player/interview");
+
+  const result = await callDiscordBot<InterviewReminderResult>(
+    "/notifications/interview-reminder",
+    "POST",
+    {
+      discordIds,
+      interviewUrl,
+    },
+    30000 // 30s timeout pour les relances groupées
+  );
+
+  if (!result.success || !result.data) {
+    return {
+      success: false,
+      total: discordIds.length,
+      sent: 0,
+      dmClosed: 0,
+      failed: discordIds.length,
+      error: result.error || "Impossible de contacter l'API de HyoriBot.",
+    };
+  }
+
   return result.data;
 }

@@ -21,6 +21,7 @@ import { CHARACTER_CLASSES } from "@/lib/character-classes";
 import {
   testBotHealthAction,
   testCharacterSheetNotificationAction,
+  testInterviewReminderAction,
   testRegistrationNotificationAction,
   testRoleSyncAction,
 } from "@/lib/actions/bot-test-actions";
@@ -174,6 +175,38 @@ export function BotTestClient({
         const msg = err instanceof Error ? err.message : "Erreur inattendue";
         toast.error(msg);
         addLog(`Notification Fiche [${status}]`, { success: false, error: msg });
+      }
+    });
+  }
+
+  function handleInterviewReminderTest() {
+    if (!targetId.trim()) {
+      toast.error("Veuillez renseigner un ID Discord cible.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const res = await testInterviewReminderAction(targetId);
+        if (res.success && res.notified) {
+          toast.success("Notification de relance d'entretien envoyée en MP !");
+        } else if (res.dmClosed) {
+          toast.warning("Notification simulée : le membre a désactivé ses MP ou bloqué le bot.");
+        } else {
+          toast.error(`Échec : ${res.error}`);
+        }
+        addLog("Notification Relance Entretien", {
+          success: res.success,
+          notified: res.notified,
+          dmClosed: res.dmClosed,
+          message: res.message,
+          error: res.error,
+          raw: res,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erreur inattendue";
+        toast.error(msg);
+        addLog("Notification Relance Entretien", { success: false, error: msg });
       }
     });
   }
@@ -460,6 +493,18 @@ export function BotTestClient({
                   Réouverture
                 </Badge>
                 Fiche personnage rouverte par le staff
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={handleInterviewReminderTest}
+                disabled={isPending}
+              >
+                <Badge variant="outline" className="bg-amber-500/10 text-[10px] text-amber-600">
+                  Relance
+                </Badge>
+                Relance pour réservation d&apos;entretien (fiche validée)
               </Button>
             </CardContent>
           </Card>

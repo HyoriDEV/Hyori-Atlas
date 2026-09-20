@@ -6,6 +6,7 @@ import {
   checkBotHealth,
   notifyPlayerCharacterSheetStatus,
   notifyPlayerRegistrationStatus,
+  sendInterviewReminders,
   syncPlayerWhitelistClassRole,
   type BotHealthResponse,
   type BotNotificationResult,
@@ -71,4 +72,30 @@ export async function testRoleSyncAction(
   }
 
   return syncPlayerWhitelistClassRole(cleanDiscordId, true, classRole);
+}
+
+export async function testInterviewReminderAction(
+  targetDiscordId: string
+): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const cleanDiscordId = targetDiscordId.trim();
+  if (!cleanDiscordId || !/^\d{16,21}$/.test(cleanDiscordId)) {
+    return {
+      success: false,
+      notified: false,
+      error: "ID Discord invalide (doit comporter entre 16 et 21 chiffres).",
+    };
+  }
+
+  const result = await sendInterviewReminders([cleanDiscordId]);
+  return {
+    success: result.success && result.sent > 0,
+    notified: result.sent > 0,
+    dmClosed: result.dmClosed > 0,
+    message:
+      result.message ||
+      (result.sent > 0 ? "Notification de relance d'entretien envoyée avec succès !" : undefined),
+    error: result.errors?.join(", ") || result.error,
+  };
 }
