@@ -4,7 +4,16 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { InterviewBookingStatus, Role } from "@/lib/generated/prisma/enums";
+import {
+  CharacterSheetStatus,
+  InterviewBookingStatus,
+  RegistrationStatus,
+  Role,
+} from "@/lib/generated/prisma/enums";
+import {
+  sendInterviewReminders,
+  type InterviewReminderResult,
+} from "@/lib/services/discord-bot-service";
 
 export async function createInterviewSlot(startsAt: Date) {
   await requireRole([Role.ADMIN]);
@@ -189,4 +198,132 @@ export async function updateInterviewBookingStatus(
   revalidatePath("/staff/atlas");
   revalidatePath(`/staff/atlas/${booking.playerId}`);
   revalidatePath("/player/interview");
+}
+
+export interface EligibleInterviewReminderCandidate {
+  id: string;
+  discordId: string;
+  discordUsername: string;
+  discordDisplayName: string;
+  discordAvatarUrl: string | null;
+  characterSheetName?: string;
+  hasPreviousBooking: boolean;
+  previousBookingStatus?: InterviewBookingStatus;
+}
+
+/**
+ * Récupère tous les joueurs en statut "En whitelist" avec une fiche RP "Validée"
+ * qui n'ont pas encore réservé de créneau d'entretien actif.
+ */
+export async function getEligibleInterviewReminderCandidatesAction(): Promise<
+  EligibleInterviewReminderCandidate[]
+> {
+  await requireRole([Role.ADMIN]);
+
+  const candidates = await prisma.user.findMany({
+    where: {
+      registrationStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
+      characterSheets: {
+        some: {
+          reviewStatus: CharacterSheetStatus.VALIDATED,
+        },
+      },
+    },
+    select: {
+      id: true,
+      discordId: true,
+      discordUsername: true,
+      discordDisplayName: true,
+      discordAvatarUrl: true,
+      characterSheets: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          name: true,
+          reviewStatus: true,
+        },
+      },
+      interviewBookings: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: {
+          id: true,
+          status: true,
+          slot: {
+            select: {
+              startsAt: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
+  const now = new Date();
+  const eligible: EligibleInterviewReminderCandidate[] = [];
+
+  for (const user of candidates) {
+    const latestSheet = user.characterSheets[0];
+    if (!latestSheet || latestSheet.reviewStatus !== CharacterSheetStatus.VALIDATED) {
+      continue;
+    }
+
+    const latestBooking = user.interviewBookings[0];
+    if (latestBooking) {
+      // Déjà validé/accepté : l'entretien a déjà été passé avec succès
+      if (latestBooking.status === InterviewBookingStatus.ACCEPTED) {
+        continue;
+      }
+      // Déjà inscrit sur un créneau futur : l'entretien est déjà programmé
+      if (
+        latestBooking.status === InterviewBookingStatus.REGISTERED &&
+        latestBooking.slot &&
+        latestBooking.slot.startsAt >= now
+      ) {
+        continue;
+      }
+    }
+
+    eligible.push({
+      id: user.id,
+      discordId: user.discordId,
+      discordUsername: user.discordUsername,
+      discordDisplayName: user.discordDisplayName,
+      discordAvatarUrl: user.discordAvatarUrl,
+      characterSheetName: latestSheet.name,
+      hasPreviousBooking: Boolean(latestBooking),
+      previousBookingStatus: latestBooking?.status,
+    });
+  }
+
+  return eligible;
+}
+
+/**
+ * Envoie une notification Discord privée à tous les joueurs éligibles pour les inviter
+ * à réserver leur créneau d'entretien.
+ */
+export async function sendInterviewRemindersAction(): Promise<InterviewReminderResult> {
+  await requireRole([Role.ADMIN]);
+
+  const candidates = await getEligibleInterviewReminderCandidatesAction();
+  if (candidates.length === 0) {
+    return {
+      success: true,
+      total: 0,
+      sent: 0,
+      dmClosed: 0,
+      failed: 0,
+      message: "Aucun joueur éligible à relancer pour le moment.",
+    };
+  }
+
+  const discordIds = candidates.map((c) => c.discordId);
+  const result = await sendInterviewReminders(discordIds);
+
+  revalidatePath("/staff/interview-slots");
+
+  return result;
 }
