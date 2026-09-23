@@ -24,6 +24,7 @@ import {
   testInterviewReminderAction,
   testRegistrationNotificationAction,
   testRoleSyncAction,
+  testTicketCreatedNotificationAction,
   testTicketNotificationAction,
 } from "@/lib/actions/bot-test-actions";
 import { type CharacterSheetNotificationStatus } from "@/lib/services/discord-bot-service";
@@ -244,6 +245,30 @@ export function BotTestClient({
     });
   }
 
+  function handleTicketCreatedTest() {
+    startTransition(async () => {
+      try {
+        const res = await testTicketCreatedNotificationAction();
+        if (res.success && res.notified) {
+          toast.success("Notification d'ouverture de ticket envoyée sur le salon Discord !");
+        } else {
+          toast.error(`Échec : ${res.error}`);
+        }
+        addLog("Notification Ouverture Ticket (Salon externe)", {
+          success: res.success,
+          notified: res.notified,
+          message: res.message,
+          error: res.error,
+          raw: res,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erreur inattendue";
+        toast.error(msg);
+        addLog("Notification Ouverture Ticket (Salon externe)", { success: false, error: msg });
+      }
+    });
+  }
+
   function handleRoleSyncTest() {
     if (!targetId.trim()) {
       toast.error("Veuillez renseigner un ID Discord cible.");
@@ -276,125 +301,138 @@ export function BotTestClient({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* 1. Carte État de santé */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
+      {/* Ligne 1 : État de santé & Cible du test côte à côte sur grand écran */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* 1. Carte État de santé */}
+        <Card className="flex flex-col justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Pulse className="text-primary size-5" />
-              État de la passerelle HyoriBot
-            </CardTitle>
-            <CardDescription className="text-xs">
-              Vérifiez la disponibilité de l&apos;API interne et de la passerelle Discord.
-            </CardDescription>
-          </div>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleHealthCheck}
-            disabled={healthLoading}
-            className="gap-1.5"
-          >
-            <ArrowClockwise className={healthLoading ? "size-3.5 animate-spin" : "size-3.5"} />
-            {healthLoading ? "Vérification..." : "Tester la connexion"}
-          </Button>
-        </CardHeader>
-        <CardContent>
-          {health ? (
-            <div className="grid grid-cols-2 gap-4 text-xs sm:grid-cols-4">
-              <div className="bg-muted/40 rounded-lg border p-2.5">
-                <span className="text-muted-foreground block text-[11px]">Serveur HTTP Bot</span>
-                <div className="mt-1 flex items-center gap-1.5">
-                  {health.success ? (
-                    <Badge
-                      variant="outline"
-                      className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-                    >
-                      En ligne ({health.status ?? "ok"})
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive">Hors-ligne</Badge>
-                  )}
-                </div>
+            <CardHeader className="flex flex-row items-center justify-between pb-3">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Pulse className="text-primary size-5" />
+                  État de la passerelle HyoriBot
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Vérifiez la disponibilité de l&apos;API interne et de la passerelle Discord.
+                </CardDescription>
               </div>
-
-              <div className="bg-muted/40 rounded-lg border p-2.5">
-                <span className="text-muted-foreground block text-[11px]">Passerelle Discord</span>
-                <div className="mt-1 flex items-center gap-1.5 font-medium">
-                  {health.discord?.ready ? (
-                    <span className="flex items-center gap-1 text-emerald-600">
-                      <CheckCircle className="size-3.5" /> Prête ({health.discord.pingMs} ms)
-                    </span>
-                  ) : (
-                    <span className="text-destructive flex items-center gap-1">
-                      <XCircle className="size-3.5" /> Non connectée
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-muted/40 rounded-lg border p-2.5">
-                <span className="text-muted-foreground block text-[11px]">Serveurs (Guilds)</span>
-                <span className="mt-1 block font-medium">
-                  {health.discord?.guildsCached ?? 0} serveur(s) détecté(s)
-                </span>
-              </div>
-
-              <div className="bg-muted/40 rounded-lg border p-2.5">
-                <span className="text-muted-foreground block text-[11px]">
-                  File d&apos;attente Bot
-                </span>
-                <span className="mt-1 block font-medium">
-                  {health.queue?.totalProcessed ?? 0} traitées (échecs:{" "}
-                  {health.queue?.totalFailed ?? 0})
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p className="text-muted-foreground text-xs">
-              Cliquez sur &quot;Tester la connexion&quot; pour sonder l&apos;API interne de
-              HyoriBot.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* 2. Cible du test */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">ID Discord cible pour les tests</CardTitle>
-          <CardDescription className="text-xs">
-            Par défaut, votre propre ID Discord est renseigné afin que vous receviez directement les
-            messages privés de test.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex-1">
-              <Label htmlFor="target-id" className="sr-only">
-                ID Discord
-              </Label>
-              <Input
-                id="target-id"
-                value={targetId}
-                onChange={(e) => setTargetId(e.target.value)}
-                placeholder="Ex: 1533676574111567952"
-                className="font-mono text-sm"
-              />
-            </div>
-            {targetId !== currentDiscordId && (
-              <Button variant="outline" size="sm" onClick={() => setTargetId(currentDiscordId)}>
-                Mon compte ({currentDiscordUsername})
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleHealthCheck}
+                disabled={healthLoading}
+                className="gap-1.5"
+              >
+                <ArrowClockwise className={healthLoading ? "size-3.5 animate-spin" : "size-3.5"} />
+                {healthLoading ? "Vérification..." : "Tester la connexion"}
               </Button>
-            )}
+            </CardHeader>
+            <CardContent>
+              {health ? (
+                <div className="grid grid-cols-2 gap-3 text-xs sm:grid-cols-2 xl:grid-cols-4">
+                  <div className="bg-muted/40 rounded-lg border p-2.5">
+                    <span className="text-muted-foreground block text-[11px]">
+                      Serveur HTTP Bot
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      {health.success ? (
+                        <Badge
+                          variant="outline"
+                          className="border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                        >
+                          En ligne ({health.status ?? "ok"})
+                        </Badge>
+                      ) : (
+                        <Badge variant="destructive">Hors-ligne</Badge>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/40 rounded-lg border p-2.5">
+                    <span className="text-muted-foreground block text-[11px]">
+                      Passerelle Discord
+                    </span>
+                    <div className="mt-1 flex items-center gap-1.5 font-medium">
+                      {health.discord?.ready ? (
+                        <span className="flex items-center gap-1 text-emerald-600">
+                          <CheckCircle className="size-3.5" /> Prête ({health.discord.pingMs} ms)
+                        </span>
+                      ) : (
+                        <span className="text-destructive flex items-center gap-1">
+                          <XCircle className="size-3.5" /> Non connectée
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-muted/40 rounded-lg border p-2.5">
+                    <span className="text-muted-foreground block text-[11px]">
+                      Serveurs (Guilds)
+                    </span>
+                    <span className="mt-1 block font-medium">
+                      {health.discord?.guildsCached ?? 0} serveur(s) détecté(s)
+                    </span>
+                  </div>
+
+                  <div className="bg-muted/40 rounded-lg border p-2.5">
+                    <span className="text-muted-foreground block text-[11px]">
+                      File d&apos;attente Bot
+                    </span>
+                    <span className="mt-1 block font-medium">
+                      {health.queue?.totalProcessed ?? 0} traitées (échecs:{" "}
+                      {health.queue?.totalFailed ?? 0})
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-xs">
+                  Cliquez sur &quot;Tester la connexion&quot; pour sonder l&apos;API interne de
+                  HyoriBot.
+                </p>
+              )}
+            </CardContent>
           </div>
-          <p className="text-muted-foreground text-[11px]">
-            Compte administrateur actif :{" "}
-            <strong className="text-foreground">{currentDiscordUsername}</strong> (ID :{" "}
-            <code>{currentDiscordId}</code>)
-          </p>
-        </CardContent>
-      </Card>
+        </Card>
+
+        {/* 2. Cible du test */}
+        <Card className="flex flex-col justify-between">
+          <div>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">ID Discord cible pour les tests</CardTitle>
+              <CardDescription className="text-xs">
+                Par défaut, votre propre ID Discord est renseigné afin que vous receviez directement
+                les messages privés de test.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div className="flex-1">
+                  <Label htmlFor="target-id" className="sr-only">
+                    ID Discord
+                  </Label>
+                  <Input
+                    id="target-id"
+                    value={targetId}
+                    onChange={(e) => setTargetId(e.target.value)}
+                    placeholder="Ex: 1533676574111567952"
+                    className="font-mono text-sm"
+                  />
+                </div>
+                {targetId !== currentDiscordId && (
+                  <Button variant="outline" size="sm" onClick={() => setTargetId(currentDiscordId)}>
+                    Mon compte ({currentDiscordUsername})
+                  </Button>
+                )}
+              </div>
+              <p className="text-muted-foreground text-[11px]">
+                Compte administrateur actif :{" "}
+                <strong className="text-foreground">{currentDiscordUsername}</strong> (ID :{" "}
+                <code>{currentDiscordId}</code>)
+              </p>
+            </CardContent>
+          </div>
+        </Card>
+      </div>
 
       {/* 3. Déclencheurs de test */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -546,14 +584,14 @@ export function BotTestClient({
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <PaperPlaneTilt className="text-primary size-4" />
-                Notification Ticket (MP Discord)
+                Notifications Tickets (MP &amp; Salon Staff)
               </CardTitle>
               <CardDescription className="text-xs">
-                Simulez l&apos;envoi d&apos;une notification Discord envoyée au joueur lors
-                d&apos;un nouveau message dans son ticket.
+                Simulez les notifications de messages de tickets en MP et l&apos;alerte sur le salon
+                staff externe lors d&apos;une ouverture de ticket.
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="flex flex-col gap-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -564,7 +602,19 @@ export function BotTestClient({
                 <Badge variant="outline" className="bg-primary/10 text-primary text-[10px]">
                   Nouveau message
                 </Badge>
-                Nouveau message de ticket reçu
+                Nouveau message de ticket reçu (MP Joueur)
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={handleTicketCreatedTest}
+                disabled={isPending}
+              >
+                <Badge variant="outline" className="bg-amber-500/10 text-[10px] text-amber-600">
+                  Ouverture Ticket
+                </Badge>
+                Alerte d&apos;ouverture de ticket (Salon externe Staff)
               </Button>
             </CardContent>
           </Card>

@@ -3,6 +3,11 @@ import {
   CharacterSheetStatus,
   RegistrationStatus,
 } from "@/lib/generated/prisma/enums";
+import {
+  getEffectiveDiscordOverride,
+  type DiscordEmbedOverride,
+  type DiscordTemplateId,
+} from "./discord-template-service";
 
 export interface BotNotificationResult {
   success: boolean;
@@ -114,9 +119,25 @@ export async function callDiscordBot<T = unknown>(
 export async function notifyPlayerRegistrationStatus(
   discordId: string,
   status: RegistrationStatus,
-  customPlayerSpaceUrl?: string
+  customPlayerSpaceUrl?: string,
+  override?: DiscordEmbedOverride | null
 ): Promise<BotNotificationResult> {
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player");
+
+  let effectiveOverride = override;
+  if (effectiveOverride === undefined) {
+    let templateId: DiscordTemplateId | null = null;
+    if (status === RegistrationStatus.WHITELIST_IN_PROGRESS) templateId = "REGISTRATION_ACCEPTED";
+    else if (status === RegistrationStatus.WHITELISTED) templateId = "REGISTRATION_WHITELISTED";
+    else if (status === RegistrationStatus.REJECTED) templateId = "REGISTRATION_REJECTED";
+
+    if (templateId) {
+      effectiveOverride = await getEffectiveDiscordOverride(templateId, {
+        playerName: "",
+        url: playerSpaceUrl,
+      }).catch(() => null);
+    }
+  }
 
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/registration-status",
@@ -125,6 +146,7 @@ export async function notifyPlayerRegistrationStatus(
       discordId,
       status,
       playerSpaceUrl,
+      override: effectiveOverride ?? undefined,
     }
   );
 
@@ -153,9 +175,26 @@ export type CharacterSheetNotificationStatus = CharacterSheetStatus | "REOPENED"
 export async function notifyPlayerCharacterSheetStatus(
   discordId: string,
   status: CharacterSheetNotificationStatus,
-  customPlayerSpaceUrl?: string
+  customPlayerSpaceUrl?: string,
+  override?: DiscordEmbedOverride | null
 ): Promise<BotNotificationResult> {
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player/character-sheet");
+
+  let effectiveOverride = override;
+  if (effectiveOverride === undefined) {
+    let templateId: DiscordTemplateId | null = null;
+    if (status === CharacterSheetStatus.VALIDATED) templateId = "SHEET_VALIDATED";
+    else if (status === CharacterSheetStatus.PENDING_PLAYER) templateId = "SHEET_FEEDBACK";
+    else if (status === "REOPENED" || status === CharacterSheetStatus.DRAFT)
+      templateId = "SHEET_REOPENED";
+
+    if (templateId) {
+      effectiveOverride = await getEffectiveDiscordOverride(templateId, {
+        playerName: "",
+        url: playerSpaceUrl,
+      }).catch(() => null);
+    }
+  }
 
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/character-sheet-status",
@@ -164,6 +203,7 @@ export async function notifyPlayerCharacterSheetStatus(
       discordId,
       status,
       playerSpaceUrl,
+      override: effectiveOverride ?? undefined,
     }
   );
 
@@ -267,9 +307,18 @@ export interface InterviewReminderResult {
  */
 export async function sendInterviewReminders(
   discordIds: string[],
-  customInterviewUrl?: string
+  customInterviewUrl?: string,
+  override?: DiscordEmbedOverride | null
 ): Promise<InterviewReminderResult> {
   const interviewUrl = customInterviewUrl || getPlayerSpaceUrl("/player/interview");
+
+  let effectiveOverride = override;
+  if (effectiveOverride === undefined) {
+    effectiveOverride = await getEffectiveDiscordOverride("INTERVIEW_REMINDER", {
+      playerName: "",
+      url: interviewUrl,
+    }).catch(() => null);
+  }
 
   const result = await callDiscordBot<InterviewReminderResult>(
     "/notifications/interview-reminder",
@@ -277,6 +326,7 @@ export async function sendInterviewReminders(
     {
       discordIds,
       interviewUrl,
+      override: effectiveOverride ?? undefined,
     },
     30000 // 30s timeout pour les relances groupées
   );
@@ -302,6 +352,7 @@ export interface TicketMessageNotificationOptions {
   authorName: string;
   messagePreview?: string | null;
   customTicketUrl?: string;
+  override?: DiscordEmbedOverride | null;
 }
 
 /**
@@ -323,6 +374,7 @@ export async function notifyPlayerTicketMessage(
       authorName: options.authorName,
       messagePreview: options.messagePreview ?? undefined,
       ticketUrl,
+      override: options.override ?? undefined,
     }
   );
 
@@ -339,6 +391,60 @@ export async function notifyPlayerTicketMessage(
       success: true,
       notified: true,
       message: "Notification sent successfully",
+    }
+  );
+}
+
+export interface TicketCreatedNotificationOptions {
+  channelId?: string | null;
+  mentionRoleId?: string | null;
+  ticketId: string;
+  ticketSubject: string;
+  ticketCategory: string;
+  authorName: string;
+  ticketDescription?: string | null;
+  customTicketStaffUrl?: string;
+  override?: DiscordEmbedOverride | null;
+}
+
+/**
+ * Notifie le staff sur un salon Discord (externe ou configuré) lors de l'ouverture d'un nouveau ticket.
+ */
+export async function notifyTicketCreated(
+  options: TicketCreatedNotificationOptions
+): Promise<BotNotificationResult> {
+  const ticketStaffUrl =
+    options.customTicketStaffUrl || getPlayerSpaceUrl(`/staff/tickets/${options.ticketId}`);
+
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/ticket-created",
+    "POST",
+    {
+      channelId: options.channelId ?? undefined,
+      mentionRoleId: options.mentionRoleId ?? undefined,
+      ticketId: options.ticketId,
+      ticketSubject: options.ticketSubject,
+      ticketCategory: options.ticketCategory,
+      authorName: options.authorName,
+      ticketDescription: options.ticketDescription ?? undefined,
+      ticketStaffUrl,
+      override: options.override ?? undefined,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "Ticket creation notification sent successfully",
     }
   );
 }

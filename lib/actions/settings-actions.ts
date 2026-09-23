@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/generated/prisma/enums";
 import { updateGlobalSettings } from "@/lib/services/settings-service";
 
@@ -83,4 +84,56 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   revalidatePath("/staff/settings");
 
   return { success: true };
+}
+
+export interface DiscordTemplateInput {
+  id: string;
+  enabled: boolean;
+  channelId?: string | null;
+  roleId?: string | null;
+  title?: string | null;
+  description?: string | null;
+  buttonLabel?: string | null;
+  buttonUrl?: string | null;
+}
+
+export async function saveDiscordTemplatesAction(
+  templates: DiscordTemplateInput[]
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const user = await requireRole([Role.ADMIN]);
+
+    for (const item of templates) {
+      await prisma.discordNotificationTemplate.upsert({
+        where: { id: item.id },
+        create: {
+          id: item.id,
+          enabled: item.enabled,
+          channelId: item.channelId?.trim() || null,
+          roleId: item.roleId?.trim() || null,
+          title: item.title?.trim() || null,
+          description: item.description?.trim() || null,
+          buttonLabel: item.buttonLabel?.trim() || null,
+          buttonUrl: item.buttonUrl?.trim() || null,
+          updatedById: user.id,
+        },
+        update: {
+          enabled: item.enabled,
+          channelId: item.channelId?.trim() || null,
+          roleId: item.roleId?.trim() || null,
+          title: item.title?.trim() || null,
+          description: item.description?.trim() || null,
+          buttonLabel: item.buttonLabel?.trim() || null,
+          buttonUrl: item.buttonUrl?.trim() || null,
+          updatedById: user.id,
+        },
+      });
+    }
+
+    revalidatePath("/staff/settings");
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Erreur lors de la sauvegarde des modèles";
+    return { success: false, error: message };
+  }
 }

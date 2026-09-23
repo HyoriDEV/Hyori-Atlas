@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { ticketStaffRoles } from "@/lib/navigation";
+import { ticketCategoryLabels, ticketStaffRoles } from "@/lib/navigation";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
@@ -15,7 +15,11 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
-import { notifyPlayerTicketMessage } from "@/lib/services/discord-bot-service";
+import { notifyPlayerTicketMessage, notifyTicketCreated } from "@/lib/services/discord-bot-service";
+import {
+  getEffectiveDiscordOverride,
+  getTicketCreationNotificationConfig,
+} from "@/lib/services/discord-template-service";
 
 export async function createTicket(category: TicketCategory, subject: string, description: string) {
   const user = await requireActivePlayer();
@@ -97,6 +101,42 @@ export async function createTicket(category: TicketCategory, subject: string, de
     publish(rpConversation.id, serializeConversationMessage(rpTrackingMessage));
   }
 
+  // Déclencher la notification Discord d'ouverture de ticket (salon externe Staff)
+  const categoryLabel = ticketCategoryLabels[category] ?? category;
+  const authorName =
+    user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Un joueur";
+  const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
+
+  getTicketCreationNotificationConfig({
+    author: authorName,
+    subject: trimmedSubject,
+    category: categoryLabel,
+    description: trimmedDescription,
+    ticketId: ticket.id,
+    url: ticketStaffUrl,
+  })
+    .then((config) => {
+      if (config.enabled) {
+        return notifyTicketCreated({
+          channelId: config.channelId,
+          mentionRoleId: config.mentionRoleId,
+          ticketId: ticket.id,
+          ticketSubject: trimmedSubject,
+          ticketCategory: categoryLabel,
+          authorName,
+          ticketDescription: trimmedDescription,
+          customTicketStaffUrl: ticketStaffUrl,
+          override: config.override,
+        });
+      }
+    })
+    .catch((err) => {
+      console.warn(
+        "[TicketNotification] Échec lors de la notification d'ouverture de ticket:",
+        err
+      );
+    });
+
   revalidatePath("/player/tickets");
   return { id: ticket.id };
 }
@@ -174,6 +214,7 @@ export async function sendTicketMessage(
     newMessageId: message.id,
     messageBody: message.body,
     hasImage: Boolean(message.imageUrl),
+    ticketPlayerId: ticket.playerId,
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
@@ -246,6 +287,7 @@ export async function sendStaffTicketMessage(
     newMessageId: message.id,
     messageBody: message.body,
     hasImage: Boolean(message.imageUrl),
+    ticketPlayerId: ticket.playerId,
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
@@ -345,6 +387,7 @@ async function dispatchTicketMessageNotifications({
   newMessageId,
   messageBody,
   hasImage,
+  ticketPlayerId,
 }: {
   ticketId: string;
   ticketSubject: string;
@@ -354,16 +397,19 @@ async function dispatchTicketMessageNotifications({
   newMessageId: string;
   messageBody?: string | null;
   hasImage?: boolean;
+  ticketPlayerId?: string;
 }): Promise<void> {
   try {
-    // Trouver tous les membres de la conversation qui sont des joueurs et non l'auteur du message
+    // Trouver tous les membres de la conversation qui sont soit le créateur du ticket (même s'il est staff),
+    // soit des joueurs, et qui ne sont pas l'auteur du message courant
     const candidateMembers = await prisma.conversationMember.findMany({
       where: {
         conversationId,
         userId: { not: authorId },
-        user: {
-          role: Role.PLAYER,
-        },
+        OR: [
+          ...(ticketPlayerId ? [{ userId: ticketPlayerId }] : []),
+          { user: { role: Role.PLAYER } },
+        ],
       },
       include: {
         user: {
@@ -379,7 +425,17 @@ async function dispatchTicketMessageNotifications({
       return;
     }
 
-    // Pour chaque membre joueur, vérifier s'il avait des messages non lus antérieurs à ce nouveau message
+    const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
+
+    // Récupérer l'override éventuel pour TICKET_MESSAGE
+    const override = await getEffectiveDiscordOverride("TICKET_MESSAGE", {
+      author: authorName,
+      subject: ticketSubject,
+      preview: previewText ?? "",
+      url: `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/player/tickets/${ticketId}`,
+    }).catch(() => null);
+
+    // Pour chaque membre éligible, vérifier s'il avait des messages non lus antérieurs à ce nouveau message
     for (const member of candidateMembers) {
       if (!member.user.discordId) continue;
 
@@ -396,17 +452,16 @@ async function dispatchTicketMessageNotifications({
         select: { id: true },
       });
 
-      // Si priorUnreadMessage est null, le joueur avait tout lu jusqu'alors : ce message est son premier non-lu !
+      // Si priorUnreadMessage est null, le membre avait tout lu jusqu'alors : ce message est son premier non-lu !
       // On déclenche donc une notification Discord unique en MP.
       if (!priorUnreadMessage) {
-        const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
-
         notifyPlayerTicketMessage({
           discordId: member.user.discordId,
           ticketId,
           ticketSubject,
           authorName,
           messagePreview: previewText,
+          override: override ?? undefined,
         }).catch((err) => {
           console.warn(
             `[TicketNotification] Échec lors de la notification Discord pour ${member.userId}:`,
