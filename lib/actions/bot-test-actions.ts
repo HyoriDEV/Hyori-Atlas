@@ -6,6 +6,7 @@ import {
   checkBotHealth,
   notifyPlayerCharacterSheetStatus,
   notifyPlayerRegistrationStatus,
+  notifyPlayerTicketMessage,
   sendInterviewReminders,
   syncPlayerWhitelistClassRole,
   type BotHealthResponse,
@@ -98,4 +99,28 @@ export async function testInterviewReminderAction(
       (result.sent > 0 ? "Notification de relance d'entretien envoyée avec succès !" : undefined),
     error: result.errors?.join(", ") || result.error,
   };
+}
+
+export async function testTicketNotificationAction(
+  targetDiscordId: string
+): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const cleanDiscordId = targetDiscordId.trim();
+  if (!cleanDiscordId || !/^\d{16,21}$/.test(cleanDiscordId)) {
+    return {
+      success: false,
+      notified: false,
+      error: "ID Discord invalide (doit comporter entre 16 et 21 chiffres).",
+    };
+  }
+
+  return notifyPlayerTicketMessage({
+    discordId: cleanDiscordId,
+    ticketId: "test-ticket",
+    ticketSubject: "Question RP — Test de notification",
+    authorName: "Équipe Staff (Test)",
+    messagePreview:
+      "Ceci est un test de notification Discord suite à un nouveau message sur votre ticket.",
+  });
 }

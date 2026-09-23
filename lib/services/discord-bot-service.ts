@@ -294,3 +294,51 @@ export async function sendInterviewReminders(
 
   return result.data;
 }
+
+export interface TicketMessageNotificationOptions {
+  discordId: string;
+  ticketId: string;
+  ticketSubject: string;
+  authorName: string;
+  messagePreview?: string | null;
+  customTicketUrl?: string;
+}
+
+/**
+ * Notifie le joueur par message privé Discord lors de la réception d'un nouveau message sur son ticket.
+ */
+export async function notifyPlayerTicketMessage(
+  options: TicketMessageNotificationOptions
+): Promise<BotNotificationResult> {
+  const ticketUrl =
+    options.customTicketUrl || getPlayerSpaceUrl(`/player/tickets/${options.ticketId}`);
+
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/ticket-message",
+    "POST",
+    {
+      discordId: options.discordId,
+      ticketId: options.ticketId,
+      ticketSubject: options.ticketSubject,
+      authorName: options.authorName,
+      messagePreview: options.messagePreview ?? undefined,
+      ticketUrl,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "Notification sent successfully",
+    }
+  );
+}

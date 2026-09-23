@@ -24,6 +24,7 @@ import {
   testInterviewReminderAction,
   testRegistrationNotificationAction,
   testRoleSyncAction,
+  testTicketNotificationAction,
 } from "@/lib/actions/bot-test-actions";
 import { type CharacterSheetNotificationStatus } from "@/lib/services/discord-bot-service";
 import { Button } from "@/components/ui/button";
@@ -207,6 +208,38 @@ export function BotTestClient({
         const msg = err instanceof Error ? err.message : "Erreur inattendue";
         toast.error(msg);
         addLog("Notification Relance Entretien", { success: false, error: msg });
+      }
+    });
+  }
+
+  function handleTicketMessageTest() {
+    if (!targetId.trim()) {
+      toast.error("Veuillez renseigner un ID Discord cible.");
+      return;
+    }
+
+    startTransition(async () => {
+      try {
+        const res = await testTicketNotificationAction(targetId);
+        if (res.success && res.notified) {
+          toast.success("Notification de nouveau message de ticket envoyée en MP !");
+        } else if (res.dmClosed) {
+          toast.warning("Notification simulée : le membre a désactivé ses MP ou bloqué le bot.");
+        } else {
+          toast.error(`Échec : ${res.error}`);
+        }
+        addLog("Notification Message Ticket", {
+          success: res.success,
+          notified: res.notified,
+          dmClosed: res.dmClosed,
+          message: res.message,
+          error: res.error,
+          raw: res,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erreur inattendue";
+        toast.error(msg);
+        addLog("Notification Message Ticket", { success: false, error: msg });
       }
     });
   }
@@ -505,6 +538,33 @@ export function BotTestClient({
                   Relance
                 </Badge>
                 Relance pour réservation d&apos;entretien (fiche validée)
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm">
+                <PaperPlaneTilt className="text-primary size-4" />
+                Notification Ticket (MP Discord)
+              </CardTitle>
+              <CardDescription className="text-xs">
+                Simulez l&apos;envoi d&apos;une notification Discord envoyée au joueur lors
+                d&apos;un nouveau message dans son ticket.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start gap-2 text-xs"
+                onClick={handleTicketMessageTest}
+                disabled={isPending}
+              >
+                <Badge variant="outline" className="bg-primary/10 text-primary text-[10px]">
+                  Nouveau message
+                </Badge>
+                Nouveau message de ticket reçu
               </Button>
             </CardContent>
           </Card>

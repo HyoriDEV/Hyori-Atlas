@@ -1,6 +1,6 @@
 "use server";
 
-import { requireActivePlayer } from "@/lib/dal";
+import { getCurrentUser, requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { MessageAuthorType, TicketStatus } from "@/lib/generated/prisma/enums";
 import { serializeConversationMessage } from "@/lib/conversation";
@@ -133,5 +133,20 @@ export async function deleteConversationMessage(messageId: string): Promise<void
     messageId: message.id,
     conversationId: message.conversationId,
     deletedAt: deletedAt.toISOString(),
+  });
+}
+
+export async function markConversationAsRead(conversationId: string): Promise<void> {
+  const user = await getCurrentUser();
+  if (!user) return;
+
+  await prisma.conversationMember.updateMany({
+    where: {
+      conversationId,
+      userId: user.id,
+    },
+    data: {
+      lastReadAt: new Date(),
+    },
   });
 }

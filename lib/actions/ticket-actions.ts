@@ -10,10 +10,12 @@ import { publish } from "@/lib/services/conversation-events";
 import {
   ConversationType,
   MessageAuthorType,
+  Role,
   TicketCategory,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+import { notifyPlayerTicketMessage } from "@/lib/services/discord-bot-service";
 
 export async function createTicket(category: TicketCategory, subject: string, description: string) {
   const user = await requireActivePlayer();
@@ -40,7 +42,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
         create: {
           type: ConversationType.TICKET,
           members: {
-            create: [{ userId: user.id }],
+            create: [{ userId: user.id, lastReadAt: new Date() }],
           },
           messages: {
             create: [
@@ -146,10 +148,33 @@ export async function sendTicketMessage(
       data: { status: TicketStatus.PENDING_STAFF },
     });
 
+    await tx.conversationMember.updateMany({
+      where: {
+        conversationId: ticket.conversationId,
+        userId: user.id,
+      },
+      data: {
+        lastReadAt: newMessage.createdAt,
+      },
+    });
+
     return newMessage;
   });
 
   publish(ticket.conversationId, serializeConversationMessage(message));
+
+  // Déclencher les notifications Discord pour les autres membres du ticket (anti-spam)
+  const authorName = user.minecraftUsername ?? user.discordDisplayName ?? "Un joueur";
+  dispatchTicketMessageNotifications({
+    ticketId: ticket.id,
+    ticketSubject: ticket.subject,
+    conversationId: ticket.conversationId,
+    authorId: user.id,
+    authorName,
+    newMessageId: message.id,
+    messageBody: message.body,
+    hasImage: Boolean(message.imageUrl),
+  }).catch(() => {});
 
   revalidatePath("/player/tickets");
   revalidatePath("/staff/tickets");
@@ -194,10 +219,34 @@ export async function sendStaffTicketMessage(
       data: { status: TicketStatus.PENDING_PLAYER },
     });
 
+    await tx.conversationMember.updateMany({
+      where: {
+        conversationId: ticket.conversationId,
+        userId: staffUser.id,
+      },
+      data: {
+        lastReadAt: newMessage.createdAt,
+      },
+    });
+
     return newMessage;
   });
 
   publish(ticket.conversationId, serializeConversationMessage(message));
+
+  // Déclencher les notifications Discord pour les joueurs membres du ticket (anti-spam)
+  const authorName =
+    staffUser.minecraftUsername ?? staffUser.discordDisplayName ?? "L'équipe staff";
+  dispatchTicketMessageNotifications({
+    ticketId: ticket.id,
+    ticketSubject: ticket.subject,
+    conversationId: ticket.conversationId,
+    authorId: staffUser.id,
+    authorName,
+    newMessageId: message.id,
+    messageBody: message.body,
+    hasImage: Boolean(message.imageUrl),
+  }).catch(() => {});
 
   revalidatePath("/player/tickets");
   revalidatePath("/staff/tickets");
@@ -261,6 +310,7 @@ export async function addTicketMember(ticketId: string, playerId: string) {
     create: {
       conversationId: ticket.conversationId,
       userId: playerId,
+      lastReadAt: new Date(),
     },
   });
 
@@ -284,4 +334,88 @@ export async function removeTicketMember(ticketId: string, playerId: string) {
   revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath(`/player/tickets/${ticketId}`);
   revalidatePath("/player/tickets");
+}
+
+async function dispatchTicketMessageNotifications({
+  ticketId,
+  ticketSubject,
+  conversationId,
+  authorId,
+  authorName,
+  newMessageId,
+  messageBody,
+  hasImage,
+}: {
+  ticketId: string;
+  ticketSubject: string;
+  conversationId: string;
+  authorId: string;
+  authorName: string;
+  newMessageId: string;
+  messageBody?: string | null;
+  hasImage?: boolean;
+}): Promise<void> {
+  try {
+    // Trouver tous les membres de la conversation qui sont des joueurs et non l'auteur du message
+    const candidateMembers = await prisma.conversationMember.findMany({
+      where: {
+        conversationId,
+        userId: { not: authorId },
+        user: {
+          role: Role.PLAYER,
+        },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            discordId: true,
+          },
+        },
+      },
+    });
+
+    if (candidateMembers.length === 0) {
+      return;
+    }
+
+    // Pour chaque membre joueur, vérifier s'il avait des messages non lus antérieurs à ce nouveau message
+    for (const member of candidateMembers) {
+      if (!member.user.discordId) continue;
+
+      const lastReadThreshold = member.lastReadAt ?? member.joinedAt;
+
+      const priorUnreadMessage = await prisma.conversationMessage.findFirst({
+        where: {
+          conversationId,
+          id: { not: newMessageId },
+          deletedAt: null,
+          authorId: { not: member.userId }, // on ne compte pas les propres messages du membre
+          createdAt: { gt: lastReadThreshold },
+        },
+        select: { id: true },
+      });
+
+      // Si priorUnreadMessage est null, le joueur avait tout lu jusqu'alors : ce message est son premier non-lu !
+      // On déclenche donc une notification Discord unique en MP.
+      if (!priorUnreadMessage) {
+        const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
+
+        notifyPlayerTicketMessage({
+          discordId: member.user.discordId,
+          ticketId,
+          ticketSubject,
+          authorName,
+          messagePreview: previewText,
+        }).catch((err) => {
+          console.warn(
+            `[TicketNotification] Échec lors de la notification Discord pour ${member.userId}:`,
+            err
+          );
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("[TicketNotification] Erreur globale lors du calcul des notifications:", err);
+  }
 }
