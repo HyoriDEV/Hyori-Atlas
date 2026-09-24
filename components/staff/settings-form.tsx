@@ -13,6 +13,7 @@ import { uploadCountdownVideoAction } from "@/lib/actions/countdown-video-action
 import { refreshAllSkinsStaffAction } from "@/lib/actions/minecraft-actions";
 import { GlobalSettings } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/utils";
+import { DiscordSettingsTab, type DiscordTemplateData } from "./discord-settings-tab";
 
 interface SettingsFormProps {
   defaultValues: GlobalSettings & {
@@ -34,9 +35,10 @@ interface SettingsFormProps {
     publicLoreEnabled?: boolean;
     publicGalleryEnabled?: boolean;
   };
+  initialDiscordTemplates?: DiscordTemplateData[];
 }
 
-export function SettingsForm({ defaultValues }: SettingsFormProps) {
+export function SettingsForm({ defaultValues, initialDiscordTemplates = [] }: SettingsFormProps) {
   const { initialDate, initialTime } = useMemo(() => {
     if (!defaultValues.countdownTargetDate) return { initialDate: "", initialTime: "18:00" };
     try {
@@ -178,8 +180,9 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="public">Pages publiques</TabsTrigger>
-          <TabsTrigger value="countdown">Accueil &amp; Compte à rebours</TabsTrigger>
+          <TabsTrigger value="countdown">Accueil</TabsTrigger>
           <TabsTrigger value="minecraft">Minecraft</TabsTrigger>
+          <TabsTrigger value="discord">Discord</TabsTrigger>
         </TabsList>
 
         {/* 1. MODULES */}
@@ -627,6 +630,11 @@ export function SettingsForm({ defaultValues }: SettingsFormProps) {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* 5. DISCORD */}
+        <TabsContent value="discord" keepMounted={true}>
+          <DiscordSettingsTab initialTemplates={initialDiscordTemplates} />
         </TabsContent>
       </Tabs>
 

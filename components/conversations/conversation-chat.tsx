@@ -21,6 +21,7 @@ import { validateImageFile } from "@/lib/upload-config";
 import {
   editConversationMessage,
   deleteConversationMessage,
+  markConversationAsRead,
 } from "@/lib/actions/conversation-actions";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
 import { MessageAuthorType, TicketStatus } from "@/lib/generated/prisma/enums";
@@ -159,6 +160,10 @@ export function ConversationChat({
               ? previous.map((existing) => (existing.id === message.id ? message : existing))
               : [...previous, message]
           );
+
+          if (typeof document !== "undefined" && document.visibilityState === "visible") {
+            markConversationAsRead(conversationId).catch(() => {});
+          }
         }
       } catch (err) {
         console.error("[ConversationChat] Erreur lors de la réception d'un événement SSE:", err);
@@ -166,6 +171,22 @@ export function ConversationChat({
     };
     return () => eventSource.close();
   }, [conversationId, viewerIsStaff, router]);
+
+  useEffect(() => {
+    function handleVisibilityOrFocus() {
+      if (document.visibilityState === "visible") {
+        markConversationAsRead(conversationId).catch(() => {});
+      }
+    }
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, [conversationId]);
 
   useEffect(() => {
     if (isInitialMount.current) {

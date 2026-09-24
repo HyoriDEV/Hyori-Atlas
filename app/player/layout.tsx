@@ -2,10 +2,8 @@ import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import {
   CharacterSheetStatus,
-  CharacterStatus,
   RegistrationStatus,
   Role,
-  TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import {
   isRegistrationStatusAtLeast,
@@ -15,6 +13,7 @@ import {
   roleLabels,
 } from "@/lib/navigation";
 import { AppShell, type AppShellNavGroup } from "@/components/app-shell/app-shell";
+import { getPlayerBadgeCounts } from "@/lib/actions/sidebar-actions";
 
 export default async function PlayerLayout({ children }: { children: React.ReactNode }) {
   const user = await getPlayerState();
@@ -50,25 +49,17 @@ export default async function PlayerLayout({ children }: { children: React.React
     );
   }
 
-  const [activeSheet, pendingTicketsCount] = await Promise.all([
+  const [characterSheet, badgeMap] = await Promise.all([
     prisma.characterSheet.findFirst({
-      where: { playerId: user.id, status: CharacterStatus.ACTIVE },
-      orderBy: { createdAt: "desc" },
+      where: { playerId: user.id },
+      orderBy: [{ status: "asc" }, { createdAt: "desc" }],
+      select: { reviewStatus: true },
     }),
-    prisma.ticket.count({
-      where: {
-        conversation: { members: { some: { userId: user.id } } },
-        status: TicketStatus.PENDING_PLAYER,
-      },
-    }),
+    getPlayerBadgeCounts(user.id),
   ]);
 
-  const characterSheet =
-    activeSheet ??
-    (await prisma.characterSheet.findFirst({
-      where: { playerId: user.id },
-      orderBy: { createdAt: "desc" },
-    }));
+  const staffCommentsCount = badgeMap["/player/character-sheet"] ?? 0;
+  const unreadTicketsCount = badgeMap["/player/tickets"] ?? 0;
 
   const isSheetValidated =
     characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED ||
@@ -94,10 +85,12 @@ export default async function PlayerLayout({ children }: { children: React.React
             locked = true;
           }
           const fullWidth = item.fullWidth;
-          const hasNotification =
-            (item.href === "/player/character-sheet" &&
-              (characterSheet?.hasUnreadFeedback ?? false)) ||
-            (item.href === "/player/tickets" && pendingTicketsCount > 0);
+          let badgeCount: number | undefined = undefined;
+          if (item.href === "/player/character-sheet") {
+            badgeCount = staffCommentsCount;
+          } else if (item.href === "/player/tickets") {
+            badgeCount = unreadTicketsCount;
+          }
 
           return {
             label: item.label,
@@ -105,7 +98,8 @@ export default async function PlayerLayout({ children }: { children: React.React
             iconKey: item.iconKey,
             locked,
             fullWidth,
-            hasNotification,
+            badgeCount,
+            hasNotification: Boolean(badgeCount && badgeCount > 0),
           };
         }),
     }))

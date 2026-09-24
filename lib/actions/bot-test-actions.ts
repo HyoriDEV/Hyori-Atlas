@@ -6,6 +6,8 @@ import {
   checkBotHealth,
   notifyPlayerCharacterSheetStatus,
   notifyPlayerRegistrationStatus,
+  notifyPlayerTicketMessage,
+  notifyTicketCreated,
   sendInterviewReminders,
   syncPlayerWhitelistClassRole,
   type BotHealthResponse,
@@ -13,6 +15,7 @@ import {
   type BotRoleSyncResult,
   type CharacterSheetNotificationStatus,
 } from "@/lib/services/discord-bot-service";
+import { getTicketCreationNotificationConfig } from "@/lib/services/discord-template-service";
 
 export async function testBotHealthAction(): Promise<BotHealthResponse> {
   await requireRole([Role.ADMIN]);
@@ -98,4 +101,53 @@ export async function testInterviewReminderAction(
       (result.sent > 0 ? "Notification de relance d'entretien envoyée avec succès !" : undefined),
     error: result.errors?.join(", ") || result.error,
   };
+}
+
+export async function testTicketNotificationAction(
+  targetDiscordId: string
+): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const cleanDiscordId = targetDiscordId.trim();
+  if (!cleanDiscordId || !/^\d{16,21}$/.test(cleanDiscordId)) {
+    return {
+      success: false,
+      notified: false,
+      error: "ID Discord invalide (doit comporter entre 16 et 21 chiffres).",
+    };
+  }
+
+  return notifyPlayerTicketMessage({
+    discordId: cleanDiscordId,
+    ticketId: "test-ticket",
+    ticketSubject: "Question RP — Test de notification",
+    authorName: "Équipe Staff (Test)",
+    messagePreview:
+      "Ceci est un test de notification Discord suite à un nouveau message sur votre ticket.",
+  });
+}
+
+export async function testTicketCreatedNotificationAction(): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const config = await getTicketCreationNotificationConfig({
+    author: "JoueurTest",
+    subject: "Demande de terrain RP (Test)",
+    category: "Demande RP",
+    description: "Ceci est un test de notification d'ouverture de ticket dans le salon staff.",
+    ticketId: "test-ticket-created",
+    url: `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/test-ticket-created`,
+  });
+
+  return notifyTicketCreated({
+    channelId: config.channelId,
+    mentionRoleId: config.mentionRoleId,
+    ticketId: "test-ticket-created",
+    ticketSubject: "Demande de terrain RP (Test)",
+    ticketCategory: "Demande RP",
+    authorName: "JoueurTest",
+    ticketDescription:
+      "Ceci est un test de notification d'ouverture de ticket dans le salon staff.",
+    override: config.override,
+  });
 }

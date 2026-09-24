@@ -144,6 +144,7 @@ model User {
   createdBdaReports     BdaReport[]                   @relation("BdaReportCreator")
   bdaStaffMemberships   BdaStaffMember[]
   updatedGlobalSettings GlobalSettings[]
+  updatedDiscordTemplates DiscordNotificationTemplate[] @relation("DiscordTemplateUpdatedBy")
   minecraftAuthCodes    MinecraftAuthCode[]
   rpGroupId             String?
   rpGroup               RpGroup?                      @relation("RpGroupMembers", fields: [rpGroupId], references: [id], onDelete: SetNull)
@@ -418,10 +419,11 @@ model Conversation {
 }
 
 model ConversationMember {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   conversationId String
   userId         String
-  joinedAt       DateTime @default(now())
+  joinedAt       DateTime  @default(now())
+  lastReadAt     DateTime? @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -569,6 +571,23 @@ model GlobalSettings {
   updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
 
   @@map("global_settings")
+}
+
+model DiscordNotificationTemplate {
+  id          String   @id
+  enabled     Boolean  @default(true)
+  title       String?  @db.VarChar(200)
+  description String?  @db.VarChar(2000)
+  buttonLabel String?  @db.VarChar(100)
+  buttonUrl   String?  @db.VarChar(500)
+  channelId   String?  @db.VarChar(50)
+  roleId      String?  @db.VarChar(50)
+  updatedAt   DateTime @updatedAt
+  updatedById String?
+
+  updatedBy User? @relation("DiscordTemplateUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("discord_notification_templates")
 }
 
 model MinecraftAuthCode {
