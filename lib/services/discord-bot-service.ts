@@ -87,7 +87,7 @@ export async function callDiscordBot<T = unknown>(
       const errorMessage =
         (responseData as { message?: string })?.message ||
         `Discord bot returned HTTP ${res.status}: ${res.statusText}`;
-      console.warn(`[DiscordBot] Request to ${endpoint} failed: ${errorMessage}`);
+      console.error(`[DiscordBot] Request to ${targetUrl} failed (${res.status}): ${errorMessage}`);
       return {
         success: false,
         error: errorMessage,
@@ -105,7 +105,7 @@ export async function callDiscordBot<T = unknown>(
     const message = err?.message
       ? `${err.message}${details} [Cible: ${targetUrl}]`
       : `Erreur de connexion inconnue [Cible: ${targetUrl}]`;
-    console.warn(`[DiscordBot] Network/connection error while calling ${targetUrl}:`, error);
+    console.error(`[DiscordBot] Network/connection error while calling ${targetUrl}:`, error);
     return {
       success: false,
       error: message,
@@ -447,4 +447,55 @@ export async function notifyTicketCreated(
       message: "Ticket creation notification sent successfully",
     }
   );
+}
+
+export interface DiscordRoleInfo {
+  id: string;
+  name: string;
+  color?: string;
+  isWhitelist: boolean;
+  isSanctioned: boolean;
+  isStaff: boolean;
+  isClass: boolean;
+}
+
+export interface DiscordMemberRolesSummary {
+  discordId: string;
+  inGuild: boolean;
+  username?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  hasWhitelistRole: boolean;
+  hasSanctionedRole?: boolean;
+  classRoleEnums: CharacterClass[];
+  roles: DiscordRoleInfo[];
+}
+
+export interface DiscordBatchRolesResult {
+  success: boolean;
+  members: Record<string, DiscordMemberRolesSummary>;
+  error?: string;
+}
+
+export async function fetchDiscordBatchRoles(
+  discordIds: string[]
+): Promise<DiscordBatchRolesResult> {
+  const result = await callDiscordBot<{ members: Record<string, DiscordMemberRolesSummary> }>(
+    "/members/batch-roles",
+    "POST",
+    { discordIds }
+  );
+
+  if (!result.success || !result.data) {
+    return {
+      success: false,
+      members: {},
+      error: result.error || "Impossible de récupérer les rôles des membres Discord.",
+    };
+  }
+
+  return {
+    success: true,
+    members: result.data.members || {},
+  };
 }

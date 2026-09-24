@@ -31,15 +31,32 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function InterviewReminderDialog() {
-  const [open, setOpen] = useState(false);
+export interface InterviewReminderDialogProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  trigger?: React.ReactNode;
+}
+
+export function InterviewReminderDialog({
+  open: externalOpen,
+  onOpenChange: externalOnOpenChange,
+  trigger,
+}: InterviewReminderDialogProps = {}) {
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = externalOpen !== undefined;
+  const open = isControlled ? externalOpen : internalOpen;
+
   const [candidates, setCandidates] = useState<EligibleInterviewReminderCandidate[] | null>(null);
   const [excludedIds, setExcludedIds] = useState<Set<string>>(new Set());
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   async function handleOpenChange(isOpen: boolean) {
-    setOpen(isOpen);
+    if (isControlled) {
+      externalOnOpenChange?.(isOpen);
+    } else {
+      setInternalOpen(isOpen);
+    }
     if (isOpen) {
       setIsLoadingCandidates(true);
       setExcludedIds(new Set());
@@ -116,7 +133,7 @@ export function InterviewReminderDialog() {
           }
         }
 
-        setOpen(false);
+        handleOpenChange(false);
       } catch (err) {
         toast.error(
           err instanceof Error ? err.message : "Erreur inattendue lors de l'envoi des relances."
@@ -131,14 +148,18 @@ export function InterviewReminderDialog() {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger
-        render={
-          <Button variant="outline" size="sm" className="gap-1.5">
-            <PaperPlaneTilt className="size-4" />
-            Relancer
-          </Button>
-        }
-      />
+      {trigger !== undefined ? (
+        trigger
+      ) : (
+        <DialogTrigger
+          render={
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <PaperPlaneTilt className="size-4" />
+              Relancer
+            </Button>
+          }
+        />
+      )}
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-2">
@@ -303,7 +324,12 @@ export function InterviewReminderDialog() {
         )}
 
         <DialogFooter className="mt-2">
-          <Button variant="outline" size="sm" onClick={() => setOpen(false)} disabled={isPending}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleOpenChange(false)}
+            disabled={isPending}
+          >
             {totalCount === 0 ? "Fermer" : "Annuler"}
           </Button>
 

@@ -5,7 +5,11 @@ import { toast } from "sonner";
 import { Check } from "@phosphor-icons/react";
 
 import { promoteToWhitelisted } from "@/lib/actions/staff-review-actions";
-import { CHARACTER_CLASSES, type CharacterClass } from "@/lib/character-classes";
+import {
+  CHARACTER_CLASSES,
+  resolveToCharacterClass,
+  type CharacterClass,
+} from "@/lib/character-classes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +26,11 @@ export interface AtlasPromoteButtonProps {
   playerId: string;
   pseudo: string;
   characterSheetId?: string;
+  primaryClass?: { id: string; name: string } | null;
+  secondaryClass?: { id: string; name: string } | null;
+  primaryRole?: { id: string; name: string } | null;
+  secondaryRole?: { id: string; name: string } | null;
+  assignedClass?: CharacterClass | null;
   primaryClassId?: string | null;
   secondaryClassId?: string | null;
 }
@@ -30,24 +39,36 @@ export function AtlasPromoteButton({
   playerId,
   pseudo,
   characterSheetId,
+  primaryClass = null,
+  secondaryClass = null,
+  primaryRole = null,
+  secondaryRole = null,
+  assignedClass = null,
   primaryClassId = null,
   secondaryClassId = null,
 }: AtlasPromoteButtonProps) {
+  const primaryChoice =
+    resolveToCharacterClass(primaryClass?.name) ?? resolveToCharacterClass(primaryClassId) ?? null;
+  const secondaryChoice =
+    resolveToCharacterClass(secondaryClass?.name) ??
+    resolveToCharacterClass(secondaryClassId) ??
+    null;
+
+  const initialClass = assignedClass ?? primaryChoice ?? null;
+
   const [open, setOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(
-    (primaryClassId as CharacterClass | null) ?? null
-  );
+  const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(initialClass);
   const [isPending, startTransition] = useTransition();
 
-  const primaryChoice = primaryClassId as CharacterClass | null;
-  const secondaryChoice = secondaryClassId as CharacterClass | null;
-  const hasPreferences = !!(primaryChoice || secondaryChoice);
+  const hasPreferences = Boolean(
+    primaryClass || secondaryClass || primaryChoice || secondaryChoice
+  );
 
   function handleOpenChange(newOpen: boolean) {
     if (!isPending) {
       setOpen(newOpen);
       if (newOpen) {
-        setSelectedClass((primaryClassId as CharacterClass | null) ?? null);
+        setSelectedClass(assignedClass ?? primaryChoice ?? null);
       }
     }
   }
@@ -60,11 +81,20 @@ export function AtlasPromoteButton({
 
     startTransition(async () => {
       try {
-        await promoteToWhitelisted(playerId, selectedClass, characterSheetId);
+        const res = await promoteToWhitelisted(playerId, selectedClass, characterSheetId);
         const classDef = CHARACTER_CLASSES.find((c) => c.id === selectedClass);
-        toast.success(
-          `${pseudo} a été whitelisté avec succès avec la classe ${classDef?.singularLabel ?? selectedClass} !`
-        );
+        const label = classDef?.singularLabel ?? selectedClass;
+
+        if (res.discordSynced) {
+          toast.success(
+            `${pseudo} a été whitelisté avec succès avec la classe ${label} ! Rôles Discord attribués.`
+          );
+        } else {
+          toast.warning(
+            `${pseudo} a été whitelisté en base (${label}), mais les rôles Discord n'ont pas pu être attribués : ${res.discordError ?? "Erreur bot"}`,
+            { duration: 8000 }
+          );
+        }
         setOpen(false);
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
@@ -96,18 +126,30 @@ export function AtlasPromoteButton({
                   Souhaits formulés par le joueur :
                 </span>
                 <div className="mt-1.5 flex flex-wrap gap-2">
-                  {primaryChoice && (
+                  {(primaryClass || primaryChoice) && (
                     <Badge variant="outline" className="gap-1">
                       <span className="text-muted-foreground">Principal :</span>
-                      {CHARACTER_CLASSES.find((c) => c.id === primaryChoice)?.singularLabel ??
-                        primaryChoice}
+                      <span className="text-foreground font-semibold">
+                        {primaryClass?.name ??
+                          CHARACTER_CLASSES.find((c) => c.id === primaryChoice)?.singularLabel ??
+                          primaryChoice}
+                      </span>
+                      {primaryRole?.name && (
+                        <span className="text-muted-foreground">({primaryRole.name})</span>
+                      )}
                     </Badge>
                   )}
-                  {secondaryChoice && (
+                  {(secondaryClass || secondaryChoice) && (
                     <Badge variant="outline" className="gap-1">
                       <span className="text-muted-foreground">Secondaire :</span>
-                      {CHARACTER_CLASSES.find((c) => c.id === secondaryChoice)?.singularLabel ??
-                        secondaryChoice}
+                      <span className="text-foreground font-semibold">
+                        {secondaryClass?.name ??
+                          CHARACTER_CLASSES.find((c) => c.id === secondaryChoice)?.singularLabel ??
+                          secondaryChoice}
+                      </span>
+                      {secondaryRole?.name && (
+                        <span className="text-muted-foreground">({secondaryRole.name})</span>
+                      )}
                     </Badge>
                   )}
                 </div>

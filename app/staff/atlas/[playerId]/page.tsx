@@ -269,6 +269,11 @@ export default async function AtlasPlayerPage({
             playerId={player.id}
             pseudo={playerName}
             characterSheetId={sheet?.id}
+            primaryClass={sheet?.primaryClass ?? null}
+            secondaryClass={sheet?.secondaryClass ?? null}
+            primaryRole={sheet?.primaryRole ?? null}
+            secondaryRole={sheet?.secondaryRole ?? null}
+            assignedClass={sheet?.assignedClass ?? null}
             primaryClassId={sheet?.primaryClassId ?? null}
             secondaryClassId={sheet?.secondaryClassId ?? null}
           />
