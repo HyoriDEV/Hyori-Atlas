@@ -7,6 +7,8 @@ import {
   ClockCountdown,
   DotsThreeVertical,
   MagnifyingGlass,
+  PaperPlaneTilt,
+  ShieldCheck,
   Table as TableIcon,
   Trash,
   UsersThree,
@@ -40,6 +42,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CreateInterviewSlotDialog } from "./create-interview-slot-dialog";
 import { InterviewReminderDialog } from "./interview-reminder-dialog";
+import { WhitelistRoleVerificationDialog } from "./whitelist-role-verification-dialog";
 import { InterviewCalendarView } from "./interview-calendar-view";
 import { InterviewTableView } from "./interview-table-view";
 import type { InterviewSlotItem, InterviewSlotsKPIs } from "./types";
@@ -85,6 +88,8 @@ export function InterviewSlotsManager({
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([]);
   const [confirmCleanPast, setConfirmCleanPast] = useState(false);
   const [confirmBatchDelete, setConfirmBatchDelete] = useState(false);
+  const [isReminderOpen, setIsReminderOpen] = useState(false);
+  const [isVerifyRolesOpen, setIsVerifyRolesOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   // Filtrage combiné : statut + recherche textuelle
@@ -227,28 +232,45 @@ export function InterviewSlotsManager({
         </div>
 
         <div className="flex items-center gap-2">
-          <InterviewReminderDialog />
-
           <DropdownMenu>
             <DropdownMenuTrigger
               render={<Button variant="outline" size="sm" className="gap-1.5" />}
             >
               <DotsThreeVertical className="size-4" />
-              Options
+              Actions
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-60">
               <DropdownMenuItem
                 onClick={() => setConfirmCleanPast(true)}
                 disabled={isPending || counts.past === 0}
                 className="text-destructive focus:text-destructive gap-2"
               >
                 <Trash className="size-4" />
-                Nettoyer les créneaux passés ({counts.past})
+                Nettoyer les créneaux ({counts.past})
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsReminderOpen(true)} className="gap-2">
+                <PaperPlaneTilt className="size-4" />
+                Relancer les fiches validées
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsVerifyRolesOpen(true)} className="gap-2">
+                <ShieldCheck className="size-4" />
+                Vérifier les rôles whitelist
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
           <CreateInterviewSlotDialog />
+
+          <InterviewReminderDialog
+            open={isReminderOpen}
+            onOpenChange={setIsReminderOpen}
+            trigger={null}
+          />
+
+          <WhitelistRoleVerificationDialog
+            open={isVerifyRolesOpen}
+            onOpenChange={setIsVerifyRolesOpen}
+          />
         </div>
       </div>
 

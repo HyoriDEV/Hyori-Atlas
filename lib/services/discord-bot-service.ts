@@ -448,3 +448,54 @@ export async function notifyTicketCreated(
     }
   );
 }
+
+export interface DiscordRoleInfo {
+  id: string;
+  name: string;
+  color?: string;
+  isWhitelist: boolean;
+  isSanctioned: boolean;
+  isStaff: boolean;
+  isClass: boolean;
+}
+
+export interface DiscordMemberRolesSummary {
+  discordId: string;
+  inGuild: boolean;
+  username?: string | null;
+  displayName?: string | null;
+  avatarUrl?: string | null;
+  hasWhitelistRole: boolean;
+  hasSanctionedRole?: boolean;
+  classRoleEnums: CharacterClass[];
+  roles: DiscordRoleInfo[];
+}
+
+export interface DiscordBatchRolesResult {
+  success: boolean;
+  members: Record<string, DiscordMemberRolesSummary>;
+  error?: string;
+}
+
+export async function fetchDiscordBatchRoles(
+  discordIds: string[]
+): Promise<DiscordBatchRolesResult> {
+  const result = await callDiscordBot<{ members: Record<string, DiscordMemberRolesSummary> }>(
+    "/members/batch-roles",
+    "POST",
+    { discordIds }
+  );
+
+  if (!result.success || !result.data) {
+    return {
+      success: false,
+      members: {},
+      error: result.error || "Impossible de récupérer les rôles des membres Discord.",
+    };
+  }
+
+  return {
+    success: true,
+    members: result.data.members || {},
+  };
+}
