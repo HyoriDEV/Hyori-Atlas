@@ -142,23 +142,39 @@ export function TicketMembersManager({
                 key={member.userId}
                 className="flex items-center justify-between rounded-lg border p-2"
               >
-                <Link
-                  href={`/staff/atlas/${member.userId}`}
-                  className="flex items-center gap-3 transition-opacity hover:opacity-80"
-                  title={`Voir la fiche Atlas de ${name}`}
-                >
-                  {member.minecraftUsername ? (
-                    <SkinHead size="sm" username={member.minecraftUsername} />
-                  ) : (
-                    <Avatar size="sm">
-                      <AvatarImage src={member.discordAvatarUrl ?? undefined} alt={name} />
-                      <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium hover:underline">{name}</span>
+                {readOnly ? (
+                  <div className="flex items-center gap-3">
+                    {member.minecraftUsername ? (
+                      <SkinHead size="sm" username={member.minecraftUsername} />
+                    ) : (
+                      <Avatar size="sm">
+                        <AvatarImage src={member.discordAvatarUrl ?? undefined} alt={name} />
+                        <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">{name}</span>
+                    </div>
                   </div>
-                </Link>
+                ) : (
+                  <Link
+                    href={`/staff/atlas/${member.userId}`}
+                    className="flex items-center gap-3 transition-opacity hover:opacity-80"
+                    title={`Voir la fiche Atlas de ${name}`}
+                  >
+                    {member.minecraftUsername ? (
+                      <SkinHead size="sm" username={member.minecraftUsername} />
+                    ) : (
+                      <Avatar size="sm">
+                        <AvatarImage src={member.discordAvatarUrl ?? undefined} alt={name} />
+                        <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium hover:underline">{name}</span>
+                    </div>
+                  </Link>
+                )}
                 {!readOnly && (
                   <Button
                     variant="ghost"
