@@ -97,7 +97,6 @@ export default async function TicketStaffDetailPage({
     create: {
       conversationId: ticket.conversationId,
       userId: staffUser.id,
-      isExplicitMember: false,
       lastReadAt: new Date(),
     },
     update: {
@@ -127,21 +126,11 @@ export default async function TicketStaffDetailPage({
   const messages = ticket.conversation.messages || [];
   const playerName = ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
 
-  const explicitMembers = ticket.conversation.members.filter(
-    (m) => m.isExplicitMember || m.userId === ticket.playerId
-  );
-
-  const membersData = explicitMembers.map((m) => ({
+  const membersData = ticket.conversation.members.map((m) => ({
     userId: m.userId,
     minecraftUsername: m.user.minecraftUsername,
     discordDisplayName: m.user.discordDisplayName,
     discordAvatarUrl: m.user.discordAvatarUrl,
-  }));
-
-  const readReceiptMembers = explicitMembers.map((m) => ({
-    userId: m.userId,
-    displayName: m.user.minecraftUsername ?? m.user.discordDisplayName ?? m.user.discordUsername,
-    lastReadAt: m.lastReadAt ? m.lastReadAt.toISOString() : null,
   }));
 
   return (
@@ -181,7 +170,6 @@ export default async function TicketStaffDetailPage({
           <ConversationChat
             conversationId={ticket.conversationId}
             initialMessages={messages.map((m) => serializeConversationMessage(m, true))}
-            readReceiptMembers={readReceiptMembers}
             viewerId={staffUser.id}
             viewerIsStaff
             sendAction={async (cId, body, imageUrl) => {

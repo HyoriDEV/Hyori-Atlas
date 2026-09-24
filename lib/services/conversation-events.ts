@@ -30,7 +30,6 @@ export type ConversationEventPayload =
   | { type: "UPDATE"; message: SerializedConversationMessage }
   | { type: "DELETE"; messageId: string; conversationId: string; deletedAt?: string }
   | { type: "STATUS_CHANGE"; status: TicketStatus; conversationId?: string }
-  | { type: "READ"; userId: string; conversationId: string; lastReadAt: string }
   | SerializedConversationMessage;
 
 type Subscriber = (event: ConversationEventPayload) => void;
