@@ -31,6 +31,7 @@ type TicketListItem = {
   subject: string;
   status: TicketStatus;
   createdAt: Date;
+  isUnread?: boolean;
   conversation?: {
     members: {
       userId: string;
@@ -69,14 +70,13 @@ function TicketList({
   return (
     <div className="flex flex-col gap-3">
       {tickets.map((ticket) => {
-        const isPendingPlayer = ticket.status === TicketStatus.PENDING_PLAYER;
         return (
           <Link key={ticket.id} href={`/player/tickets/${ticket.id}`} className="group relative">
             <Card
               size="sm"
               className="hover:border-ring/40 relative overflow-visible transition-colors"
             >
-              {isPendingPlayer && <UnreadDot placement="card" title="En attente de ta réponse" />}
+              {ticket.isUnread && <UnreadDot placement="card" title="Nouveau message non lu" />}
               <CardContent className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
@@ -166,6 +166,15 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
                 },
               },
             },
+            messages: {
+              where: {
+                deletedAt: null,
+                authorId: { not: user.id },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { createdAt: true },
+            },
           },
         },
       },
@@ -189,12 +198,36 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
                 },
               },
             },
+            messages: {
+              where: {
+                deletedAt: null,
+                authorId: { not: user.id },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { createdAt: true },
+            },
           },
         },
       },
       orderBy: { createdAt: "desc" },
     }),
   ]);
+
+  const formatTickets = (list: typeof activeTickets) =>
+    list.map((ticket) => {
+      const userMember = ticket.conversation?.members.find((m) => m.userId === user.id);
+      const lastOtherMessage = ticket.conversation?.messages?.[0];
+      const isUnread = Boolean(
+        lastOtherMessage &&
+          lastOtherMessage.createdAt >
+            (userMember?.lastReadAt ?? userMember?.joinedAt ?? new Date(0))
+      );
+      return {
+        ...ticket,
+        isUnread,
+      };
+    });
 
   return (
     <div className="flex flex-col gap-6">
@@ -212,14 +245,14 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
       >
         <TabsContent value="active">
           <TicketList
-            tickets={activeTickets}
+            tickets={formatTickets(activeTickets)}
             emptyTitle="Rien à voir pour l'instant !"
             emptyDescription="Pose une question ou signale un problème au staff ici."
           />
         </TabsContent>
         <TabsContent value="archived">
           <TicketList
-            tickets={archivedTickets}
+            tickets={formatTickets(archivedTickets)}
             emptyTitle="Rien à voir pour l'instant !"
             emptyDescription="Les tickets archivés par le staff apparaîtront ici."
           />

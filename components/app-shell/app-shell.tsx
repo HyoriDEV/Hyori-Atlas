@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -28,6 +29,7 @@ import {
 
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/actions/auth-actions";
+import { getSidebarBadgeCountsAction } from "@/lib/actions/sidebar-actions";
 import type { NavIconKey } from "@/lib/navigation";
 import {
   Sidebar,
@@ -87,6 +89,8 @@ export interface AppShellNavEntry {
   locked?: boolean;
   fullWidth?: boolean;
   hasNotification?: boolean;
+  badgeCount?: number;
+  maxBadgeCount?: number;
 }
 
 export interface AppShellNavGroup {
@@ -117,6 +121,43 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const initial = user.name.charAt(0).toUpperCase();
+  const [countsOverride, setCountsOverride] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function poll() {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+      try {
+        const counts = await getSidebarBadgeCountsAction();
+        if (isMounted && counts) {
+          setCountsOverride(counts);
+        }
+      } catch {
+        // Ignorer les erreurs réseau passagères lors du polling
+      }
+    }
+
+    const interval = setInterval(poll, 15000);
+
+    function handleVisibilityOrFocus() {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") {
+        poll();
+      }
+    }
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, []);
 
   const groups: AppShellNavGroup[] = (navGroups ?? (navItems ? [{ items: navItems }] : []))
     .map((group) => {
@@ -238,11 +279,33 @@ export function AppShell({
                           <Icon className="size-4" />
                           <span>{item.label}</span>
                         </SidebarMenuButton>
-                        {item.hasNotification && (
-                          <SidebarMenuBadge>
-                            <span className="bg-primary size-2 rounded-full" />
-                          </SidebarMenuBadge>
-                        )}
+                        {(() => {
+                          const currentBadgeCount =
+                            typeof countsOverride[item.href] === "number"
+                              ? countsOverride[item.href]
+                              : item.badgeCount;
+
+                          if (typeof currentBadgeCount === "number" && currentBadgeCount > 0) {
+                            const max = item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99);
+                            return (
+                              <SidebarMenuBadge className="right-2">
+                                <span className="bg-primary/15 text-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums">
+                                  {currentBadgeCount > max ? `${max}+` : currentBadgeCount}
+                                </span>
+                              </SidebarMenuBadge>
+                            );
+                          }
+
+                          if (item.hasNotification && typeof countsOverride[item.href] !== "number") {
+                            return (
+                              <SidebarMenuBadge>
+                                <span className="bg-primary size-2 rounded-full" />
+                              </SidebarMenuBadge>
+                            );
+                          }
+
+                          return null;
+                        })()}
                       </SidebarMenuItem>
                     );
                   })}

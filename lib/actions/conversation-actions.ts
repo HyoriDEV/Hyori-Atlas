@@ -140,12 +140,19 @@ export async function markConversationAsRead(conversationId: string): Promise<vo
   const user = await getCurrentUser();
   if (!user) return;
 
-  await prisma.conversationMember.updateMany({
+  await prisma.conversationMember.upsert({
     where: {
+      conversationId_userId: {
+        conversationId,
+        userId: user.id,
+      },
+    },
+    create: {
       conversationId,
       userId: user.id,
+      lastReadAt: new Date(),
     },
-    data: {
+    update: {
       lastReadAt: new Date(),
     },
   });

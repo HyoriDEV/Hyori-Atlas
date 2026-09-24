@@ -260,12 +260,19 @@ export async function sendStaffTicketMessage(
       data: { status: TicketStatus.PENDING_PLAYER },
     });
 
-    await tx.conversationMember.updateMany({
+    await tx.conversationMember.upsert({
       where: {
+        conversationId_userId: {
+          conversationId: ticket.conversationId,
+          userId: staffUser.id,
+        },
+      },
+      create: {
         conversationId: ticket.conversationId,
         userId: staffUser.id,
+        lastReadAt: newMessage.createdAt,
       },
-      data: {
+      update: {
         lastReadAt: newMessage.createdAt,
       },
     });

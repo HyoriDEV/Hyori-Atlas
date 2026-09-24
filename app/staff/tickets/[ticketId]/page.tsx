@@ -86,6 +86,24 @@ export default async function TicketStaffDetailPage({
     notFound();
   }
 
+  // Marquer immédiatement la conversation comme lue pour ce membre du staff
+  await prisma.conversationMember.upsert({
+    where: {
+      conversationId_userId: {
+        conversationId: ticket.conversationId,
+        userId: staffUser.id,
+      },
+    },
+    create: {
+      conversationId: ticket.conversationId,
+      userId: staffUser.id,
+      lastReadAt: new Date(),
+    },
+    update: {
+      lastReadAt: new Date(),
+    },
+  });
+
   const allPlayers = await prisma.user.findMany({
     select: {
       id: true,

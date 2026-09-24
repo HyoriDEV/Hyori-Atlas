@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -42,7 +41,7 @@ export default async function TicketsStaffListPage(props: {
   searchParams: Promise<{ category?: string; tab?: string; page?: string; pageSize?: string }>;
 }) {
   const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
-  await requireRole(item.roles);
+  const staffUser = await requireRole(item.roles);
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -72,7 +71,26 @@ export default async function TicketsStaffListPage(props: {
         ...catFilter,
         status: isArchived ? TicketStatus.ARCHIVED : { not: TicketStatus.ARCHIVED },
       },
-      include: { player: true },
+      include: {
+        player: true,
+        conversation: {
+          select: {
+            members: {
+              where: { userId: staffUser.id },
+              select: { lastReadAt: true, joinedAt: true },
+            },
+            messages: {
+              where: {
+                deletedAt: null,
+                authorId: { not: staffUser.id },
+              },
+              orderBy: { createdAt: "desc" },
+              take: 1,
+              select: { createdAt: true },
+            },
+          },
+        },
+      },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -116,20 +134,20 @@ export default async function TicketsStaffListPage(props: {
               </TableRow>
             ) : (
               tickets.map((ticket) => {
-                const isPendingStaff = ticket.status === TicketStatus.PENDING_STAFF;
+                const member = ticket.conversation?.members[0];
+                const lastMessage = ticket.conversation?.messages[0];
+                const isUnread = Boolean(
+                  lastMessage && (!member || lastMessage.createdAt > (member.lastReadAt ?? member.joinedAt))
+                );
                 const playerName =
                   ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
                 return (
                   <TicketTableRow key={ticket.id} href={`/staff/tickets/${ticket.id}`}>
                     <TableCell className="relative pl-6">
-                      {isPendingStaff && (
-                        <UnreadDot placement="table" title="En attente du staff" />
+                      {isUnread && (
+                        <UnreadDot placement="table" title="Nouveau(x) message(s) non lu(s)" />
                       )}
-                      <Link
-                        href={`/staff/atlas/${ticket.player.id}`}
-                        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
-                        title={`Voir la fiche Atlas de ${playerName}`}
-                      >
+                      <div className="inline-flex items-center gap-2">
                         {ticket.player.minecraftUsername ? (
                           <SkinHead
                             size="sm"
@@ -145,8 +163,8 @@ export default async function TicketsStaffListPage(props: {
                             <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
                         )}
-                        <span className="font-medium hover:underline">{playerName}</span>
-                      </Link>
+                        <span className="font-medium">{playerName}</span>
+                      </div>
                     </TableCell>
                     <TableCell>
                       <Badge variant="secondary" className="text-xs">
