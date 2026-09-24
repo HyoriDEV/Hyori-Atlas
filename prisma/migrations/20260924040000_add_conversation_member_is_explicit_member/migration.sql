@@ -2,11 +2,19 @@
 ALTER TABLE "conversation_members" ADD COLUMN "isExplicitMember" BOOLEAN NOT NULL DEFAULT true;
 
 -- For tickets, set isExplicitMember = false for staff members who are not the ticket creator
-UPDATE "conversation_members" cm
+UPDATE "conversation_members"
 SET "isExplicitMember" = false
-FROM "conversations" c
-JOIN "tickets" t ON t."conversationId" = c."id"
-JOIN "users" u ON u."id" = cm."userId"
-WHERE cm."conversationId" = c."id"
-  AND cm."userId" != t."playerId"
-  AND u."role" != 'PLAYER';
+WHERE "userId" NOT IN (
+    SELECT t."playerId"
+    FROM "tickets" t
+    WHERE t."conversationId" = "conversation_members"."conversationId"
+)
+AND "userId" IN (
+    SELECT u."id"
+    FROM "users" u
+    WHERE u."role" != 'PLAYER'
+)
+AND "conversationId" IN (
+    SELECT t."conversationId"
+    FROM "tickets" t
+);
