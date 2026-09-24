@@ -93,12 +93,14 @@ export default async function TicketDetailPage({
 
   const messages = ticket.conversation.messages || [];
 
-  const membersData = ticket.conversation.members.map((m) => ({
-    userId: m.userId,
-    minecraftUsername: m.user.minecraftUsername,
-    discordDisplayName: m.user.discordDisplayName,
-    discordAvatarUrl: m.user.discordAvatarUrl,
-  }));
+  const membersData = ticket.conversation.members
+    .filter((m) => m.user.role === Role.PLAYER)
+    .map((m) => ({
+      userId: m.userId,
+      minecraftUsername: m.user.minecraftUsername,
+      discordDisplayName: m.user.discordDisplayName,
+      discordAvatarUrl: m.user.discordAvatarUrl,
+    }));
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">

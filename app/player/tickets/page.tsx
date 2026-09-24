@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   title: "Tickets",
 };
 import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
-import { TicketStatus } from "@/lib/generated/prisma/enums";
+import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
@@ -37,6 +37,7 @@ type TicketListItem = {
       userId: string;
       user: {
         id: string;
+        role: Role;
         minecraftUsername: string | null;
         discordDisplayName: string;
         discordAvatarUrl: string | null;
@@ -159,6 +160,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
                 user: {
                   select: {
                     id: true,
+                    role: true,
                     minecraftUsername: true,
                     discordDisplayName: true,
                     discordAvatarUrl: true,
@@ -191,6 +193,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
                 user: {
                   select: {
                     id: true,
+                    role: true,
                     minecraftUsername: true,
                     discordDisplayName: true,
                     discordAvatarUrl: true,
@@ -226,6 +229,14 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
       return {
         ...ticket,
         isUnread,
+        conversation: ticket.conversation
+          ? {
+              ...ticket.conversation,
+              members: ticket.conversation.members.filter(
+                (m) => m.user.role === Role.PLAYER
+              ),
+            }
+          : null,
       };
     });
 
