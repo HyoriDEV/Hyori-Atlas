@@ -120,7 +120,12 @@ export async function getStaffBadgeCounts(userId: string): Promise<Record<string
       },
     }),
     prisma.interviewBooking.count({
-      where: { status: InterviewBookingStatus.REGISTERED },
+      where: {
+        status: InterviewBookingStatus.REGISTERED,
+        slot: {
+          startsAt: { gte: new Date() },
+        },
+      },
     }),
   ]);
 

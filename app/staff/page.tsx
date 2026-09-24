@@ -89,7 +89,10 @@ export default async function StaffDashboardPage() {
       : 0,
     canAccessInterviewSlots
       ? prisma.interviewBooking.count({
-          where: { status: InterviewBookingStatus.REGISTERED },
+          where: {
+            status: InterviewBookingStatus.REGISTERED,
+            slot: { startsAt: { gte: new Date() } },
+          },
         })
       : 0,
     canAccessDistribution ? prisma.playerClass.count() : 0,

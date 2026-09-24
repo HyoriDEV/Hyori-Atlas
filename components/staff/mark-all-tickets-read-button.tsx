@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Check } from "@phosphor-icons/react";
+import { Check, CircleNotch } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -37,8 +37,12 @@ export function MarkAllTicketsReadButton() {
       className="h-9 gap-1.5 text-xs font-medium"
       title="Tout marquer comme lu"
     >
-      <Check className="size-3.5" />
-      <span>{isPending ? "Mise à jour..." : "Tout marquer comme lu"}</span>
+      {isPending ? (
+        <CircleNotch className="size-3.5 animate-spin" />
+      ) : (
+        <Check className="size-3.5" />
+      )}
+      <span>Tout marquer comme lu</span>
     </Button>
   );
 }
