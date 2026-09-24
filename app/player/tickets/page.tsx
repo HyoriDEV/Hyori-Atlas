@@ -27,6 +27,7 @@ import { getGlobalSettings } from "@/lib/services/settings-service";
 
 type TicketListItem = {
   id: string;
+  playerId?: string;
   category: keyof typeof ticketCategoryLabels;
   subject: string;
   status: TicketStatus;
@@ -35,6 +36,7 @@ type TicketListItem = {
   conversation?: {
     members: {
       userId: string;
+      isExplicitMember?: boolean;
       user: {
         id: string;
         minecraftUsername: string | null;
@@ -84,11 +86,16 @@ function TicketList({
                       {ticketCategoryLabels[ticket.category]} ·{" "}
                       {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
                     </span>
-                    {ticket.conversation?.members && ticket.conversation.members.length > 0 && (
+                    {ticket.conversation?.members &&
+                      ticket.conversation.members.filter(
+                        (m) => m.isExplicitMember || m.userId === ticket.playerId
+                      ).length > 0 && (
                       <>
                         <span>·</span>
                         <div className="flex items-center gap-1">
-                          {ticket.conversation.members.map((member) => {
+                          {ticket.conversation.members
+                            .filter((m) => m.isExplicitMember || m.userId === ticket.playerId)
+                            .map((member) => {
                             const name =
                               member.user.minecraftUsername ?? member.user.discordDisplayName;
                             return member.user.minecraftUsername ? (

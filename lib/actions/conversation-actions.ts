@@ -140,6 +140,8 @@ export async function markConversationAsRead(conversationId: string): Promise<vo
   const user = await getCurrentUser();
   if (!user) return;
 
+  const now = new Date();
+
   await prisma.conversationMember.upsert({
     where: {
       conversationId_userId: {
@@ -150,10 +152,19 @@ export async function markConversationAsRead(conversationId: string): Promise<vo
     create: {
       conversationId,
       userId: user.id,
-      lastReadAt: new Date(),
+      isExplicitMember: false,
+      lastReadAt: now,
     },
     update: {
-      lastReadAt: new Date(),
+      lastReadAt: now,
     },
   });
+
+  publish(conversationId, {
+    type: "READ",
+    userId: user.id,
+    conversationId,
+    lastReadAt: now.toISOString(),
+  });
 }
+
