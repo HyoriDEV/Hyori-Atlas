@@ -87,3 +87,39 @@ export function isValidDraftClassSelection(classes: CharacterClass[]): boolean {
   const unique = new Set(classes);
   return unique.size === classes.length && classes.every(isCharacterClass);
 }
+
+/**
+ * Tente de convertir un nom de classe libre, un label ou un identifiant en enum CharacterClass valide.
+ */
+export function resolveToCharacterClass(value: unknown): CharacterClass | null {
+  if (!value || typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (isCharacterClass(trimmed)) {
+    return trimmed;
+  }
+  const normalized = trimmed
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
+  if (
+    normalized.includes("noble") ||
+    normalized.includes("grande ville") ||
+    normalized.includes("ville")
+  ) {
+    return CharacterClass.NOBLE;
+  }
+  if (normalized.includes("paysan") || normalized.includes("agricul")) {
+    return CharacterClass.PAYSAN;
+  }
+  if (normalized.includes("pech")) {
+    return CharacterClass.PECHEUR;
+  }
+  if (normalized.includes("mine")) {
+    return CharacterClass.MINEUR;
+  }
+  if (normalized.includes("erudit") || normalized.includes("savoir")) {
+    return CharacterClass.ERUDIT;
+  }
+  return null;
+}

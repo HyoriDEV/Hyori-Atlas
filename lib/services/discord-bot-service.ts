@@ -87,7 +87,7 @@ export async function callDiscordBot<T = unknown>(
       const errorMessage =
         (responseData as { message?: string })?.message ||
         `Discord bot returned HTTP ${res.status}: ${res.statusText}`;
-      console.warn(`[DiscordBot] Request to ${endpoint} failed: ${errorMessage}`);
+      console.error(`[DiscordBot] Request to ${targetUrl} failed (${res.status}): ${errorMessage}`);
       return {
         success: false,
         error: errorMessage,
@@ -105,7 +105,7 @@ export async function callDiscordBot<T = unknown>(
     const message = err?.message
       ? `${err.message}${details} [Cible: ${targetUrl}]`
       : `Erreur de connexion inconnue [Cible: ${targetUrl}]`;
-    console.warn(`[DiscordBot] Network/connection error while calling ${targetUrl}:`, error);
+    console.error(`[DiscordBot] Network/connection error while calling ${targetUrl}:`, error);
     return {
       success: false,
       error: message,

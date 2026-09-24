@@ -175,11 +175,18 @@ export async function reopenCharacterSheetReview(sheetId: string, note?: string)
   revalidateSheetSurfaces(sheet.playerId);
 }
 
+export interface PromoteToWhitelistedResult {
+  success: boolean;
+  discordSynced: boolean;
+  discordError?: string;
+  discordNotified?: boolean;
+}
+
 export async function promoteToWhitelisted(
   userId: string,
   assignedClass: CharacterClass,
   characterSheetId?: string
-) {
+): Promise<PromoteToWhitelistedResult> {
   const staffUser = await requireRole([Role.ADMIN]);
 
   if (!assignedClass || !Object.values(CharacterClass).includes(assignedClass)) {
@@ -236,12 +243,36 @@ export async function promoteToWhitelisted(
     }),
   ]);
 
+  let discordSynced = false;
+  let discordError: string | undefined;
+  let discordNotified = false;
+
   if (user.discordId) {
     // 1. Synchronisation du rôle whitelist et du rôle de classe sur Discord
-    await syncPlayerWhitelistClassRole(user.discordId, true, assignedClass);
+    const roleSyncResult = await syncPlayerWhitelistClassRole(user.discordId, true, assignedClass);
+    discordSynced = roleSyncResult.success;
+    if (!roleSyncResult.success) {
+      discordError = roleSyncResult.error || "Impossible d'attribuer les rôles sur Discord";
+      console.error(
+        `[PromoteToWhitelisted] Échec de la synchronisation des rôles Discord pour ${user.discordId}:`,
+        discordError
+      );
+    }
+
     // 2. Notification MP de la validation définitive
-    await notifyPlayerRegistrationStatus(user.discordId, RegistrationStatus.WHITELISTED);
+    const notifyResult = await notifyPlayerRegistrationStatus(
+      user.discordId,
+      RegistrationStatus.WHITELISTED
+    );
+    discordNotified = notifyResult.success && Boolean(notifyResult.notified);
   }
 
   revalidateSheetSurfaces(userId);
+
+  return {
+    success: true,
+    discordSynced,
+    discordError,
+    discordNotified,
+  };
 }
