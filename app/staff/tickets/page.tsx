@@ -34,6 +34,7 @@ import { StatusTabs } from "@/components/dashboard/status-tabs";
 import { TicketFilters } from "@/components/dashboard/ticket-filters";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
+import { MarkAllTicketsReadButton } from "@/components/staff/mark-all-tickets-read-button";
 
 const DEFAULT_PAGE_SIZE = 10;
 
@@ -42,6 +43,64 @@ export default async function TicketsStaffListPage(props: {
 }) {
   const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   const staffUser = await requireRole(item.roles);
+
+  // Marquer automatiquement comme lus les tickets archivés non lus pour ce membre du staff
+  const unreadArchivedTickets = await prisma.ticket.findMany({
+    where: { status: TicketStatus.ARCHIVED },
+    select: {
+      conversationId: true,
+      conversation: {
+        select: {
+          members: {
+            where: { userId: staffUser.id },
+            select: { lastReadAt: true, joinedAt: true },
+          },
+          messages: {
+            where: {
+              deletedAt: null,
+              authorId: { not: staffUser.id },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { createdAt: true },
+          },
+        },
+      },
+    },
+  });
+
+  const archivedToMark = unreadArchivedTickets.filter((t) => {
+    const member = t.conversation.members[0];
+    const lastMessage = t.conversation.messages[0];
+    if (!lastMessage) return false;
+    if (!member) return true;
+    const readThreshold = member.lastReadAt ?? member.joinedAt;
+    return lastMessage.createdAt > readThreshold;
+  });
+
+  if (archivedToMark.length > 0) {
+    const now = new Date();
+    await Promise.all(
+      archivedToMark.map((t) =>
+        prisma.conversationMember.upsert({
+          where: {
+            conversationId_userId: {
+              conversationId: t.conversationId,
+              userId: staffUser.id,
+            },
+          },
+          create: {
+            conversationId: t.conversationId,
+            userId: staffUser.id,
+            lastReadAt: now,
+          },
+          update: {
+            lastReadAt: now,
+          },
+        })
+      )
+    );
+  }
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -104,7 +163,10 @@ export default async function TicketsStaffListPage(props: {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-heading text-2xl font-semibold">Tickets</h1>
-        <TicketFilters category={category} />
+        <div className="flex flex-wrap items-center gap-2">
+          <MarkAllTicketsReadButton />
+          <TicketFilters category={category} />
+        </div>
       </div>
 
       <StatusTabs

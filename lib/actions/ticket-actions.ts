@@ -481,3 +481,70 @@ async function dispatchTicketMessageNotifications({
     console.warn("[TicketNotification] Erreur globale lors du calcul des notifications:", err);
   }
 }
+
+export async function markAllStaffTicketsAsRead(): Promise<{ success: boolean; count: number }> {
+  const staffUser = await requireRole(ticketStaffRoles);
+
+  const activeTickets = await prisma.ticket.findMany({
+    where: { status: { not: TicketStatus.ARCHIVED } },
+    select: {
+      conversationId: true,
+      conversation: {
+        select: {
+          members: {
+            where: { userId: staffUser.id },
+            select: { lastReadAt: true, joinedAt: true },
+          },
+          messages: {
+            where: {
+              deletedAt: null,
+              authorId: { not: staffUser.id },
+            },
+            orderBy: { createdAt: "desc" },
+            take: 1,
+            select: { createdAt: true },
+          },
+        },
+      },
+    },
+  });
+
+  const unreadTickets = activeTickets.filter((t) => {
+    const member = t.conversation.members[0];
+    const lastMessage = t.conversation.messages[0];
+    if (!lastMessage) return false;
+    if (!member) return true;
+    const readThreshold = member.lastReadAt ?? member.joinedAt;
+    return lastMessage.createdAt > readThreshold;
+  });
+
+  if (unreadTickets.length > 0) {
+    const now = new Date();
+    await Promise.all(
+      unreadTickets.map((t) =>
+        prisma.conversationMember.upsert({
+          where: {
+            conversationId_userId: {
+              conversationId: t.conversationId,
+              userId: staffUser.id,
+            },
+          },
+          create: {
+            conversationId: t.conversationId,
+            userId: staffUser.id,
+            lastReadAt: now,
+          },
+          update: {
+            lastReadAt: now,
+          },
+        })
+      )
+    );
+  }
+
+  revalidatePath("/staff/tickets");
+  revalidatePath("/staff");
+
+  return { success: true, count: unreadTickets.length };
+}
+
