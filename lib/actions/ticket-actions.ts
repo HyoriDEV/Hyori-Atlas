@@ -355,13 +355,10 @@ export async function addTicketMember(ticketId: string, playerId: string) {
         userId: playerId,
       },
     },
-    update: {
-      isExplicitMember: true,
-    },
+    update: {},
     create: {
       conversationId: ticket.conversationId,
       userId: playerId,
-      isExplicitMember: true,
       lastReadAt: new Date(),
     },
   });
@@ -376,13 +373,10 @@ export async function removeTicketMember(ticketId: string, playerId: string) {
 
   const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
 
-  await prisma.conversationMember.updateMany({
+  await prisma.conversationMember.deleteMany({
     where: {
       conversationId: ticket.conversationId,
       userId: playerId,
-    },
-    data: {
-      isExplicitMember: false,
     },
   });
 
@@ -538,7 +532,6 @@ export async function markAllStaffTicketsAsRead(): Promise<{ success: boolean; c
           create: {
             conversationId: t.conversationId,
             userId: staffUser.id,
-            isExplicitMember: false,
             lastReadAt: now,
           },
           update: {

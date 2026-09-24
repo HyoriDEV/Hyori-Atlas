@@ -46,12 +46,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export interface ConversationMemberReadInfo {
-  userId: string;
-  displayName: string;
-  lastReadAt: string | null;
-}
-
 interface MessageGroup {
   id: string;
   authorId: string | null;
@@ -66,7 +60,6 @@ interface MessageGroup {
 export function ConversationChat({
   conversationId,
   initialMessages,
-  readReceiptMembers,
   viewerId,
   viewerIsStaff,
   sendAction,
@@ -77,7 +70,6 @@ export function ConversationChat({
 }: {
   conversationId: string;
   initialMessages: SerializedConversationMessage[];
-  readReceiptMembers?: ConversationMemberReadInfo[];
   viewerId: string;
   viewerIsStaff: boolean;
   sendAction: (
@@ -92,9 +84,6 @@ export function ConversationChat({
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
-  const [members, setMembers] = useState<ConversationMemberReadInfo[]>(
-    readReceiptMembers ?? []
-  );
   const [isChatDisabled, setIsChatDisabled] = useState(disabled);
   const [body, setBody] = useState("");
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
@@ -118,24 +107,12 @@ export function ConversationChat({
     setIsChatDisabled(disabled);
   }
 
-  const [prevMembersProp, setPrevMembersProp] = useState(readReceiptMembers);
-  if (readReceiptMembers !== prevMembersProp) {
-    setPrevMembersProp(readReceiptMembers);
-    setMembers(readReceiptMembers ?? []);
-  }
-
   useEffect(() => {
     const eventSource = new EventSource(`/api/conversations/${conversationId}/stream`);
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.type === "READ") {
-          setMembers((previous) =>
-            previous.map((m) =>
-              m.userId === data.userId ? { ...m, lastReadAt: data.lastReadAt } : m
-            )
-          );
-        } else if (data.type === "DELETE") {
+        if (data.type === "DELETE") {
           if (viewerIsStaff) {
             setMessages((previous) =>
               previous.map((msg) =>
@@ -196,10 +173,6 @@ export function ConversationChat({
   }, [conversationId, viewerIsStaff, router]);
 
   useEffect(() => {
-    if (typeof document !== "undefined" && document.visibilityState === "visible") {
-      markConversationAsRead(conversationId).catch(() => {});
-    }
-
     function handleVisibilityOrFocus() {
       if (document.visibilityState === "visible") {
         markConversationAsRead(conversationId).catch(() => {});
@@ -556,70 +529,6 @@ export function ConversationChat({
 
     return items;
   }, [messages, viewerId, viewerIsStaff]);
-
-  const readReceipts = useMemo(() => {
-    if (!viewerIsStaff || members.length === 0 || messages.length === 0) {
-      return new Map<string, string>();
-    }
-
-    const readableMessages = messages.filter(
-      (m) => m.authorType !== MessageAuthorType.SYSTEM
-    );
-
-    // Track for each eligible member their latest read message
-    // Note: The viewer never displays "Lu par [himself]" (user instruction:
-    // "Un auteur n'affiche jamais 'Lu par [lui-même]', ni sous ses messages, ni les messages des autres.")
-    const eligibleMembers = members.filter((m) => m.userId !== viewerId);
-
-    const lastReadMsgIdByMember = new Map<string, string>();
-    for (const member of eligibleMembers) {
-      if (!member.lastReadAt) continue;
-      const readTime = new Date(member.lastReadAt).getTime();
-
-      let lastMsgId: string | null = null;
-      for (const msg of readableMessages) {
-        // A member does not count as a reader of their own sent message
-        if (msg.authorId === member.userId) continue;
-
-        const msgTime = new Date(msg.createdAt).getTime();
-        if (msgTime <= readTime) {
-          lastMsgId = msg.id;
-        }
-      }
-
-      if (lastMsgId) {
-        lastReadMsgIdByMember.set(member.userId, lastMsgId);
-      }
-    }
-
-    // Group readers by the message they stopped at
-    const readersByMsgId = new Map<string, typeof eligibleMembers>();
-    for (const [userId, msgId] of lastReadMsgIdByMember.entries()) {
-      const member = eligibleMembers.find((m) => m.userId === userId);
-      if (!member) continue;
-      const list = readersByMsgId.get(msgId) ?? [];
-      list.push(member);
-      readersByMsgId.set(msgId, list);
-    }
-
-    const resultMap = new Map<string, string>();
-    for (const [msgId, readers] of readersByMsgId.entries()) {
-      const msg = readableMessages.find((m) => m.id === msgId);
-      if (!msg) continue;
-
-      // Eligible readers for this specific message (excluding its author and current viewer)
-      const eligibleForThisMsg = eligibleMembers.filter((m) => m.userId !== msg.authorId);
-
-      if (eligibleForThisMsg.length > 1 && readers.length === eligibleForThisMsg.length) {
-        resultMap.set(msgId, "Lu par tous");
-      } else {
-        const names = readers.map((r) => r.displayName).join(", ");
-        resultMap.set(msgId, `Lu par ${names}`);
-      }
-    }
-
-    return resultMap;
-  }, [viewerIsStaff, members, messages, viewerId]);
 
   return (
     <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
@@ -1003,12 +912,6 @@ export function ConversationChat({
                             </>
                           )}
                         </div>
-
-                        {viewerIsStaff && readReceipts.has(message.id) && (
-                          <span className="text-muted-foreground text-xs select-none">
-                            {readReceipts.get(message.id)}
-                          </span>
-                        )}
                       </div>
                     </div>
                   );

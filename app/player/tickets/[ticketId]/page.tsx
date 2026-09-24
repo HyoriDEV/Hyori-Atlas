@@ -93,11 +93,7 @@ export default async function TicketDetailPage({
 
   const messages = ticket.conversation.messages || [];
 
-  const explicitMembers = ticket.conversation.members.filter(
-    (m) => m.isExplicitMember || m.userId === ticket.playerId
-  );
-
-  const membersData = explicitMembers.map((m) => ({
+  const membersData = ticket.conversation.members.map((m) => ({
     userId: m.userId,
     minecraftUsername: m.user.minecraftUsername,
     discordDisplayName: m.user.discordDisplayName,
