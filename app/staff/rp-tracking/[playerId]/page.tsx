@@ -51,6 +51,9 @@ export default async function RpTrackingStaffDetailPage({
       members: { some: { userId: playerId } },
     },
     include: {
+      members: {
+        include: { user: true },
+      },
       messages: {
         include: {
           author: true,
@@ -69,10 +72,13 @@ export default async function RpTrackingStaffDetailPage({
       data: {
         type: ConversationType.RP_TRACKING,
         members: {
-          create: [{ userId: playerId }],
+          create: [{ userId: playerId, isExplicitMember: true }],
         },
       },
       include: {
+        members: {
+          include: { user: true },
+        },
         messages: {
           include: {
             author: true,
@@ -86,6 +92,21 @@ export default async function RpTrackingStaffDetailPage({
   const messages = conversation.messages || [];
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
+
+  const explicitMembers = (conversation.members || []).filter(
+    (m) => m.isExplicitMember || m.userId === playerId
+  );
+
+  const readReceiptMembers = explicitMembers.map((m) => ({
+    userId: m.userId,
+    displayName:
+      m.user?.minecraftUsername ??
+      m.user?.discordDisplayName ??
+      m.user?.discordUsername ??
+      playerName ??
+      "Joueur",
+    lastReadAt: m.lastReadAt ? m.lastReadAt.toISOString() : null,
+  }));
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
@@ -111,6 +132,7 @@ export default async function RpTrackingStaffDetailPage({
       <ConversationChat
         conversationId={conversation.id}
         initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true))}
+        readReceiptMembers={readReceiptMembers}
         viewerId={staffUser.id}
         viewerIsStaff
         sendAction={sendStaffConversationMessage}

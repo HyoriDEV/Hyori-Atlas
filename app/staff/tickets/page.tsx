@@ -92,6 +92,7 @@ export default async function TicketsStaffListPage(props: {
           create: {
             conversationId: t.conversationId,
             userId: staffUser.id,
+            isExplicitMember: false,
             lastReadAt: now,
           },
           update: {

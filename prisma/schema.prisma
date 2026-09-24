@@ -419,11 +419,12 @@ model Conversation {
 }
 
 model ConversationMember {
-  id             String    @id @default(cuid())
-  conversationId String
-  userId         String
-  joinedAt       DateTime  @default(now())
-  lastReadAt     DateTime? @default(now())
+  id               String    @id @default(cuid())
+  conversationId   String
+  userId           String
+  isExplicitMember Boolean   @default(true)
+  joinedAt         DateTime  @default(now())
+  lastReadAt       DateTime? @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
