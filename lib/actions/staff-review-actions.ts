@@ -259,10 +259,13 @@ export async function promoteToWhitelisted(
       );
     }
 
-    // 2. Notification MP de la validation définitive
+    // 2. Notification MP de la validation définitive (inclut le lien d'invitation vers le Discord du village)
     const notifyResult = await notifyPlayerRegistrationStatus(
       user.discordId,
-      RegistrationStatus.WHITELISTED
+      RegistrationStatus.WHITELISTED,
+      undefined,
+      undefined,
+      assignedClass
     );
     discordNotified = notifyResult.success && Boolean(notifyResult.notified);
   }

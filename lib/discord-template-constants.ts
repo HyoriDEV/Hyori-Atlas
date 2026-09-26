@@ -73,11 +73,17 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
     category: "registration",
     defaultTitle: "Whitelist — Validation définitive",
     defaultDescription:
-      "Félicitations, votre inscription sur **Hyori RP** a été validée !\n\nVous disposez désormais d'un accès complet au site, au serveur Discord et au serveur Minecraft.",
+      "Félicitations, votre inscription sur **Hyori RP** a été validée !\n\nVous disposez désormais d'un accès complet au site, au serveur Discord communautaire et au serveur Minecraft.\n\n🏛️ **Serveur Discord de votre classe ({villageName}) :**\n{villageInviteUrl}",
     defaultButtonLabel: "Accéder à mon espace joueur",
     availableVariables: [
       { key: "{playerName}", description: "Pseudo du joueur" },
       { key: "{url}", description: "Lien vers l'espace joueur" },
+      { key: "{className}", description: "Classe RP attribuée (ex: Noble, Pêcheur...)" },
+      { key: "{villageName}", description: "Nom du village / serveur Discord attribué" },
+      {
+        key: "{villageInviteUrl}",
+        description: "Lien d'invitation permanent vers le Discord du village",
+      },
     ],
   },
   REGISTRATION_REJECTED: {
