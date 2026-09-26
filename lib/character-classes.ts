@@ -123,3 +123,55 @@ export function resolveToCharacterClass(value: unknown): CharacterClass | null {
   }
   return null;
 }
+
+export interface VillageDiscordConfig {
+  key: string;
+  name: string;
+  class: CharacterClass;
+  className: string;
+  inviteUrl: string;
+}
+
+export const VILLAGE_DISCORD_CONFIGS: Record<CharacterClass, VillageDiscordConfig> = {
+  [CharacterClass.NOBLE]: {
+    key: "grandeVille",
+    name: "Grande Ville",
+    class: CharacterClass.NOBLE,
+    className: "Grande ville",
+    inviteUrl: "https://discord.gg/Y6KgkWxa9h",
+  },
+  [CharacterClass.PECHEUR]: {
+    key: "peche",
+    name: "Village de Pêche",
+    class: CharacterClass.PECHEUR,
+    className: "Village de pêche",
+    inviteUrl: "https://discord.gg/vegcyMnbyZ",
+  },
+  [CharacterClass.PAYSAN]: {
+    key: "paysans",
+    name: "Village des Paysans",
+    class: CharacterClass.PAYSAN,
+    className: "Village des paysans",
+    inviteUrl: "https://discord.gg/mccHxc5cxS",
+  },
+  [CharacterClass.MINEUR]: {
+    key: "mines",
+    name: "Village des Mines",
+    class: CharacterClass.MINEUR,
+    className: "Village des mines",
+    inviteUrl: "https://discord.gg/s5269BqXqF",
+  },
+  [CharacterClass.ERUDIT]: {
+    key: "erudits",
+    name: "Village des Érudits",
+    class: CharacterClass.ERUDIT,
+    className: "Village des érudits",
+    inviteUrl: "https://discord.gg/TRJ9XP3mg9",
+  },
+};
+
+export function getVillageConfigByClass(value: unknown): VillageDiscordConfig | null {
+  const cls = resolveToCharacterClass(value);
+  if (!cls) return null;
+  return VILLAGE_DISCORD_CONFIGS[cls] || null;
+}

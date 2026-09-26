@@ -8,6 +8,7 @@ import {
   type DiscordEmbedOverride,
   type DiscordTemplateId,
 } from "./discord-template-service";
+import { getVillageConfigByClass } from "@/lib/character-classes";
 
 export interface BotNotificationResult {
   success: boolean;
@@ -120,7 +121,8 @@ export async function notifyPlayerRegistrationStatus(
   discordId: string,
   status: RegistrationStatus,
   customPlayerSpaceUrl?: string,
-  override?: DiscordEmbedOverride | null
+  override?: DiscordEmbedOverride | null,
+  assignedClass?: string | null
 ): Promise<BotNotificationResult> {
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player");
 
@@ -132,9 +134,13 @@ export async function notifyPlayerRegistrationStatus(
     else if (status === RegistrationStatus.REJECTED) templateId = "REGISTRATION_REJECTED";
 
     if (templateId) {
+      const village = assignedClass ? getVillageConfigByClass(assignedClass) : null;
       effectiveOverride = await getEffectiveDiscordOverride(templateId, {
         playerName: "",
         url: playerSpaceUrl,
+        className: village?.className || assignedClass || "",
+        villageName: village?.name || "",
+        villageInviteUrl: village?.inviteUrl || "",
       }).catch(() => null);
     }
   }
@@ -146,6 +152,7 @@ export async function notifyPlayerRegistrationStatus(
       discordId,
       status,
       playerSpaceUrl,
+      assignedClass: assignedClass ?? undefined,
       override: effectiveOverride ?? undefined,
     }
   );
@@ -497,5 +504,85 @@ export async function fetchDiscordBatchRoles(
   return {
     success: true,
     members: result.data.members || {},
+  };
+}
+
+export interface BroadcastVillageInvitesSummary {
+  totalWhitelisted: number;
+  sent: number;
+  dmClosed: number;
+  failed: number;
+  noClassRole: number;
+  byClass: Record<string, number>;
+  skipped?: Array<{ discordId: string; username?: string; displayName?: string; reason?: string }>;
+  errors?: string[];
+}
+
+export interface BroadcastVillageInvitesResult {
+  success: boolean;
+  summary?: BroadcastVillageInvitesSummary;
+  message?: string;
+  error?: string;
+}
+
+/**
+ * Envoie automatiquement un message privé via HyoriBot à tous les joueurs whitelistés,
+ * contenant le lien d'invitation vers le serveur Discord de leur classe.
+ */
+export async function broadcastVillageInvites(): Promise<BroadcastVillageInvitesResult> {
+  const result = await callDiscordBot<{
+    success: boolean;
+    summary?: BroadcastVillageInvitesSummary;
+    message?: string;
+  }>("/notifications/broadcast-village-invites", "POST", {}, 30000);
+
+  if (!result.success) {
+    return {
+      success: false,
+      error:
+        result.error || "Impossible de contacter le bot Discord pour diffuser les invitations.",
+    };
+  }
+
+  return {
+    success: true,
+    summary: result.data?.summary,
+    message: result.data?.message,
+  };
+}
+
+export interface DiscordVillageItem {
+  key: string;
+  id: string;
+  name: string;
+  class: string;
+  habitantRoleId: string;
+  inviteUrl: string | null;
+}
+
+/**
+ * Récupère la liste des villages Discord et leurs liens d'invitation permanents depuis le bot.
+ */
+export async function fetchDiscordVillages(): Promise<{
+  success: boolean;
+  villages: DiscordVillageItem[];
+  error?: string;
+}> {
+  const result = await callDiscordBot<{ success: boolean; villages: DiscordVillageItem[] }>(
+    "/villages",
+    "GET"
+  );
+
+  if (!result.success || !result.data?.villages) {
+    return {
+      success: false,
+      villages: [],
+      error: result.error || "Impossible de charger la configuration des villages depuis le bot.",
+    };
+  }
+
+  return {
+    success: true,
+    villages: result.data.villages,
   };
 }

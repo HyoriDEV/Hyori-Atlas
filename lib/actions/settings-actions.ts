@@ -6,6 +6,12 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role } from "@/lib/generated/prisma/enums";
 import { updateGlobalSettings } from "@/lib/services/settings-service";
+import {
+  broadcastVillageInvites,
+  fetchDiscordVillages,
+  type BroadcastVillageInvitesResult,
+  type DiscordVillageItem,
+} from "@/lib/services/discord-bot-service";
 
 export async function saveGlobalSettingsAction(formData: FormData) {
   const user = await requireRole([Role.ADMIN]);
@@ -136,4 +142,25 @@ export async function saveDiscordTemplatesAction(
     const message = err instanceof Error ? err.message : "Erreur lors de la sauvegarde des modèles";
     return { success: false, error: message };
   }
+}
+
+/**
+ * Action staff pour envoyer en un clic un MP Discord via HyoriBot à tous les joueurs whitelistés
+ * avec le lien d'invitation vers le serveur Discord de leur village selon leur classe.
+ */
+export async function broadcastVillageInvitesAction(): Promise<BroadcastVillageInvitesResult> {
+  await requireRole([Role.ADMIN]);
+  return broadcastVillageInvites();
+}
+
+/**
+ * Action staff pour récupérer les villages et leurs liens d'invitation configurés côté bot Discord.
+ */
+export async function getDiscordVillagesAction(): Promise<{
+  success: boolean;
+  villages: DiscordVillageItem[];
+  error?: string;
+}> {
+  await requireRole([Role.ADMIN]);
+  return fetchDiscordVillages();
 }
