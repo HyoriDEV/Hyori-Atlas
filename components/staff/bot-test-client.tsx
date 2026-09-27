@@ -352,21 +352,19 @@ export function BotTestClient({
       badge: "Acceptée",
       badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600",
       title: "Candidature acceptée",
-      description: "Validation de la candidature écrite : passage aux étapes entretien vocal et rédaction de la fiche.",
+      description:
+        "Validation de la candidature écrite : passage aux étapes entretien vocal et rédaction de la fiche.",
       onClick: () =>
-        handleRegistrationTest(
-          RegistrationStatus.WHITELIST_IN_PROGRESS,
-          "Candidature acceptée"
-        ),
+        handleRegistrationTest(RegistrationStatus.WHITELIST_IN_PROGRESS, "Candidature acceptée"),
     },
     {
       id: `reg_${RegistrationStatus.REJECTED}`,
       badge: "Refusée",
       badgeClass: "border-destructive/30 bg-destructive/10 text-destructive",
       title: "Candidature non retenue",
-      description: "Information au candidat que sa candidature n'a pas été retenue par l'équipe staff.",
-      onClick: () =>
-        handleRegistrationTest(RegistrationStatus.REJECTED, "Candidature refusée"),
+      description:
+        "Information au candidat que sa candidature n'a pas été retenue par l'équipe staff.",
+      onClick: () => handleRegistrationTest(RegistrationStatus.REJECTED, "Candidature refusée"),
     },
     {
       id: `reg_${RegistrationStatus.WAITLIST}`,
@@ -375,22 +373,17 @@ export function BotTestClient({
       title: "Réintégration sur la liste d'attente",
       description: "Notification de réintégration ou placement du joueur sur la liste d'attente.",
       onClick: () =>
-        handleRegistrationTest(
-          RegistrationStatus.WAITLIST,
-          "Réintégration liste d'attente"
-        ),
+        handleRegistrationTest(RegistrationStatus.WAITLIST, "Réintégration liste d'attente"),
     },
     {
       id: `reg_${RegistrationStatus.WHITELISTED}`,
       badge: "Whitelisté",
       badgeClass: "border-primary/30 bg-primary/10 text-primary",
       title: "Validation définitive (accès serveur)",
-      description: "Félicitations et confirmation de l'accès officiel et complet au serveur Minecraft Hyori.",
+      description:
+        "Félicitations et confirmation de l'accès officiel et complet au serveur Minecraft Hyori.",
       onClick: () =>
-        handleRegistrationTest(
-          RegistrationStatus.WHITELISTED,
-          "Validation définitive"
-        ),
+        handleRegistrationTest(RegistrationStatus.WHITELISTED, "Validation définitive"),
     },
   ];
 
@@ -400,25 +393,26 @@ export function BotTestClient({
       badge: "Validée",
       badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-600",
       title: "Fiche personnage validée",
-      description: "Confirmation de validation de la fiche par le staff et invitation à réserver un entretien.",
-      onClick: () =>
-        handleSheetTest(CharacterSheetStatus.VALIDATED, "Fiche validée"),
+      description:
+        "Confirmation de validation de la fiche par le staff et invitation à réserver un entretien.",
+      onClick: () => handleSheetTest(CharacterSheetStatus.VALIDATED, "Fiche validée"),
     },
     {
       id: `sheet_${CharacterSheetStatus.PENDING_PLAYER}`,
       badge: "Retours",
       badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600",
       title: "Retours disponibles sur la fiche",
-      description: "Notification indiquant au joueur que des retours ou demandes de corrections ont été postés.",
-      onClick: () =>
-        handleSheetTest(CharacterSheetStatus.PENDING_PLAYER, "Retours disponibles"),
+      description:
+        "Notification indiquant au joueur que des retours ou demandes de corrections ont été postés.",
+      onClick: () => handleSheetTest(CharacterSheetStatus.PENDING_PLAYER, "Retours disponibles"),
     },
     {
       id: "sheet_REOPENED",
       badge: "Réouverture",
       badgeClass: "border-blue-500/30 bg-blue-500/10 text-blue-600",
       title: "Fiche personnage rouverte",
-      description: "Alerte informant le joueur que sa fiche a été rouverte pour lui permettre d'éditer ses textes.",
+      description:
+        "Alerte informant le joueur que sa fiche a été rouverte pour lui permettre d'éditer ses textes.",
       onClick: () => handleSheetTest("REOPENED", "Fiche rouverte"),
     },
     {
@@ -426,7 +420,8 @@ export function BotTestClient({
       badge: "Relance",
       badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600",
       title: "Relance réservation d'entretien",
-      description: "Rappel automatique au candidat ayant une fiche validée de réserver son créneau d'entretien.",
+      description:
+        "Rappel automatique au candidat ayant une fiche validée de réserver son créneau d'entretien.",
       onClick: handleInterviewReminderTest,
     },
   ];
@@ -437,7 +432,8 @@ export function BotTestClient({
       badge: "Nouveau message",
       badgeClass: "border-primary/30 bg-primary/10 text-primary",
       title: "Nouveau message de ticket (MP Joueur)",
-      description: "Notification en message privé Discord envoyée au joueur lorsqu'un membre du staff lui répond.",
+      description:
+        "Notification en message privé Discord envoyée au joueur lorsqu'un membre du staff lui répond.",
       onClick: handleTicketMessageTest,
     },
     {
@@ -445,7 +441,8 @@ export function BotTestClient({
       badge: "Ouverture Ticket",
       badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-600",
       title: "Alerte d'ouverture de ticket (Salon externe Staff)",
-      description: "Publication d'un embed d'alerte avec bouton d'accès dans le salon Discord staff dédié.",
+      description:
+        "Publication d'un embed d'alerte avec bouton d'accès dans le salon Discord staff dédié.",
       onClick: handleTicketCreatedTest,
     },
   ];
@@ -472,7 +469,7 @@ export function BotTestClient({
                 variant="outline"
                 onClick={handleHealthCheck}
                 disabled={healthLoading}
-                className="gap-1.5 shrink-0"
+                className="shrink-0 gap-1.5"
               >
                 <ArrowClockwise className={healthLoading ? "size-3.5 animate-spin" : "size-3.5"} />
                 {healthLoading ? "Vérification..." : "Tester la connexion"}
@@ -536,7 +533,7 @@ export function BotTestClient({
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-xs py-2">
+                <p className="text-muted-foreground py-2 text-xs">
                   Cliquez sur &quot;Tester la connexion&quot; pour sonder l&apos;API interne de
                   HyoriBot.
                 </p>
@@ -590,7 +587,7 @@ export function BotTestClient({
 
       {/* 2. Organisation par Onglets thématiques pour les tests */}
       <Tabs defaultValue="registration" className="flex flex-col gap-4">
-        <TabsList className="bg-muted/70 p-1 rounded-xl h-auto grid grid-cols-2 sm:grid-cols-4 w-full sm:w-auto">
+        <TabsList className="bg-muted/70 grid h-auto w-full grid-cols-2 rounded-xl p-1 sm:w-auto sm:grid-cols-4">
           <TabsTrigger value="registration" className="gap-2 px-3 py-2 text-xs font-medium">
             <UserPlus className="size-4 shrink-0" />
             <span>Inscriptions</span>
@@ -618,7 +615,8 @@ export function BotTestClient({
                 Notifications d&apos;Inscription (MP Discord)
               </CardTitle>
               <CardDescription className="text-xs">
-                Simulez les messages privés reçus par le candidat lors des différentes étapes de son processus de candidature.
+                Simulez les messages privés reçus par le candidat lors des différentes étapes de son
+                processus de candidature.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -628,22 +626,25 @@ export function BotTestClient({
                     key={action.id}
                     className="bg-card hover:bg-muted/30 flex flex-col gap-3 rounded-lg border p-3.5 transition-colors sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex min-w-0 items-start gap-3">
                       <Badge
                         variant="outline"
-                        className={cn("mt-0.5 shrink-0 text-[11px] font-semibold", action.badgeClass)}
+                        className={cn(
+                          "mt-0.5 shrink-0 text-[11px] font-semibold",
+                          action.badgeClass
+                        )}
                       >
                         {action.badge}
                       </Badge>
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{action.title}</span>
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-foreground text-sm font-medium">{action.title}</span>
                         <span className="text-muted-foreground text-xs">{action.description}</span>
                       </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 text-xs shrink-0 self-end sm:self-center"
+                      className="shrink-0 gap-1.5 self-end text-xs sm:self-center"
                       onClick={action.onClick}
                       disabled={isBusy}
                     >
@@ -675,7 +676,8 @@ export function BotTestClient({
                 Notification Fiche Personnage (MP Discord)
               </CardTitle>
               <CardDescription className="text-xs">
-                Simulez la notification de validation, de retours staff, de réouverture ou de relance d&apos;entretien.
+                Simulez la notification de validation, de retours staff, de réouverture ou de
+                relance d&apos;entretien.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -685,22 +687,25 @@ export function BotTestClient({
                     key={action.id}
                     className="bg-card hover:bg-muted/30 flex flex-col gap-3 rounded-lg border p-3.5 transition-colors sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex min-w-0 items-start gap-3">
                       <Badge
                         variant="outline"
-                        className={cn("mt-0.5 shrink-0 text-[11px] font-semibold", action.badgeClass)}
+                        className={cn(
+                          "mt-0.5 shrink-0 text-[11px] font-semibold",
+                          action.badgeClass
+                        )}
                       >
                         {action.badge}
                       </Badge>
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{action.title}</span>
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-foreground text-sm font-medium">{action.title}</span>
                         <span className="text-muted-foreground text-xs">{action.description}</span>
                       </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 text-xs shrink-0 self-end sm:self-center"
+                      className="shrink-0 gap-1.5 self-end text-xs sm:self-center"
                       onClick={action.onClick}
                       disabled={isBusy}
                     >
@@ -732,7 +737,8 @@ export function BotTestClient({
                 Notifications Tickets (MP &amp; Salon Staff)
               </CardTitle>
               <CardDescription className="text-xs">
-                Simulez les alertes relatives au support : message privé au joueur et notification dans le salon staff externe.
+                Simulez les alertes relatives au support : message privé au joueur et notification
+                dans le salon staff externe.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -742,22 +748,25 @@ export function BotTestClient({
                     key={action.id}
                     className="bg-card hover:bg-muted/30 flex flex-col gap-3 rounded-lg border p-3.5 transition-colors sm:flex-row sm:items-center sm:justify-between"
                   >
-                    <div className="flex items-start gap-3 min-w-0">
+                    <div className="flex min-w-0 items-start gap-3">
                       <Badge
                         variant="outline"
-                        className={cn("mt-0.5 shrink-0 text-[11px] font-semibold", action.badgeClass)}
+                        className={cn(
+                          "mt-0.5 shrink-0 text-[11px] font-semibold",
+                          action.badgeClass
+                        )}
                       >
                         {action.badge}
                       </Badge>
-                      <div className="flex flex-col gap-0.5 min-w-0">
-                        <span className="text-sm font-medium text-foreground">{action.title}</span>
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <span className="text-foreground text-sm font-medium">{action.title}</span>
                         <span className="text-muted-foreground text-xs">{action.description}</span>
                       </div>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="gap-1.5 text-xs shrink-0 self-end sm:self-center"
+                      className="shrink-0 gap-1.5 self-end text-xs sm:self-center"
                       onClick={action.onClick}
                       disabled={isBusy}
                     >
@@ -789,15 +798,16 @@ export function BotTestClient({
                 Synchronisation Rôles Discord (Whitelist + Classe RP)
               </CardTitle>
               <CardDescription className="text-xs">
-                Attribuez instantanément le rôle Whitelist et le rôle de classe RP correspondant sur le Discord pour le compte cible.
+                Attribuez instantanément le rôle Whitelist et le rôle de classe RP correspondant sur
+                le Discord pour le compte cible.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-5">
               <div>
-                <span className="text-xs font-medium text-foreground mb-2.5 block">
+                <span className="text-foreground mb-2.5 block text-xs font-medium">
                   Sélectionnez la classe RP à synchroniser :
                 </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {CHARACTER_CLASSES.map((cls) => {
                     const Icon = cls.icon;
                     const isSelected = selectedClass === cls.id;
@@ -807,7 +817,7 @@ export function BotTestClient({
                         type="button"
                         onClick={() => setSelectedClass(cls.id)}
                         className={cn(
-                          "flex items-center gap-3 p-3 rounded-lg border text-left transition-all cursor-pointer",
+                          "flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-left transition-all",
                           isSelected
                             ? "border-primary bg-primary/10 text-primary shadow-2xs"
                             : "border-border hover:bg-muted/40 text-muted-foreground hover:text-foreground"
@@ -815,15 +825,19 @@ export function BotTestClient({
                       >
                         <div
                           className={cn(
-                            "p-2 rounded-md shrink-0",
-                            isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"
+                            "shrink-0 rounded-md p-2",
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-foreground"
                           )}
                         >
                           <Icon size={18} />
                         </div>
-                        <div className="flex flex-col min-w-0">
-                          <span className="text-sm font-semibold truncate">{cls.id}</span>
-                          <span className="text-[11px] text-muted-foreground truncate">{cls.label}</span>
+                        <div className="flex min-w-0 flex-col">
+                          <span className="truncate text-sm font-semibold">{cls.id}</span>
+                          <span className="text-muted-foreground truncate text-[11px]">
+                            {cls.label}
+                          </span>
                         </div>
                       </button>
                     );
@@ -831,14 +845,16 @@ export function BotTestClient({
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
-                <p className="text-xs text-muted-foreground">
-                  Rôle de classe sélectionné : <strong className="text-foreground">{selectedClass}</strong> + rôle Whitelist Discord.
+              <div className="flex flex-col justify-between gap-3 border-t pt-3 sm:flex-row sm:items-center">
+                <p className="text-muted-foreground text-xs">
+                  Rôle de classe sélectionné :{" "}
+                  <strong className="text-foreground">{selectedClass}</strong> + rôle Whitelist
+                  Discord.
                 </p>
                 <Button
                   onClick={handleRoleSyncTest}
                   disabled={isBusy}
-                  className="gap-2 text-xs shrink-0 w-full sm:w-auto"
+                  className="w-full shrink-0 gap-2 text-xs sm:w-auto"
                 >
                   {loadingAction === "role_sync" ? (
                     <>
@@ -862,7 +878,7 @@ export function BotTestClient({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <div>
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold">
               <ListBullets className="text-primary size-4" />
               Journal des tests en direct
             </CardTitle>
@@ -879,7 +895,8 @@ export function BotTestClient({
         <CardContent>
           {logs.length === 0 ? (
             <p className="text-muted-foreground py-4 text-center text-xs">
-              Aucun test déclenché pour le moment. Cliquez sur un des boutons de test ci-dessus pour lancer une simulation.
+              Aucun test déclenché pour le moment. Cliquez sur un des boutons de test ci-dessus pour
+              lancer une simulation.
             </p>
           ) : (
             <div className="flex flex-col gap-2 font-mono text-xs">

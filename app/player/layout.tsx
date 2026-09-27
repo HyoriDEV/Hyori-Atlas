@@ -1,10 +1,6 @@
 import { getPlayerState } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import {
-  CharacterSheetStatus,
-  RegistrationStatus,
-  Role,
-} from "@/lib/generated/prisma/enums";
+import { CharacterSheetStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
 import {
   isRegistrationStatusAtLeast,
   playerPendingNavGroups,

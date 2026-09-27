@@ -199,7 +199,8 @@ export default async function TicketsStaffListPage(props: {
                 const member = ticket.conversation?.members[0];
                 const lastMessage = ticket.conversation?.messages[0];
                 const isUnread = Boolean(
-                  lastMessage && (!member || lastMessage.createdAt > (member.lastReadAt ?? member.joinedAt))
+                  lastMessage &&
+                  (!member || lastMessage.createdAt > (member.lastReadAt ?? member.joinedAt))
                 );
                 const playerName =
                   ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;

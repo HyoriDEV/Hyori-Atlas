@@ -286,17 +286,21 @@ export function AppShell({
                               : item.badgeCount;
 
                           if (typeof currentBadgeCount === "number" && currentBadgeCount > 0) {
-                            const max = item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99);
+                            const max =
+                              item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99);
                             return (
                               <SidebarMenuBadge className="right-2">
-                                <span className="bg-primary/15 text-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums leading-none">
+                                <span className="bg-primary/15 text-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-none font-semibold tabular-nums">
                                   {currentBadgeCount > max ? `${max}+` : currentBadgeCount}
                                 </span>
                               </SidebarMenuBadge>
                             );
                           }
 
-                          if (item.hasNotification && typeof countsOverride[item.href] !== "number") {
+                          if (
+                            item.hasNotification &&
+                            typeof countsOverride[item.href] !== "number"
+                          ) {
                             return (
                               <SidebarMenuBadge>
                                 <span className="bg-primary size-2 rounded-full" />

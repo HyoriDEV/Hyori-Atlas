@@ -62,8 +62,7 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
       },
     }));
 
-  const staffCommentsCount =
-    characterSheet?.hasUnreadFeedback ? characterSheet._count.comments : 0;
+  const staffCommentsCount = characterSheet?.hasUnreadFeedback ? characterSheet._count.comments : 0;
 
   const unreadTicketsCount = userActiveTickets.filter((t) => {
     const member = t.conversation.members[0];

@@ -547,4 +547,3 @@ export async function markAllStaffTicketsAsRead(): Promise<{ success: boolean; c
 
   return { success: true, count: unreadTickets.length };
 }
-

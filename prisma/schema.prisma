@@ -27,6 +27,22 @@ enum RegistrationStatus {
   REJECTED
 }
 
+enum SanctionType {
+  WARNING
+  SUSPENSION
+  EXCLUSION
+}
+
+enum SanctionSource {
+  WEB
+  GAME
+}
+
+enum PluginActionType {
+  KICK
+  SANCTION
+}
+
 enum NewsType {
   ANNOUNCEMENT
   CHANGELOG
@@ -149,6 +165,10 @@ model User {
   rpGroupId             String?
   rpGroup               RpGroup?                      @relation("RpGroupMembers", fields: [rpGroupId], references: [id], onDelete: SetNull)
   createdRpGroups       RpGroup[]                     @relation("RpGroupCreator")
+  sanctions             Sanction[]                    @relation("SanctionTarget")
+  issuedSanctions       Sanction[]                    @relation("SanctionIssuer")
+  revokedSanctions      Sanction[]                    @relation("SanctionRevoker")
+  gameSessions          GameSession[]
 
   @@index([rpGroupId])
   @@map("users")
@@ -603,6 +623,57 @@ model MinecraftAuthCode {
   @@index([userId])
   @@index([code])
   @@map("minecraft_auth_codes")
+}
+
+model Sanction {
+  id            String         @id @default(cuid())
+  userId        String
+  type          SanctionType
+  reason        String         @db.VarChar(500)
+  expiresAt     DateTime?
+  source        SanctionSource
+  issuedById    String?
+  issuedByName  String?        @db.VarChar(64)
+  revokedAt     DateTime?
+  revokedById   String?
+  revokedByName String?        @db.VarChar(64)
+  createdAt     DateTime       @default(now())
+
+  user      User  @relation("SanctionTarget", fields: [userId], references: [id], onDelete: Cascade)
+  issuedBy  User? @relation("SanctionIssuer", fields: [issuedById], references: [id], onDelete: SetNull)
+  revokedBy User? @relation("SanctionRevoker", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([userId, revokedAt])
+  @@map("sanctions")
+}
+
+model GameSession {
+  id                String   @id
+  userId            String?
+  minecraftUuid     String
+  minecraftUsername String   @db.VarChar(16)
+  ipAddress         String   @db.VarChar(45)
+  connectedAt       DateTime
+  disconnectedAt    DateTime
+  createdAt         DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([minecraftUuid])
+  @@index([userId, connectedAt])
+  @@map("game_sessions")
+}
+
+model PluginAction {
+  id             String           @id @default(cuid())
+  type           PluginActionType
+  targetUuid     String
+  payload        Json
+  createdAt      DateTime         @default(now())
+  acknowledgedAt DateTime?
+
+  @@index([acknowledgedAt, createdAt])
+  @@map("plugin_actions")
 }
 
 model RuleSection {

@@ -223,8 +223,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
       const lastOtherMessage = ticket.conversation?.messages?.[0];
       const isUnread = Boolean(
         lastOtherMessage &&
-          lastOtherMessage.createdAt >
-            (userMember?.lastReadAt ?? userMember?.joinedAt ?? new Date(0))
+        lastOtherMessage.createdAt > (userMember?.lastReadAt ?? userMember?.joinedAt ?? new Date(0))
       );
       return {
         ...ticket,
@@ -232,9 +231,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
         conversation: ticket.conversation
           ? {
               ...ticket.conversation,
-              members: ticket.conversation.members.filter(
-                (m) => m.user.role === Role.PLAYER
-              ),
+              members: ticket.conversation.members.filter((m) => m.user.role === Role.PLAYER),
             }
           : null,
       };
