@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   ArrowCounterClockwise,
   CheckCircle,
@@ -51,26 +51,42 @@ export function InterviewReminderDialog({
   const [isLoadingCandidates, setIsLoadingCandidates] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  async function handleOpenChange(isOpen: boolean) {
+  function handleOpenChange(isOpen: boolean) {
     if (isControlled) {
       externalOnOpenChange?.(isOpen);
     } else {
       setInternalOpen(isOpen);
     }
-    if (isOpen) {
-      setIsLoadingCandidates(true);
-      setExcludedIds(new Set());
-      try {
-        const list = await getEligibleInterviewReminderCandidatesAction();
-        setCandidates(list);
-      } catch {
-        toast.error("Impossible de récupérer la liste des candidats à relancer.");
-        setCandidates([]);
-      } finally {
-        setIsLoadingCandidates(false);
-      }
-    }
   }
+
+  // Charge les candidats à chaque ouverture de la modale, y compris lorsque
+  // celle-ci est ouverte en pilotant directement la prop `open` depuis le
+  // parent (ex. menu "Actions"), sans passer par handleOpenChange.
+  useEffect(() => {
+    if (!open) return;
+
+    let cancelled = false;
+    setIsLoadingCandidates(true);
+    setExcludedIds(new Set());
+
+    getEligibleInterviewReminderCandidatesAction()
+      .then((list) => {
+        if (!cancelled) setCandidates(list);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          toast.error("Impossible de récupérer la liste des candidats à relancer.");
+          setCandidates([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingCandidates(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   function toggleCandidateExclusion(id: string) {
     setExcludedIds((prev) => {
