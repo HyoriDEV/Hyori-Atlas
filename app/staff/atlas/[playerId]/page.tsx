@@ -450,7 +450,9 @@ export default async function AtlasPlayerPage({
             <AtlasSanctionCard
               playerId={player.id}
               pseudo={playerName}
-              canRevokeWhitelist={isAdmin && player.registrationStatus === RegistrationStatus.WHITELISTED}
+              canRevokeWhitelist={
+                isAdmin && player.registrationStatus === RegistrationStatus.WHITELISTED
+              }
               activeBan={
                 activeBan
                   ? {

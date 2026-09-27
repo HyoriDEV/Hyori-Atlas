@@ -20,7 +20,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ uuid
   const url = new URL(request.url);
   const limitParam = url.searchParams.get("limit");
   const limit = limitParam === "all" ? undefined : limitParam ? parseInt(limitParam, 10) : 5;
-  const safeLimit = limit === undefined ? undefined : Number.isInteger(limit) && limit > 0 ? limit : 5;
+  const safeLimit =
+    limit === undefined ? undefined : Number.isInteger(limit) && limit > 0 ? limit : 5;
 
   const sanctions = await listSanctions(user.id, safeLimit);
 

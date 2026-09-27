@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import {
   ArrowClockwise,
   Check,
@@ -22,7 +22,7 @@ import {
   type WhitelistedPlayerRoleAuditItem,
   type WhitelistRoleAuditSummary,
 } from "@/lib/actions/whitelist-role-verification-actions";
-import { CHARACTER_CLASSES, type CharacterClass } from "@/lib/character-classes";
+import { CHARACTER_CLASSES } from "@/lib/character-classes";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

@@ -230,7 +230,9 @@ function RevokeBanButton({
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger render={<Button size="sm" variant="destructive" />}>Lever</AlertDialogTrigger>
+      <AlertDialogTrigger render={<Button size="sm" variant="destructive" />}>
+        Lever
+      </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Lever la sanction</AlertDialogTitle>
@@ -289,9 +291,7 @@ export function AtlasSanctionCard({
 
       {!activeBan && (
         <div className="flex flex-wrap gap-2">
-          {canRevokeWhitelist && (
-            <AtlasRevokeWhitelistButton playerId={playerId} pseudo={pseudo} />
-          )}
+          {canRevokeWhitelist && <AtlasRevokeWhitelistButton playerId={playerId} pseudo={pseudo} />}
           <SanctionDialog kind="warning" playerId={playerId} pseudo={pseudo} />
           <SanctionDialog kind="suspension" playerId={playerId} pseudo={pseudo} />
           <SanctionDialog kind="exclusion" playerId={playerId} pseudo={pseudo} />

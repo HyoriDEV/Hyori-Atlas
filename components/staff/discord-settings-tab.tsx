@@ -4,7 +4,6 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import {
   Bell,
-  ChatCircleText,
   Check,
   DiscordLogo,
   ArrowCounterClockwise,
@@ -14,7 +13,6 @@ import {
   UserCheck,
   CalendarCheck,
   ArrowSquareOut,
-  Info,
   PaperPlaneTilt,
   ArrowsClockwise,
   CheckCircle,
@@ -22,7 +20,6 @@ import {
 
 import {
   DEFAULT_DISCORD_TEMPLATES,
-  type DefaultTemplateConfig,
   type DiscordTemplateId,
 } from "@/lib/discord-template-constants";
 import {
@@ -33,7 +30,7 @@ import {
 import type { BroadcastVillageInvitesSummary } from "@/lib/services/discord-bot-service";
 import { VILLAGE_DISCORD_CONFIGS } from "@/lib/character-classes";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {

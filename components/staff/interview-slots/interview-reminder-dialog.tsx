@@ -66,8 +66,12 @@ export function InterviewReminderDialog({
     if (!open) return;
 
     let cancelled = false;
-    setIsLoadingCandidates(true);
-    setExcludedIds(new Set());
+    queueMicrotask(() => {
+      if (!cancelled) {
+        setIsLoadingCandidates(true);
+        setExcludedIds(new Set());
+      }
+    });
 
     getEligibleInterviewReminderCandidatesAction()
       .then((list) => {
