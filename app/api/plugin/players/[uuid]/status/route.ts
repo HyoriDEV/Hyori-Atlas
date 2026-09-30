@@ -20,6 +20,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ uuid
       username: null,
       role: null,
       isStaff: false,
+      registrationStatus: null,
       whitelisted: false,
       activeBan: null,
     });
@@ -32,6 +33,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ uuid
     username: user.minecraftUsername,
     role: user.role,
     isStaff: user.role !== Role.PLAYER,
+    registrationStatus: user.registrationStatus,
     whitelisted: user.registrationStatus === RegistrationStatus.WHITELISTED,
     activeBan: ban
       ? {
