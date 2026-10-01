@@ -2,10 +2,30 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { CaretDown, CaretUp, CaretUpDown, MagnifyingGlass, Users, X } from "@phosphor-icons/react";
+import {
+  ArrowCounterClockwise,
+  CaretDown,
+  CaretUp,
+  CaretUpDown,
+  MagnifyingGlass,
+  Users,
+  X,
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Card } from "@/components/ui/card";
 import {
   Table,
@@ -29,7 +49,7 @@ import { TablePagination } from "@/components/dashboard/table-pagination";
 import { getClientPagePrefs, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { getClassPaletteColor, NEUTRAL_PALETTE_COLOR } from "@/lib/class-palette";
 import { PlayerOverrideCell } from "@/components/staff/distribution/player-override-cell";
-import { toggleDistributionProcessedAction } from "@/lib/actions/player-affiliation-actions";
+import { toggleDistributionProcessedAction, resetDistributionAction } from "@/lib/actions/player-affiliation-actions";
 import type { SerializedPlayerClass } from "@/components/staff/distribution/player-class-card";
 import type { PlayerAffiliationOverview } from "@/lib/services/player-affiliation-overview-service";
 
@@ -75,6 +95,21 @@ export function DistributionOverview({
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
   const [, startTransition] = useTransition();
+  const [isResetting, setIsResetting] = useState(false);
+
+  async function handleReset() {
+    setIsResetting(true);
+    const res = await resetDistributionAction();
+    setIsResetting(false);
+    if (res.success) {
+      toast.success("Distribution réinitialisée. Tous les choix retenus ont été remis au choix 1.");
+      // Reset local optimistic state
+      setOverrideState({});
+      setProcessedState({});
+    } else {
+      toast.error(res.error || "Impossible de réinitialiser la distribution.");
+    }
+  }
 
   // Derived players list with optimistic updates applied
   const players = useMemo(() => {
@@ -269,8 +304,8 @@ export function DistributionOverview({
       <div className="flex flex-col gap-2">
         <p className="text-muted-foreground text-sm">
           Répartition réelle des {players.length} joueur
-          {players.length > 1 ? "s" : ""} ayant renseigné leur affiliation, selon le choix retenu
-          par le staff (choix 1 par défaut).
+          {players.length > 1 ? "s" : ""} whitelistés (ou ayant une fiche validée) ayant renseigné
+          leur affiliation, selon le choix retenu par le staff (choix 1 par défaut).
         </p>
 
         <div className="grid grid-cols-1 gap-5 min-[1600px]:grid-cols-3 lg:grid-cols-2">
@@ -400,6 +435,43 @@ export function DistributionOverview({
               ))}
             </SelectContent>
           </Select>
+
+          <div className="ml-auto">
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive gap-1.5"
+                    disabled={isResetting}
+                  >
+                    <ArrowCounterClockwise className="size-3.5" />
+                    Réinitialiser
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Réinitialiser la distribution ?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Cette action va effacer tous les choix retenus (overrides) et réinitialiser le
+                    statut «&nbsp;Traité&nbsp;» de tous les joueurs. La distribution reviendra au
+                    choix 1 de chaque joueur. Cette action ne peut pas être annulée.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Annuler</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleReset}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Réinitialiser
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </div>
 
         <Card className="gap-0 overflow-hidden border py-0">

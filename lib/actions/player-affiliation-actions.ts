@@ -63,6 +63,31 @@ export async function setStaffOverrideChoiceAction(
   }
 }
 
+export async function resetDistributionAction(): Promise<PlayerAffiliationActionResult> {
+  try {
+    await requireRole(distributionAllowedRoles);
+
+    await prisma.characterSheet.updateMany({
+      where: {
+        primaryClassId: { not: null },
+      },
+      data: {
+        overrideClassId: null,
+        overrideRoleId: null,
+        distributionProcessed: false,
+      },
+    });
+
+    revalidatePath("/staff/distribution");
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : "Erreur lors de la réinitialisation.",
+    };
+  }
+}
+
 export async function toggleDistributionProcessedAction(
   sheetId: string,
   distributionProcessed: boolean
