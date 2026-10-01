@@ -92,7 +92,7 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
     category: "registration",
     defaultTitle: "Inscription — Candidature non retenue",
     defaultDescription:
-      "Votre candidature pour rejoindre **Hyori RP** n'a pas été retenue par l'équipe staff.\n\nVous pouvez consulter les détails depuis votre espace joueur.",
+      "Ta candidature pour rejoindre **Hyori RP** n'a pas été retenue par l'équipe staff.\n\nTu peux consulter les détails depuis ton espace joueur.",
     defaultButtonLabel: "Accéder à mon espace joueur",
     availableVariables: [
       { key: "{playerName}", description: "Pseudo du joueur" },

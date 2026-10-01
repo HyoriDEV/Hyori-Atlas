@@ -49,6 +49,8 @@ import { SkinHead } from "@/components/ui/skin-head";
 import { CopyButton } from "@/components/player/copy-button";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { AtlasPromoteButton } from "@/components/dashboard/atlas-promote-button";
+import { AtlasRejectWhitelistButton } from "@/components/dashboard/atlas-reject-whitelist-button";
+import { AtlasTransferDiscordButton } from "@/components/dashboard/atlas-transfer-discord-button";
 import { AtlasCharacterSheetSummary } from "@/components/dashboard/atlas-character-sheet-summary";
 import { AtlasCharacterTabs } from "@/components/dashboard/atlas-character-tabs";
 import { AtlasCreateCharacterDialog } from "@/components/dashboard/atlas-create-character-dialog";
@@ -180,6 +182,8 @@ export default async function AtlasPlayerPage({
     sheet?.reviewStatus === CharacterSheetStatus.VALIDATED &&
     player.registrationStatus !== RegistrationStatus.WHITELISTED;
   const isAdmin = staffUser.role === Role.ADMIN;
+  const canRefuse =
+    isAdmin && player.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
   const canManageCharacters = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
   const canSanction = player.role === Role.PLAYER;
@@ -328,6 +332,12 @@ export default async function AtlasPlayerPage({
         <Badge variant={registrationStatusBadgeVariant(player.registrationStatus)}>
           {registrationStatusLabels[player.registrationStatus]}
         </Badge>
+        {canRefuse && (
+          <AtlasRejectWhitelistButton
+            playerId={player.id}
+            pseudo={playerName}
+          />
+        )}
         {isAdmin && canPromote && (
           <AtlasPromoteButton
             playerId={player.id}
@@ -376,9 +386,20 @@ export default async function AtlasPlayerPage({
                   Discord
                 </span>
                 <div className="flex flex-col justify-center">
-                  <span className="text-sm font-medium">
-                    {player.discordDisplayName} ({player.discordUsername})
-                  </span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium">
+                      {player.discordDisplayName} ({player.discordUsername})
+                    </span>
+                    {isAdmin && (
+                      <AtlasTransferDiscordButton
+                        playerId={player.id}
+                        currentDiscordId={player.discordId}
+                        currentDisplayName={player.discordDisplayName}
+                        currentUsername={player.discordUsername}
+                        currentAvatarUrl={player.discordAvatarUrl}
+                      />
+                    )}
+                  </div>
                   <div className="text-muted-foreground flex items-center text-xs">
                     <span>ID: {player.discordId}</span>
                     {player.discordId && <CopyButton value={player.discordId} />}

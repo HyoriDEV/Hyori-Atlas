@@ -124,7 +124,8 @@ export async function notifyPlayerRegistrationStatus(
   override?: DiscordEmbedOverride | null,
   assignedClass?: string | null
 ): Promise<BotNotificationResult> {
-  const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player");
+  const defaultPath = status === RegistrationStatus.REJECTED ? "/player/rejection" : "/player";
+  const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl(defaultPath);
 
   let effectiveOverride = override;
   if (effectiveOverride === undefined) {
@@ -586,3 +587,64 @@ export async function fetchDiscordVillages(): Promise<{
     villages: result.data.villages,
   };
 }
+
+export interface DiscordSanctionApplyResult {
+  success: boolean;
+  inGuild: boolean;
+  backupId?: string;
+  removedRoleIds?: string[];
+  assignedRoleId?: string;
+  error?: string;
+}
+
+/**
+ * Applique une sanction d'exclusion sur Discord :
+ * - Sauvegarde persistante des rôles actuels du joueur
+ * - Retrait de tous ses rôles
+ * - Attribution du rôle unique d'exclusion
+ * Si le joueur n'est pas présent sur le serveur Discord, l'action est ignorée sans erreur bloquante.
+ */
+export async function excludePlayerOnDiscord(
+  discordId: string,
+  reason: string = "Refus d'accès à la whitelist",
+  metadata?: Record<string, unknown>
+): Promise<DiscordSanctionApplyResult> {
+  const result = await callDiscordBot<{
+    success: boolean;
+    inGuild?: boolean;
+    backupId?: string;
+    removedRoleIds?: string[];
+    assignedRoleId?: string;
+    message?: string;
+  }>("/sanctions/apply", "POST", {
+    discordId,
+    type: "EXCLUSION",
+    reason,
+    notifyDm: false,
+    ignoreIfNotInGuild: true,
+    metadata,
+  });
+
+  if (!result.success || !result.data) {
+    if (result.error && result.error.toLowerCase().includes("not found in the guild")) {
+      return {
+        success: true,
+        inGuild: false,
+      };
+    }
+    return {
+      success: false,
+      inGuild: false,
+      error: result.error || "Impossible d'appliquer l'exclusion sur Discord.",
+    };
+  }
+
+  return {
+    success: true,
+    inGuild: result.data.inGuild !== false,
+    backupId: result.data.backupId,
+    removedRoleIds: result.data.removedRoleIds,
+    assignedRoleId: result.data.assignedRoleId,
+  };
+}
+
