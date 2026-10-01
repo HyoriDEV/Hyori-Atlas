@@ -1,5 +1,9 @@
 import { prisma } from "@/lib/prisma";
-import { CharacterStatus } from "@/lib/generated/prisma/enums";
+import {
+  CharacterStatus,
+  CharacterSheetStatus,
+  RegistrationStatus,
+} from "@/lib/generated/prisma/enums";
 
 const UNSPECIFIED_ROLE_LABEL = "Autre";
 
@@ -8,6 +12,8 @@ export interface PlayerAffiliationRow {
   playerId: string;
   playerName: string;
   minecraftUsername: string | null;
+  registrationStatus: RegistrationStatus;
+  sheetReviewStatus: CharacterSheetStatus;
   distributionProcessed: boolean;
   primaryClassId: string | null;
   primaryClassName: string | null;
@@ -52,10 +58,20 @@ export async function getPlayerAffiliationOverview(): Promise<PlayerAffiliationO
     where: {
       status: CharacterStatus.ACTIVE,
       primaryClassId: { not: null },
+      // Only include players who are whitelisted OR have a validated sheet
+      OR: [
+        { player: { registrationStatus: RegistrationStatus.WHITELISTED } },
+        { reviewStatus: CharacterSheetStatus.VALIDATED },
+      ],
     },
     include: {
       player: {
-        select: { id: true, minecraftUsername: true, discordDisplayName: true },
+        select: {
+          id: true,
+          minecraftUsername: true,
+          discordDisplayName: true,
+          registrationStatus: true,
+        },
       },
       primaryClass: true,
       primaryRole: true,
@@ -76,6 +92,8 @@ export async function getPlayerAffiliationOverview(): Promise<PlayerAffiliationO
       playerId: sheet.player.id,
       playerName: sheet.player.minecraftUsername ?? sheet.player.discordDisplayName,
       minecraftUsername: sheet.player.minecraftUsername,
+      registrationStatus: sheet.player.registrationStatus,
+      sheetReviewStatus: sheet.reviewStatus,
       distributionProcessed: sheet.distributionProcessed ?? false,
       primaryClassId: sheet.primaryClassId,
       primaryClassName: sheet.primaryClass?.name ?? null,

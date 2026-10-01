@@ -14,6 +14,7 @@ import {
 } from "@/lib/generated/prisma/enums";
 import { characterSheetReviewerRoles } from "@/lib/navigation";
 import {
+  excludePlayerOnDiscord,
   notifyPlayerCharacterSheetStatus,
   notifyPlayerRegistrationStatus,
   syncPlayerWhitelistClassRole,
@@ -279,3 +280,95 @@ export async function promoteToWhitelisted(
     discordNotified,
   };
 }
+
+/**
+ * Refuse un joueur actuellement en cours de whitelist (WHITELIST_IN_PROGRESS).
+ * - Son statut passe à REJECTED (comme s'il n'avait pas passé la liste d'attente).
+ * - Sa fiche personnage reste enregistrée en base et n'est pas modifiée.
+ * - S'il est présent sur le Discord communautaire : retrait de tous ses rôles et attribution du rôle unique d'exclusion avec sauvegarde des rôles précédents.
+ * - Envoi d'une notification MP de refus identique à celle de la liste d'attente.
+ */
+export async function rejectWhitelistPlayer(userId: string) {
+  const staffUser = await requireRole([Role.ADMIN]);
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      discordId: true,
+      minecraftUsername: true,
+      discordDisplayName: true,
+      registrationStatus: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("Joueur introuvable.");
+  }
+
+  if (user.registrationStatus !== RegistrationStatus.WHITELIST_IN_PROGRESS) {
+    throw new Error("Seul un joueur en statut 'En whitelist' peut être refusé.");
+  }
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId, registrationStatus: RegistrationStatus.WHITELIST_IN_PROGRESS },
+      data: { registrationStatus: RegistrationStatus.REJECTED },
+    }),
+    prisma.registrationStatusHistory.create({
+      data: {
+        userId,
+        authorId: staffUser.id,
+        status: RegistrationStatus.REJECTED,
+      },
+    }),
+  ]);
+
+  let discordSanctionApplied = false;
+  let discordError: string | undefined;
+  let discordNotified = false;
+
+  if (user.discordId) {
+    // 1. Exclusion Discord avec sauvegarde des rôles (si présent sur le serveur communautaire)
+    const sanctionResult = await excludePlayerOnDiscord(
+      user.discordId,
+      "Refus d'accès à la whitelist",
+      {
+        action: "WHITELIST_REFUSAL",
+        staffAuthorId: staffUser.id,
+        userId: user.id,
+      }
+    );
+
+    if (sanctionResult.success) {
+      discordSanctionApplied = sanctionResult.inGuild;
+    } else {
+      discordError = sanctionResult.error;
+      console.error(
+        `[RejectWhitelistPlayer] Échec de l'exclusion Discord pour ${user.discordId}:`,
+        sanctionResult.error
+      );
+    }
+
+    // 2. Notification MP identique au refus de liste d'attente
+    const notifyResult = await notifyPlayerRegistrationStatus(
+      user.discordId,
+      RegistrationStatus.REJECTED
+    );
+    discordNotified = notifyResult.success && Boolean(notifyResult.notified);
+  }
+
+  revalidateSheetSurfaces(userId);
+  revalidatePath("/staff/waitlist");
+  revalidatePath("/player");
+  revalidatePath("/player", "layout");
+  revalidatePath("/player/rejection");
+
+  return {
+    success: true,
+    discordSanctionApplied,
+    discordError,
+    discordNotified,
+  };
+}
+

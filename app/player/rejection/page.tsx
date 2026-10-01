@@ -25,9 +25,8 @@ export default async function RejectionPage() {
         </CardHeader>
         <CardContent className="text-muted-foreground flex flex-col gap-4 text-base leading-relaxed">
           <p>
-            Merci pour ton inscription sur la liste d&apos;attente de Hyori RP. En raison d&apos;un
-            nombre de places limité, ta candidature pour ce projet n&apos;a pas été retenue.
-            L&apos;accès au reste du parcours d&apos;inscription est donc clos.
+            Ton profil ne correspond pas à la vision portée par la direction à l&apos;égard du
+            projet Hyori RP. Nous te remercions pour ta participation.
           </p>
         </CardContent>
       </Card>
