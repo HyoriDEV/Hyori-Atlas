@@ -61,7 +61,7 @@ export function AtlasCharacterTabs({
               className={cn(
                 "flex items-center justify-between gap-3 rounded-lg border px-3 py-2 transition-colors",
                 isSelected
-                  ? "border-primary/50 bg-primary/5 shadow-xs"
+                  ? "border-border bg-muted/60 shadow-xs"
                   : "border-border/60 hover:border-border hover:bg-muted/30 cursor-pointer"
               )}
               onClick={() => {
@@ -71,7 +71,7 @@ export function AtlasCharacterTabs({
               <span
                 className={cn(
                   "truncate text-sm",
-                  isSelected ? "text-primary font-semibold" : "font-medium"
+                  isSelected ? "font-semibold" : "font-medium"
                 )}
               >
                 {charName}
