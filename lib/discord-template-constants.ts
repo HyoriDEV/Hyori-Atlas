@@ -1,5 +1,6 @@
 export type DiscordTemplateId =
   | "TICKET_CREATED"
+  | "TICKET_RP_STAFF_SUMMONED"
   | "TICKET_MESSAGE"
   | "REGISTRATION_ACCEPTED"
   | "REGISTRATION_WHITELISTED"
@@ -37,6 +38,24 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
       { key: "{description}", description: "Contenu du premier message" },
       { key: "{ticketId}", description: "Identifiant du ticket" },
       { key: "{url}", description: "Lien vers le ticket sur l'espace staff" },
+    ],
+  },
+  TICKET_RP_STAFF_SUMMONED: {
+    id: "TICKET_RP_STAFF_SUMMONED",
+    label: "Convocation Suivi RP (Salon Discord Suivi RP)",
+    category: "ticket",
+    isChannelNotification: true,
+    defaultTitle: "Convocation Suivi RP — {subject}",
+    defaultDescription:
+      "L'équipe de **Suivi RP** a été convoquée sur le ticket de **{author}** (**« {subject} »**).\n\n**Catégorie :** {category}\n\n> {description}\n\nUn administrateur a rendu ce ticket accessible aux staffs de suivi RP pour intervention ou avis.",
+    defaultButtonLabel: "Accéder au ticket",
+    availableVariables: [
+      { key: "{author}", description: "Pseudo du joueur créateur" },
+      { key: "{subject}", description: "Sujet du ticket" },
+      { key: "{category}", description: "Catégorie du ticket" },
+      { key: "{description}", description: "Contenu ou description du ticket" },
+      { key: "{ticketId}", description: "Identifiant du ticket" },
+      { key: "{url}", description: "Lien direct vers le ticket staff" },
     ],
   },
   TICKET_MESSAGE: {

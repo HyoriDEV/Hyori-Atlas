@@ -100,3 +100,25 @@ export async function getTicketCreationNotificationConfig(
     override,
   };
 }
+
+/**
+ * Récupère les paramètres de convocation de l'équipe Suivi RP (salon Discord dédié, rôle et override).
+ */
+export async function getTicketRpSummonedNotificationConfig(
+  variables: Record<string, string | null | undefined>
+) {
+  const templatesMap = await getDiscordNotificationTemplates();
+  const record = templatesMap.get("TICKET_RP_STAFF_SUMMONED");
+
+  const enabled = record ? record.enabled : true;
+  const channelId = record?.channelId?.trim() || null;
+  const mentionRoleId = record?.roleId?.trim() || null;
+  const override = await getEffectiveDiscordOverride("TICKET_RP_STAFF_SUMMONED", variables);
+
+  return {
+    enabled,
+    channelId,
+    mentionRoleId,
+    override,
+  };
+}

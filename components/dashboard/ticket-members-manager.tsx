@@ -153,7 +153,14 @@ export function TicketMembersManager({
                       </Avatar>
                     )}
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium">{name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium">{name}</span>
+                        {member.isCreator && (
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+                            Créateur
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ) : (
@@ -171,7 +178,14 @@ export function TicketMembersManager({
                       </Avatar>
                     )}
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium hover:underline">{name}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm font-medium hover:underline">{name}</span>
+                        {member.isCreator && (
+                          <span className="rounded-md bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+                            Créateur
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </Link>
                 )}

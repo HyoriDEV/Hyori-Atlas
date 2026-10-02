@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
-import { requireActivePlayer, requireRole } from "@/lib/dal";
+import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { ticketCategoryLabels, ticketStaffRoles } from "@/lib/navigation";
 import { serializeConversationMessage } from "@/lib/conversation";
@@ -15,10 +15,15 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
-import { notifyPlayerTicketMessage, notifyTicketCreated } from "@/lib/services/discord-bot-service";
+import {
+  notifyPlayerTicketMessage,
+  notifyTicketCreated,
+  notifyTicketRpSummoned,
+} from "@/lib/services/discord-bot-service";
 import {
   getEffectiveDiscordOverride,
   getTicketCreationNotificationConfig,
+  getTicketRpSummonedNotificationConfig,
 } from "@/lib/services/discord-template-service";
 
 export async function createTicket(category: TicketCategory, subject: string, description: string) {
@@ -228,7 +233,7 @@ export async function sendStaffTicketMessage(
   body?: string,
   imageUrl?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const staffUser = await requireRole(ticketStaffRoles);
+  const staffUser = await requireUser();
 
   const trimmedBody = body?.trim();
   if (!trimmedBody && !imageUrl) {
@@ -241,6 +246,12 @@ export async function sendStaffTicketMessage(
   }
   if (ticket.status === TicketStatus.ARCHIVED) {
     return { success: false, error: "Ce ticket est archivé. Les réponses sont fermées." };
+  }
+
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    return { success: false, error: "Tu n'as pas accès à ce ticket." };
   }
 
   const message = await prisma.$transaction(async (tx) => {
@@ -260,31 +271,13 @@ export async function sendStaffTicketMessage(
       data: { status: TicketStatus.PENDING_PLAYER },
     });
 
-    await tx.conversationMember.upsert({
-      where: {
-        conversationId_userId: {
-          conversationId: ticket.conversationId,
-          userId: staffUser.id,
-        },
-      },
-      create: {
-        conversationId: ticket.conversationId,
-        userId: staffUser.id,
-        lastReadAt: newMessage.createdAt,
-      },
-      update: {
-        lastReadAt: newMessage.createdAt,
-      },
-    });
-
     return newMessage;
   });
 
-  publish(ticket.conversationId, serializeConversationMessage(message));
+  publish(ticket.conversationId, serializeConversationMessage(message, true));
 
-  // Déclencher les notifications Discord pour les joueurs membres du ticket (anti-spam)
-  const authorName =
-    staffUser.minecraftUsername ?? staffUser.discordDisplayName ?? "L'équipe staff";
+  // Déclencher les notifications Discord pour les joueurs membres du ticket (anti-spam anonymisé)
+  const authorName = "L'équipe staff";
   dispatchTicketMessageNotifications({
     ticketId: ticket.id,
     ticketSubject: ticket.subject,
@@ -303,10 +296,90 @@ export async function sendStaffTicketMessage(
   return { success: true };
 }
 
-export async function archiveTicket(ticketId: string) {
-  await requireRole(ticketStaffRoles);
+export async function toggleTicketRpTrackingAccess(ticketId: string): Promise<{
+  success: boolean;
+  rpTrackingAccess: boolean;
+  error?: string;
+}> {
+  await requireRole([Role.ADMIN]);
 
-  const ticket = await prisma.ticket.update({
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: {
+      player: true,
+      conversation: true,
+    },
+  });
+
+  if (!ticket) {
+    return { success: false, rpTrackingAccess: false, error: "Ticket introuvable." };
+  }
+
+  const nextAccess = !ticket.rpTrackingAccess;
+
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { rpTrackingAccess: nextAccess },
+  });
+
+  if (nextAccess) {
+    const categoryLabel = ticketCategoryLabels[ticket.category] ?? ticket.category;
+    const authorName =
+      ticket.player.minecraftUsername ??
+      ticket.player.discordDisplayName ??
+      ticket.player.discordUsername ??
+      "Un joueur";
+    const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
+
+    getTicketRpSummonedNotificationConfig({
+      author: authorName,
+      subject: ticket.subject,
+      category: categoryLabel,
+      description: ticket.subject,
+      ticketId: ticket.id,
+      url: ticketStaffUrl,
+    })
+      .then((config) => {
+        if (config.enabled) {
+          return notifyTicketRpSummoned({
+            channelId: config.channelId,
+            mentionRoleId: config.mentionRoleId,
+            ticketId: ticket.id,
+            ticketSubject: ticket.subject,
+            ticketCategory: categoryLabel,
+            authorName,
+            ticketDescription: ticket.subject,
+            customTicketStaffUrl: ticketStaffUrl,
+            override: config.override,
+          });
+        }
+      })
+      .catch((err) => {
+        console.warn(
+          "[TicketNotification] Échec lors de la notification de convocation Suivi RP:",
+          err
+        );
+      });
+  }
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+
+  return { success: true, rpTrackingAccess: nextAccess };
+}
+
+export async function archiveTicket(ticketId: string) {
+  const staffUser = await requireUser();
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  if (!ticket) throw new Error("Ticket introuvable.");
+
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    throw new Error("Accès refusé.");
+  }
+
+  await prisma.ticket.update({
     where: { id: ticketId },
     data: { status: TicketStatus.ARCHIVED },
   });
@@ -324,9 +397,17 @@ export async function archiveTicket(ticketId: string) {
 }
 
 export async function reopenTicket(ticketId: string) {
-  await requireRole(ticketStaffRoles);
+  const staffUser = await requireUser();
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  if (!ticket) throw new Error("Ticket introuvable.");
 
-  const ticket = await prisma.ticket.update({
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    throw new Error("Accès refusé.");
+  }
+
+  await prisma.ticket.update({
     where: { id: ticketId },
     data: { status: TicketStatus.PENDING_STAFF },
   });
@@ -344,9 +425,14 @@ export async function reopenTicket(ticketId: string) {
 }
 
 export async function addTicketMember(ticketId: string, playerId: string) {
-  await requireRole(ticketStaffRoles);
-
+  const staffUser = await requireUser();
   const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
+
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    throw new Error("Accès refusé.");
+  }
 
   await prisma.conversationMember.upsert({
     where: {
@@ -369,9 +455,14 @@ export async function addTicketMember(ticketId: string, playerId: string) {
 }
 
 export async function removeTicketMember(ticketId: string, playerId: string) {
-  await requireRole(ticketStaffRoles);
-
+  const staffUser = await requireUser();
   const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
+
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    throw new Error("Accès refusé.");
+  }
 
   await prisma.conversationMember.deleteMany({
     where: {

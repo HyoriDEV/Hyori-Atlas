@@ -94,12 +94,13 @@ export default async function TicketDetailPage({
   const messages = ticket.conversation.messages || [];
 
   const membersData = ticket.conversation.members
-    .filter((m) => m.user.role === Role.PLAYER)
+    .filter((m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId)
     .map((m) => ({
       userId: m.userId,
       minecraftUsername: m.user.minecraftUsername,
       discordDisplayName: m.user.discordDisplayName,
       discordAvatarUrl: m.user.discordAvatarUrl,
+      isCreator: m.userId === ticket.playerId,
     }));
 
   return (
@@ -128,9 +129,9 @@ export default async function TicketDetailPage({
         <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
             conversationId={ticket.conversationId}
-            initialMessages={messages.map((m) => serializeConversationMessage(m, isStaff))}
+            initialMessages={messages.map((m) => serializeConversationMessage(m, false))}
             viewerId={user.id}
-            viewerIsStaff={isStaff}
+            viewerIsStaff={false}
             sendAction={async (cId, body, imageUrl) => {
               "use server";
               return await sendTicketMessage(ticket.id, body, imageUrl);

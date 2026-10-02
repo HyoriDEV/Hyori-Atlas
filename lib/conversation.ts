@@ -3,6 +3,7 @@ import type {
   ConversationMessageVersion,
   User,
 } from "@/lib/generated/prisma/client";
+import { MessageAuthorType } from "@/lib/generated/prisma/enums";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
 
 export function serializeConversationMessage(
@@ -13,17 +14,24 @@ export function serializeConversationMessage(
   isStaff: boolean = false
 ): SerializedConversationMessage {
   const isEdited = (message.versions && message.versions.length > 0) || false;
+  const isAnonymizedStaff = !isStaff && message.authorType === MessageAuthorType.STAFF;
 
   return {
     id: message.id,
     conversationId: message.conversationId,
-    authorId: message.authorId,
+    authorId: isAnonymizedStaff ? null : message.authorId,
     authorType: message.authorType,
-    authorName: message.author
-      ? (message.author.minecraftUsername ?? message.author.discordDisplayName)
-      : null,
-    authorMinecraftUsername: message.author?.minecraftUsername ?? null,
-    authorAvatarUrl: message.author?.discordAvatarUrl ?? null,
+    authorName: isAnonymizedStaff
+      ? "Staff"
+      : message.author
+        ? (message.author.minecraftUsername ?? message.author.discordDisplayName)
+        : null,
+    authorMinecraftUsername: isAnonymizedStaff
+      ? null
+      : (message.author?.minecraftUsername ?? null),
+    authorAvatarUrl: isAnonymizedStaff
+      ? "/HYORI-LOGO-COMPRESSED.jpg"
+      : (message.author?.discordAvatarUrl ?? null),
     body: message.body,
     imageUrl: message.imageUrl,
     linkHref: message.linkHref,
