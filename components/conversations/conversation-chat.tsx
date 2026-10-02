@@ -152,9 +152,19 @@ export function ConversationChat({
           }
           router.refresh();
         } else {
-          const message: SerializedConversationMessage =
+          const rawMessage: SerializedConversationMessage =
             data.type === "CREATE" ? data.message : data;
-          if (!viewerIsStaff && message.deletedAt) return;
+          if (!viewerIsStaff && rawMessage.deletedAt) return;
+          const message: SerializedConversationMessage =
+            !viewerIsStaff && rawMessage.authorType === MessageAuthorType.STAFF
+              ? {
+                  ...rawMessage,
+                  authorId: null,
+                  authorName: "Staff",
+                  authorMinecraftUsername: null,
+                  authorAvatarUrl: "/HYORI-LOGO-COMPRESSED.jpg",
+                }
+              : rawMessage;
           setMessages((previous) =>
             previous.some((existing) => existing.id === message.id)
               ? previous.map((existing) => (existing.id === message.id ? message : existing))
@@ -473,6 +483,7 @@ export function ConversationChat({
 
       const isOwn = msg.authorId === viewerId;
       const isStaffMessage = msg.authorType === MessageAuthorType.STAFF;
+      const effectiveAuthorId = isStaffMessage && !viewerIsStaff ? null : msg.authorId;
       const displayName = isOwn
         ? "Moi"
         : isStaffMessage && !viewerIsStaff
@@ -483,13 +494,17 @@ export function ConversationChat({
               ? "Staff"
               : "Joueur";
 
-      const minecraftUsername = isStaffMessage ? null : (msg.authorMinecraftUsername ?? null);
-      const avatarUrl = isStaffMessage ? "/HYORI-LOGO-COMPRESSED.jpg" : msg.authorAvatarUrl;
+      const minecraftUsername =
+        isStaffMessage && !viewerIsStaff ? null : (msg.authorMinecraftUsername ?? null);
+      const avatarUrl =
+        isStaffMessage && !viewerIsStaff
+          ? "/HYORI-LOGO-COMPRESSED.jpg"
+          : (msg.authorAvatarUrl ?? (isStaffMessage ? "/HYORI-LOGO-COMPRESSED.jpg" : null));
 
       if (!currentGroup) {
         currentGroup = {
           id: msg.id,
-          authorId: msg.authorId,
+          authorId: effectiveAuthorId,
           authorType: msg.authorType,
           displayName,
           minecraftUsername,
@@ -503,7 +518,10 @@ export function ConversationChat({
         const currTime = new Date(msg.createdAt).getTime();
         const timeDiffMs = currTime - prevTime;
         const sameAuthor =
-          currentGroup.authorId === msg.authorId && currentGroup.authorType === msg.authorType;
+          !viewerIsStaff && isStaffMessage && currentGroup.authorType === MessageAuthorType.STAFF
+            ? true
+            : currentGroup.authorId === effectiveAuthorId &&
+              currentGroup.authorType === msg.authorType;
 
         if (sameAuthor && timeDiffMs <= 10 * 60 * 1000) {
           currentGroup.messages.push(msg);
@@ -511,7 +529,7 @@ export function ConversationChat({
           items.push({ type: "group", group: currentGroup });
           currentGroup = {
             id: msg.id,
-            authorId: msg.authorId,
+            authorId: effectiveAuthorId,
             authorType: msg.authorType,
             displayName,
             minecraftUsername,

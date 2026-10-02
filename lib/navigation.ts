@@ -200,7 +200,7 @@ export const staffTicketsItem: StaffNavItem = {
   label: "Tickets",
   href: "/staff/tickets",
   iconKey: "ticket",
-  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT],
+  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
 };
 
 export const staffBdaReportsItem: StaffNavItem = {
@@ -364,6 +364,10 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   if (role === Role.RP_TRACKING) {
     return [
       overviewGroup,
+      {
+        title: "Support",
+        items: [staffTicketsItem],
+      },
       {
         title: "Gestion RP",
         items: [staffAtlasItem, staffRpGroupsItem, staffDistributionItem, staffRpTrackingItem],

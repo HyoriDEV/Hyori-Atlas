@@ -1,7 +1,8 @@
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { subscribe } from "@/lib/services/conversation-events";
-import { ConversationType } from "@/lib/generated/prisma/enums";
+import { ConversationType, Role, MessageAuthorType } from "@/lib/generated/prisma/enums";
+import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
 import { rpTrackingStaffRoles, ticketStaffRoles } from "@/lib/navigation";
 
 export const dynamic = "force-dynamic";
@@ -34,8 +35,18 @@ export async function GET(
 
   let hasStaffAccess = false;
   if (!isMember) {
-    if (conversation.type === ConversationType.TICKET && ticketStaffRoles.includes(user.role)) {
-      hasStaffAccess = true;
+    if (conversation.type === ConversationType.TICKET) {
+      if (ticketStaffRoles.includes(user.role)) {
+        hasStaffAccess = true;
+      } else if (user.role === Role.RP_TRACKING) {
+        const ticket = await prisma.ticket.findUnique({
+          where: { conversationId },
+          select: { rpTrackingAccess: true },
+        });
+        if (ticket?.rpTrackingAccess) {
+          hasStaffAccess = true;
+        }
+      }
     } else if (
       conversation.type === ConversationType.RP_TRACKING &&
       rpTrackingStaffRoles.includes(user.role)
@@ -52,13 +63,38 @@ export async function GET(
   let unsubscribe: (() => void) | null = null;
   let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
+  function anonymizeStaffMessage(msg: SerializedConversationMessage): SerializedConversationMessage {
+    if (msg.authorType !== MessageAuthorType.STAFF) return msg;
+    return {
+      ...msg,
+      authorId: null,
+      authorName: "Staff",
+      authorMinecraftUsername: null,
+      authorAvatarUrl: "/HYORI-LOGO-COMPRESSED.jpg",
+      versions: undefined,
+      deletedAt: null,
+    };
+  }
+
   const stream = new ReadableStream({
     start(controller) {
       controller.enqueue(encoder.encode(": connected\n\n"));
 
-      unsubscribe = subscribe(conversationId, (message) => {
+      unsubscribe = subscribe(conversationId, (event) => {
         try {
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify(message)}\n\n`));
+          let payload = event;
+          if (!hasStaffAccess) {
+            if ("type" in payload) {
+              if (payload.type === "CREATE") {
+                payload = { ...payload, message: anonymizeStaffMessage(payload.message) };
+              } else if (payload.type === "UPDATE") {
+                payload = { ...payload, message: anonymizeStaffMessage(payload.message) };
+              }
+            } else if ("authorType" in payload) {
+              payload = anonymizeStaffMessage(payload);
+            }
+          }
+          controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
         } catch {
           // Stream controller might already be closed
         }

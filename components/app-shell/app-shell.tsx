@@ -25,7 +25,10 @@ import {
   BookBookmark,
   Scroll,
   Scales,
+  MagnifyingGlass,
 } from "@phosphor-icons/react";
+
+import { GlobalSearchDialog } from "@/components/staff/global-search-dialog";
 
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/actions/auth-actions";
@@ -122,6 +125,21 @@ export function AppShell({
   const pathname = usePathname();
   const initial = user.name.charAt(0).toUpperCase();
   const [countsOverride, setCountsOverride] = useState<Record<string, number>>({});
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user.isStaff) return;
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setIsSearchOpen((prev) => !prev);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [user.isStaff]);
 
   useEffect(() => {
     let isMounted = true;
@@ -364,9 +382,25 @@ export function AppShell({
         </SidebarFooter>
       </Sidebar>
       <SidebarInset className="flex h-svh max-h-svh flex-col overflow-hidden">
-        <header className="border-border flex h-12 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger />
-          <span className={cn("text-muted-foreground text-sm")}>{sectionLabel}</span>
+        <header className="border-border flex h-12 shrink-0 items-center justify-between gap-2 border-b px-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <SidebarTrigger />
+            <span className={cn("text-muted-foreground truncate text-sm")}>{sectionLabel}</span>
+          </div>
+          {user.isStaff && (
+            <button
+              type="button"
+              onClick={() => setIsSearchOpen(true)}
+              className="text-muted-foreground hover:text-foreground hover:bg-muted/60 border-border/50 bg-muted/20 flex shrink-0 cursor-pointer items-center gap-2 rounded-md border px-2.5 py-1 text-xs transition-colors select-none"
+              title="Recherche globale (Ctrl+K)"
+            >
+              <MagnifyingGlass className="size-3.5 shrink-0 opacity-70" />
+              <span className="hidden font-normal sm:inline">Recherche</span>
+              <kbd className="border-border/70 bg-background/80 text-muted-foreground inline-flex items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-2xs">
+                Ctrl K
+              </kbd>
+            </button>
+          )}
         </header>
         <div
           className={cn(
@@ -385,6 +419,7 @@ export function AppShell({
           </div>
         </div>
       </SidebarInset>
+      {user.isStaff && <GlobalSearchDialog open={isSearchOpen} onOpenChange={setIsSearchOpen} />}
     </SidebarProvider>
   );
 }

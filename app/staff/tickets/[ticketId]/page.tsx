@@ -2,8 +2,21 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
-import { requireRole } from "@/lib/dal";
+import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
+import { ticketCategoryLabels, ticketStaffRoles, ticketStatusLabels } from "@/lib/navigation";
+import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
+import { formatDate } from "@/lib/date";
+import { serializeConversationMessage } from "@/lib/conversation";
+import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
+import { Badge } from "@/components/ui/badge";
+import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
+import { ConversationChat } from "@/components/conversations/conversation-chat";
+import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
+import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
+import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
+import { TicketRpAccessButton } from "@/components/dashboard/ticket-rp-access-button";
 
 export async function generateMetadata({
   params,
@@ -39,18 +52,6 @@ export async function generateMetadata({
     title: playerName ? `Ticket de ${playerName}` : "Ticket Staff",
   };
 }
-import { staffNavItems, ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
-import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
-import { formatDate } from "@/lib/date";
-import { TicketStatus } from "@/lib/generated/prisma/enums";
-import { serializeConversationMessage } from "@/lib/conversation";
-import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
-import { Badge } from "@/components/ui/badge";
-import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
-import { ConversationChat } from "@/components/conversations/conversation-chat";
-import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
-import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
-import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 
 export default async function TicketStaffDetailPage({
   params,
@@ -58,8 +59,7 @@ export default async function TicketStaffDetailPage({
   params: Promise<{ ticketId: string }>;
 }) {
   const { ticketId } = await params;
-  const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
-  const staffUser = await requireRole(item.roles);
+  const staffUser = await requireUser();
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
@@ -86,23 +86,11 @@ export default async function TicketStaffDetailPage({
     notFound();
   }
 
-  // Marquer immédiatement la conversation comme lue pour ce membre du staff
-  await prisma.conversationMember.upsert({
-    where: {
-      conversationId_userId: {
-        conversationId: ticket.conversationId,
-        userId: staffUser.id,
-      },
-    },
-    create: {
-      conversationId: ticket.conversationId,
-      userId: staffUser.id,
-      lastReadAt: new Date(),
-    },
-    update: {
-      lastReadAt: new Date(),
-    },
-  });
+  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
+  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
+  if (!isRegularStaff && !isSummonedRpStaff) {
+    notFound();
+  }
 
   const allPlayers = await prisma.user.findMany({
     select: {
@@ -126,12 +114,15 @@ export default async function TicketStaffDetailPage({
   const messages = ticket.conversation.messages || [];
   const playerName = ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
 
-  const membersData = ticket.conversation.members.map((m) => ({
-    userId: m.userId,
-    minecraftUsername: m.user.minecraftUsername,
-    discordDisplayName: m.user.discordDisplayName,
-    discordAvatarUrl: m.user.discordAvatarUrl,
-  }));
+  const membersData = ticket.conversation.members
+    .filter((m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId)
+    .map((m) => ({
+      userId: m.userId,
+      minecraftUsername: m.user.minecraftUsername,
+      discordDisplayName: m.user.discordDisplayName,
+      discordAvatarUrl: m.user.discordAvatarUrl,
+      isCreator: m.userId === ticket.playerId,
+    }));
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
@@ -161,6 +152,11 @@ export default async function TicketStaffDetailPage({
           members={membersData}
           availablePlayers={allPlayers}
           className="lg:hidden"
+        />
+        <TicketRpAccessButton
+          ticketId={ticket.id}
+          rpTrackingAccess={ticket.rpTrackingAccess}
+          isAdmin={staffUser.role === Role.ADMIN}
         />
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>

@@ -24,7 +24,19 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
     }),
     prisma.ticket.findMany({
       where: {
-        conversation: { members: { some: { userId } } },
+        OR: [
+          { playerId: userId },
+          {
+            conversation: {
+              members: {
+                some: {
+                  userId,
+                  user: { role: Role.PLAYER },
+                },
+              },
+            },
+          },
+        ],
         status: { not: TicketStatus.ARCHIVED },
       },
       select: {
@@ -78,35 +90,23 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
   };
 }
 
-export async function getStaffBadgeCounts(userId: string): Promise<Record<string, number>> {
+export async function getStaffBadgeCounts(
+  userId: string,
+  role?: Role
+): Promise<Record<string, number>> {
+  const staffTicketFilter =
+    role === Role.RP_TRACKING
+      ? { status: TicketStatus.PENDING_STAFF, rpTrackingAccess: true }
+      : { status: TicketStatus.PENDING_STAFF };
+
   const [
-    activeTickets,
+    pendingStaffTicketsCount,
     unreadBdaReportsCount,
     atlasPlayersCount,
     registeredInterviewBookingsCount,
   ] = await Promise.all([
-    prisma.ticket.findMany({
-      where: { status: { not: TicketStatus.ARCHIVED } },
-      select: {
-        id: true,
-        conversation: {
-          select: {
-            members: {
-              where: { userId },
-              select: { lastReadAt: true, joinedAt: true },
-            },
-            messages: {
-              where: {
-                deletedAt: null,
-                authorId: { not: userId },
-              },
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: { createdAt: true },
-            },
-          },
-        },
-      },
+    prisma.ticket.count({
+      where: staffTicketFilter,
     }),
     prisma.bdaReport.count({
       where: { status: BdaReportStatus.UNREAD },
@@ -128,17 +128,8 @@ export async function getStaffBadgeCounts(userId: string): Promise<Record<string
     }),
   ]);
 
-  const unreadTicketsCount = activeTickets.filter((t) => {
-    const member = t.conversation.members[0];
-    const lastMessage = t.conversation.messages[0];
-    if (!lastMessage) return false;
-    if (!member) return true;
-    const readThreshold = member.lastReadAt ?? member.joinedAt;
-    return lastMessage.createdAt > readThreshold;
-  }).length;
-
   return {
-    "/staff/tickets": unreadTicketsCount,
+    "/staff/tickets": pendingStaffTicketsCount,
     "/staff/bda-reports": unreadBdaReportsCount,
     "/staff/atlas": atlasPlayersCount,
     "/staff/interview-slots": registeredInterviewBookingsCount,
@@ -154,7 +145,7 @@ export async function getSidebarBadgeCountsAction(): Promise<Record<string, numb
     return playerCounts;
   }
 
-  const staffCounts = await getStaffBadgeCounts(user.id);
+  const staffCounts = await getStaffBadgeCounts(user.id, user.role);
   return {
     ...playerCounts,
     ...staffCounts,

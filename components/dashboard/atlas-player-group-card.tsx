@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowSquareOut, PencilSimple, Plus } from "@phosphor-icons/react";
+import { PencilSimple, Plus } from "@phosphor-icons/react";
 
 import {
   characterSheetStatusBadgeVariant,
@@ -106,28 +106,8 @@ export function AtlasPlayerGroupCard({
 
         {/* Content */}
         {group ? (
-          <div className="flex flex-1 flex-col gap-3.5">
-            <div className="flex items-center justify-between gap-2 border-b pb-3">
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <Link
-                  href="/staff/groups"
-                  className="text-foreground flex items-center gap-1.5 text-sm font-medium hover:underline"
-                >
-                  <span className="truncate">{group.name}</span>
-                  <ArrowSquareOut className="text-muted-foreground size-3.5 shrink-0" />
-                </Link>
-                {group.description && (
-                  <p className="text-muted-foreground line-clamp-2 text-xs">{group.description}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Members preview */}
-            <div className="flex flex-col gap-2">
-              <span className="text-muted-foreground text-xs font-semibold">
-                Membres du groupe :
-              </span>
-              <div className="flex max-h-[180px] flex-col gap-2 overflow-y-auto pr-1">
+          <div className="flex flex-1 flex-col">
+            <div className="flex max-h-[220px] flex-col gap-2 overflow-y-auto pr-1">
                 {group.members.map((m) => {
                   const isCurrent = m.id === playerId;
                   const name = m.minecraftUsername ?? m.discordDisplayName;
@@ -202,7 +182,6 @@ export function AtlasPlayerGroupCard({
                 })}
               </div>
             </div>
-          </div>
         ) : (
           <p className="text-muted-foreground text-xs">Aucun groupe RP assigné à ce joueur.</p>
         )}

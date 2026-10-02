@@ -145,7 +145,19 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
   const activeTab = searchParams.tab === "archived" ? "archived" : "active";
 
   const userFilter = {
-    conversation: { members: { some: { userId: user.id } } },
+    OR: [
+      { playerId: user.id },
+      {
+        conversation: {
+          members: {
+            some: {
+              userId: user.id,
+              user: { role: Role.PLAYER },
+            },
+          },
+        },
+      },
+    ],
   };
 
   const [activeTickets, archivedTickets] = await Promise.all([
@@ -231,7 +243,9 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
         conversation: ticket.conversation
           ? {
               ...ticket.conversation,
-              members: ticket.conversation.members.filter((m) => m.user.role === Role.PLAYER),
+              members: ticket.conversation.members.filter(
+                (m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId
+              ),
             }
           : null,
       };
