@@ -190,7 +190,10 @@ export function AppShell({
   const isFullWidth = allNavItems.some((item) => {
     if (!item.fullWidth) return false;
     const isExactRoot =
-      item.href === "/player" || item.href === "/staff" || item.href === "/player/writing";
+      item.href === "/player" ||
+      item.href === "/staff" ||
+      item.href === "/player/writing" ||
+      item.href === "/staff/tickets";
     return isExactRoot
       ? pathname === item.href
       : pathname === item.href || pathname?.startsWith(`${item.href}/`);

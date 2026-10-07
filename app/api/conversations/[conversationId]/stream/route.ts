@@ -1,9 +1,9 @@
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { subscribe } from "@/lib/services/conversation-events";
-import { ConversationType, Role, MessageAuthorType } from "@/lib/generated/prisma/enums";
+import { MessageAuthorType } from "@/lib/generated/prisma/enums";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
-import { rpTrackingStaffRoles, ticketStaffRoles } from "@/lib/navigation";
+import { canAccessConversationAsStaff } from "@/lib/ticket-access";
 
 export const dynamic = "force-dynamic";
 
@@ -33,27 +33,9 @@ export async function GET(
 
   const isMember = conversation.members.length > 0;
 
-  let hasStaffAccess = false;
-  if (!isMember) {
-    if (conversation.type === ConversationType.TICKET) {
-      if (ticketStaffRoles.includes(user.role)) {
-        hasStaffAccess = true;
-      } else if (user.role === Role.RP_TRACKING) {
-        const ticket = await prisma.ticket.findUnique({
-          where: { conversationId },
-          select: { rpTrackingAccess: true },
-        });
-        if (ticket?.rpTrackingAccess) {
-          hasStaffAccess = true;
-        }
-      }
-    } else if (
-      conversation.type === ConversationType.RP_TRACKING &&
-      rpTrackingStaffRoles.includes(user.role)
-    ) {
-      hasStaffAccess = true;
-    }
-  }
+  // L'accès staff ne dépend pas de l'appartenance : un staff qui est aussi membre du ticket
+  // garde la vue non anonymisée.
+  const hasStaffAccess = await canAccessConversationAsStaff(user, conversationId);
 
   if (!isMember && !hasStaffAccess) {
     return new Response(null, { status: 403 });
@@ -63,7 +45,9 @@ export async function GET(
   let unsubscribe: (() => void) | null = null;
   let keepAliveInterval: ReturnType<typeof setInterval> | null = null;
 
-  function anonymizeStaffMessage(msg: SerializedConversationMessage): SerializedConversationMessage {
+  function anonymizeStaffMessage(
+    msg: SerializedConversationMessage
+  ): SerializedConversationMessage {
     if (msg.authorType !== MessageAuthorType.STAFF) return msg;
     return {
       ...msg,

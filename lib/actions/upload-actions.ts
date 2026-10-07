@@ -9,6 +9,7 @@ import sharp from "sharp";
 import { requireActivePlayer, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { validateImageFile } from "@/lib/upload-config";
+import { canAccessConversationAsStaff } from "@/lib/ticket-access";
 
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads");
 
@@ -60,7 +61,7 @@ export async function uploadConversationImage(
     },
   });
 
-  if (!membership) {
+  if (!membership && !(await canAccessConversationAsStaff(user, conversationId))) {
     throw new Error("Tu n'as pas accès à cette conversation.");
   }
 

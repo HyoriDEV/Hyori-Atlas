@@ -158,9 +158,10 @@ export const playerNavItems: PlayerNavItem[] = [
 
 export const allStaffRoles: Role[] = [
   Role.ADMIN,
-  Role.COMMUNICATION,
+  Role.HELPER,
   Role.CONFLICT_MANAGEMENT,
   Role.RP_TRACKING,
+  Role.EVENT,
   Role.DEVELOPER,
 ];
 
@@ -200,7 +201,8 @@ export const staffTicketsItem: StaffNavItem = {
   label: "Tickets",
   href: "/staff/tickets",
   iconKey: "ticket",
-  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
+  roles: allStaffRoles,
+  fullWidth: true,
 };
 
 export const staffBdaReportsItem: StaffNavItem = {
@@ -214,7 +216,7 @@ export const staffAtlasItem: StaffNavItem = {
   label: "Atlas des joueurs",
   href: "/staff/atlas",
   iconKey: "users",
-  roles: [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT, Role.RP_TRACKING],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -222,7 +224,7 @@ export const staffRpGroupsItem: StaffNavItem = {
   label: "Groupes RP",
   href: "/staff/groups",
   iconKey: "users",
-  roles: [Role.ADMIN, Role.RP_TRACKING],
+  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
   fullWidth: true,
 };
 
@@ -230,7 +232,7 @@ export const staffDistributionItem: StaffNavItem = {
   label: "Distribution",
   href: "/staff/distribution",
   iconKey: "scales",
-  roles: [Role.ADMIN, Role.RP_TRACKING],
+  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
   fullWidth: true,
 };
 
@@ -238,14 +240,14 @@ export const staffWritingItem: StaffNavItem = {
   label: "Lore des joueurs",
   href: "/staff/writing",
   iconKey: "pen",
-  roles: [Role.ADMIN, Role.RP_TRACKING],
+  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
 };
 
 export const staffRpTrackingItem: StaffNavItem = {
   label: "Suivi RP",
   href: "/staff/rp-tracking",
   iconKey: "chat",
-  roles: [Role.ADMIN, Role.RP_TRACKING],
+  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
 };
 
 export const staffWaitlistItem: StaffNavItem = {
@@ -351,7 +353,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     ];
   }
 
-  if (role === Role.COMMUNICATION) {
+  if (role === Role.HELPER) {
     return [
       overviewGroup,
       {
@@ -361,7 +363,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     ];
   }
 
-  if (role === Role.RP_TRACKING) {
+  if (role === Role.RP_TRACKING || role === Role.EVENT) {
     return [
       overviewGroup,
       {
@@ -376,7 +378,13 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   }
 
   if (role === Role.DEVELOPER) {
-    return [overviewGroup];
+    return [
+      overviewGroup,
+      {
+        title: "Outils",
+        items: [staffTicketsItem, staffAtlasItem],
+      },
+    ];
   }
 
   return [overviewGroup];
@@ -385,15 +393,31 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
 export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
 
 export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
 export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
-export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
-export const ticketStaffRoles: Role[] = [Role.ADMIN, Role.COMMUNICATION, Role.CONFLICT_MANAGEMENT];
+export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
+export const rpManagementRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
+export const ticketStaffRoles: Role[] = [Role.ADMIN, Role.HELPER];
+export const ticketSummonableTeams: Role[] = [
+  Role.RP_TRACKING,
+  Role.CONFLICT_MANAGEMENT,
+  Role.EVENT,
+  Role.DEVELOPER,
+];
+
+export const ticketTeamShortLabels: Partial<Record<Role, string>> = {
+  [Role.RP_TRACKING]: "Suivi RP",
+  [Role.CONFLICT_MANAGEMENT]: "GC",
+  [Role.EVENT]: "Événementiel",
+  [Role.DEVELOPER]: "Dév",
+};
 
 export const staffRoleLabels: Record<Role, string> = {
   [Role.ADMIN]: "Administrateur",
-  [Role.COMMUNICATION]: "Équipe Communication",
+  [Role.HELPER]: "Helper",
   [Role.CONFLICT_MANAGEMENT]: "Gestion des conflits",
   [Role.RP_TRACKING]: "Équipe Suivi RP",
+  [Role.EVENT]: "Équipe Événementiel",
   [Role.DEVELOPER]: "Développeur",
   [Role.PLAYER]: "Joueur",
 };

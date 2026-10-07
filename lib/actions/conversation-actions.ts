@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { MessageAuthorType, TicketStatus } from "@/lib/generated/prisma/enums";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
+import { canAccessConversationAsStaff } from "@/lib/ticket-access";
 
 export async function editConversationMessage(messageId: string, body: string): Promise<void> {
   const user = await requireActivePlayer();
@@ -136,11 +137,26 @@ export async function deleteConversationMessage(messageId: string): Promise<void
   });
 }
 
-export async function markConversationAsRead(conversationId: string): Promise<void> {
+export async function markConversationAsRead(
+  conversationId: string,
+  asStaff: boolean = false
+): Promise<void> {
   const user = await getCurrentUser();
   if (!user) return;
 
-  await prisma.conversationMember.upsert({
+  // Côté joueur, seule une appartenance existante est mise à jour : lire ne crée jamais de membre.
+  if (!asStaff) {
+    await prisma.conversationMember.updateMany({
+      where: { conversationId, userId: user.id },
+      data: { lastReadAt: new Date() },
+    });
+    return;
+  }
+
+  if (!(await canAccessConversationAsStaff(user, conversationId))) return;
+
+  const now = new Date();
+  await prisma.conversationRead.upsert({
     where: {
       conversationId_userId: {
         conversationId,
@@ -150,10 +166,10 @@ export async function markConversationAsRead(conversationId: string): Promise<vo
     create: {
       conversationId,
       userId: user.id,
-      lastReadAt: new Date(),
+      lastReadAt: now,
     },
     update: {
-      lastReadAt: new Date(),
+      lastReadAt: now,
     },
   });
 }

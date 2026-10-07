@@ -15,7 +15,7 @@ import {
   type BotRoleSyncResult,
   type CharacterSheetNotificationStatus,
 } from "@/lib/services/discord-bot-service";
-import { getTicketCreationNotificationConfig } from "@/lib/services/discord-template-service";
+import { getTicketChannelNotificationConfig } from "@/lib/services/discord-template-service";
 
 export async function testBotHealthAction(): Promise<BotHealthResponse> {
   await requireRole([Role.ADMIN]);
@@ -130,7 +130,7 @@ export async function testTicketNotificationAction(
 export async function testTicketCreatedNotificationAction(): Promise<BotNotificationResult> {
   await requireRole([Role.ADMIN]);
 
-  const config = await getTicketCreationNotificationConfig({
+  const config = await getTicketChannelNotificationConfig("TICKET_CREATED", {
     author: "JoueurTest",
     subject: "Demande de terrain RP (Test)",
     category: "Demande RP",

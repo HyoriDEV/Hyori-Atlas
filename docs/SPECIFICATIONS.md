@@ -162,9 +162,17 @@ A dedicated module for the GC team to handle player disputes objectively.
 
 ## 6. Role-Based Access Control (RBAC) Matrix
 
-- Administrator: Full access to all features below. Manages User Accounts. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs).
-- Communication: Reads Player Atlas. Manages Player Tickets.
-- Gestion des conflits (GC): Reads Player Atlas. Manages Player Tickets. Writes/Manages BDA Reports.
-- Suivi RP: Reads Player Atlas. Manages Player RP Tracking chats & Lore Writing validation.
-- Développeur: Publishes News (Changelogs only).
+- Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets.
+- Helper: Reads Player Atlas. Full access to Player Tickets.
+- Gestion des conflits (GC): Reads Player Atlas. Writes/Manages BDA Reports. Player Tickets on summon only.
+- Suivi RP: Reads Player Atlas. Evaluates and edits Character Sheets, manages characters. Manages RP Groups, Distribution, Player RP Tracking chats & Lore Writing validation. Player Tickets on summon only.
+- Événementiel: Same as Suivi RP, but read-only on the Player Atlas and Character Sheets (no evaluation, no edition, no character management). Player Tickets on summon only.
+- Développeur: Reads Player Atlas. Player Tickets on summon only.
 - Joueur: Access restricted entirely to the Frontend and the Espace Joueur dashboard.
+
+### 6.1. Ticket Access
+
+- Full access (Administrator, Helper): sees every ticket, summons teams and adds individual staff members to a ticket.
+- On summon (GC, Suivi RP, Événementiel, Développeur): the Tickets tab is always present, but only lists tickets where the member's team has been summoned or where the member has been added individually. Once granted, the member can reply, archive/reopen and manage the ticket's player members.
+- A summon is never shown to the summoned team or to the player. It sends a Discord notification to the team's channel through HyoriBot, identical to a ticket opening notification. Adding an individual staff member sends no notification.
+- Staff read state is personal: a ticket is unread for a staff member when it has activity since they last opened it. It drives the sidebar badge and the unread markers of the ticket list.

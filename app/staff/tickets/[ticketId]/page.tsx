@@ -5,7 +5,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
-import { ticketCategoryLabels, ticketStaffRoles, ticketStatusLabels } from "@/lib/navigation";
+import { ticketCategoryLabels, ticketStatusLabels, ticketSummonableTeams } from "@/lib/navigation";
+import { hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
@@ -16,7 +17,7 @@ import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
-import { TicketRpAccessButton } from "@/components/dashboard/ticket-rp-access-button";
+import { TicketStaffAccessPanel } from "@/components/dashboard/ticket-staff-access-panel";
 
 export async function generateMetadata({
   params,
@@ -24,8 +25,9 @@ export async function generateMetadata({
   params: Promise<{ ticketId: string }>;
 }): Promise<Metadata> {
   const { ticketId } = await params;
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
+  const staffUser = await requireUser();
+  const ticket = await prisma.ticket.findFirst({
+    where: { AND: [{ id: ticketId }, ticketAccessWhere(staffUser)] },
     select: {
       subject: true,
       player: {
@@ -60,9 +62,10 @@ export default async function TicketStaffDetailPage({
 }) {
   const { ticketId } = await params;
   const staffUser = await requireUser();
+  const canManageAccess = hasFullTicketAccess(staffUser.role);
 
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
+  const ticket = await prisma.ticket.findFirst({
+    where: { AND: [{ id: ticketId }, ticketAccessWhere(staffUser)] },
     include: {
       player: true,
       conversation: {
@@ -77,8 +80,11 @@ export default async function TicketStaffDetailPage({
             },
           },
           members: { include: { user: true } },
+          reads: { where: { userId: staffUser.id } },
         },
       },
+      teamSummons: { include: { summonedBy: true } },
+      staffAccesses: { include: { user: true }, orderBy: { createdAt: "asc" } },
     },
   });
 
@@ -86,30 +92,54 @@ export default async function TicketStaffDetailPage({
     notFound();
   }
 
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    notFound();
-  }
-
-  const allPlayers = await prisma.user.findMany({
-    select: {
-      id: true,
-      minecraftUsername: true,
-      discordDisplayName: true,
-      discordUsername: true,
-      discordAvatarUrl: true,
-      role: true,
-      registrationStatus: true,
-      characterSheets: {
-        select: {
-          name: true,
-          status: true,
-        },
+  // La lecture précédente sert au séparateur « Nouveaux messages », puis le ticket est marqué lu.
+  const previousReadAt = ticket.conversation.reads[0]?.lastReadAt ?? null;
+  const readAt = new Date();
+  await prisma.conversationRead.upsert({
+    where: {
+      conversationId_userId: {
+        conversationId: ticket.conversationId,
+        userId: staffUser.id,
       },
     },
-    orderBy: { discordDisplayName: "asc" },
+    create: { conversationId: ticket.conversationId, userId: staffUser.id, lastReadAt: readAt },
+    update: { lastReadAt: readAt },
   });
+
+  const [allPlayers, summonableStaff] = await Promise.all([
+    prisma.user.findMany({
+      select: {
+        id: true,
+        minecraftUsername: true,
+        discordDisplayName: true,
+        discordUsername: true,
+        discordAvatarUrl: true,
+        role: true,
+        registrationStatus: true,
+        characterSheets: {
+          select: {
+            name: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: { discordDisplayName: "asc" },
+    }),
+    canManageAccess
+      ? prisma.user.findMany({
+          where: { role: { in: ticketSummonableTeams } },
+          select: {
+            id: true,
+            minecraftUsername: true,
+            discordDisplayName: true,
+            discordUsername: true,
+            discordAvatarUrl: true,
+            role: true,
+          },
+          orderBy: { discordDisplayName: "asc" },
+        })
+      : [],
+  ]);
 
   const messages = ticket.conversation.messages || [];
   const playerName = ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
@@ -123,6 +153,32 @@ export default async function TicketStaffDetailPage({
       discordAvatarUrl: m.user.discordAvatarUrl,
       isCreator: m.userId === ticket.playerId,
     }));
+
+  // Le panneau d'accès n'est jamais rendu pour les équipes convoquées : la convocation
+  // ne doit pas être visible de leur côté.
+  const staffAccessPanel = canManageAccess ? (
+    <TicketStaffAccessPanel
+      ticketId={ticket.id}
+      teams={ticketSummonableTeams.map((team) => {
+        const summon = ticket.teamSummons.find((s) => s.team === team);
+        return {
+          team,
+          summonedAt: summon ? summon.createdAt.toISOString() : null,
+          summonedByName: summon?.summonedBy
+            ? (summon.summonedBy.minecraftUsername ?? summon.summonedBy.discordDisplayName)
+            : null,
+        };
+      })}
+      staffMembers={ticket.staffAccesses.map((access) => ({
+        userId: access.userId,
+        role: access.user.role,
+        minecraftUsername: access.user.minecraftUsername,
+        discordDisplayName: access.user.discordDisplayName,
+        discordAvatarUrl: access.user.discordAvatarUrl,
+      }))}
+      availableStaff={summonableStaff}
+    />
+  ) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
@@ -151,12 +207,8 @@ export default async function TicketStaffDetailPage({
           ticketId={ticket.id}
           members={membersData}
           availablePlayers={allPlayers}
+          staffAccessPanel={staffAccessPanel}
           className="lg:hidden"
-        />
-        <TicketRpAccessButton
-          ticketId={ticket.id}
-          rpTrackingAccess={ticket.rpTrackingAccess}
-          isAdmin={staffUser.role === Role.ADMIN}
         />
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>
@@ -168,6 +220,7 @@ export default async function TicketStaffDetailPage({
             initialMessages={messages.map((m) => serializeConversationMessage(m, true))}
             viewerId={staffUser.id}
             viewerIsStaff
+            unreadSince={previousReadAt?.toISOString() ?? null}
             sendAction={async (cId, body, imageUrl) => {
               "use server";
               return await sendStaffTicketMessage(ticket.id, body, imageUrl);
@@ -177,11 +230,13 @@ export default async function TicketStaffDetailPage({
             className="min-h-0 flex-1"
           />
         </div>
-        <div className="hidden min-h-0 lg:col-span-2 lg:flex lg:flex-col">
+        <div className="hidden min-h-0 gap-4 overflow-y-auto lg:col-span-2 lg:flex lg:flex-col">
+          {staffAccessPanel}
           <TicketMembersManager
             ticketId={ticket.id}
             members={membersData}
             availablePlayers={allPlayers}
+            className={canManageAccess ? "h-auto min-h-48 flex-1" : undefined}
           />
         </div>
       </div>

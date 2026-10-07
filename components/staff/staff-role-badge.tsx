@@ -24,9 +24,10 @@ export function StaffRoleBadge({ role, className }: StaffRoleBadgeProps) {
           {label}
         </Badge>
       );
-    case Role.COMMUNICATION:
+    case Role.HELPER:
     case Role.CONFLICT_MANAGEMENT:
     case Role.RP_TRACKING:
+    case Role.EVENT:
       return (
         <Badge variant="default" className={cn("font-medium tracking-wide", className)}>
           {label}

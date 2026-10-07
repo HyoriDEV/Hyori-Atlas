@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { requireRole } from "@/lib/dal";
+import { ticketAccessWhere } from "@/lib/ticket-access";
 import { prisma } from "@/lib/prisma";
 
 export async function generateMetadata({
@@ -142,7 +143,7 @@ export default async function AtlasPlayerPage({
           orderBy: { createdAt: "asc" },
           include: { author: true },
         },
-        tickets: { orderBy: { createdAt: "desc" } },
+        tickets: { where: ticketAccessWhere(staffUser), orderBy: { createdAt: "desc" } },
         staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
       },
     }),
@@ -186,7 +187,7 @@ export default async function AtlasPlayerPage({
     isAdmin && player.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
   const canManageCharacters = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
-  const canSanction = player.role === Role.PLAYER;
+  const canSanction = isAdmin && player.role === Role.PLAYER;
 
   const now = new Date();
   const sanctionHistory: AtlasSanctionHistoryItem[] = sanctions.map((sanction) => {
@@ -332,12 +333,7 @@ export default async function AtlasPlayerPage({
         <Badge variant={registrationStatusBadgeVariant(player.registrationStatus)}>
           {registrationStatusLabels[player.registrationStatus]}
         </Badge>
-        {canRefuse && (
-          <AtlasRejectWhitelistButton
-            playerId={player.id}
-            pseudo={playerName}
-          />
-        )}
+        {canRefuse && <AtlasRejectWhitelistButton playerId={player.id} pseudo={playerName} />}
         {isAdmin && canPromote && (
           <AtlasPromoteButton
             playerId={player.id}

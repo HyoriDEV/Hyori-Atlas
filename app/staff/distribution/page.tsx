@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@/lib/generated/prisma/enums";
+import { rpManagementRoles } from "@/lib/navigation";
 import { getPlayerAffiliationOverview } from "@/lib/services/player-affiliation-overview-service";
 import { DistributionManager } from "@/components/staff/distribution/distribution-manager";
 import { DistributionOverview } from "@/components/staff/distribution/distribution-overview";
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DistributionStaffPage() {
-  await requireRole([Role.ADMIN, Role.RP_TRACKING]);
+  await requireRole(rpManagementRoles);
 
   const [classes, overview] = await Promise.all([
     prisma.playerClass.findMany({

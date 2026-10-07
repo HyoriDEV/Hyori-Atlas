@@ -74,22 +74,20 @@ export default async function TicketDetailPage({
 
   const isMember = ticket && ticket.conversation.members.some((m) => m.userId === user.id);
 
-  if (!ticket || (!isStaff && !isMember)) {
+  if (!ticket || !isMember) {
     notFound();
   }
 
   // Marquer immédiatement la conversation comme lue pour ce membre
-  if (isMember) {
-    await prisma.conversationMember.updateMany({
-      where: {
-        conversationId: ticket.conversationId,
-        userId: user.id,
-      },
-      data: {
-        lastReadAt: new Date(),
-      },
-    });
-  }
+  await prisma.conversationMember.updateMany({
+    where: {
+      conversationId: ticket.conversationId,
+      userId: user.id,
+    },
+    data: {
+      lastReadAt: new Date(),
+    },
+  });
 
   const messages = ticket.conversation.messages || [];
 

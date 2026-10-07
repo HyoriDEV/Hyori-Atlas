@@ -1,6 +1,14 @@
+import { Role } from "@/lib/generated/prisma/enums";
+
+export type TicketSummonTemplateId =
+  | "TICKET_SUMMONED_RP_TRACKING"
+  | "TICKET_SUMMONED_CONFLICT_MANAGEMENT"
+  | "TICKET_SUMMONED_EVENT"
+  | "TICKET_SUMMONED_DEVELOPER";
+
 export type DiscordTemplateId =
   | "TICKET_CREATED"
-  | "TICKET_RP_STAFF_SUMMONED"
+  | TicketSummonTemplateId
   | "TICKET_MESSAGE"
   | "REGISTRATION_ACCEPTED"
   | "REGISTRATION_WHITELISTED"
@@ -21,43 +29,55 @@ export interface DefaultTemplateConfig {
   isChannelNotification?: boolean;
 }
 
+const TICKET_OPENING_TEMPLATE = {
+  category: "ticket",
+  isChannelNotification: true,
+  defaultTitle: "Nouveau Ticket — {category}",
+  defaultDescription:
+    "Un nouveau ticket a été ouvert par **{author}**.\n\n**Catégorie :** {category}\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+  defaultButtonLabel: "Consulter le ticket",
+  availableVariables: [
+    { key: "{author}", description: "Pseudo du joueur créateur" },
+    { key: "{subject}", description: "Sujet du ticket" },
+    { key: "{category}", description: "Catégorie du ticket" },
+    { key: "{description}", description: "Contenu du premier message" },
+    { key: "{ticketId}", description: "Identifiant du ticket" },
+    { key: "{url}", description: "Lien vers le ticket sur l'espace staff" },
+  ],
+} satisfies Omit<DefaultTemplateConfig, "id" | "label">;
+
+// Même présentation que l'ouverture d'un ticket : la notification ne mentionne pas la convocation.
+function ticketSummonTemplate(
+  id: TicketSummonTemplateId,
+  teamLabel: string
+): DefaultTemplateConfig {
+  return {
+    ...TICKET_OPENING_TEMPLATE,
+    id,
+    label: `Ticket transmis à l'équipe ${teamLabel} (Salon de l'équipe)`,
+  };
+}
+
+export const TICKET_SUMMON_TEMPLATE_IDS: Partial<Record<Role, TicketSummonTemplateId>> = {
+  [Role.RP_TRACKING]: "TICKET_SUMMONED_RP_TRACKING",
+  [Role.CONFLICT_MANAGEMENT]: "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
+  [Role.EVENT]: "TICKET_SUMMONED_EVENT",
+  [Role.DEVELOPER]: "TICKET_SUMMONED_DEVELOPER",
+};
+
 export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplateConfig> = {
   TICKET_CREATED: {
+    ...TICKET_OPENING_TEMPLATE,
     id: "TICKET_CREATED",
     label: "Ouverture de ticket (Salon externe Staff)",
-    category: "ticket",
-    isChannelNotification: true,
-    defaultTitle: "Nouveau Ticket — {category}",
-    defaultDescription:
-      "Un nouveau ticket a été ouvert par **{author}**.\n\n**Catégorie :** {category}\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
-    defaultButtonLabel: "Consulter le ticket",
-    availableVariables: [
-      { key: "{author}", description: "Pseudo du joueur créateur" },
-      { key: "{subject}", description: "Sujet du ticket" },
-      { key: "{category}", description: "Catégorie du ticket" },
-      { key: "{description}", description: "Contenu du premier message" },
-      { key: "{ticketId}", description: "Identifiant du ticket" },
-      { key: "{url}", description: "Lien vers le ticket sur l'espace staff" },
-    ],
   },
-  TICKET_RP_STAFF_SUMMONED: {
-    id: "TICKET_RP_STAFF_SUMMONED",
-    label: "Convocation Suivi RP (Salon Discord Suivi RP)",
-    category: "ticket",
-    isChannelNotification: true,
-    defaultTitle: "Convocation Suivi RP — {subject}",
-    defaultDescription:
-      "L'équipe de **Suivi RP** a été convoquée sur le ticket de **{author}** (**« {subject} »**).\n\n**Catégorie :** {category}\n\n> {description}\n\nUn administrateur a rendu ce ticket accessible aux staffs de suivi RP pour intervention ou avis.",
-    defaultButtonLabel: "Accéder au ticket",
-    availableVariables: [
-      { key: "{author}", description: "Pseudo du joueur créateur" },
-      { key: "{subject}", description: "Sujet du ticket" },
-      { key: "{category}", description: "Catégorie du ticket" },
-      { key: "{description}", description: "Contenu ou description du ticket" },
-      { key: "{ticketId}", description: "Identifiant du ticket" },
-      { key: "{url}", description: "Lien direct vers le ticket staff" },
-    ],
-  },
+  TICKET_SUMMONED_RP_TRACKING: ticketSummonTemplate("TICKET_SUMMONED_RP_TRACKING", "Suivi RP"),
+  TICKET_SUMMONED_CONFLICT_MANAGEMENT: ticketSummonTemplate(
+    "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
+    "Gestion des conflits"
+  ),
+  TICKET_SUMMONED_EVENT: ticketSummonTemplate("TICKET_SUMMONED_EVENT", "Événementiel"),
+  TICKET_SUMMONED_DEVELOPER: ticketSummonTemplate("TICKET_SUMMONED_DEVELOPER", "Développement"),
   TICKET_MESSAGE: {
     id: "TICKET_MESSAGE",
     label: "Nouveau message de ticket (MP Joueur)",

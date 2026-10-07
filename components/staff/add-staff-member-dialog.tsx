@@ -29,14 +29,14 @@ import { StaffRoleBadge } from "@/components/staff/staff-role-badge";
 
 const staffRoleOptions = [
   {
-    value: Role.COMMUNICATION,
-    label: staffRoleLabels[Role.COMMUNICATION],
-    description: "Gestion des tickets joueurs et consultation de l'Atlas.",
+    value: Role.HELPER,
+    label: staffRoleLabels[Role.HELPER],
+    description: "Assistance aux joueurs via les tickets et consultation de l'Atlas.",
   },
   {
     value: Role.CONFLICT_MANAGEMENT,
     label: staffRoleLabels[Role.CONFLICT_MANAGEMENT],
-    description: "Gestion des litiges, conciliation, rapports GC et tickets.",
+    description: "Médiation, litiges, conciliation et rapports GC.",
   },
   {
     value: Role.RP_TRACKING,
@@ -44,9 +44,15 @@ const staffRoleOptions = [
     description: "Évaluation des fiches personnages, lore et salons de suivi RP.",
   },
   {
+    value: Role.EVENT,
+    label: staffRoleLabels[Role.EVENT],
+    description:
+      "Groupes RP, distribution et suivi RP ; consultation seule de l'Atlas et des fiches.",
+  },
+  {
     value: Role.DEVELOPER,
     label: staffRoleLabels[Role.DEVELOPER],
-    description: "Publication des changelogs et actualités techniques.",
+    description: "Support technique, consultation de l'Atlas et tickets sur convocation.",
   },
   {
     value: Role.ADMIN,
@@ -63,13 +69,13 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
   const [isOpen, setIsOpen] = useState(false);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerOption | null>(null);
-  const [selectedRole, setSelectedRole] = useState<Role>(Role.COMMUNICATION);
+  const [selectedRole, setSelectedRole] = useState<Role>(Role.HELPER);
   const [isPending, startTransition] = useTransition();
 
   function handleReset() {
     setSelectedPlayerId(null);
     setSelectedPlayer(null);
-    setSelectedRole(Role.COMMUNICATION);
+    setSelectedRole(Role.HELPER);
   }
 
   function handleAddMember() {

@@ -457,31 +457,25 @@ export async function notifyTicketCreated(
   );
 }
 
-export interface TicketRpSummonedNotificationOptions {
-  channelId?: string | null;
-  mentionRoleId?: string | null;
-  ticketId: string;
-  ticketSubject: string;
-  ticketCategory: string;
-  authorName: string;
-  ticketDescription?: string | null;
-  customTicketStaffUrl?: string;
-  override?: DiscordEmbedOverride | null;
+export interface TicketTeamSummonedNotificationOptions extends TicketCreatedNotificationOptions {
+  team: string;
 }
 
 /**
- * Notifie l'équipe de Suivi RP sur un salon Discord dédié lorsqu'un administrateur les convoque sur un ticket.
+ * Notifie une équipe sur son salon Discord dédié lorsqu'elle est convoquée sur un ticket.
+ * L'embed est identique à celui d'une ouverture de ticket.
  */
-export async function notifyTicketRpSummoned(
-  options: TicketRpSummonedNotificationOptions
+export async function notifyTicketTeamSummoned(
+  options: TicketTeamSummonedNotificationOptions
 ): Promise<BotNotificationResult> {
   const ticketStaffUrl =
     options.customTicketStaffUrl || getPlayerSpaceUrl(`/staff/tickets/${options.ticketId}`);
 
   const result = await callDiscordBot<BotNotificationResult>(
-    "/notifications/ticket-rp-summoned",
+    "/notifications/ticket-team-summoned",
     "POST",
     {
+      team: options.team,
       channelId: options.channelId ?? undefined,
       mentionRoleId: options.mentionRoleId ?? undefined,
       ticketId: options.ticketId,
@@ -506,7 +500,7 @@ export async function notifyTicketRpSummoned(
     result.data ?? {
       success: true,
       notified: true,
-      message: "Ticket RP summoned notification sent successfully",
+      message: "Ticket team summoned notification sent successfully",
     }
   );
 }
@@ -701,4 +695,3 @@ export async function excludePlayerOnDiscord(
     assignedRoleId: result.data.assignedRoleId,
   };
 }
-
