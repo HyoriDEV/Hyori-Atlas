@@ -26,7 +26,11 @@ import {
   CharacterStatus,
   RegistrationStatus,
 } from "@/lib/generated/prisma/enums";
-import { characterSheetReviewerRoles, characterSheetStatusLabels } from "@/lib/navigation";
+import {
+  characterSheetReviewerRoles,
+  characterSheetViewerRoles,
+  characterSheetStatusLabels,
+} from "@/lib/navigation";
 import { characterSheetStatusBadgeVariant } from "@/lib/atlas-status";
 import { SKILL_DEFINITIONS, type SkillValues } from "@/lib/character-sheet";
 import type { SheetComment } from "@/lib/character-sheet-comments";
@@ -48,7 +52,8 @@ export default async function CharacterSheetEvaluationPage({
 }) {
   const { playerId } = await params;
   const { sheetId } = await searchParams;
-  await requireRole(characterSheetReviewerRoles);
+  const staffUser = await requireRole(characterSheetViewerRoles);
+  const canEvaluate = characterSheetReviewerRoles.includes(staffUser.role);
 
   const player = await prisma.user.findUnique({
     where: { id: playerId },
@@ -121,24 +126,26 @@ export default async function CharacterSheetEvaluationPage({
       <div className="flex items-center gap-3">
         <AtlasBackButton href={`/staff/atlas/${player.id}`} />
         <h1 className="font-heading flex-1 text-lg font-semibold">
-          {sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF
+          {canEvaluate && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF
             ? `Évaluation de la fiche de ${playerName}`
             : `Fiche personnage de ${playerName}`}
         </h1>
         <Badge variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}>
           {characterSheetStatusLabels[sheet.reviewStatus]}
         </Badge>
-        <Button
-          size="sm"
-          variant="outline"
-          className="gap-1.5"
-          render={
-            <Link href={`/staff/atlas/${player.id}/edit?sheetId=${sheet.id}`} prefetch={false} />
-          }
-        >
-          <PencilSimple size={14} />
-          Éditer la fiche
-        </Button>
+        {canEvaluate && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1.5"
+            render={
+              <Link href={`/staff/atlas/${player.id}/edit?sheetId=${sheet.id}`} prefetch={false} />
+            }
+          >
+            <PencilSimple size={14} />
+            Éditer la fiche
+          </Button>
+        )}
       </div>
 
       <SheetEvaluationWorkspace
@@ -157,6 +164,7 @@ export default async function CharacterSheetEvaluationPage({
           secondaryRoleId: sheet.secondaryRoleId ?? null,
         }}
         initialComments={comments}
+        canEvaluate={canEvaluate}
       />
     </div>
   );

@@ -7,10 +7,66 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
+  // Handle any legacy dev user ID renames (e.g. 'communication' -> 'helper')
+  const legacyIdMap: Record<string, string> = {
+    helper: "communication",
+  };
+
+  for (const [newId, oldId] of Object.entries(legacyIdMap)) {
+    const oldUser = await prisma.user.findUnique({ where: { id: oldId } });
+    if (oldUser) {
+      const newUser = await prisma.user.findUnique({ where: { id: newId } });
+      if (!newUser) {
+        await prisma.user.update({
+          where: { id: oldId },
+          data: { id: newId },
+        });
+      } else {
+        await prisma.user.delete({ where: { id: oldId } });
+      }
+    }
+  }
+
   for (const user of DEV_TEST_USERS) {
+    const existingByDiscord = await prisma.user.findUnique({
+      where: { discordId: user.discordId },
+    });
+
+    if (existingByDiscord && existingByDiscord.id !== user.id) {
+      const existingById = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
+
+      if (!existingById) {
+        await prisma.user.update({
+          where: { id: existingByDiscord.id },
+          data: {
+            id: user.id,
+            discordUsername: user.discordUsername,
+            discordDisplayName: user.discordDisplayName,
+            discordAvatarUrl: user.discordAvatarUrl,
+            role: user.role,
+            registrationStatus: user.registrationStatus,
+          },
+        });
+        continue;
+      } else {
+        await prisma.user.delete({
+          where: { id: existingByDiscord.id },
+        });
+      }
+    }
+
     await prisma.user.upsert({
       where: { id: user.id },
-      update: {},
+      update: {
+        discordId: user.discordId,
+        discordUsername: user.discordUsername,
+        discordDisplayName: user.discordDisplayName,
+        discordAvatarUrl: user.discordAvatarUrl,
+        role: user.role,
+        registrationStatus: user.registrationStatus,
+      },
       create: {
         id: user.id,
         discordId: user.discordId,

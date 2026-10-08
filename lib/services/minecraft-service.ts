@@ -285,6 +285,16 @@ export async function verifyAndLinkMinecraftAccount(params: {
         console.error("[MinecraftService] Background skin sync failed:", err);
       });
 
+    // Notifier les administrateurs sur le salon Discord dédié du serveur staff
+    import("./discord-bot-service")
+      .then((mod) => mod.notifyWaitlistRegistrationForUser(txResult.user))
+      .catch((err) => {
+        console.error(
+          "[MinecraftService] Échec lors de la notification Discord de liste d'attente:",
+          err
+        );
+      });
+
     return {
       success: true,
       message: "Compte Minecraft lié avec succès ! Ton statut passe en liste d'attente.",

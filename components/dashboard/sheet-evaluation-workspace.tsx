@@ -43,6 +43,7 @@ export function SheetEvaluationWorkspace({
   playerClasses = [],
   affiliation,
   initialComments,
+  canEvaluate: canEvaluateProp = true,
 }: {
   sheetId: string;
   playerId: string;
@@ -54,6 +55,7 @@ export function SheetEvaluationWorkspace({
   playerClasses?: PlayerClassWithStats[];
   affiliation?: AffiliationChoiceValues;
   initialComments: SheetComment[];
+  canEvaluate?: boolean;
 }) {
   const router = useRouter();
   const [comments, setComments] = useState(initialComments);
@@ -67,7 +69,7 @@ export function SheetEvaluationWorkspace({
   const activeComment = comments.find((comment) => comment.id === activeCommentId) ?? null;
   useCommentTargetScroll(activeComment?.target ?? null);
 
-  const canEvaluate = status === CharacterSheetStatus.PENDING_STAFF;
+  const canEvaluate = canEvaluateProp && status === CharacterSheetStatus.PENDING_STAFF;
 
   function narrativeValue(target: CharacterSheetCommentTarget): string {
     return target === CharacterSheetCommentTarget.description
@@ -252,6 +254,7 @@ export function SheetEvaluationWorkspace({
         }
         onSubmit={handleSubmit}
         onApprovalDialogChange={setIsApprovalDialogOpen}
+        canEvaluate={canEvaluate}
       />
     </div>
   );

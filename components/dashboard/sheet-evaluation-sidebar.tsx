@@ -48,6 +48,7 @@ export function SheetEvaluationSidebar({
   onDeleteComment,
   onSubmit,
   onApprovalDialogChange,
+  canEvaluate: canEvaluateProp,
 }: {
   pseudo: string;
   status: CharacterSheetStatus;
@@ -66,9 +67,10 @@ export function SheetEvaluationSidebar({
   onDeleteComment: (commentId: string) => void;
   onSubmit: () => void;
   onApprovalDialogChange: (open: boolean) => void;
+  canEvaluate?: boolean;
 }) {
   const hasComments = comments.length > 0;
-  const canEvaluate = status === CharacterSheetStatus.PENDING_STAFF;
+  const canEvaluate = (canEvaluateProp ?? true) && status === CharacterSheetStatus.PENDING_STAFF;
 
   return (
     <Card className="flex max-h-[calc(100vh-6rem)] flex-col gap-4 lg:sticky lg:top-6">

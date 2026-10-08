@@ -33,7 +33,7 @@ const PARIS_FORMATTER = new Intl.DateTimeFormat("fr-FR", {
   hourCycle: "h23",
 });
 
-interface ParisDateParts {
+export interface ParisDateParts {
   year: number;
   month: number;
   day: number;
@@ -46,7 +46,7 @@ interface ParisDateParts {
   minutePadded: string;
 }
 
-function getParisParts(date: Date): ParisDateParts {
+export function getParisParts(date: Date): ParisDateParts {
   const parts = PARIS_FORMATTER.formatToParts(date);
   let year = 1970;
   let month = 1;

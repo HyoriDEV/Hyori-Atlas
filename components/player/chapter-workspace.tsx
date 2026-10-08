@@ -17,6 +17,7 @@ import {
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
+import { countWords } from "@/lib/text-stats";
 import {
   createChapter,
   deleteChapter,
@@ -60,16 +61,6 @@ function extractSnippet(html: string): string {
     .trim();
   if (!text) return "Chapitre vide...";
   return text.length > 65 ? text.slice(0, 65) + "…" : text;
-}
-
-function countWords(html: string): number {
-  if (!html) return 0;
-  const text = html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!text) return 0;
-  return text.split(/\s+/).filter(Boolean).length;
 }
 
 export function ChapterWorkspace({

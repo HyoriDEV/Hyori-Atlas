@@ -3,7 +3,8 @@
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { allStaffRoles } from "@/lib/navigation";
-import { CharacterStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
+import { ticketAccessWhere } from "@/lib/ticket-access";
+import { CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
 
 export interface GlobalSearchPlayerResult {
   id: string;
@@ -32,8 +33,6 @@ export async function globalSearchAction(query: string): Promise<GlobalSearchRes
   if (term.length < 3) {
     return { players: [], tickets: [] };
   }
-
-  const isRpStaff = staffUser.role === Role.RP_TRACKING;
 
   const [rawPlayers, rawTickets] = await Promise.all([
     // Atlas des joueurs : Recherche sur le pseudo et UUID Minecraft,
@@ -77,7 +76,7 @@ export async function globalSearchAction(query: string): Promise<GlobalSearchRes
     // Tickets : Recherche sur l'intitulé et l'auteur. Tri par date de création du ticket des résultats.
     prisma.ticket.findMany({
       where: {
-        ...(isRpStaff ? { rpTrackingAccess: true } : {}),
+        AND: [ticketAccessWhere(staffUser)],
         OR: [
           { subject: { contains: term, mode: "insensitive" } },
           {

@@ -23,9 +23,10 @@ const QUERY_DEBOUNCE_MS = 400;
 const roleFilterItems = [
   { value: ALL_VALUE, label: "Tous les pôles" },
   { value: Role.ADMIN, label: staffRoleLabels[Role.ADMIN] },
-  { value: Role.COMMUNICATION, label: staffRoleLabels[Role.COMMUNICATION] },
+  { value: Role.HELPER, label: staffRoleLabels[Role.HELPER] },
   { value: Role.CONFLICT_MANAGEMENT, label: staffRoleLabels[Role.CONFLICT_MANAGEMENT] },
   { value: Role.RP_TRACKING, label: staffRoleLabels[Role.RP_TRACKING] },
+  { value: Role.EVENT, label: staffRoleLabels[Role.EVENT] },
   { value: Role.DEVELOPER, label: staffRoleLabels[Role.DEVELOPER] },
 ];
 

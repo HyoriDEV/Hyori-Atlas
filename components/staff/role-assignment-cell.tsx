@@ -28,11 +28,14 @@ import { StaffRoleBadge } from "@/components/staff/staff-role-badge";
 const roleDescriptions: Record<Role, string> = {
   [Role.ADMIN]:
     "Accès complet à tous les modules d'administration, gestion des membres et paramètres globaux.",
-  [Role.COMMUNICATION]: "Gestion des tickets joueurs et consultation de l'Atlas des joueurs.",
-  [Role.CONFLICT_MANAGEMENT]: "Gestion des litiges, conciliation, rapports GC et tickets joueurs.",
+  [Role.HELPER]: "Assistance aux joueurs via les tickets et consultation de l'Atlas des joueurs.",
+  [Role.CONFLICT_MANAGEMENT]:
+    "Gestion des litiges, conciliation, rapports GC et consultation de l'Atlas.",
   [Role.RP_TRACKING]:
     "Évaluation des fiches personnages, validation du lore et salons de suivi RP.",
-  [Role.DEVELOPER]: "Rôle technique et développement du serveur.",
+  [Role.EVENT]:
+    "Groupes RP, distribution et salons de suivi RP ; consultation seule de l'Atlas et des fiches.",
+  [Role.DEVELOPER]: "Support technique, consultation de l'Atlas et tickets sur convocation.",
   [Role.PLAYER]: "Rôle standard réservé aux joueurs (aucun accès à l'espace staff).",
 };
 

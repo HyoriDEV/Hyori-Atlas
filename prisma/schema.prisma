@@ -12,9 +12,10 @@ datasource db {
 
 enum Role {
   ADMIN
-  COMMUNICATION
+  HELPER
   CONFLICT_MANAGEMENT
   RP_TRACKING
+  EVENT
   DEVELOPER
   PLAYER
 }
@@ -144,7 +145,11 @@ model User {
   tickets                 Ticket[]
   registrationHistory     RegistrationStatusHistory[]
   conversationMemberships ConversationMember[]
+  conversationReads       ConversationRead[]
   conversationMessages    ConversationMessage[]
+  ticketStaffAccesses     TicketStaffAccess[]         @relation("TicketStaffAccessUser")
+  grantedTicketAccesses   TicketStaffAccess[]         @relation("TicketStaffAccessAddedBy")
+  ticketTeamSummons       TicketTeamSummon[]
   characterSheets         CharacterSheet[]
   interviewBookings       InterviewBooking[]
   staffNotes              StaffNote[]                 @relation("StaffNotePlayer")
@@ -154,21 +159,21 @@ model User {
   authoredStatusChanges     RegistrationStatusHistory[] @relation("RegistrationStatusHistoryAuthor")
   reviewedInterviewBookings InterviewBooking[]          @relation("InterviewBookingReviewer")
 
-  authoredSheetComments CharacterSheetComment[]       @relation("CharacterSheetCommentAuthor")
-  authoredSheetReviews  CharacterSheetReviewHistory[] @relation("CharacterSheetReviewAuthor")
-  bdaPartyMemberships   BdaPartyMember[]
-  createdBdaReports     BdaReport[]                   @relation("BdaReportCreator")
-  bdaStaffMemberships   BdaStaffMember[]
-  updatedGlobalSettings GlobalSettings[]
+  authoredSheetComments   CharacterSheetComment[]       @relation("CharacterSheetCommentAuthor")
+  authoredSheetReviews    CharacterSheetReviewHistory[] @relation("CharacterSheetReviewAuthor")
+  bdaPartyMemberships     BdaPartyMember[]
+  createdBdaReports       BdaReport[]                   @relation("BdaReportCreator")
+  bdaStaffMemberships     BdaStaffMember[]
+  updatedGlobalSettings   GlobalSettings[]
   updatedDiscordTemplates DiscordNotificationTemplate[] @relation("DiscordTemplateUpdatedBy")
-  minecraftAuthCodes    MinecraftAuthCode[]
-  rpGroupId             String?
-  rpGroup               RpGroup?                      @relation("RpGroupMembers", fields: [rpGroupId], references: [id], onDelete: SetNull)
-  createdRpGroups       RpGroup[]                     @relation("RpGroupCreator")
-  sanctions             Sanction[]                    @relation("SanctionTarget")
-  issuedSanctions       Sanction[]                    @relation("SanctionIssuer")
-  revokedSanctions      Sanction[]                    @relation("SanctionRevoker")
-  gameSessions          GameSession[]
+  minecraftAuthCodes      MinecraftAuthCode[]
+  rpGroupId               String?
+  rpGroup                 RpGroup?                      @relation("RpGroupMembers", fields: [rpGroupId], references: [id], onDelete: SetNull)
+  createdRpGroups         RpGroup[]                     @relation("RpGroupCreator")
+  sanctions               Sanction[]                    @relation("SanctionTarget")
+  issuedSanctions         Sanction[]                    @relation("SanctionIssuer")
+  revokedSanctions        Sanction[]                    @relation("SanctionRevoker")
+  gameSessions            GameSession[]
 
   @@index([rpGroupId])
   @@map("users")
@@ -252,16 +257,49 @@ model Ticket {
   subject        String
   status         TicketStatus   @default(PENDING_STAFF)
   conversationId String         @unique
-  rpTrackingAccess Boolean      @default(false)
+  lastMessageAt  DateTime       @default(now())
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  player       User         @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  bdaReport    BdaReport?
+  player        User                @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  conversation  Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  bdaReport     BdaReport?
+  teamSummons   TicketTeamSummon[]
+  staffAccesses TicketStaffAccess[]
 
-  @@index([rpTrackingAccess])
+  @@index([status, lastMessageAt])
   @@map("tickets")
+}
+
+model TicketTeamSummon {
+  id           String   @id @default(cuid())
+  ticketId     String
+  team         Role
+  summonedById String?
+  createdAt    DateTime @default(now())
+
+  ticket     Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  summonedBy User?  @relation(fields: [summonedById], references: [id], onDelete: SetNull)
+
+  @@unique([ticketId, team])
+  @@index([team])
+  @@map("ticket_team_summons")
+}
+
+model TicketStaffAccess {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  addedById String?
+  createdAt DateTime @default(now())
+
+  ticket  Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  user    User   @relation("TicketStaffAccessUser", fields: [userId], references: [id], onDelete: Cascade)
+  addedBy User?  @relation("TicketStaffAccessAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
+
+  @@unique([ticketId, userId])
+  @@index([userId])
+  @@map("ticket_staff_accesses")
 }
 
 model CharacterSheet {
@@ -435,6 +473,7 @@ model Conversation {
   updatedAt DateTime @updatedAt
 
   members  ConversationMember[]
+  reads    ConversationRead[]
   messages ConversationMessage[]
 
   @@map("conversations")
@@ -453,6 +492,20 @@ model ConversationMember {
   @@unique([conversationId, userId])
   @@index([userId])
   @@map("conversation_members")
+}
+
+model ConversationRead {
+  id             String   @id @default(cuid())
+  conversationId String
+  userId         String
+  lastReadAt     DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@map("conversation_reads")
 }
 
 model ConversationMessage {

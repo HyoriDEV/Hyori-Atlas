@@ -80,18 +80,20 @@ export async function getEffectiveDiscordOverride(
 }
 
 /**
- * Récupère les paramètres d'ouverture de ticket (salon externe, rôle et override).
+ * Récupère les paramètres d'une notification envoyée dans un salon Discord
+ * (salon cible, rôle mentionné, état d'activation et override éventuel).
  */
-export async function getTicketCreationNotificationConfig(
+export async function getChannelNotificationConfig(
+  templateId: DiscordTemplateId,
   variables: Record<string, string | null | undefined>
 ) {
   const templatesMap = await getDiscordNotificationTemplates();
-  const record = templatesMap.get("TICKET_CREATED");
+  const record = templatesMap.get(templateId);
 
   const enabled = record ? record.enabled : true;
   const channelId = record?.channelId?.trim() || null;
   const mentionRoleId = record?.roleId?.trim() || null;
-  const override = await getEffectiveDiscordOverride("TICKET_CREATED", variables);
+  const override = await getEffectiveDiscordOverride(templateId, variables);
 
   return {
     enabled,
@@ -102,23 +104,7 @@ export async function getTicketCreationNotificationConfig(
 }
 
 /**
- * Récupère les paramètres de convocation de l'équipe Suivi RP (salon Discord dédié, rôle et override).
+ * Alias de compatibilité pour les notifications de tickets.
  */
-export async function getTicketRpSummonedNotificationConfig(
-  variables: Record<string, string | null | undefined>
-) {
-  const templatesMap = await getDiscordNotificationTemplates();
-  const record = templatesMap.get("TICKET_RP_STAFF_SUMMONED");
+export const getTicketChannelNotificationConfig = getChannelNotificationConfig;
 
-  const enabled = record ? record.enabled : true;
-  const channelId = record?.channelId?.trim() || null;
-  const mentionRoleId = record?.roleId?.trim() || null;
-  const override = await getEffectiveDiscordOverride("TICKET_RP_STAFF_SUMMONED", variables);
-
-  return {
-    enabled,
-    channelId,
-    mentionRoleId,
-    override,
-  };
-}

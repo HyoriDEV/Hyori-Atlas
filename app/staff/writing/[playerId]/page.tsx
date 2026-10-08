@@ -33,7 +33,7 @@ import { SkinHead } from "@/components/ui/skin-head";
 
 export default async function WritingStaffDetailPage(props: {
   params: Promise<{ playerId: string }>;
-  searchParams: Promise<{ characterId?: string }>;
+  searchParams: Promise<{ characterId?: string; from?: string }>;
 }) {
   const { playerId } = await props.params;
   const searchParams = await props.searchParams;
@@ -69,12 +69,17 @@ export default async function WritingStaffDetailPage(props: {
   });
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
+  // Ouvert depuis un salon de suivi RP : le retour ramène au salon plutôt qu'à l'Atlas.
+  const backHref =
+    searchParams.from === "rp-tracking"
+      ? `/staff/rp-tracking/${playerId}`
+      : `/staff/atlas/${playerId}`;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
       <div className="flex shrink-0 flex-wrap items-center justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <AtlasBackButton href={`/staff/atlas/${playerId}`} />
+          <AtlasBackButton href={backHref} />
           <div className="flex min-w-0 items-center gap-2.5">
             <Link
               href={`/staff/atlas/${playerId}`}

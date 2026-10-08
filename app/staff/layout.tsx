@@ -11,7 +11,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
 
   const roleGroups = getStaffNavGroups(user.role);
 
-  const navBadgeMap = await getStaffBadgeCounts(user.id);
+  const navBadgeMap = await getStaffBadgeCounts(user.id, user.role);
 
   const navGroups: AppShellNavGroup[] = roleGroups
     .map((group) => ({

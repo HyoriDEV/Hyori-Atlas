@@ -93,9 +93,10 @@ export default async function StaffTeamPage(props: PageProps) {
   const [
     totalStaffCount,
     adminCount,
-    commCount,
+    helperCount,
     conflictCount,
     rpTrackingCount,
+    eventCount,
     devCount,
     filteredStaffCount,
     staffMembers,
@@ -103,9 +104,10 @@ export default async function StaffTeamPage(props: PageProps) {
   ] = await Promise.all([
     prisma.user.count({ where: { role: { not: Role.PLAYER } } }),
     prisma.user.count({ where: { role: Role.ADMIN } }),
-    prisma.user.count({ where: { role: Role.COMMUNICATION } }),
+    prisma.user.count({ where: { role: Role.HELPER } }),
     prisma.user.count({ where: { role: Role.CONFLICT_MANAGEMENT } }),
     prisma.user.count({ where: { role: Role.RP_TRACKING } }),
+    prisma.user.count({ where: { role: Role.EVENT } }),
     prisma.user.count({ where: { role: Role.DEVELOPER } }),
     prisma.user.count({ where: whereClause }),
     prisma.user.findMany({
@@ -146,7 +148,7 @@ export default async function StaffTeamPage(props: PageProps) {
       </div>
 
       {/* Cartes statistiques synthétiques des pôles */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
         <Card className="flex flex-col gap-1 p-3.5">
           <span className="text-muted-foreground text-xs font-medium">Équipe staff</span>
           <span className="font-heading text-2xl font-semibold">{totalStaffCount}</span>
@@ -158,8 +160,8 @@ export default async function StaffTeamPage(props: PageProps) {
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
-          <span className="text-muted-foreground text-xs font-medium">Communication</span>
-          <span className="font-heading text-2xl font-semibold">{commCount}</span>
+          <span className="text-muted-foreground text-xs font-medium">Helper</span>
+          <span className="font-heading text-2xl font-semibold">{helperCount}</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">
@@ -170,6 +172,11 @@ export default async function StaffTeamPage(props: PageProps) {
         <Card className="flex flex-col gap-1 p-3.5">
           <span className="text-muted-foreground text-xs font-medium">Suivi RP</span>
           <span className="font-heading text-2xl font-semibold">{rpTrackingCount}</span>
+        </Card>
+
+        <Card className="flex flex-col gap-1 p-3.5">
+          <span className="text-muted-foreground text-xs font-medium">Événementiel</span>
+          <span className="font-heading text-2xl font-semibold">{eventCount}</span>
         </Card>
 
         <Card className="flex flex-col gap-1 p-3.5">

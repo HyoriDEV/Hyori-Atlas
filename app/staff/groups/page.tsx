@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterStatus, RegistrationStatus, Role } from "@/lib/generated/prisma/enums";
+import { CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { rpManagementRoles } from "@/lib/navigation";
 import type { PlayerOption } from "@/components/player-select";
 import type { RpGroupWithMembers } from "@/lib/rp-groups";
 import { RpGroupsDashboard } from "@/components/staff/groups/rp-groups-dashboard";
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 export default async function StaffGroupsPage() {
-  const staffUser = await requireRole([Role.ADMIN, Role.RP_TRACKING]);
+  const staffUser = await requireRole(rpManagementRoles);
 
   const [rawGroups, rawUsers] = await Promise.all([
     prisma.rpGroup.findMany({
@@ -125,7 +126,7 @@ export default async function StaffGroupsPage() {
     }),
   }));
 
-  const canManageGroups = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
+  const canManageGroups = rpManagementRoles.includes(staffUser.role);
 
   return (
     <RpGroupsDashboard

@@ -212,6 +212,8 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
     if (activeCategory === "channel") return tmpl.isChannelNotification;
     if (activeCategory === "ticket")
       return tmpl.category === "ticket" && !tmpl.isChannelNotification;
+    if (activeCategory === "registration")
+      return tmpl.category === "registration" && !tmpl.isChannelNotification;
     return tmpl.category === activeCategory;
   });
 

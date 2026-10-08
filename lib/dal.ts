@@ -37,6 +37,9 @@ export const getCurrentUser = cache(async () => {
         },
       }),
     ]);
+    import("./services/discord-bot-service")
+      .then((mod) => mod.notifyWaitlistRegistrationForUser(promoted))
+      .catch(() => {});
     return { ...session.user, ...promoted };
   }
 

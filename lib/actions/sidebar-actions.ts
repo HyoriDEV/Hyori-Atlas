@@ -2,6 +2,7 @@
 
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { getUnreadTickets } from "@/lib/ticket-access";
 import {
   BdaReportStatus,
   CharacterStatus,
@@ -92,22 +93,15 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
 
 export async function getStaffBadgeCounts(
   userId: string,
-  role?: Role
+  role: Role
 ): Promise<Record<string, number>> {
-  const staffTicketFilter =
-    role === Role.RP_TRACKING
-      ? { status: TicketStatus.PENDING_STAFF, rpTrackingAccess: true }
-      : { status: TicketStatus.PENDING_STAFF };
-
   const [
-    pendingStaffTicketsCount,
+    unreadTickets,
     unreadBdaReportsCount,
     atlasPlayersCount,
     registeredInterviewBookingsCount,
   ] = await Promise.all([
-    prisma.ticket.count({
-      where: staffTicketFilter,
-    }),
+    getUnreadTickets({ id: userId, role }),
     prisma.bdaReport.count({
       where: { status: BdaReportStatus.UNREAD },
     }),
@@ -129,7 +123,7 @@ export async function getStaffBadgeCounts(
   ]);
 
   return {
-    "/staff/tickets": pendingStaffTicketsCount,
+    "/staff/tickets": unreadTickets.length,
     "/staff/bda-reports": unreadBdaReportsCount,
     "/staff/atlas": atlasPlayersCount,
     "/staff/interview-slots": registeredInterviewBookingsCount,

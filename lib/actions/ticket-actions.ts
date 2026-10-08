@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { ticketCategoryLabels, ticketStaffRoles } from "@/lib/navigation";
+import {
+  allStaffRoles,
+  ticketCategoryLabels,
+  ticketStaffRoles,
+  ticketSummonableTeams,
+} from "@/lib/navigation";
+import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
+import { TICKET_SUMMON_TEMPLATE_IDS } from "@/lib/discord-template-constants";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
@@ -18,13 +25,26 @@ import { getGlobalSettings } from "@/lib/services/settings-service";
 import {
   notifyPlayerTicketMessage,
   notifyTicketCreated,
-  notifyTicketRpSummoned,
+  notifyTicketTeamSummoned,
 } from "@/lib/services/discord-bot-service";
 import {
   getEffectiveDiscordOverride,
-  getTicketCreationNotificationConfig,
-  getTicketRpSummonedNotificationConfig,
+  getTicketChannelNotificationConfig,
 } from "@/lib/services/discord-template-service";
+
+const BOT_TICKET_DESCRIPTION_MAX_LENGTH = 2000;
+
+/**
+ * Charge le ticket si le staff connecté y a accès (accès complet, équipe convoquée ou ajout
+ * individuel). Un ticket inaccessible est indiscernable d'un ticket inexistant.
+ */
+async function findAccessibleTicket(ticketId: string) {
+  const staffUser = await requireUser();
+  const ticket = await prisma.ticket.findFirst({
+    where: { AND: [{ id: ticketId }, ticketAccessWhere(staffUser)] },
+  });
+  return { staffUser, ticket };
+}
 
 export async function createTicket(category: TicketCategory, subject: string, description: string) {
   const user = await requireActivePlayer();
@@ -112,7 +132,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
     user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Un joueur";
   const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
 
-  getTicketCreationNotificationConfig({
+  getTicketChannelNotificationConfig("TICKET_CREATED", {
     author: authorName,
     subject: trimmedSubject,
     category: categoryLabel,
@@ -190,7 +210,7 @@ export async function sendTicketMessage(
 
     await tx.ticket.update({
       where: { id: ticketId },
-      data: { status: TicketStatus.PENDING_STAFF },
+      data: { status: TicketStatus.PENDING_STAFF, lastMessageAt: newMessage.createdAt },
     });
 
     await tx.conversationMember.updateMany({
@@ -233,25 +253,17 @@ export async function sendStaffTicketMessage(
   body?: string,
   imageUrl?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const staffUser = await requireUser();
-
   const trimmedBody = body?.trim();
   if (!trimmedBody && !imageUrl) {
     return { success: false, error: "Le message ne peut pas être vide." };
   }
 
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const { staffUser, ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) {
     return { success: false, error: "Ticket introuvable." };
   }
   if (ticket.status === TicketStatus.ARCHIVED) {
     return { success: false, error: "Ce ticket est archivé. Les réponses sont fermées." };
-  }
-
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    return { success: false, error: "Tu n'as pas accès à ce ticket." };
   }
 
   const message = await prisma.$transaction(async (tx) => {
@@ -268,7 +280,22 @@ export async function sendStaffTicketMessage(
 
     await tx.ticket.update({
       where: { id: ticketId },
-      data: { status: TicketStatus.PENDING_PLAYER },
+      data: { status: TicketStatus.PENDING_PLAYER, lastMessageAt: newMessage.createdAt },
+    });
+
+    await tx.conversationRead.upsert({
+      where: {
+        conversationId_userId: {
+          conversationId: ticket.conversationId,
+          userId: staffUser.id,
+        },
+      },
+      create: {
+        conversationId: ticket.conversationId,
+        userId: staffUser.id,
+        lastReadAt: newMessage.createdAt,
+      },
+      update: { lastReadAt: newMessage.createdAt },
     });
 
     return newMessage;
@@ -296,88 +323,165 @@ export async function sendStaffTicketMessage(
   return { success: true };
 }
 
-export async function toggleTicketRpTrackingAccess(ticketId: string): Promise<{
+export async function setTicketTeamSummon(
+  ticketId: string,
+  team: Role,
+  summoned: boolean
+): Promise<{
   success: boolean;
-  rpTrackingAccess: boolean;
   error?: string;
+  discord?: "sent" | "failed" | "disabled";
 }> {
-  await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(ticketStaffRoles);
+
+  const templateId = TICKET_SUMMON_TEMPLATE_IDS[team];
+  if (!ticketSummonableTeams.includes(team) || !templateId) {
+    return { success: false, error: "Cette équipe ne peut pas être convoquée." };
+  }
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    include: {
-      player: true,
-      conversation: true,
-    },
+    include: { player: true },
   });
 
   if (!ticket) {
-    return { success: false, rpTrackingAccess: false, error: "Ticket introuvable." };
+    return { success: false, error: "Ticket introuvable." };
   }
 
-  const nextAccess = !ticket.rpTrackingAccess;
+  if (!summoned) {
+    await prisma.ticketTeamSummon.deleteMany({ where: { ticketId, team } });
+    revalidatePath(`/staff/tickets/${ticketId}`);
+    revalidatePath("/staff/tickets");
+    return { success: true };
+  }
 
-  await prisma.ticket.update({
-    where: { id: ticketId },
-    data: { rpTrackingAccess: nextAccess },
+  const existing = await prisma.ticketTeamSummon.findUnique({
+    where: { ticketId_team: { ticketId, team } },
   });
-
-  if (nextAccess) {
-    const categoryLabel = ticketCategoryLabels[ticket.category] ?? ticket.category;
-    const authorName =
-      ticket.player.minecraftUsername ??
-      ticket.player.discordDisplayName ??
-      ticket.player.discordUsername ??
-      "Un joueur";
-    const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
-
-    getTicketRpSummonedNotificationConfig({
-      author: authorName,
-      subject: ticket.subject,
-      category: categoryLabel,
-      description: ticket.subject,
-      ticketId: ticket.id,
-      url: ticketStaffUrl,
-    })
-      .then((config) => {
-        if (config.enabled) {
-          return notifyTicketRpSummoned({
-            channelId: config.channelId,
-            mentionRoleId: config.mentionRoleId,
-            ticketId: ticket.id,
-            ticketSubject: ticket.subject,
-            ticketCategory: categoryLabel,
-            authorName,
-            ticketDescription: ticket.subject,
-            customTicketStaffUrl: ticketStaffUrl,
-            override: config.override,
-          });
-        }
-      })
-      .catch((err) => {
-        console.warn(
-          "[TicketNotification] Échec lors de la notification de convocation Suivi RP:",
-          err
-        );
-      });
+  if (existing) {
+    return { success: true };
   }
+
+  await prisma.ticketTeamSummon.create({
+    data: { ticketId, team, summonedById: staffUser.id },
+  });
 
   revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath("/staff/tickets");
 
-  return { success: true, rpTrackingAccess: nextAccess };
+  // La notification reprend la présentation d'une ouverture de ticket, description comprise.
+  const firstPlayerMessage = await prisma.conversationMessage.findFirst({
+    where: {
+      conversationId: ticket.conversationId,
+      authorType: MessageAuthorType.PLAYER,
+      deletedAt: null,
+      body: { not: null },
+    },
+    orderBy: { createdAt: "asc" },
+    select: { body: true },
+  });
+
+  const categoryLabel = ticketCategoryLabels[ticket.category] ?? ticket.category;
+  const authorName =
+    ticket.player.minecraftUsername ??
+    ticket.player.discordDisplayName ??
+    ticket.player.discordUsername ??
+    "Un joueur";
+  const description = (firstPlayerMessage?.body ?? ticket.subject).slice(
+    0,
+    BOT_TICKET_DESCRIPTION_MAX_LENGTH
+  );
+  const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
+
+  try {
+    const config = await getTicketChannelNotificationConfig(templateId, {
+      author: authorName,
+      subject: ticket.subject,
+      category: categoryLabel,
+      description,
+      ticketId: ticket.id,
+      url: ticketStaffUrl,
+    });
+
+    if (!config.enabled) {
+      return { success: true, discord: "disabled" };
+    }
+
+    const result = await notifyTicketTeamSummoned({
+      team,
+      channelId: config.channelId,
+      mentionRoleId: config.mentionRoleId,
+      ticketId: ticket.id,
+      ticketSubject: ticket.subject,
+      ticketCategory: categoryLabel,
+      authorName,
+      ticketDescription: description,
+      customTicketStaffUrl: ticketStaffUrl,
+      override: config.override,
+    });
+
+    if (!result.success || result.notified === false) {
+      console.warn(
+        `[TicketNotification] Notification de convocation non envoyée (${team}):`,
+        result.error
+      );
+      return { success: true, discord: "failed" };
+    }
+
+    return { success: true, discord: "sent" };
+  } catch (err) {
+    console.warn("[TicketNotification] Échec lors de la notification de convocation:", err);
+    return { success: true, discord: "failed" };
+  }
+}
+
+export async function addTicketStaffAccess(
+  ticketId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  const staffUser = await requireRole(ticketStaffRoles);
+
+  const [ticket, target] = await Promise.all([
+    prisma.ticket.findUnique({ where: { id: ticketId }, select: { id: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } }),
+  ]);
+
+  if (!ticket) {
+    return { success: false, error: "Ticket introuvable." };
+  }
+  if (!target || !ticketSummonableTeams.includes(target.role)) {
+    return { success: false, error: "Ce membre ne peut pas être ajouté à un ticket." };
+  }
+
+  await prisma.ticketStaffAccess.upsert({
+    where: { ticketId_userId: { ticketId, userId } },
+    update: {},
+    create: { ticketId, userId, addedById: staffUser.id },
+  });
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+
+  return { success: true };
+}
+
+export async function removeTicketStaffAccess(
+  ticketId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireRole(ticketStaffRoles);
+
+  await prisma.ticketStaffAccess.deleteMany({ where: { ticketId, userId } });
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+
+  return { success: true };
 }
 
 export async function archiveTicket(ticketId: string) {
-  const staffUser = await requireUser();
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const { ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) throw new Error("Ticket introuvable.");
-
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    throw new Error("Accès refusé.");
-  }
 
   await prisma.ticket.update({
     where: { id: ticketId },
@@ -397,15 +501,8 @@ export async function archiveTicket(ticketId: string) {
 }
 
 export async function reopenTicket(ticketId: string) {
-  const staffUser = await requireUser();
-  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId } });
+  const { ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) throw new Error("Ticket introuvable.");
-
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    throw new Error("Accès refusé.");
-  }
 
   await prisma.ticket.update({
     where: { id: ticketId },
@@ -425,14 +522,8 @@ export async function reopenTicket(ticketId: string) {
 }
 
 export async function addTicketMember(ticketId: string, playerId: string) {
-  const staffUser = await requireUser();
-  const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
-
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    throw new Error("Accès refusé.");
-  }
+  const { ticket } = await findAccessibleTicket(ticketId);
+  if (!ticket) throw new Error("Ticket introuvable.");
 
   await prisma.conversationMember.upsert({
     where: {
@@ -455,14 +546,8 @@ export async function addTicketMember(ticketId: string, playerId: string) {
 }
 
 export async function removeTicketMember(ticketId: string, playerId: string) {
-  const staffUser = await requireUser();
-  const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
-
-  const isRegularStaff = ticketStaffRoles.includes(staffUser.role);
-  const isSummonedRpStaff = staffUser.role === Role.RP_TRACKING && ticket.rpTrackingAccess;
-  if (!isRegularStaff && !isSummonedRpStaff) {
-    throw new Error("Accès refusé.");
-  }
+  const { ticket } = await findAccessibleTicket(ticketId);
+  if (!ticket) throw new Error("Ticket introuvable.");
 
   await prisma.conversationMember.deleteMany({
     where: {
@@ -574,46 +659,15 @@ async function dispatchTicketMessageNotifications({
 }
 
 export async function markAllStaffTicketsAsRead(): Promise<{ success: boolean; count: number }> {
-  const staffUser = await requireRole(ticketStaffRoles);
+  const staffUser = await requireRole(allStaffRoles);
 
-  const activeTickets = await prisma.ticket.findMany({
-    where: { status: { not: TicketStatus.ARCHIVED } },
-    select: {
-      conversationId: true,
-      conversation: {
-        select: {
-          members: {
-            where: { userId: staffUser.id },
-            select: { lastReadAt: true, joinedAt: true },
-          },
-          messages: {
-            where: {
-              deletedAt: null,
-              authorId: { not: staffUser.id },
-            },
-            orderBy: { createdAt: "desc" },
-            take: 1,
-            select: { createdAt: true },
-          },
-        },
-      },
-    },
-  });
-
-  const unreadTickets = activeTickets.filter((t) => {
-    const member = t.conversation.members[0];
-    const lastMessage = t.conversation.messages[0];
-    if (!lastMessage) return false;
-    if (!member) return true;
-    const readThreshold = member.lastReadAt ?? member.joinedAt;
-    return lastMessage.createdAt > readThreshold;
-  });
+  const unreadTickets = await getUnreadTickets(staffUser);
 
   if (unreadTickets.length > 0) {
     const now = new Date();
     await Promise.all(
       unreadTickets.map((t) =>
-        prisma.conversationMember.upsert({
+        prisma.conversationRead.upsert({
           where: {
             conversationId_userId: {
               conversationId: t.conversationId,
@@ -637,4 +691,38 @@ export async function markAllStaffTicketsAsRead(): Promise<{ success: boolean; c
   revalidatePath("/staff");
 
   return { success: true, count: unreadTickets.length };
+}
+
+export async function setStaffTicketRead(
+  ticketId: string,
+  read: boolean
+): Promise<{ success: boolean; error?: string }> {
+  const { staffUser, ticket } = await findAccessibleTicket(ticketId);
+  if (!ticket) {
+    return { success: false, error: "Ticket introuvable." };
+  }
+
+  const key = {
+    conversationId_userId: {
+      conversationId: ticket.conversationId,
+      userId: staffUser.id,
+    },
+  };
+
+  if (read) {
+    const now = new Date();
+    await prisma.conversationRead.upsert({
+      where: key,
+      create: { conversationId: ticket.conversationId, userId: staffUser.id, lastReadAt: now },
+      update: { lastReadAt: now },
+    });
+  } else {
+    await prisma.conversationRead.deleteMany({
+      where: { conversationId: ticket.conversationId, userId: staffUser.id },
+    });
+  }
+
+  revalidatePath("/staff/tickets");
+
+  return { success: true };
 }

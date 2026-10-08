@@ -4,9 +4,9 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role } from "@/lib/generated/prisma/enums";
+import { rpManagementRoles } from "@/lib/navigation";
 
-const distributionAllowedRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+const distributionAllowedRoles = rpManagementRoles;
 
 export interface PlayerAffiliationActionResult {
   success: boolean;

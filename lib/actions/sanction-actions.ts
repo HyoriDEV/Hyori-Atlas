@@ -3,8 +3,7 @@
 import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
-import { SanctionSource, SanctionType } from "@/lib/generated/prisma/enums";
-import { allStaffRoles } from "@/lib/navigation";
+import { Role, SanctionSource, SanctionType } from "@/lib/generated/prisma/enums";
 import { createSanction, revokeSanctionById, SanctionError } from "@/lib/services/sanction-service";
 
 export type SuspensionUnit = "minutes" | "hours" | "days" | "weeks";
@@ -33,7 +32,7 @@ async function issueSanction(
   reason: string,
   durationMs?: number
 ) {
-  const staffUser = await requireRole(allStaffRoles);
+  const staffUser = await requireRole([Role.ADMIN]);
   await runSanctionOperation(playerId, () =>
     createSanction({
       targetUserId: playerId,
@@ -67,7 +66,7 @@ export async function excludePlayer(playerId: string, reason: string) {
 }
 
 export async function revokeSanction(playerId: string, sanctionId: string) {
-  const staffUser = await requireRole(allStaffRoles);
+  const staffUser = await requireRole([Role.ADMIN]);
   await runSanctionOperation(playerId, () =>
     revokeSanctionById(playerId, sanctionId, { kind: "user", userId: staffUser.id })
   );

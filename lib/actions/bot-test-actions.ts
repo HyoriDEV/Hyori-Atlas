@@ -8,6 +8,7 @@ import {
   notifyPlayerRegistrationStatus,
   notifyPlayerTicketMessage,
   notifyTicketCreated,
+  notifyWaitlistRegistrationForUser,
   sendInterviewReminders,
   syncPlayerWhitelistClassRole,
   type BotHealthResponse,
@@ -15,7 +16,7 @@ import {
   type BotRoleSyncResult,
   type CharacterSheetNotificationStatus,
 } from "@/lib/services/discord-bot-service";
-import { getTicketCreationNotificationConfig } from "@/lib/services/discord-template-service";
+import { getTicketChannelNotificationConfig } from "@/lib/services/discord-template-service";
 
 export async function testBotHealthAction(): Promise<BotHealthResponse> {
   await requireRole([Role.ADMIN]);
@@ -130,7 +131,7 @@ export async function testTicketNotificationAction(
 export async function testTicketCreatedNotificationAction(): Promise<BotNotificationResult> {
   await requireRole([Role.ADMIN]);
 
-  const config = await getTicketCreationNotificationConfig({
+  const config = await getTicketChannelNotificationConfig("TICKET_CREATED", {
     author: "JoueurTest",
     subject: "Demande de terrain RP (Test)",
     category: "Demande RP",
@@ -149,5 +150,20 @@ export async function testTicketCreatedNotificationAction(): Promise<BotNotifica
     ticketDescription:
       "Ceci est un test de notification d'ouverture de ticket dans le salon staff.",
     override: config.override,
+  });
+}
+
+export async function testWaitlistRegistrationNotificationAction(
+  targetDiscordId?: string
+): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const cleanDiscordId = targetDiscordId?.trim() || "";
+  return notifyWaitlistRegistrationForUser({
+    discordId: cleanDiscordId || null,
+    discordDisplayName: "JoueurTest",
+    discordUsername: "joueur_test",
+    minecraftUsername: "SteveTest",
+    minecraftUuid: "069a79f4-44e9-4726-a5be-fca90e38aaf5",
   });
 }

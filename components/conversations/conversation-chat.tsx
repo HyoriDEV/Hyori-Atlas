@@ -66,6 +66,7 @@ export function ConversationChat({
   disabled = false,
   disabledMessage,
   emptyBadge,
+  unreadSince,
   className,
 }: {
   conversationId: string;
@@ -80,10 +81,20 @@ export function ConversationChat({
   disabled?: boolean;
   disabledMessage?: string;
   emptyBadge?: string;
+  /** Dernière lecture du lecteur : affiche un séparateur avant le premier message plus récent. */
+  unreadSince?: string | null;
   className?: string;
 }) {
   const router = useRouter();
   const [messages, setMessages] = useState(initialMessages);
+  const [firstUnreadMessageId] = useState(() => {
+    if (!unreadSince) return null;
+    const threshold = new Date(unreadSince).getTime();
+    const firstUnread = initialMessages.find(
+      (msg) => msg.authorId !== viewerId && new Date(msg.createdAt).getTime() > threshold
+    );
+    return firstUnread?.id ?? null;
+  });
   const [isChatDisabled, setIsChatDisabled] = useState(disabled);
   const [body, setBody] = useState("");
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
@@ -172,7 +183,7 @@ export function ConversationChat({
           );
 
           if (typeof document !== "undefined" && document.visibilityState === "visible") {
-            markConversationAsRead(conversationId).catch(() => {});
+            markConversationAsRead(conversationId, viewerIsStaff).catch(() => {});
           }
         }
       } catch (err) {
@@ -185,7 +196,7 @@ export function ConversationChat({
   useEffect(() => {
     function handleVisibilityOrFocus() {
       if (document.visibilityState === "visible") {
-        markConversationAsRead(conversationId).catch(() => {});
+        markConversationAsRead(conversationId, viewerIsStaff).catch(() => {});
       }
     }
 
@@ -196,7 +207,7 @@ export function ConversationChat({
       window.removeEventListener("focus", handleVisibilityOrFocus);
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
     };
-  }, [conversationId]);
+  }, [conversationId, viewerIsStaff]);
 
   useEffect(() => {
     if (isInitialMount.current) {
@@ -463,6 +474,7 @@ export function ConversationChat({
   const groupedItems = useMemo(() => {
     type ChatItem =
       | { type: "system"; message: SerializedConversationMessage }
+      | { type: "unread-separator" }
       | { type: "group"; group: MessageGroup };
 
     const items: ChatItem[] = [];
@@ -472,6 +484,13 @@ export function ConversationChat({
 
     for (let i = 0; i < visibleMessages.length; i++) {
       const msg = visibleMessages[i];
+      if (msg.id === firstUnreadMessageId) {
+        if (currentGroup) {
+          items.push({ type: "group", group: currentGroup });
+          currentGroup = null;
+        }
+        items.push({ type: "unread-separator" });
+      }
       if (msg.authorType === MessageAuthorType.SYSTEM) {
         if (currentGroup) {
           items.push({ type: "group", group: currentGroup });
@@ -546,7 +565,7 @@ export function ConversationChat({
     }
 
     return items;
-  }, [messages, viewerId, viewerIsStaff]);
+  }, [messages, viewerId, viewerIsStaff, firstUnreadMessageId]);
 
   return (
     <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
@@ -579,6 +598,19 @@ export function ConversationChat({
                       {message.linkLabel ?? "Voir"}
                     </Link>
                   )}
+                </div>
+              );
+            }
+
+            if (item.type === "unread-separator") {
+              return (
+                <div
+                  key="unread-separator"
+                  className="text-primary flex items-center gap-3 text-xs font-medium select-none"
+                >
+                  <span className="bg-primary/40 h-px flex-1" />
+                  <span>Nouveaux messages</span>
+                  <span className="bg-primary/40 h-px flex-1" />
                 </div>
               );
             }
