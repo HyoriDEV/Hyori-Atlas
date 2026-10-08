@@ -6,6 +6,7 @@ import {
   CharacterSheetStatus,
   CharacterStatus,
   RegistrationStatus,
+  SanctionType,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 
@@ -68,6 +69,28 @@ export function bdaReportStatusBadgeVariant(status: BdaReportStatus): BadgeVaria
     case BdaReportStatus.RESOLVED:
       return "default";
     case BdaReportStatus.ARCHIVED:
+      return "outline";
+  }
+}
+
+export function sanctionTypeBadgeVariant(type: SanctionType): BadgeVariant {
+  switch (type) {
+    case SanctionType.WARNING:
+      return "secondary";
+    case SanctionType.SUSPENSION:
+      return "inverted";
+    case SanctionType.EXCLUSION:
+      return "destructive";
+  }
+}
+
+export function sanctionStatusBadgeVariant(status: "ACTIVE" | "EXPIRED" | "REVOKED"): BadgeVariant {
+  switch (status) {
+    case "ACTIVE":
+      return "destructive";
+    case "EXPIRED":
+      return "secondary";
+    case "REVOKED":
       return "outline";
   }
 }

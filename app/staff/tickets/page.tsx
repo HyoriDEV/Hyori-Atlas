@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 
@@ -24,7 +23,6 @@ import {
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import {
   DEFAULT_TICKET_VIEW,
-  TICKET_READ_FILTER_UNREAD,
   TICKET_TEAM_FILTER_NONE,
   TICKET_VIEWS,
   type TicketView,
@@ -59,7 +57,6 @@ import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { TicketRowActions } from "@/components/dashboard/ticket-row-actions";
 import { TicketListRefresher } from "@/components/dashboard/ticket-list-refresher";
 import { UnreadDot } from "@/components/ui/unread-dot";
-import { MarkAllTicketsReadButton } from "@/components/staff/mark-all-tickets-read-button";
 
 const DEFAULT_PAGE_SIZE = 10;
 const LAST_MESSAGE_PREVIEW_LENGTH = 90;
@@ -69,19 +66,27 @@ type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = ["player", "category", "status", "activity", "created"];
 
-const VIEW_STATUS_FILTER: Record<TicketView, Prisma.TicketWhereInput> = {
-  active: { status: { not: TicketStatus.ARCHIVED } },
-  staff: { status: TicketStatus.PENDING_STAFF },
-  player: { status: TicketStatus.PENDING_PLAYER },
-  archived: { status: TicketStatus.ARCHIVED },
-};
+function getViewFilter(
+  view: TicketView,
+  unreadTicketIds: Set<string>
+): Prisma.TicketWhereInput {
+  switch (view) {
+    case "active":
+      return { status: { not: TicketStatus.ARCHIVED } };
+    case "staff":
+      return { status: TicketStatus.PENDING_STAFF };
+    case "unread":
+      return { id: { in: [...unreadTicketIds] } };
+    case "archived":
+      return { status: TicketStatus.ARCHIVED };
+  }
+}
 
 type PageProps = {
   searchParams: Promise<{
     q?: string;
     tab?: string;
     category?: string;
-    read?: string;
     team?: string;
     sort?: string;
     dir?: string;
@@ -120,7 +125,11 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
-  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/tickets");
+  const rawSavedPrefs = getServerPagePrefs(cookieStore, "/staff/tickets");
+  const savedPrefs = { ...rawSavedPrefs };
+  if (savedPrefs.tab && !TICKET_VIEWS.includes(savedPrefs.tab as TicketView)) {
+    delete savedPrefs.tab;
+  }
   const redirectUrl = checkRedirectWithSavedPrefs("/staff/tickets", searchParams, savedPrefs);
   if (redirectUrl) {
     redirect(redirectUrl);
@@ -135,7 +144,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
   const category = Object.values(TicketCategory).includes(searchParams.category as TicketCategory)
     ? (searchParams.category as TicketCategory)
     : undefined;
-  const unreadOnly = searchParams.read === TICKET_READ_FILTER_UNREAD;
 
   // Le filtre par accès n'existe que pour les rôles à accès complet : les autres équipes
   // ne doivent rien pouvoir déduire des convocations.
@@ -166,9 +174,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
   if (category) {
     filters.push({ category });
   }
-  if (unreadOnly) {
-    filters.push({ id: { in: [...unreadTicketIds] } });
-  }
   if (teamFilter) {
     filters.push({ teamSummons: { some: { team: teamFilter } } });
   }
@@ -186,30 +191,28 @@ export default async function TicketsStaffListPage(props: PageProps) {
   }
 
   const hasActiveFilters = Boolean(
-    query || category || unreadOnly || teamFilter || noAccessGrantedOnly
+    query || category || teamFilter || noAccessGrantedOnly
   );
 
-  const [statusCounts, tickets] = await Promise.all([
+  const [statusCounts, unreadCount, tickets] = await Promise.all([
     prisma.ticket.groupBy({
       by: ["status"],
       where: { AND: filters },
       _count: { _all: true },
     }),
+    unreadTicketIds.size > 0
+      ? prisma.ticket.count({
+          where: { AND: [...filters, { id: { in: [...unreadTicketIds] } }] },
+        })
+      : 0,
     prisma.ticket.findMany({
-      where: { AND: [...filters, VIEW_STATUS_FILTER[view]] },
+      where: { AND: [...filters, getViewFilter(view, unreadTicketIds)] },
       include: {
         player: true,
         teamSummons: { select: { team: true } },
         _count: { select: { staffAccesses: true } },
         conversation: {
           select: {
-            _count: {
-              select: {
-                messages: {
-                  where: { deletedAt: null, authorType: { not: MessageAuthorType.SYSTEM } },
-                },
-              },
-            },
             members: {
               where: { user: { role: Role.PLAYER } },
               select: { userId: true },
@@ -243,7 +246,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
   const viewCounts: Record<TicketView, number> = {
     active: pendingStaffCount + pendingPlayerCount,
     staff: pendingStaffCount,
-    player: pendingPlayerCount,
+    unread: unreadCount,
     archived: archivedCount,
   };
 
@@ -258,7 +261,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
     currentSort: sortDir,
   };
 
-  const columnCount = canManageAccess ? 9 : 8;
+  const columnCount = canManageAccess ? 8 : 7;
 
   return (
     <div className="flex flex-col gap-6">
@@ -266,17 +269,13 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-heading text-2xl font-semibold">Tickets</h1>
-        <div className="flex flex-wrap items-center gap-2">
-          <TicketFilters
-            query={query}
-            category={category}
-            read={unreadOnly ? TICKET_READ_FILTER_UNREAD : undefined}
-            team={teamFilter ?? (noAccessGrantedOnly ? TICKET_TEAM_FILTER_NONE : undefined)}
-            showTeamFilter={canManageAccess}
-            hasActiveSort={Boolean(sortKey)}
-          />
-          <MarkAllTicketsReadButton />
-        </div>
+        <TicketFilters
+          query={query}
+          category={category}
+          team={teamFilter ?? (noAccessGrantedOnly ? TICKET_TEAM_FILTER_NONE : undefined)}
+          showTeamFilter={canManageAccess}
+          hasActiveSort={Boolean(sortKey)}
+        />
       </div>
 
       <ViewTabs
@@ -285,7 +284,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
         tabs={[
           { value: "active", label: "Tous les actifs", count: viewCounts.active },
           { value: "staff", label: "À traiter", count: viewCounts.staff },
-          { value: "player", label: "En attente du joueur", count: viewCounts.player },
+          { value: "unread", label: "Non lus", count: viewCounts.unread },
           { value: "archived", label: "Archivés", count: viewCounts.archived },
         ]}
       />
@@ -320,7 +319,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
                 />
               </TableHead>
               {canManageAccess && <TableHead>Accès staff</TableHead>}
-              <TableHead>Messages</TableHead>
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
@@ -464,21 +462,11 @@ export default async function TicketsStaffListPage(props: PageProps) {
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="text-muted-foreground">
-                      <span className="inline-flex items-center gap-1.5">
-                        <ChatCircle className="size-3.5" />
-                        {ticket.conversation._count.messages}
-                      </span>
+                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                      {formatDate(ticket.lastMessageAt, { style: "compact" })}
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {formatDate(ticket.lastMessageAt, { style: "chat" })}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
-                      {formatDate(ticket.createdAt, {
-                        style: "compact",
-                        withTime: false,
-                        withYear: true,
-                      })}
+                      {formatDate(ticket.createdAt, { style: "compact" })}
                     </TableCell>
                     <TableCell className="w-10 pr-4">
                       <TicketRowActions

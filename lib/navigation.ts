@@ -5,6 +5,8 @@ import {
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
+  SanctionSource,
+  SanctionType,
   TicketCategory,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
@@ -27,7 +29,8 @@ export type NavIconKey =
   | "book-bookmark"
   | "scroll"
   | "scales"
-  | "chart";
+  | "chart"
+  | "gavel";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -199,13 +202,6 @@ export const staffSettingsItem: StaffNavItem = {
   roles: [Role.ADMIN],
 };
 
-export const staffBotTestItem: StaffNavItem = {
-  label: "Tests",
-  href: "/staff/bot-test",
-  iconKey: "info",
-  roles: [Role.ADMIN],
-};
-
 export const staffTicketsItem: StaffNavItem = {
   label: "Tickets",
   href: "/staff/tickets",
@@ -219,6 +215,14 @@ export const staffBdaReportsItem: StaffNavItem = {
   href: "/staff/bda-reports",
   iconKey: "shield",
   roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
+};
+
+export const staffSanctionsItem: StaffNavItem = {
+  label: "Sanctions",
+  href: "/staff/sanctions",
+  iconKey: "gavel",
+  roles: [Role.ADMIN],
+  fullWidth: true,
 };
 
 export const staffAtlasItem: StaffNavItem = {
@@ -309,9 +313,9 @@ export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
   staffStatisticsItem,
   staffSettingsItem,
-  staffBotTestItem,
   staffTicketsItem,
   staffBdaReportsItem,
+  staffSanctionsItem,
   staffStaffTeamItem,
   staffAtlasItem,
   staffRpGroupsItem,
@@ -328,7 +332,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
     items:
       role === Role.ADMIN
-        ? [staffDashboardItem, staffStatisticsItem, staffSettingsItem, staffBotTestItem]
+        ? [staffDashboardItem, staffStatisticsItem, staffSettingsItem]
         : [staffDashboardItem],
   };
 
@@ -337,7 +341,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffBdaReportsItem, staffStaffTeamItem],
+        items: [staffTicketsItem, staffBdaReportsItem, staffSanctionsItem, staffStaffTeamItem],
       },
       {
         title: "Gestion RP",
@@ -480,4 +484,15 @@ export const bdaReportStatusLabels: Record<BdaReportStatus, string> = {
   [BdaReportStatus.UNREAD]: "Non lu",
   [BdaReportStatus.RESOLVED]: "Résolu",
   [BdaReportStatus.ARCHIVED]: "Archivé",
+};
+
+export const sanctionTypeLabels: Record<SanctionType, string> = {
+  [SanctionType.WARNING]: "Avertissement",
+  [SanctionType.SUSPENSION]: "Suspension",
+  [SanctionType.EXCLUSION]: "Exclusion",
+};
+
+export const sanctionSourceLabels: Record<SanctionSource, string> = {
+  [SanctionSource.WEB]: "Atlas",
+  [SanctionSource.GAME]: "En jeu",
 };

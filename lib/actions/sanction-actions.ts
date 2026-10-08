@@ -24,6 +24,7 @@ async function runSanctionOperation<T>(playerId: string, operation: () => Promis
     throw error;
   }
   revalidatePath(`/staff/atlas/${playerId}`);
+  revalidatePath("/staff/sanctions");
 }
 
 async function issueSanction(
