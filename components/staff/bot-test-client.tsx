@@ -32,6 +32,7 @@ import {
   testRoleSyncAction,
   testTicketCreatedNotificationAction,
   testTicketNotificationAction,
+  testWaitlistRegistrationNotificationAction,
 } from "@/lib/actions/bot-test-actions";
 import { type CharacterSheetNotificationStatus } from "@/lib/services/discord-bot-service";
 import { Button } from "@/components/ui/button";
@@ -313,6 +314,33 @@ export function BotTestClient({
     });
   }
 
+  function handleWaitlistRegistrationTest() {
+    setLoadingAction("waitlist_channel_notification");
+    startTransition(async () => {
+      try {
+        const res = await testWaitlistRegistrationNotificationAction(targetId);
+        if (res.success && res.notified) {
+          toast.success("Notification d'inscription en liste d'attente envoyée sur le salon Discord !");
+        } else {
+          toast.error(`Échec : ${res.error}`);
+        }
+        addLog("Notification Inscription Liste d'attente (Salon staff)", {
+          success: res.success,
+          notified: res.notified,
+          message: res.message,
+          error: res.error,
+          raw: res,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "Erreur inattendue";
+        toast.error(msg);
+        addLog("Notification Inscription Liste d'attente (Salon staff)", { success: false, error: msg });
+      } finally {
+        setLoadingAction(null);
+      }
+    });
+  }
+
   function handleRoleSyncTest() {
     if (!targetId.trim()) {
       toast.error("Veuillez renseigner un ID Discord cible.");
@@ -384,6 +412,15 @@ export function BotTestClient({
         "Félicitations et confirmation de l'accès officiel et complet au serveur Minecraft Hyori.",
       onClick: () =>
         handleRegistrationTest(RegistrationStatus.WHITELISTED, "Validation définitive"),
+    },
+    {
+      id: "waitlist_channel_notification",
+      badge: "Salon Staff",
+      badgeClass: "border-purple-500/30 bg-purple-500/10 text-purple-600",
+      title: "Alerte inscription liste d'attente (Salon externe Staff)",
+      description:
+        "Publication d'un embed d'alerte dans le salon Discord staff dédié lors de l'inscription d'un joueur en liste d'attente.",
+      onClick: handleWaitlistRegistrationTest,
     },
   ];
 

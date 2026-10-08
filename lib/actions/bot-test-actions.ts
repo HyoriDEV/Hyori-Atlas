@@ -8,6 +8,7 @@ import {
   notifyPlayerRegistrationStatus,
   notifyPlayerTicketMessage,
   notifyTicketCreated,
+  notifyWaitlistRegistrationForUser,
   sendInterviewReminders,
   syncPlayerWhitelistClassRole,
   type BotHealthResponse,
@@ -149,5 +150,20 @@ export async function testTicketCreatedNotificationAction(): Promise<BotNotifica
     ticketDescription:
       "Ceci est un test de notification d'ouverture de ticket dans le salon staff.",
     override: config.override,
+  });
+}
+
+export async function testWaitlistRegistrationNotificationAction(
+  targetDiscordId?: string
+): Promise<BotNotificationResult> {
+  await requireRole([Role.ADMIN]);
+
+  const cleanDiscordId = targetDiscordId?.trim() || "";
+  return notifyWaitlistRegistrationForUser({
+    discordId: cleanDiscordId || null,
+    discordDisplayName: "JoueurTest",
+    discordUsername: "joueur_test",
+    minecraftUsername: "SteveTest",
+    minecraftUuid: "069a79f4-44e9-4726-a5be-fca90e38aaf5",
   });
 }

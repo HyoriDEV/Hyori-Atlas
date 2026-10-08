@@ -695,3 +695,108 @@ export async function excludePlayerOnDiscord(
     assignedRoleId: result.data.assignedRoleId,
   };
 }
+
+export interface WaitlistRegistrationNotificationOptions {
+  channelId?: string | null;
+  mentionRoleId?: string | null;
+  discordId?: string | null;
+  playerName: string;
+  minecraftUsername?: string | null;
+  minecraftUuid?: string | null;
+  avatarUrl?: string | null;
+  customWaitlistStaffUrl?: string | null;
+  override?: DiscordEmbedOverride | null;
+}
+
+/**
+ * Notifie les administrateurs sur le salon Discord dédié du serveur staff
+ * lors de l'inscription d'un nouveau joueur sur la liste d'attente.
+ */
+export async function notifyWaitlistRegistration(
+  options: WaitlistRegistrationNotificationOptions
+): Promise<BotNotificationResult> {
+  const waitlistStaffUrl =
+    options.customWaitlistStaffUrl || `${getAtlasBaseUrl()}/staff/waitlist`;
+
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/waitlist-registration",
+    "POST",
+    {
+      channelId: options.channelId ?? undefined,
+      mentionRoleId: options.mentionRoleId ?? undefined,
+      discordId: options.discordId ?? undefined,
+      playerName: options.playerName,
+      minecraftUsername: options.minecraftUsername ?? undefined,
+      minecraftUuid: options.minecraftUuid ?? undefined,
+      avatarUrl: options.avatarUrl ?? undefined,
+      waitlistStaffUrl,
+      override: options.override ?? undefined,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "Waitlist registration notification sent successfully",
+    }
+  );
+}
+
+/**
+ * Construit les données et déclenche la notification administrateur de liste d'attente
+ * pour un utilisateur donné, en respectant la configuration de template dynamique.
+ */
+export async function notifyWaitlistRegistrationForUser(user: {
+  discordId?: string | null;
+  discordDisplayName?: string | null;
+  discordUsername?: string | null;
+  discordAvatarUrl?: string | null;
+  minecraftUsername?: string | null;
+  minecraftUuid?: string | null;
+}): Promise<BotNotificationResult> {
+  const { getChannelNotificationConfig } = await import("./discord-template-service");
+
+  const playerName =
+    user.discordDisplayName ||
+    user.discordUsername ||
+    user.minecraftUsername ||
+    "Un joueur";
+  const waitlistStaffUrl = `${getAtlasBaseUrl()}/staff/waitlist`;
+
+  const config = await getChannelNotificationConfig("WAITLIST_REGISTRATION", {
+    playerName,
+    minecraftUsername: user.minecraftUsername || "",
+    discordId: user.discordId || "",
+    url: waitlistStaffUrl,
+  });
+
+  if (!config.enabled) {
+    return {
+      success: true,
+      notified: false,
+      message: "Notification de liste d'attente désactivée par configuration",
+    };
+  }
+
+  return notifyWaitlistRegistration({
+    channelId: config.channelId,
+    mentionRoleId: config.mentionRoleId,
+    discordId: user.discordId,
+    playerName,
+    minecraftUsername: user.minecraftUsername,
+    minecraftUuid: user.minecraftUuid,
+    avatarUrl: user.discordAvatarUrl,
+    customWaitlistStaffUrl: waitlistStaffUrl,
+    override: config.override,
+  });
+}
+

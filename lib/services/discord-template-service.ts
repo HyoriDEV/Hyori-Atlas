@@ -80,10 +80,10 @@ export async function getEffectiveDiscordOverride(
 }
 
 /**
- * Récupère les paramètres d'une notification de ticket envoyée dans un salon
- * (ouverture ou transmission à une équipe) : salon, rôle mentionné et override.
+ * Récupère les paramètres d'une notification envoyée dans un salon Discord
+ * (salon cible, rôle mentionné, état d'activation et override éventuel).
  */
-export async function getTicketChannelNotificationConfig(
+export async function getChannelNotificationConfig(
   templateId: DiscordTemplateId,
   variables: Record<string, string | null | undefined>
 ) {
@@ -102,3 +102,9 @@ export async function getTicketChannelNotificationConfig(
     override,
   };
 }
+
+/**
+ * Alias de compatibilité pour les notifications de tickets.
+ */
+export const getTicketChannelNotificationConfig = getChannelNotificationConfig;
+

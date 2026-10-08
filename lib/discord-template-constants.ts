@@ -16,7 +16,8 @@ export type DiscordTemplateId =
   | "SHEET_VALIDATED"
   | "SHEET_FEEDBACK"
   | "SHEET_REOPENED"
-  | "INTERVIEW_REMINDER";
+  | "INTERVIEW_REMINDER"
+  | "WAITLIST_REGISTRATION";
 
 export interface DefaultTemplateConfig {
   id: DiscordTemplateId;
@@ -188,6 +189,22 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
     availableVariables: [
       { key: "{playerName}", description: "Pseudo du joueur" },
       { key: "{url}", description: "Lien vers la réservation d'entretien" },
+    ],
+  },
+  WAITLIST_REGISTRATION: {
+    id: "WAITLIST_REGISTRATION",
+    label: "Inscription en liste d'attente (Salon externe Staff)",
+    category: "registration",
+    isChannelNotification: true,
+    defaultTitle: "Nouvelle Inscription — Liste d'attente",
+    defaultDescription:
+      "Nouveau inscrit sur la liste d'attente..\n\n**Joueur :** {playerName}\n**Minecraft :** {minecraftUsername}\n\nConsulte la liste d'attente depuis l'espace staff.",
+    defaultButtonLabel: "Consulter la liste d'attente",
+    availableVariables: [
+      { key: "{playerName}", description: "Pseudo Discord ou nom d'affichage du joueur" },
+      { key: "{minecraftUsername}", description: "Pseudo Minecraft lié du joueur" },
+      { key: "{discordId}", description: "Identifiant Discord du joueur" },
+      { key: "{url}", description: "Lien vers la liste d'attente sur l'espace staff" },
     ],
   },
 };
