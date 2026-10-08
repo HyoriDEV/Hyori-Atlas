@@ -16,21 +16,16 @@ import { TicketCategory } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels, ticketCategoryLabels, ticketSummonableTeams } from "@/lib/navigation";
 import { ResetSortButton } from "@/components/dashboard/waitlist-sort-controls";
 import { setClientPagePref } from "@/lib/table-preferences";
-import { TICKET_READ_FILTER_UNREAD, TICKET_TEAM_FILTER_NONE } from "@/lib/ticket-list";
+import { TICKET_TEAM_FILTER_NONE } from "@/lib/ticket-list";
 
 const ALL_VALUE = "ALL";
 const QUERY_DEBOUNCE_MS = 400;
 // Filtres ponctuels : jamais enregistrés dans les préférences de la page.
-const TRANSIENT_PARAMS = new Set(["q", "read"]);
+const TRANSIENT_PARAMS = new Set(["q"]);
 
 const categoryItems = [
   { value: ALL_VALUE, label: "Toutes les catégories" },
   ...Object.values(TicketCategory).map((value) => ({ value, label: ticketCategoryLabels[value] })),
-];
-
-const readItems = [
-  { value: ALL_VALUE, label: "Lus et non lus" },
-  { value: TICKET_READ_FILTER_UNREAD, label: "Non lus" },
 ];
 
 const teamItems = [
@@ -42,14 +37,12 @@ const teamItems = [
 export function TicketFilters({
   query,
   category,
-  read,
   team,
   showTeamFilter = false,
   hasActiveSort = false,
 }: {
   query: string;
   category?: string;
-  read?: string;
   team?: string;
   showTeamFilter?: boolean;
   hasActiveSort?: boolean;
@@ -164,23 +157,6 @@ export function TicketFilters({
         </SelectTrigger>
         <SelectContent>
           {categoryItems.map((item) => (
-            <SelectItem key={item.value} value={item.value}>
-              {item.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        items={readItems}
-        value={read ?? ALL_VALUE}
-        onValueChange={(value) => updateParams({ read: value ?? ALL_VALUE })}
-      >
-        <SelectTrigger className="w-40">
-          <SelectValue placeholder="Lecture" />
-        </SelectTrigger>
-        <SelectContent>
-          {readItems.map((item) => (
             <SelectItem key={item.value} value={item.value}>
               {item.label}
             </SelectItem>

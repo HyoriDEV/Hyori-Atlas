@@ -26,6 +26,7 @@ import {
   Scroll,
   Scales,
   ChartBar,
+  Gavel,
   MagnifyingGlass,
 } from "@phosphor-icons/react";
 
@@ -85,6 +86,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   scroll: Scroll,
   scales: Scales,
   chart: ChartBar,
+  gavel: Gavel,
 };
 
 export interface AppShellNavEntry {

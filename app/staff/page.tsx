@@ -11,6 +11,7 @@ import {
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
+  SanctionType,
   TicketCategory,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
@@ -48,6 +49,7 @@ export default async function StaffDashboardPage() {
   const canAccessRpTracking = rpTrackingRoles.includes(user.role);
   const canAccessBdaReports = bdaRoles.includes(user.role);
   const canAccessStaffTeam = user.role === Role.ADMIN;
+  const canAccessSanctions = user.role === Role.ADMIN;
 
   const ticketWhereBase = ticketAccessWhere(user);
 
@@ -63,6 +65,7 @@ export default async function StaffDashboardPage() {
     rpTrackingCounts,
     bdaReportsCount,
     staffMembersCount,
+    activeSanctionsCount,
   ] = await Promise.all([
     prisma.ticket.count({
       where: { AND: [ticketWhereBase, { status: TicketStatus.PENDING_STAFF }] },
@@ -103,6 +106,18 @@ export default async function StaffDashboardPage() {
     canAccessStaffTeam
       ? prisma.user.count({
           where: { role: { not: Role.PLAYER } },
+        })
+      : 0,
+    canAccessSanctions
+      ? prisma.sanction.count({
+          where: {
+            revokedAt: null,
+            OR: [
+              { type: { in: [SanctionType.WARNING, SanctionType.EXCLUSION] } },
+              { expiresAt: null },
+              { expiresAt: { gt: new Date() } },
+            ],
+          },
         })
       : 0,
   ]);
@@ -164,6 +179,14 @@ export default async function StaffDashboardPage() {
       iconKey: "shield",
       stat: bdaReportsCount,
       statLabel: bdaReportsCount > 1 ? "dossiers" : "dossier",
+    },
+    "/staff/sanctions": {
+      title: "Sanctions",
+      description: "Historique et gestion des avertissements, suspensions et exclusions.",
+      href: "/staff/sanctions",
+      iconKey: "gavel",
+      stat: activeSanctionsCount,
+      statLabel: activeSanctionsCount > 1 ? "actives" : "active",
     },
     "/staff/staff-team": {
       title: "Équipe staff",
