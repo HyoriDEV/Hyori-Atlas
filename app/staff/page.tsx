@@ -8,7 +8,6 @@ export const metadata: Metadata = {
 };
 import {
   CharacterSheetStatus,
-  ConversationType,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -25,6 +24,7 @@ import {
   type NavIconKey,
 } from "@/lib/navigation";
 import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
+import { getRpTrackingStates } from "@/lib/services/rp-tracking-service";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,7 @@ export default async function StaffDashboardPage() {
     waitlistCount,
     registeredInterviewBookingsCount,
     totalPlayerClassesCount,
-    activeRpTrackingConversationsCount,
+    rpTrackingCounts,
     bdaReportsCount,
     staffMembersCount,
   ] = await Promise.all([
@@ -91,11 +91,7 @@ export default async function StaffDashboardPage() {
         })
       : 0,
     canAccessDistribution ? prisma.playerClass.count() : 0,
-    canAccessRpTracking
-      ? prisma.conversation.count({
-          where: { type: ConversationType.RP_TRACKING },
-        })
-      : 0,
+    canAccessRpTracking ? getRpTrackingStates().then((states) => states.counts) : null,
     canAccessBdaReports
       ? prisma.ticket.count({
           where: {
@@ -110,6 +106,9 @@ export default async function StaffDashboardPage() {
         })
       : 0,
   ]);
+
+  const pendingRpTrackingCount = rpTrackingCounts?.pending ?? 0;
+  const ongoingRpTrackingCount = pendingRpTrackingCount + (rpTrackingCounts?.recent ?? 0);
 
   const displayName =
     user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Staff";
@@ -131,6 +130,12 @@ export default async function StaffDashboardPage() {
       hasNotification?: boolean;
     }
   > = {
+    "/staff/statistics": {
+      title: "Statistiques",
+      description: "Admission, activité en jeu, personnages et support.",
+      href: "/staff/statistics",
+      iconKey: "chart",
+    },
     "/staff/tickets": {
       title: "Tickets joueurs",
       description: "Assistance et demandes des joueurs.",
@@ -198,8 +203,13 @@ export default async function StaffDashboardPage() {
       description: "Salons de suivi des joueurs actifs.",
       href: "/staff/rp-tracking",
       iconKey: "chat",
-      stat: activeRpTrackingConversationsCount,
-      statLabel: activeRpTrackingConversationsCount > 1 ? "salons actifs" : "salon actif",
+      stat: ongoingRpTrackingCount,
+      statLabel: ongoingRpTrackingCount > 1 ? "suivis en cours" : "suivi en cours",
+      badge:
+        pendingRpTrackingCount > 0
+          ? { label: `${pendingRpTrackingCount} à traiter`, variant: "default" }
+          : undefined,
+      hasNotification: pendingRpTrackingCount > 0,
     },
     "/staff/waitlist": {
       title: "Liste d'attente",

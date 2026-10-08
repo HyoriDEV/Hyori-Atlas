@@ -53,7 +53,7 @@ import {
 } from "@/components/ui/table";
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { SortHeader } from "@/components/dashboard/waitlist-sort-controls";
-import { TicketViewTabs } from "@/components/dashboard/ticket-view-tabs";
+import { ViewTabs } from "@/components/dashboard/view-tabs";
 import { TicketFilters } from "@/components/dashboard/ticket-filters";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { TicketRowActions } from "@/components/dashboard/ticket-row-actions";
@@ -279,8 +279,9 @@ export default async function TicketsStaffListPage(props: PageProps) {
         </div>
       </div>
 
-      <TicketViewTabs
+      <ViewTabs
         activeView={view}
+        defaultView={DEFAULT_TICKET_VIEW}
         tabs={[
           { value: "active", label: "Tous les actifs", count: viewCounts.active },
           { value: "staff", label: "À traiter", count: viewCounts.staff },

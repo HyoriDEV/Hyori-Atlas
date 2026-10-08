@@ -26,8 +26,10 @@ import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enu
 import { rpTrackingStaffRoles } from "@/lib/navigation";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendStaffConversationMessage } from "@/lib/actions/rp-tracking-actions";
+import { getRpTrackingPlayerContexts } from "@/lib/services/rp-tracking-service";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
+import { WritingSummaryBanner } from "@/components/staff/rp-tracking/writing-summary-banner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
 
@@ -84,6 +86,7 @@ export default async function RpTrackingStaffDetailPage({
   }
 
   const messages = conversation.messages || [];
+  const playerContext = (await getRpTrackingPlayerContexts([playerId])).get(playerId);
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
 
@@ -107,6 +110,8 @@ export default async function RpTrackingStaffDetailPage({
           <span className="hover:underline">{playerName}</span>
         </Link>
       </div>
+
+      {playerContext && <WritingSummaryBanner playerId={playerId} context={playerContext} />}
 
       <ConversationChat
         conversationId={conversation.id}

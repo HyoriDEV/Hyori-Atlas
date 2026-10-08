@@ -5,21 +5,25 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setClientPagePref } from "@/lib/table-preferences";
-import { DEFAULT_TICKET_VIEW, type TicketView } from "@/lib/ticket-list";
 
-export interface TicketViewTab {
-  value: TicketView;
+export interface ViewTab<T extends string> {
+  value: T;
   label: string;
-  count: number;
+  count?: number;
 }
 
-export function TicketViewTabs({
+export function ViewTabs<T extends string>({
   activeView,
+  defaultView,
   tabs,
+  paramName = "tab",
   className,
 }: {
-  activeView: TicketView;
-  tabs: TicketViewTab[];
+  activeView: T;
+  /** Vue affichée sans paramètre d'URL : elle n'est jamais écrite dans l'URL ni les préférences. */
+  defaultView: T;
+  tabs: ViewTab<T>[];
+  paramName?: string;
   className?: string;
 }) {
   const router = useRouter();
@@ -29,12 +33,12 @@ export function TicketViewTabs({
 
   const handleValueChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value === DEFAULT_TICKET_VIEW) {
-      params.delete("tab");
-      setClientPagePref(pathname, { tab: undefined });
+    if (value === defaultView) {
+      params.delete(paramName);
+      setClientPagePref(pathname, { [paramName]: undefined });
     } else {
-      params.set("tab", value);
-      setClientPagePref(pathname, { tab: value });
+      params.set(paramName, value);
+      setClientPagePref(pathname, { [paramName]: value });
     }
     params.delete("page");
 
@@ -49,7 +53,7 @@ export function TicketViewTabs({
       <TabsList variant="line">
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value}>
-            {tab.label} ({tab.count})
+            {tab.count === undefined ? tab.label : `${tab.label} (${tab.count})`}
           </TabsTrigger>
         ))}
       </TabsList>

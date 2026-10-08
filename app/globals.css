@@ -78,6 +78,12 @@
   --sidebar-accent-foreground: #f8f5e8;
   --sidebar-border: #323232;
   --sidebar-ring: #e9d15c;
+  /* Palette catégorielle des graphiques : ordre fixe, validé (daltonisme, contraste) sur --card. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
 }
 
 .dark {
@@ -107,6 +113,12 @@
   --sidebar-accent-foreground: #f8f5e8;
   --sidebar-border: #323232;
   --sidebar-ring: #e9d15c;
+  /* Palette catégorielle des graphiques : ordre fixe, validé (daltonisme, contraste) sur --card. */
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
 }
 
 .editor-light {

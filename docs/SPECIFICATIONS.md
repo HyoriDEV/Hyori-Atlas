@@ -160,9 +160,35 @@ A dedicated module for the GC team to handle player disputes objectively.
   - Optional dropdown to link an existing player complaint ticket.
 - Statuses: Non lu (default), Résolu, Archivé.
 
+### 5.4. RP Tracking — Staff View (Suivi RP)
+
+A list of every whitelisted player's RP Tracking chat, ordered so that the chats needing attention come first.
+
+- States, derived from the chat messages (deleted and system messages are ignored):
+  - À traiter: the last message comes from the player and has no staff reply yet.
+  - Actif: answered, with an exchange in the last 30 days.
+  - En sommeil: answered, with no exchange for 30 days or more.
+  - Sans échange: no message exchanged yet.
+- Default order: À traiter (longest wait first), Actif, En sommeil, Sans échange. Tabs with counters filter by state, and a search field filters by player name.
+- Header tiles: chats to handle, active chats, longest current wait, median staff reply time over the last 30 days.
+- Each row shows the player and their active character, the state (with the waiting time when a reply is expected), the last message, the message count, the size of the written lore (chapters and words), the last in-game login and the last activity.
+- Chat page: a banner above the chat summarises the active character and their written lore (chapters, words, last modification) with the last in-game login, and links to the lore reader. Going back from the reader returns to the chat.
+
+### 5.5. Statistics (Statistiques)
+
+A read-only overview reserved for Administrators. Every figure is computed from the existing data when the page is displayed: nothing is stored and nothing can be edited from this page.
+
+- A period selector (7, 30 or 90 days, or since the beginning) scopes the time-based figures; figures describing the current state are labelled as such. Days and hours follow the Europe/Paris time zone.
+- Four tabs, only the displayed one being computed:
+  - Admission & communauté: accounts per registration status, acceptance rate, registrations and whitelistings over time, median delay between admission steps, interview slots and bookings, character sheet review statuses and average number of change requests before validation.
+  - Activité en jeu: hours played, unique players, sessions, median session length, peak of simultaneous players, hours played and unique players over time, average attendance per weekday and hour, top playtime, attendance of whitelisted players. A session is only recorded when the player logs out.
+  - Personnages & écriture: characters per status, gender and age of the characters in play, average skill values, retained classes and roles, lore writing volume (authors, words, chapters) and most prolific authors.
+  - Support & modération: open and pending tickets, tickets created per category over time, median first staff reply time, RP Tracking states and reply time, sanctions per type and origin, BDA reports per status.
+- Every chart over time can be switched to a table of the same values.
+
 ## 6. Role-Based Access Control (RBAC) Matrix
 
-- Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets.
+- Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets. Sole access to Statistics.
 - Helper: Reads Player Atlas. Full access to Player Tickets.
 - Gestion des conflits (GC): Reads Player Atlas. Writes/Manages BDA Reports. Player Tickets on summon only.
 - Suivi RP: Reads Player Atlas. Evaluates and edits Character Sheets, manages characters. Manages RP Groups, Distribution, Player RP Tracking chats & Lore Writing validation. Player Tickets on summon only.

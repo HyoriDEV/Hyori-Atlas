@@ -26,7 +26,8 @@ export type NavIconKey =
   | "newspaper"
   | "book-bookmark"
   | "scroll"
-  | "scales";
+  | "scales"
+  | "chart";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -183,6 +184,14 @@ export const staffDashboardItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffStatisticsItem: StaffNavItem = {
+  label: "Statistiques",
+  href: "/staff/statistics",
+  iconKey: "chart",
+  roles: [Role.ADMIN],
+  fullWidth: true,
+};
+
 export const staffSettingsItem: StaffNavItem = {
   label: "Paramètres",
   href: "/staff/settings",
@@ -248,6 +257,7 @@ export const staffRpTrackingItem: StaffNavItem = {
   href: "/staff/rp-tracking",
   iconKey: "chat",
   roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
+  fullWidth: true,
 };
 
 export const staffWaitlistItem: StaffNavItem = {
@@ -297,6 +307,7 @@ export const staffStaffTeamItem: StaffNavItem = {
 
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
+  staffStatisticsItem,
   staffSettingsItem,
   staffBotTestItem,
   staffTicketsItem,
@@ -317,7 +328,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
     items:
       role === Role.ADMIN
-        ? [staffDashboardItem, staffSettingsItem, staffBotTestItem]
+        ? [staffDashboardItem, staffStatisticsItem, staffSettingsItem, staffBotTestItem]
         : [staffDashboardItem],
   };
 

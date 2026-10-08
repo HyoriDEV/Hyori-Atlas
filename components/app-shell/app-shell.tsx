@@ -25,6 +25,7 @@ import {
   BookBookmark,
   Scroll,
   Scales,
+  ChartBar,
   MagnifyingGlass,
 } from "@phosphor-icons/react";
 
@@ -83,6 +84,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   "book-bookmark": BookBookmark,
   scroll: Scroll,
   scales: Scales,
+  chart: ChartBar,
 };
 
 export interface AppShellNavEntry {
@@ -193,7 +195,8 @@ export function AppShell({
       item.href === "/player" ||
       item.href === "/staff" ||
       item.href === "/player/writing" ||
-      item.href === "/staff/tickets";
+      item.href === "/staff/tickets" ||
+      item.href === "/staff/rp-tracking";
     return isExactRoot
       ? pathname === item.href
       : pathname === item.href || pathname?.startsWith(`${item.href}/`);

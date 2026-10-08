@@ -5,6 +5,7 @@ import DOMPurify from "isomorphic-dompurify";
 import { TextAa, Sun, Moon, BookOpen } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
+import { countWords } from "@/lib/text-stats";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -55,16 +56,6 @@ function useWritingPreference<T extends string>(
   };
 
   return [value, setValue];
-}
-
-function countWords(html: string): number {
-  if (!html) return 0;
-  const text = html
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  if (!text) return 0;
-  return text.split(/\s+/).filter(Boolean).length;
 }
 
 DOMPurify.addHook("afterSanitizeAttributes", (node) => {
