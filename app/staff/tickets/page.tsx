@@ -16,9 +16,7 @@ import {
 import {
   staffNavItems,
   ticketCategoryLabels,
-  ticketStatusLabels,
   ticketSummonableTeams,
-  ticketTeamShortLabels,
 } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import {
@@ -261,7 +259,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
     currentSort: sortDir,
   };
 
-  const columnCount = canManageAccess ? 8 : 7;
+  const columnCount = 6;
 
   return (
     <div className="flex flex-col gap-6">
@@ -305,20 +303,11 @@ export default async function TicketsStaffListPage(props: PageProps) {
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
-                  sortKey="category"
-                  defaultDirection="asc"
-                  label="Catégorie"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
                   sortKey="status"
                   defaultDirection="asc"
                   label="Statut"
                 />
               </TableHead>
-              {canManageAccess && <TableHead>Accès staff</TableHead>}
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
@@ -377,12 +366,17 @@ export default async function TicketsStaffListPage(props: PageProps) {
                     <TableCell className="relative max-w-md pl-6">
                       {isUnread && <UnreadDot placement="table" title="Non lu" />}
                       <div className="flex min-w-0 flex-col gap-0.5">
-                        <span
-                          className={cn("truncate", isUnread ? "font-semibold" : "font-medium")}
-                          title={ticket.subject}
-                        >
-                          {ticket.subject}
-                        </span>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                          <span
+                            className={cn("truncate", isUnread ? "font-semibold" : "font-medium")}
+                            title={ticket.subject}
+                          >
+                            {ticket.subject}
+                          </span>
+                          <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">
+                            {ticketCategoryLabels[ticket.category]}
+                          </Badge>
+                        </div>
                         {lastMessage && (
                           <span
                             className={cn(
@@ -424,44 +418,14 @@ export default async function TicketsStaffListPage(props: PageProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className="text-xs">
-                        {ticketCategoryLabels[ticket.category]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
                       <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
-                        {ticketStatusLabels[ticket.status]}
+                        {ticket.status === "PENDING_STAFF"
+                          ? "Staff"
+                          : ticket.status === "PENDING_PLAYER"
+                            ? "Joueur"
+                            : "Archivé"}
                       </Badge>
                     </TableCell>
-                    {canManageAccess && (
-                      <TableCell>
-                        {ticket.teamSummons.length === 0 && ticket._count.staffAccesses === 0 ? (
-                          <span className="text-muted-foreground">—</span>
-                        ) : (
-                          <div className="flex flex-wrap items-center gap-1">
-                            {ticketSummonableTeams
-                              .filter((team) => ticket.teamSummons.some((s) => s.team === team))
-                              .map((team) => (
-                                <Badge
-                                  key={team}
-                                  variant="outline"
-                                  className="px-1.5 py-0 text-[10px]"
-                                >
-                                  {ticketTeamShortLabels[team]}
-                                </Badge>
-                              ))}
-                            {ticket._count.staffAccesses > 0 && (
-                              <span
-                                className="text-muted-foreground text-xs"
-                                title="Staff ajoutés individuellement"
-                              >
-                                +{ticket._count.staffAccesses} staff
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </TableCell>
-                    )}
                     <TableCell className="text-muted-foreground whitespace-nowrap">
                       {formatDate(ticket.lastMessageAt, { style: "compact" })}
                     </TableCell>

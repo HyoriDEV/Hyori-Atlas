@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 export function StatTile({
   label,
   value,
-  hint,
   className,
 }: {
   label: string;
@@ -24,7 +23,6 @@ export function StatTile({
       <span className="font-heading text-foreground truncate text-2xl font-semibold tracking-tight">
         {value}
       </span>
-      {hint ? <span className="text-muted-foreground truncate text-xs">{hint}</span> : null}
     </div>
   );
 }

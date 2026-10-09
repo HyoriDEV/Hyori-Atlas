@@ -1,11 +1,8 @@
 import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 
-import { MAX_SKILL_POINTS } from "@/lib/character-sheet";
 import { getCharacterStats } from "@/lib/services/statistics/character-stats";
 import { describeGranularity, type StatisticsRange } from "@/lib/services/statistics/timeline";
 import { formatNumber, formatPercent, pluralize } from "@/lib/statistics-format";
-import { Button } from "@/components/ui/button";
 import { SkinHead } from "@/components/ui/skin-head";
 import {
   Table,
@@ -68,7 +65,6 @@ export async function CharactersTab({ range }: { range: StatisticsRange }) {
 
       <StatisticsSection
         title="Personnages"
-        description="État actuel, indépendant de la période choisie."
       >
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <ChartCard title="Statut" description="Tous les personnages créés.">
@@ -82,69 +78,6 @@ export async function CharactersTab({ range }: { range: StatisticsRange }) {
           </ChartCard>
         </div>
 
-        <ChartCard
-          title="Compétences moyennes"
-          description={`Moyenne sur ${MAX_SKILL_POINTS} points des personnages en jeu.`}
-        >
-          {stats.activeCharacters === 0 ? (
-            <ChartEmptyState>Aucun personnage en jeu.</ChartEmptyState>
-          ) : (
-            <div className="grid grid-cols-1 gap-x-8 gap-y-5 lg:grid-cols-3">
-              {stats.skills.map((category) => (
-                <div key={category.category} className="flex flex-col gap-2.5">
-                  <h4 className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                    {category.category}
-                  </h4>
-                  <BarList
-                    max={MAX_SKILL_POINTS}
-                    decimals={1}
-                    items={category.skills.map((skill) => ({
-                      label: skill.label,
-                      value: skill.average,
-                    }))}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </ChartCard>
-
-        <ChartCard
-          title="Classes et métiers retenus"
-          description={`Affiliation renseignée par ${pluralize(stats.affiliatedPlayers, "joueur")}, selon le choix retenu par le staff.`}
-          action={
-            <Button
-              size="sm"
-              variant="outline"
-              render={<Link href="/staff/distribution" prefetch={false} />}
-            >
-              Voir la distribution
-              <ArrowRight className="size-3.5" />
-            </Button>
-          }
-        >
-          {stats.affiliatedPlayers === 0 ? (
-            <ChartEmptyState>Aucune affiliation renseignée.</ChartEmptyState>
-          ) : (
-            <div className="grid grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-2">
-              {stats.classes.map((playerClass) => (
-                <div key={playerClass.name} className="flex flex-col gap-2.5">
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h4 className="text-foreground text-sm font-semibold">{playerClass.name}</h4>
-                    <span className="text-muted-foreground text-xs">
-                      {pluralize(playerClass.count, "joueur")} ·{" "}
-                      {formatPercent(playerClass.count / stats.affiliatedPlayers)}
-                    </span>
-                  </div>
-                  <BarList
-                    items={playerClass.roles}
-                    emptyLabel="Aucun joueur avec un métier précis."
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </ChartCard>
       </StatisticsSection>
 
       <StatisticsSection title="Écriture de trame">

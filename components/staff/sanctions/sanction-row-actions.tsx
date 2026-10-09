@@ -6,11 +6,8 @@ import { toast } from "sonner";
 import {
   ArrowCounterClockwise,
   ArrowSquareOut,
-  Clock,
   Eye,
   Gavel,
-  ShieldWarning,
-  User as UserIcon,
 } from "@phosphor-icons/react";
 
 import { revokeSanction } from "@/lib/actions/sanction-actions";
@@ -123,32 +120,31 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
   return (
     <>
       <div className="flex items-center justify-end gap-1.5">
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-xs"
-          onClick={() => setDetailsOpen(true)}
-          title="Consulter les détails de la sanction"
-        >
-          <Eye className="size-3.5" />
-          <span className="hidden sm:inline">Détails</span>
-        </Button>
-
         {isActive && (
           <Button
             type="button"
             variant="destructive"
             size="sm"
-            className="h-8 px-2.5 text-xs"
+            className="h-8 px-2"
             onClick={() => setRevokeOpen(true)}
             title="Lever cette sanction"
           >
             <ArrowCounterClockwise className="size-3.5" />
-            <span>Lever</span>
           </Button>
         )}
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2"
+          onClick={() => setDetailsOpen(true)}
+          title="Consulter les détails de la sanction"
+        >
+          <Eye className="size-3.5" />
+        </Button>
       </div>
+
 
       {/* Dialog Détails */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
@@ -282,7 +278,7 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
             <AlertDialogDescription>
               Êtes-vous sûr de vouloir lever cette sanction pour{" "}
               <strong>{playerDisplayName}</strong> ? Le joueur pourra de nouveau se
-              connecter au serveur si aucune autre exclusion ou suspension n'est active.
+              connecter au serveur si aucune autre exclusion ou suspension n&apos;est active.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

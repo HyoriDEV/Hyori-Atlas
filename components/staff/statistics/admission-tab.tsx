@@ -9,8 +9,7 @@ import { TimeSeriesChart } from "@/components/staff/statistics/time-series-chart
 
 export async function AdmissionTab({ range }: { range: StatisticsRange }) {
   const stats = await getAdmissionStats(range);
-  const { totals, interviews, sheets } = stats;
-  const upcomingSlots = interviews.upcomingBooked + interviews.upcomingFree;
+  const { totals } = stats;
 
   return (
     <div className="flex flex-col gap-8">
@@ -88,36 +87,6 @@ export async function AdmissionTab({ range }: { range: StatisticsRange }) {
             ]}
           />
         </ChartCard>
-      </StatisticsSection>
-
-      <StatisticsSection title="Entretiens et fiches personnage">
-        <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <ChartCard
-            title="Entretiens whitelist"
-            description={
-              upcomingSlots > 0
-                ? `${pluralize(upcomingSlots, "créneau", "créneaux")} à venir : ${formatNumber(interviews.upcomingBooked)} réservé(s), ${formatNumber(interviews.upcomingFree)} libre(s).`
-                : "Aucun créneau à venir."
-            }
-          >
-            <BarList
-              items={interviews.byStatus}
-              showShare
-              emptyLabel="Aucune réservation sur cette période."
-            />
-          </ChartCard>
-
-          <ChartCard
-            title="Fiches des personnages actifs"
-            description={
-              sheets.averageReviewRounds === null
-                ? "Aucune fiche validée pour l'instant."
-                : `${formatNumber(sheets.averageReviewRounds, 1)} demande(s) de modifications en moyenne avant validation (${pluralize(sheets.validatedCount, "fiche validée", "fiches validées")}).`
-            }
-          >
-            <BarList items={sheets.byStatus} showShare emptyLabel="Aucune fiche personnage." />
-          </ChartCard>
-        </div>
       </StatisticsSection>
     </div>
   );

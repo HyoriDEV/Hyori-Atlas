@@ -30,7 +30,8 @@ export type NavIconKey =
   | "scroll"
   | "scales"
   | "chart"
-  | "gavel";
+  | "gavel"
+  | "kanban";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -210,6 +211,17 @@ export const staffTicketsItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const backlogRoles: Role[] = [Role.ADMIN, Role.DEVELOPER, Role.HELPER];
+export const backlogManagerRoles: Role[] = [Role.ADMIN, Role.DEVELOPER];
+
+export const staffBacklogItem: StaffNavItem = {
+  label: "Backlog",
+  href: "/staff/backlog",
+  iconKey: "kanban",
+  roles: backlogRoles,
+  fullWidth: true,
+};
+
 export const staffBdaReportsItem: StaffNavItem = {
   label: "Rapports GC",
   href: "/staff/bda-reports",
@@ -314,6 +326,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffStatisticsItem,
   staffSettingsItem,
   staffTicketsItem,
+  staffBacklogItem,
   staffBdaReportsItem,
   staffSanctionsItem,
   staffStaffTeamItem,
@@ -341,7 +354,13 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffBdaReportsItem, staffSanctionsItem, staffStaffTeamItem],
+        items: [
+          staffTicketsItem,
+          staffBacklogItem,
+          staffBdaReportsItem,
+          staffSanctionsItem,
+          staffStaffTeamItem,
+        ],
       },
       {
         title: "Gestion RP",
@@ -373,7 +392,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffAtlasItem],
+        items: [staffTicketsItem, staffBacklogItem, staffAtlasItem],
       },
     ];
   }
@@ -397,7 +416,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Outils",
-        items: [staffTicketsItem, staffAtlasItem],
+        items: [staffTicketsItem, staffBacklogItem, staffAtlasItem],
       },
     ];
   }

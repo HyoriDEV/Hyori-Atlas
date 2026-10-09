@@ -52,10 +52,8 @@ type SortKey =
   | "player"
   | "rpName"
   | "sheetUpdatedAt"
-  | "sheetComments"
   | "sheetStatus"
   | "playtime"
-  | "lastLogin"
   | "status";
 type SortDirection = "asc" | "desc";
 
@@ -63,10 +61,8 @@ const VALID_SORT_KEYS: SortKey[] = [
   "player",
   "rpName",
   "sheetUpdatedAt",
-  "sheetComments",
   "sheetStatus",
   "playtime",
-  "lastLogin",
   "status",
 ];
 
@@ -89,12 +85,6 @@ function parseEnumParam<T extends string>(
   if (!value) return null;
   const values = Object.values(enumObj) as string[];
   return values.includes(value) ? (value as T) : null;
-}
-
-function formatCommentCount(count?: number): string {
-  if (!count || count <= 0) return "—";
-  if (count === 1) return "1 retour";
-  return `${count} retours`;
 }
 
 export default async function AtlasPage(props: PageProps) {
@@ -164,11 +154,6 @@ export default async function AtlasPage(props: PageProps) {
     include: {
       characterSheets: {
         orderBy: { createdAt: "desc" },
-        include: {
-          _count: {
-            select: { comments: true },
-          },
-        },
       },
     },
     orderBy: { createdAt: "desc" },
@@ -209,10 +194,6 @@ export default async function AtlasPage(props: PageProps) {
           const diff = timeA - timeB;
           return sortDir === "asc" ? diff : -diff;
         }
-      } else if (sortKey === "sheetComments") {
-        const countA = a.activeSheet?._count.comments ?? 0;
-        const countB = b.activeSheet?._count.comments ?? 0;
-        comparison = countA - countB;
       } else if (sortKey === "sheetStatus") {
         const rankMap: Record<CharacterSheetStatus, number> = {
           [CharacterSheetStatus.PENDING_STAFF]: 4,
@@ -223,7 +204,7 @@ export default async function AtlasPage(props: PageProps) {
         const rankA = a.activeSheet ? (rankMap[a.activeSheet.reviewStatus] ?? 0) : 0;
         const rankB = b.activeSheet ? (rankMap[b.activeSheet.reviewStatus] ?? 0) : 0;
         comparison = rankA - rankB;
-      } else if (sortKey === "playtime" || sortKey === "lastLogin") {
+      } else if (sortKey === "playtime") {
         comparison = 0;
       } else if (sortKey === "status") {
         const rankA = registrationStatusRank[a.player.registrationStatus] ?? 0;
@@ -282,28 +263,10 @@ export default async function AtlasPage(props: PageProps) {
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
-                  sortKey="lastLogin"
-                  defaultDirection="desc"
-                  currentSort={sortDir}
-                  label="Dernière connexion"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
                   sortKey="sheetUpdatedAt"
                   defaultDirection="desc"
                   currentSort={sortDir}
                   label="Modification fiche"
-                />
-              </TableHead>
-              <TableHead>
-                <SortHeader
-                  {...sortHeaderProps}
-                  sortKey="sheetComments"
-                  defaultDirection="desc"
-                  currentSort={sortDir}
-                  label="Retours"
                 />
               </TableHead>
               <TableHead>
@@ -330,7 +293,7 @@ export default async function AtlasPage(props: PageProps) {
           <TableBody>
             {pagePlayers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-muted-foreground py-10 text-center text-sm">
+                <TableCell colSpan={6} className="text-muted-foreground py-10 text-center text-sm">
                   {hasActiveFilters
                     ? "Aucun joueur ne correspond à ces filtres."
                     : "Aucun joueur pour l'instant."}
@@ -356,14 +319,10 @@ export default async function AtlasPage(props: PageProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{sheet?.name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">—</TableCell>
                     <TableCell className="text-muted-foreground">
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
                         : "—"}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatCommentCount(sheet?._count.comments)}
                     </TableCell>
                     <TableCell>
                       {sheet ? (

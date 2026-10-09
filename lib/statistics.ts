@@ -21,8 +21,8 @@ export type StatisticsPeriod = (typeof STATISTICS_PERIODS)[number];
 export const DEFAULT_STATISTICS_PERIOD: StatisticsPeriod = "all";
 
 export const statisticsPeriodLabels: Record<StatisticsPeriod, string> = {
-  "7": "7 derniers jours",
-  "30": "30 derniers jours",
-  "90": "90 derniers jours",
+  "7": "7J",
+  "30": "30J",
+  "90": "90J",
   all: "Depuis le début",
 };

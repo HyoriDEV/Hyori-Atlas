@@ -155,7 +155,7 @@ export function SanctionsFilters({
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       {/* Barre de recherche */}
-      <div className="relative min-w-[220px] flex-1 sm:w-64 sm:flex-initial">
+      <div className="relative min-w-[280px] flex-1 sm:w-80 sm:flex-initial">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           type="text"
@@ -182,7 +182,11 @@ export function SanctionsFilters({
         onValueChange={(val) => updateParams({ type: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[160px]">
-          <SelectValue placeholder="Tous les types" />
+          {typeFilter && typeFilter !== ALL_VALUE ? (
+            <SelectValue />
+          ) : (
+            <span className="text-muted-foreground">Tous les types</span>
+          )}
         </SelectTrigger>
         <SelectContent>
           {typeFilterItems.map((item) => (
@@ -199,7 +203,11 @@ export function SanctionsFilters({
         onValueChange={(val) => updateParams({ status: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Tous les statuts" />
+          {statusFilter && statusFilter !== ALL_VALUE ? (
+            <SelectValue />
+          ) : (
+            <span className="text-muted-foreground">Tous les statuts</span>
+          )}
         </SelectTrigger>
         <SelectContent>
           {statusFilterItems.map((item) => (
@@ -216,7 +224,11 @@ export function SanctionsFilters({
         onValueChange={(val) => updateParams({ source: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[150px]">
-          <SelectValue placeholder="Toutes les sources" />
+          {sourceFilter && sourceFilter !== ALL_VALUE ? (
+            <SelectValue />
+          ) : (
+            <span className="text-muted-foreground">Toutes les sources</span>
+          )}
         </SelectTrigger>
         <SelectContent>
           {sourceFilterItems.map((item) => (
