@@ -38,15 +38,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatTile } from "@/components/dashboard/stat-tile";
-import { TablePagination } from "@/components/dashboard/table-pagination";
-import { SortHeader } from "@/components/dashboard/waitlist-sort-controls";
 import { SanctionsFilters } from "@/components/staff/sanctions/sanctions-filters";
 import {
   SanctionRowActions,
   type SanctionRowData,
 } from "@/components/staff/sanctions/sanction-row-actions";
-import { NewSanctionDialog } from "@/components/staff/sanctions/new-sanction-dialog";
+import { TablePagination } from "@/components/dashboard/table-pagination";
+import { SortHeader } from "@/components/dashboard/waitlist-sort-controls";
 
 export const metadata: Metadata = {
   title: "Sanctions",
@@ -131,56 +129,7 @@ export default async function SanctionsPage(props: PageProps) {
 
   const now = new Date();
 
-  // Statistiques globales synthétiques
-  const [
-    totalSanctionsCount,
-    activeSanctionsCount,
-    expiredSanctionsCount,
-    revokedSanctionsCount,
-    availablePlayers,
-  ] = await Promise.all([
-    prisma.sanction.count(),
-    prisma.sanction.count({
-      where: {
-        revokedAt: null,
-        OR: [
-          { type: { in: [SanctionType.WARNING, SanctionType.EXCLUSION] } },
-          { expiresAt: null },
-          { expiresAt: { gt: now } },
-        ],
-      },
-    }),
-    prisma.sanction.count({
-      where: {
-        revokedAt: null,
-        expiresAt: { lte: now },
-      },
-    }),
-    prisma.sanction.count({
-      where: {
-        revokedAt: { not: null },
-      },
-    }),
-    prisma.user.findMany({
-      where: { role: Role.PLAYER },
-      select: {
-        id: true,
-        minecraftUsername: true,
-        discordDisplayName: true,
-        discordUsername: true,
-        discordAvatarUrl: true,
-        role: true,
-        registrationStatus: true,
-        characterSheets: {
-          select: { name: true, status: true },
-        },
-      },
-      orderBy: [
-        { minecraftUsername: "asc" },
-        { discordDisplayName: "asc" },
-      ],
-    }),
-  ]);
+
 
   // Construction des conditions de filtrage
   const conditions: Prisma.SanctionWhereInput[] = [];
@@ -364,42 +313,14 @@ export default async function SanctionsPage(props: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête avec titre et bouton d'action */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">
-            Sanctions
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Gestion et historique des avertissements, suspensions et exclusions des joueurs.
-          </p>
-        </div>
-        <NewSanctionDialog availablePlayers={availablePlayers} />
-      </div>
-
-      {/* Cartes statistiques globales */}
-      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4">
-        <StatTile
-          label="Total des sanctions"
-          value={totalSanctionsCount}
-          hint={totalSanctionsCount > 1 ? "sanctions émises" : "sanction émise"}
-        />
-        <StatTile
-          label="Sanctions actives"
-          value={activeSanctionsCount}
-          hint={activeSanctionsCount > 1 ? "sanctions en cours" : "sanction en cours"}
-          className={activeSanctionsCount > 0 ? "border-destructive/30" : undefined}
-        />
-        <StatTile
-          label="Expirées"
-          value={expiredSanctionsCount}
-          hint={expiredSanctionsCount > 1 ? "suspensions achevées" : "suspension achevée"}
-        />
-        <StatTile
-          label="Levées"
-          value={revokedSanctionsCount}
-          hint={revokedSanctionsCount > 1 ? "par un administrateur" : "par un administrateur"}
-        />
+      {/* En-tête */}
+      <div>
+        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+          Sanctions
+        </h1>
+        <p className="text-muted-foreground text-sm">
+          Gestion et historique des avertissements, suspensions et exclusions des joueurs.
+        </p>
       </div>
 
       {/* Barre de recherche et filtres */}
@@ -410,6 +331,7 @@ export default async function SanctionsPage(props: PageProps) {
         sourceFilter={sourceParam}
         hasActiveSort={Boolean(rawSortKey && rawSortKey !== "createdAt")}
       />
+
 
       {/* Tableau des sanctions */}
       <Card className="gap-0 overflow-hidden py-0">

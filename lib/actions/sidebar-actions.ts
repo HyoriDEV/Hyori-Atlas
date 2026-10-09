@@ -3,7 +3,9 @@
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { getUnreadTickets } from "@/lib/ticket-access";
+import { backlogRoles } from "@/lib/navigation";
 import {
+  BacklogStatus,
   BdaReportStatus,
   CharacterStatus,
   InterviewBookingStatus,
@@ -100,6 +102,7 @@ export async function getStaffBadgeCounts(
     unreadBdaReportsCount,
     atlasPlayersCount,
     registeredInterviewBookingsCount,
+    assignedBacklogTasksCount,
   ] = await Promise.all([
     getUnreadTickets({ id: userId, role }),
     prisma.bdaReport.count({
@@ -120,6 +123,15 @@ export async function getStaffBadgeCounts(
         },
       },
     }),
+    backlogRoles.includes(role)
+      ? prisma.backlogTask.count({
+          where: {
+            assigneeId: userId,
+            archivedAt: null,
+            status: { not: BacklogStatus.DONE },
+          },
+        })
+      : 0,
   ]);
 
   return {
@@ -127,6 +139,7 @@ export async function getStaffBadgeCounts(
     "/staff/bda-reports": unreadBdaReportsCount,
     "/staff/atlas": atlasPlayersCount,
     "/staff/interview-slots": registeredInterviewBookingsCount,
+    "/staff/backlog": assignedBacklogTasksCount,
   };
 }
 

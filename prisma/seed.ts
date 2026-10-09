@@ -79,6 +79,18 @@ async function main() {
     });
   }
 
+  const defaultBacklogLabels = [
+    { name: "Bug", color: "red" },
+    { name: "Fonctionnalité", color: "blue" },
+    { name: "Plugin", color: "green" },
+    { name: "Atlas", color: "violet" },
+    { name: "Bot", color: "amber" },
+  ];
+
+  if ((await prisma.backlogLabel.count()) === 0) {
+    await prisma.backlogLabel.createMany({ data: defaultBacklogLabels });
+  }
+
   await prisma.globalSettings.upsert({
     where: { id: "global" },
     update: {},

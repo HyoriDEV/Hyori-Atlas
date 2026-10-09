@@ -27,6 +27,7 @@ import {
   Scales,
   ChartBar,
   Gavel,
+  Kanban,
   MagnifyingGlass,
 } from "@phosphor-icons/react";
 
@@ -87,6 +88,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   scales: Scales,
   chart: ChartBar,
   gavel: Gavel,
+  kanban: Kanban,
 };
 
 export interface AppShellNavEntry {
@@ -198,6 +200,7 @@ export function AppShell({
       item.href === "/staff" ||
       item.href === "/player/writing" ||
       item.href === "/staff/tickets" ||
+      item.href === "/staff/backlog" ||
       item.href === "/staff/rp-tracking";
     return isExactRoot
       ? pathname === item.href
@@ -208,7 +211,8 @@ export function AppShell({
     (pathname?.startsWith("/staff/tickets/") && pathname !== "/staff/tickets") ||
     (pathname?.startsWith("/player/tickets/") && pathname !== "/player/tickets") ||
     (pathname?.startsWith("/staff/rp-tracking/") && pathname !== "/staff/rp-tracking") ||
-    pathname === "/player/rp-tracking"
+    pathname === "/player/rp-tracking" ||
+    pathname === "/staff/backlog"
   );
 
   const isStaffDashboard = sectionLabel === "Espace Staff";

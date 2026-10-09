@@ -186,14 +186,27 @@ A read-only overview reserved for Administrators. Every figure is computed from 
   - Support & modération: open and pending tickets, tickets created per category over time, median first staff reply time, RP Tracking states and reply time, sanctions per type and origin, BDA reports per status.
 - Every chart over time can be switched to a table of the same values.
 
+### 5.6. Backlog
+
+A Kanban board shared by Administrators, Developers and Helpers to follow bug fixes and upcoming features.
+
+- Five fixed columns: À trier, À faire, En cours, À tester, Terminé. Cards are moved and reordered by drag and drop; the Terminé column is sorted by completion date and only shows the 30 most recent tasks.
+- A task has a title, a rich-text description, a priority (Basse, Moyenne, Haute, Urgente), an optional assignee (Administrator or Developer), an optional due date, custom labels, a checklist and an automatic activity log (creation, status, assignee, priority, due date, ticket link, archiving).
+- Quick creation at the bottom of each column; a click on a card opens its detail panel, whose fields save as they are edited. The panel is addressable with `/staff/backlog?task=<id>`.
+- Filters: text search, "Mes tâches" (assigned to or created by the viewer), assignee, priority, label.
+- Labels are created on the fly by any Backlog role, with a name and one of eight colors; renaming and deleting them is reserved for Administrators and Developers.
+- Archiving removes a task from the board without deleting it; archived tasks are listed under "Archives" and can be restored. Bulk archiving of the Terminé column is reserved for Administrators and Developers. Permanent deletion is reserved for the task's author, Administrators and Developers.
+- The sidebar badge counts the unfinished tasks assigned to the viewer.
+- Link with Player Tickets: a staff member with access to a ticket can create a task from it, optionally summoning the Developer team on the ticket (full ticket access only; pre-checked for a "Report de bug"). The ticket header lists its linked tasks with their status, and the task shows its linked ticket, which is only a link for staff members who can open that ticket.
+
 ## 6. Role-Based Access Control (RBAC) Matrix
 
-- Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets. Sole access to Statistics.
-- Helper: Reads Player Atlas. Full access to Player Tickets.
+- Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets. Sole access to Statistics. Full access to the Backlog.
+- Helper: Reads Player Atlas. Full access to Player Tickets. Creates and edits Backlog tasks.
 - Gestion des conflits (GC): Reads Player Atlas. Writes/Manages BDA Reports. Player Tickets on summon only.
 - Suivi RP: Reads Player Atlas. Evaluates and edits Character Sheets, manages characters. Manages RP Groups, Distribution, Player RP Tracking chats & Lore Writing validation. Player Tickets on summon only.
 - Événementiel: Same as Suivi RP, but read-only on the Player Atlas and Character Sheets (no evaluation, no edition, no character management). Player Tickets on summon only.
-- Développeur: Reads Player Atlas. Player Tickets on summon only.
+- Développeur: Reads Player Atlas. Player Tickets on summon only. Full access to the Backlog.
 - Joueur: Access restricted entirely to the Frontend and the Espace Joueur dashboard.
 
 ### 6.1. Ticket Access

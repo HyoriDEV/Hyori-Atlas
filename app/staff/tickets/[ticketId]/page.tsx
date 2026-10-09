@@ -4,8 +4,16 @@ import Link from "next/link";
 
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
-import { ticketCategoryLabels, ticketStatusLabels, ticketSummonableTeams } from "@/lib/navigation";
+import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
+import {
+  backlogManagerRoles,
+  backlogRoles,
+  ticketCategoryLabels,
+  ticketStatusLabels,
+  ticketSummonableTeams,
+} from "@/lib/navigation";
+import { backlogStatusDotClasses, backlogStatusLabels } from "@/lib/backlog";
+import { serializeBacklogUser } from "@/lib/services/backlog-service";
 import { hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
@@ -18,6 +26,7 @@ import { TicketStatusActions } from "@/components/dashboard/ticket-status-action
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 import { TicketStaffAccessPanel } from "@/components/dashboard/ticket-staff-access-panel";
+import { CreateTaskFromTicketDialog } from "@/components/staff/backlog/create-task-from-ticket-dialog";
 
 export async function generateMetadata({
   params,
@@ -63,6 +72,7 @@ export default async function TicketStaffDetailPage({
   const { ticketId } = await params;
   const staffUser = await requireUser();
   const canManageAccess = hasFullTicketAccess(staffUser.role);
+  const canUseBacklog = backlogRoles.includes(staffUser.role);
 
   const ticket = await prisma.ticket.findFirst({
     where: { AND: [{ id: ticketId }, ticketAccessWhere(staffUser)] },
@@ -85,6 +95,11 @@ export default async function TicketStaffDetailPage({
       },
       teamSummons: { include: { summonedBy: true } },
       staffAccesses: { include: { user: true }, orderBy: { createdAt: "asc" } },
+      backlogTasks: {
+        where: { archivedAt: null },
+        select: { id: true, title: true, status: true },
+        orderBy: { createdAt: "asc" },
+      },
     },
   });
 
@@ -106,7 +121,7 @@ export default async function TicketStaffDetailPage({
     update: { lastReadAt: readAt },
   });
 
-  const [allPlayers, summonableStaff] = await Promise.all([
+  const [allPlayers, summonableStaff, backlogAssignees] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -133,6 +148,19 @@ export default async function TicketStaffDetailPage({
             minecraftUsername: true,
             discordDisplayName: true,
             discordUsername: true,
+            discordAvatarUrl: true,
+            role: true,
+          },
+          orderBy: { discordDisplayName: "asc" },
+        })
+      : [],
+    canUseBacklog
+      ? prisma.user.findMany({
+          where: { role: { in: backlogManagerRoles } },
+          select: {
+            id: true,
+            minecraftUsername: true,
+            discordDisplayName: true,
             discordAvatarUrl: true,
             role: true,
           },
@@ -197,6 +225,26 @@ export default async function TicketStaffDetailPage({
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
           <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
+          {canUseBacklog && ticket.backlogTasks.length > 0 && (
+            <div className="mt-1 flex flex-wrap gap-1.5">
+              {ticket.backlogTasks.map((task) => (
+                <Link
+                  key={task.id}
+                  href={`/staff/backlog?task=${task.id}`}
+                  title={`Tâche du backlog : ${task.title}`}
+                  className="border-border hover:bg-muted inline-flex max-w-64 items-center gap-1.5 rounded-full border px-2 py-0.5 text-xs transition-colors"
+                >
+                  <span
+                    className={`size-1.5 shrink-0 rounded-full ${backlogStatusDotClasses[task.status]}`}
+                  />
+                  <span className="truncate">{task.title}</span>
+                  <span className="text-muted-foreground shrink-0">
+                    · {backlogStatusLabels[task.status]}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         {ticket.status !== TicketStatus.ARCHIVED && (
           <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
@@ -210,6 +258,17 @@ export default async function TicketStaffDetailPage({
           staffAccessPanel={staffAccessPanel}
           className="lg:hidden"
         />
+        {canUseBacklog && (
+          <CreateTaskFromTicketDialog
+            ticketId={ticket.id}
+            ticketSubject={ticket.subject}
+            assignees={backlogAssignees.map(serializeBacklogUser)}
+            canSummonDevelopers={
+              canManageAccess && !ticket.teamSummons.some((s) => s.team === Role.DEVELOPER)
+            }
+            defaultSummonDevelopers={ticket.category === TicketCategory.BUG_REPORT}
+          />
+        )}
         <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
       </div>
 

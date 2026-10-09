@@ -187,6 +187,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     Discord({
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      issuer: "https://discord.com",
       profile(profile: DiscordProfileData) {
         const avatarUrl = buildDiscordAvatarUrl(profile);
         const displayName = profile.global_name ?? profile.username;
