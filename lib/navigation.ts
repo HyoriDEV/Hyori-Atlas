@@ -50,6 +50,7 @@ export function isRegistrationStatusAtLeast(
 
 export interface NavGroup<T> {
   title?: string;
+  iconKey?: NavIconKey;
   items: T[];
 }
 
@@ -323,30 +324,27 @@ export const staffStaffTeamItem: StaffNavItem = {
 
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
-  staffStatisticsItem,
-  staffSettingsItem,
   staffTicketsItem,
-  staffBacklogItem,
   staffBdaReportsItem,
   staffSanctionsItem,
-  staffStaffTeamItem,
+  staffBacklogItem,
   staffAtlasItem,
   staffRpGroupsItem,
-  staffDistributionItem,
   staffRpTrackingItem,
+  staffDistributionItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
   staffInterviewGuideItem,
   staffNewsItem,
   staffRulesItem,
+  staffStaffTeamItem,
+  staffStatisticsItem,
+  staffSettingsItem,
 ];
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items:
-      role === Role.ADMIN
-        ? [staffDashboardItem, staffStatisticsItem, staffSettingsItem]
-        : [staffDashboardItem],
+    items: [staffDashboardItem],
   };
 
   if (role === Role.ADMIN) {
@@ -354,25 +352,37 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
+        iconKey: "shield",
         items: [
           staffTicketsItem,
-          staffBacklogItem,
           staffBdaReportsItem,
           staffSanctionsItem,
-          staffStaffTeamItem,
         ],
       },
       {
+        title: "Organisation",
+        iconKey: "kanban",
+        items: [staffBacklogItem],
+      },
+      {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffRpGroupsItem, staffDistributionItem, staffRpTrackingItem],
+        iconKey: "users",
+        items: [staffAtlasItem, staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
       },
       {
         title: "Admission",
+        iconKey: "clock",
         items: [staffWaitlistItem, staffInterviewSlotsItem, staffInterviewGuideItem],
       },
       {
         title: "Contenu",
+        iconKey: "newspaper",
         items: [staffNewsItem, staffRulesItem],
+      },
+      {
+        title: "Administration",
+        iconKey: "gear",
+        items: [staffStaffTeamItem, staffStatisticsItem, staffSettingsItem],
       },
     ];
   }
@@ -382,7 +392,13 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffBdaReportsItem, staffAtlasItem],
+        iconKey: "shield",
+        items: [staffTicketsItem, staffBdaReportsItem],
+      },
+      {
+        title: "Gestion RP",
+        iconKey: "users",
+        items: [staffAtlasItem],
       },
     ];
   }
@@ -392,7 +408,18 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Modération",
-        items: [staffTicketsItem, staffBacklogItem, staffAtlasItem],
+        iconKey: "shield",
+        items: [staffTicketsItem],
+      },
+      {
+        title: "Organisation",
+        iconKey: "kanban",
+        items: [staffBacklogItem],
+      },
+      {
+        title: "Gestion RP",
+        iconKey: "users",
+        items: [staffAtlasItem],
       },
     ];
   }
@@ -402,11 +429,13 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       overviewGroup,
       {
         title: "Support",
+        iconKey: "chat",
         items: [staffTicketsItem],
       },
       {
         title: "Gestion RP",
-        items: [staffAtlasItem, staffRpGroupsItem, staffDistributionItem, staffRpTrackingItem],
+        iconKey: "users",
+        items: [staffAtlasItem, staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
       },
     ];
   }
@@ -415,8 +444,19 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     return [
       overviewGroup,
       {
-        title: "Outils",
-        items: [staffTicketsItem, staffBacklogItem, staffAtlasItem],
+        title: "Modération",
+        iconKey: "shield",
+        items: [staffTicketsItem],
+      },
+      {
+        title: "Organisation",
+        iconKey: "kanban",
+        items: [staffBacklogItem],
+      },
+      {
+        title: "Gestion RP",
+        iconKey: "users",
+        items: [staffAtlasItem],
       },
     ];
   }
