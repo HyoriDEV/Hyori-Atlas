@@ -269,22 +269,15 @@ export default async function RpTrackingStaffListPage(props: {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col items-start gap-0.5">
-                        <Badge
-                          variant={stateBadgeVariant[player.state]}
-                          className={cn(
-                            "text-xs",
-                            player.state === "none" && "text-muted-foreground"
-                          )}
-                        >
-                          {rpTrackingStateLabels[player.state]}
-                        </Badge>
-                        {isPending && player.waitingSince && (
-                          <span className="text-muted-foreground text-xs whitespace-nowrap">
-                            {formatDuration(now.getTime() - player.waitingSince.getTime())}
-                          </span>
+                      <Badge
+                        variant={stateBadgeVariant[player.state]}
+                        className={cn(
+                          "text-xs",
+                          player.state === "none" && "text-muted-foreground"
                         )}
-                      </div>
+                      >
+                        {rpTrackingStateLabels[player.state]}
+                      </Badge>
                     </TableCell>
                     <TableCell className="max-w-md">
                       {lastMessage ? (
