@@ -281,7 +281,7 @@ export default async function RpTrackingStaffListPage(props: {
                         </Badge>
                         {isPending && player.waitingSince && (
                           <span className="text-muted-foreground text-xs whitespace-nowrap">
-                            depuis {formatDuration(now.getTime() - player.waitingSince.getTime())}
+                            {formatDuration(now.getTime() - player.waitingSince.getTime())}
                           </span>
                         )}
                       </div>

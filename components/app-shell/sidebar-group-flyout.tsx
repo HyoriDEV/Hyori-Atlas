@@ -7,7 +7,6 @@ import { CaretRight, LockSimple } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import type { NavIconKey } from "@/lib/navigation";
-import { Separator } from "@/components/ui/separator";
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
 import type { AppShellNavEntry, AppShellNavGroup } from "@/components/app-shell/app-shell";
 
@@ -134,21 +133,6 @@ export function SidebarGroupFlyout({
                 "before:absolute before:-left-3.5 before:top-0 before:h-full before:w-3.5 before:content-['']"
               )}
             >
-              {/* En-tête du groupe */}
-              <div className="flex items-center justify-between px-2.5 py-1.5 pb-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  <GroupIcon className="text-primary size-3.5 shrink-0" />
-                  <span className="text-muted-foreground truncate text-[11px] font-semibold tracking-wider uppercase">
-                    {groupTitle}
-                  </span>
-                </div>
-                <span className="text-muted-foreground/60 shrink-0 text-[10px]">
-                  {group.items.length} {group.items.length > 1 ? "onglets" : "onglet"}
-                </span>
-              </div>
-
-              <Separator className="mb-1 opacity-50" />
-
               {/* Onglets du groupe */}
               <div className="flex flex-col gap-0.5">
                 {group.items.map((item: AppShellNavEntry) => {
