@@ -16,6 +16,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
   const navGroups: AppShellNavGroup[] = roleGroups
     .map((group) => ({
       title: group.title,
+      iconKey: group.iconKey,
       items: group.items
         .filter((item) => item.roles.includes(user.role))
         .map((item) => {

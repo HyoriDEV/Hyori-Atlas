@@ -70,6 +70,7 @@ export interface DashboardStatCardProps {
   locked?: boolean;
   lockedDescription?: string;
   highlight?: boolean;
+  compact?: boolean;
   className?: string;
 }
 
@@ -85,6 +86,7 @@ export function DashboardStatCard({
   locked = false,
   lockedDescription,
   highlight = false,
+  compact = false,
   className,
 }: DashboardStatCardProps) {
   const Icon = iconMap[iconKey] ?? Info;
@@ -92,7 +94,8 @@ export function DashboardStatCard({
   const content = (
     <div
       className={cn(
-        "group relative flex h-full flex-col justify-between rounded-xl border p-4.5 transition-all duration-200",
+        "group relative flex h-full flex-col justify-between rounded-xl border transition-all duration-200",
+        compact ? "p-3 sm:p-3.5" : "p-4.5",
         locked
           ? "border-border/70 bg-card/40 cursor-not-allowed border-dashed opacity-70"
           : "border-border bg-card hover:border-primary/40 hover:bg-card/90 hover:shadow-primary/5 cursor-pointer hover:shadow-md",
@@ -100,12 +103,13 @@ export function DashboardStatCard({
         className
       )}
     >
-      <div className="flex flex-col gap-2.5">
-        <div className="flex items-center justify-between gap-2.5">
-          <div className="flex min-w-0 items-center gap-2.5">
+      <div className={cn("flex flex-col", compact ? "gap-1.5" : "gap-2.5")}>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex min-w-0 items-center gap-2">
             <div
               className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                "flex shrink-0 items-center justify-center rounded-lg border transition-colors",
+                compact ? "size-7.5" : "size-9",
                 locked
                   ? "border-muted bg-muted/40 text-muted-foreground"
                   : highlight
@@ -113,10 +117,15 @@ export function DashboardStatCard({
                     : "border-border bg-muted/30 text-foreground group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary"
               )}
             >
-              <Icon className="size-4.5 shrink-0" />
+              <Icon className={cn(compact ? "size-3.5" : "size-4.5", "shrink-0")} />
             </div>
-            <div className="flex min-w-0 items-center gap-2">
-              <h3 className="font-heading text-foreground text-base font-semibold tracking-tight">
+            <div className="flex min-w-0 items-center gap-1.5">
+              <h3
+                className={cn(
+                  "font-heading text-foreground font-semibold tracking-tight truncate",
+                  compact ? "text-sm" : "text-base"
+                )}
+              >
                 {title}
               </h3>
               {hasNotification && (
@@ -129,32 +138,55 @@ export function DashboardStatCard({
             {badge && (
               <Badge
                 variant={badge.variant ?? "secondary"}
-                className={cn("shrink-0 text-[11px] font-medium", badge.className)}
+                className={cn(
+                  "shrink-0 font-medium",
+                  compact ? "px-1.5 py-0 text-[10px]" : "text-[11px]",
+                  badge.className
+                )}
               >
                 {badge.label}
               </Badge>
             )}
             {locked && !badge && (
-              <Badge variant="outline" className="text-muted-foreground shrink-0 gap-1 text-[11px]">
-                <LockSimple className="size-3" />
+              <Badge
+                variant="outline"
+                className={cn("text-muted-foreground shrink-0 gap-1", compact ? "text-[10px]" : "text-[11px]")}
+              >
+                <LockSimple className={compact ? "size-2.5" : "size-3"} />
                 <span>Verrouillé</span>
               </Badge>
             )}
           </div>
         </div>
 
-        <p className="text-muted-foreground line-clamp-2 text-sm leading-relaxed">
+        <p
+          className={cn(
+            "text-muted-foreground leading-relaxed",
+            compact ? "line-clamp-1 text-xs" : "line-clamp-2 text-sm"
+          )}
+        >
           {locked && lockedDescription ? lockedDescription : description}
         </p>
       </div>
 
-      <div className="border-border/50 mt-4 flex min-h-7 items-center justify-between border-t pt-3">
+      <div
+        className={cn(
+          "border-border/50 flex items-center justify-between border-t",
+          compact ? "mt-2 pt-2 min-h-5" : "mt-4 pt-3 min-h-7"
+        )}
+      >
         {stat !== undefined && stat !== null ? (
           <div className="flex min-w-0 items-center gap-1.5">
             <span
               className={cn(
                 "font-heading text-foreground tracking-tight",
-                typeof stat === "number" ? "text-lg font-bold" : "text-sm font-semibold"
+                compact
+                  ? typeof stat === "number"
+                    ? "text-base font-bold"
+                    : "text-xs font-semibold"
+                  : typeof stat === "number"
+                    ? "text-lg font-bold"
+                    : "text-sm font-semibold"
               )}
             >
               {stat}
@@ -170,9 +202,11 @@ export function DashboardStatCard({
         )}
 
         {!locked && href && (
-          <div className="text-muted-foreground group-hover:text-primary ml-auto flex shrink-0 items-center gap-1 text-xs font-medium transition-colors">
-            <span>Accéder</span>
-            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+          <div className="text-muted-foreground group-hover:text-primary ml-auto flex shrink-0 items-center gap-1 font-medium transition-colors">
+            <span className={compact ? "text-[11px]" : "text-xs"}>Accéder</span>
+            <ArrowRight
+              className={cn(compact ? "size-3" : "size-3.5", "transition-transform group-hover:translate-x-0.5")}
+            />
           </div>
         )}
       </div>

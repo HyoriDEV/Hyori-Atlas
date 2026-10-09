@@ -69,6 +69,7 @@ export default async function PlayerLayout({ children }: { children: React.React
   const navGroups: AppShellNavGroup[] = baseGroups
     .map((group) => ({
       title: group.title,
+      iconKey: group.iconKey,
       items: group.items
         .filter(
           (item) =>

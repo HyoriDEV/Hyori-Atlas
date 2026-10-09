@@ -82,16 +82,27 @@ function formatSessionInlineDate(debutInput: Date | string, finInput: Date | str
   const debut = debutInput instanceof Date ? debutInput : new Date(debutInput);
   const fin = finInput instanceof Date ? finInput : new Date(finInput);
 
+  const timeStart = formatShortTime(debut);
+  const timeEnd = formatShortTime(fin);
+
   if (isSameDay(debut, fin)) {
-    const dateStr = formatDate(debut, { style: "prefix-short", withTime: false, withYear: true });
-    const timeStart = formatShortTime(debut);
-    const timeEnd = formatShortTime(fin);
-    return `${dateStr} · ${timeStart} à ${timeEnd}`;
+    return `${timeStart} à ${timeEnd}`;
   }
 
-  const startStr = formatDate(debut, { style: "prefix-short", withTime: true, withYear: true });
-  const endStr = formatDate(fin, { style: "prefix-short", withTime: true, withYear: true });
-  return `${startStr} à ${endStr}`;
+  return `${timeStart} à ${timeEnd} (+1j)`;
+}
+
+function groupSessionsByDay(sessions: AtlasSessionBlock[]) {
+  const grouped = new Map<string, AtlasSessionBlock[]>();
+  for (const session of sessions) {
+    const debut = session.debut instanceof Date ? session.debut : new Date(session.debut);
+    const dateStr = formatDate(debut, { style: "prefix-long", withTime: false, withYear: true });
+    if (!grouped.has(dateStr)) {
+      grouped.set(dateStr, []);
+    }
+    grouped.get(dateStr)!.push(session);
+  }
+  return Array.from(grouped.entries());
 }
 
 function TimelineRow({
@@ -340,43 +351,52 @@ export function AtlasTimelineTabs({
                   </Button>
                 </div>
               ) : (
-                <div className="flex flex-col">
-                  {filteredSessions.map((block, index) => (
-                    <div
-                      key={block.id ?? index}
-                      className="relative flex flex-row items-start gap-3 pb-3.5 last:pb-0"
-                    >
-                      {index < filteredSessions.length - 1 && (
-                        <span className="bg-border absolute top-2.5 left-[3px] h-full w-px" />
-                      )}
-                      <span className="bg-primary relative z-10 mt-1.5 size-1.5 shrink-0 rounded-full" />
-                      <div className="flex flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-foreground font-medium">
-                            {formatSessionInlineDate(block.debut, block.fin)}
-                          </span>
-                          <Badge
-                            variant="secondary"
-                            className="h-4 px-1.5 py-0 text-[11px] font-normal"
+                <div className="flex flex-col gap-8">
+                  {groupSessionsByDay(filteredSessions).map(([dayLabel, daySessions]) => (
+                    <div key={dayLabel} className="flex flex-col gap-4">
+                      <h4 className="text-sm font-semibold capitalize text-foreground/90 border-b pb-2">
+                        {dayLabel}
+                      </h4>
+                      <div className="flex flex-col">
+                        {daySessions.map((block, index) => (
+                          <div
+                            key={block.id ?? index}
+                            className="relative flex flex-row items-start gap-3 pb-4 last:pb-0"
                           >
-                            {formatPlaytime(block.dureeMinutes)}
-                          </Badge>
-                        </div>
-                        <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
-                          {block.minecraftUsername && (
-                            <span className="text-foreground/80 font-medium">
-                              {block.minecraftUsername}
-                            </span>
-                          )}
-                          {block.minecraftUsername && (block.ipAddress || block.metadata) && (
-                            <span>·</span>
-                          )}
-                          {block.ipAddress ? (
-                            <span className="font-mono">IP {block.ipAddress}</span>
-                          ) : (
-                            block.metadata && <span>{block.metadata}</span>
-                          )}
-                        </div>
+                            {index < daySessions.length - 1 && (
+                              <span className="bg-border absolute top-2.5 left-[3px] h-full w-px" />
+                            )}
+                            <span className="bg-primary relative z-10 mt-1.5 size-1.5 shrink-0 rounded-full" />
+                            <div className="flex flex-1 flex-wrap items-center justify-between gap-x-3 gap-y-1 text-sm">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-foreground font-medium">
+                                  {formatSessionInlineDate(block.debut, block.fin)}
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="h-4 px-1.5 py-0 text-[11px] font-normal"
+                                >
+                                  {formatPlaytime(block.dureeMinutes)}
+                                </Badge>
+                              </div>
+                              <div className="text-muted-foreground flex items-center gap-1.5 text-xs">
+                                {block.minecraftUsername && (
+                                  <span className="text-foreground/80 font-medium">
+                                    {block.minecraftUsername}
+                                  </span>
+                                )}
+                                {block.minecraftUsername && (block.ipAddress || block.metadata) && (
+                                  <span>·</span>
+                                )}
+                                {block.ipAddress ? (
+                                  <span className="font-mono">IP {block.ipAddress}</span>
+                                ) : (
+                                  block.metadata && <span>{block.metadata}</span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   ))}

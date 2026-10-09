@@ -94,7 +94,7 @@ export function CreateTaskFromTicketDialog({
       }
 
       const taskId = res.data.id;
-      toast.success("La tâche a été ajoutée au backlog, dans « À trier ».", {
+      toast.success("La tâche a été ajoutée au backlog.", {
         action: {
           label: "Voir",
           onClick: () => router.push(`/staff/backlog?task=${taskId}`),

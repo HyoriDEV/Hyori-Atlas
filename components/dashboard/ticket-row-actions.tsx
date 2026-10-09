@@ -8,16 +8,23 @@ import {
   DotsThreeVertical,
   Envelope,
   EnvelopeOpen,
+  Trash,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-import { archiveTicket, reopenTicket, setStaffTicketRead } from "@/lib/actions/ticket-actions";
+import {
+  archiveTicket,
+  deleteTicket,
+  reopenTicket,
+  setStaffTicketRead,
+} from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -35,13 +42,16 @@ export function TicketRowActions({
   ticketId,
   status,
   isUnread,
+  isAdmin = false,
 }: {
   ticketId: string;
   status: TicketStatus;
   isUnread: boolean;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const isArchived = status === TicketStatus.ARCHIVED;
@@ -67,6 +77,19 @@ export function TicketRowActions({
         await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId));
         toast.success(isArchived ? "Ticket rouvert." : "Ticket archivé.");
         setConfirmOpen(false);
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
+    });
+  }
+
+  function handleConfirmDelete() {
+    startTransition(async () => {
+      try {
+        await deleteTicket(ticketId);
+        toast.success("Ticket supprimé définitivement.");
+        setDeleteOpen(false);
         router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
@@ -108,6 +131,18 @@ export function TicketRowActions({
             )}
             <span>{isArchived ? "Désarchiver" : "Archiver"}</span>
           </DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteOpen(true)}
+              >
+                <Trash className="size-3.5" />
+                <span>Supprimer définitivement</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -135,6 +170,30 @@ export function TicketRowActions({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {isAdmin && (
+        <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Supprimer définitivement le ticket</AlertDialogTitle>
+              <AlertDialogDescription>
+                Cette action est irréversible. Le ticket, tous ses messages ainsi que les accès
+                associés seront définitivement supprimés de la base de données.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                onClick={handleConfirmDelete}
+                disabled={isPending}
+              >
+                {isPending ? "Suppression en cours..." : "Supprimer définitivement"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   );
 }

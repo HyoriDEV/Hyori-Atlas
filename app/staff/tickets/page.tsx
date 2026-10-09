@@ -120,6 +120,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
   const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   const staffUser = await requireRole(item.roles);
   const canManageAccess = hasFullTicketAccess(staffUser.role);
+  const isAdmin = staffUser.role === Role.ADMIN;
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -437,6 +438,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                         ticketId={ticket.id}
                         status={ticket.status}
                         isUnread={isUnread}
+                        isAdmin={isAdmin}
                       />
                     </TableCell>
                   </TicketTableRow>

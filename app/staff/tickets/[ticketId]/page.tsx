@@ -269,7 +269,11 @@ export default async function TicketStaffDetailPage({
             defaultSummonDevelopers={ticket.category === TicketCategory.BUG_REPORT}
           />
         )}
-        <TicketStatusActions ticketId={ticket.id} status={ticket.status} />
+        <TicketStatusActions
+          ticketId={ticket.id}
+          status={ticket.status}
+          isAdmin={staffUser.role === Role.ADMIN}
+        />
       </div>
 
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">

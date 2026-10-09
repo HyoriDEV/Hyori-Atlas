@@ -32,6 +32,7 @@ import {
 } from "@phosphor-icons/react";
 
 import { GlobalSearchDialog } from "@/components/staff/global-search-dialog";
+import { SidebarGroupFlyout } from "@/components/app-shell/sidebar-group-flyout";
 
 import { cn } from "@/lib/utils";
 import { signOutAction } from "@/lib/actions/auth-actions";
@@ -104,6 +105,7 @@ export interface AppShellNavEntry {
 
 export interface AppShellNavGroup {
   title?: string;
+  iconKey?: NavIconKey;
   items: AppShellNavEntry[];
 }
 
@@ -265,88 +267,101 @@ export function AppShell({
             </div>
           )}
         </SidebarHeader>
-        <SidebarContent className="gap-4 px-3.5 py-2.5">
-          {groups.map((group, groupIndex) => (
-            <SidebarGroup key={groupIndex} className="p-0">
-              {group.title && (
-                <SidebarGroupLabel className="text-sidebar-foreground/50 mb-1 flex h-7 items-center gap-2 px-2 text-[11px] font-semibold tracking-wider uppercase select-none">
-                  <span className="shrink-0">{group.title}</span>
-                  <span className="bg-sidebar-border/70 h-px flex-1" />
-                </SidebarGroupLabel>
-              )}
-              <SidebarGroupContent>
-                <SidebarMenu className="gap-1">
-                  {group.items.map((item) => {
-                    const isExactRoot = item.href === "/staff" || item.href === "/player";
-                    const isActive = isExactRoot
-                      ? pathname === item.href
-                      : pathname === item.href || pathname?.startsWith(`${item.href}/`);
-                    const Icon = iconMap[item.iconKey];
+        <SidebarContent className="gap-2 px-3.5 py-2.5">
+          <SidebarMenu className="gap-1">
+            {groups.map((group, groupIndex) => {
+              // Si le groupe n'a pas de titre (ex: Accueil > Tableau de bord) :
+              // ses items restent affichés directement au premier niveau.
+              if (!group.title) {
+                return (
+                  <div key={groupIndex} className="flex flex-col gap-1">
+                    {group.items.map((item) => {
+                      const isExactRoot = item.href === "/staff" || item.href === "/player";
+                      const isActive = isExactRoot
+                        ? pathname === item.href
+                        : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+                      const Icon = iconMap[item.iconKey];
 
-                    if (item.locked) {
+                      if (item.locked) {
+                        return (
+                          <SidebarMenuItem key={item.href}>
+                            <SidebarMenuButton
+                              aria-disabled
+                              tooltip="Verrouillé pour le moment"
+                              className="pointer-events-none h-9 gap-3 rounded-md px-2.5 opacity-50 transition-all duration-150 ease-out"
+                            >
+                              <Icon className="size-4" />
+                              <span>{item.label}</span>
+                              <LockSimple className="ml-auto size-3.5" />
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        );
+                      }
+
                       return (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
-                            aria-disabled
-                            tooltip="Verrouillé pour le moment"
-                            className="pointer-events-none h-9 gap-3 rounded-md px-2.5 opacity-50 transition-all duration-150 ease-out"
+                            isActive={isActive}
+                            render={<Link href={item.href} />}
+                            className="h-9 gap-3 rounded-md px-2.5 transition-all duration-150 ease-out"
                           >
                             <Icon className="size-4" />
                             <span>{item.label}</span>
-                            <LockSimple className="ml-auto size-3.5" />
                           </SidebarMenuButton>
+                          {(() => {
+                            const currentBadgeCount =
+                              typeof countsOverride[item.href] === "number"
+                                ? countsOverride[item.href]
+                                : item.badgeCount;
+
+                            if (typeof currentBadgeCount === "number" && currentBadgeCount > 0) {
+                              const max =
+                                item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99);
+                              return (
+                                <SidebarMenuBadge className="right-2">
+                                  <span className="bg-primary/15 text-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-none font-semibold tabular-nums">
+                                    {currentBadgeCount > max ? `${max}+` : currentBadgeCount}
+                                  </span>
+                                </SidebarMenuBadge>
+                              );
+                            }
+
+                            if (
+                              item.hasNotification &&
+                              typeof countsOverride[item.href] !== "number"
+                            ) {
+                              return (
+                                <SidebarMenuBadge>
+                                  <span className="bg-primary size-2 rounded-full" />
+                                </SidebarMenuBadge>
+                              );
+                            }
+
+                            return null;
+                          })()}
                         </SidebarMenuItem>
                       );
-                    }
+                    })}
+                    {groupIndex === 0 && groups.length > 1 && (
+                      <Separator className="my-1.5 opacity-50" />
+                    )}
+                  </div>
+                );
+              }
 
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          isActive={isActive}
-                          render={<Link href={item.href} />}
-                          className="h-9 gap-3 rounded-md px-2.5 transition-all duration-150 ease-out"
-                        >
-                          <Icon className="size-4" />
-                          <span>{item.label}</span>
-                        </SidebarMenuButton>
-                        {(() => {
-                          const currentBadgeCount =
-                            typeof countsOverride[item.href] === "number"
-                              ? countsOverride[item.href]
-                              : item.badgeCount;
-
-                          if (typeof currentBadgeCount === "number" && currentBadgeCount > 0) {
-                            const max =
-                              item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99);
-                            return (
-                              <SidebarMenuBadge className="right-2">
-                                <span className="bg-primary/15 text-primary flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] leading-none font-semibold tabular-nums">
-                                  {currentBadgeCount > max ? `${max}+` : currentBadgeCount}
-                                </span>
-                              </SidebarMenuBadge>
-                            );
-                          }
-
-                          if (
-                            item.hasNotification &&
-                            typeof countsOverride[item.href] !== "number"
-                          ) {
-                            return (
-                              <SidebarMenuBadge>
-                                <span className="bg-primary size-2 rounded-full" />
-                              </SidebarMenuBadge>
-                            );
-                          }
-
-                          return null;
-                        })()}
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          ))}
+              // Pour tous les autres groupes (Modération, Organisation, Gestion RP, etc.) :
+              // seul le groupe est affiché, et au survol s'ouvre la pop-up à droite.
+              return (
+                <SidebarGroupFlyout
+                  key={group.title ?? groupIndex}
+                  group={group}
+                  pathname={pathname}
+                  countsOverride={countsOverride}
+                  iconMap={iconMap}
+                />
+              );
+            })}
+          </SidebarMenu>
         </SidebarContent>
         <SidebarFooter className="flex flex-col gap-3 px-4 py-4">
           <Separator className="opacity-60" />
