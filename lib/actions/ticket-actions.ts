@@ -521,6 +521,33 @@ export async function reopenTicket(ticketId: string) {
   revalidatePath("/player/tickets");
 }
 
+export async function deleteTicket(ticketId: string) {
+  await requireRole([Role.ADMIN]);
+
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, conversationId: true },
+  });
+
+  if (!ticket) {
+    throw new Error("Ticket introuvable.");
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.ticket.delete({ where: { id: ticketId } });
+    await tx.conversation.delete({ where: { id: ticket.conversationId } });
+  });
+
+  revalidatePath("/staff/tickets");
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/player/tickets");
+  revalidatePath(`/player/tickets/${ticketId}`);
+  revalidatePath("/staff/backlog");
+  revalidatePath("/staff");
+
+  return { success: true };
+}
+
 export async function addTicketMember(ticketId: string, playerId: string) {
   const { ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) throw new Error("Ticket introuvable.");
