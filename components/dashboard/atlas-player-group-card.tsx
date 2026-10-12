@@ -108,80 +108,80 @@ export function AtlasPlayerGroupCard({
         {group ? (
           <div className="flex flex-1 flex-col">
             <div className="flex max-h-[220px] flex-col gap-2 overflow-y-auto pr-1">
-                {group.members.map((m) => {
-                  const isCurrent = m.id === playerId;
-                  const name = m.minecraftUsername ?? m.discordDisplayName;
-                  const sheet = m.characterSheets[0];
+              {group.members.map((m) => {
+                const isCurrent = m.id === playerId;
+                const name = m.minecraftUsername ?? m.discordDisplayName;
+                const sheet = m.characterSheets[0];
 
-                  return (
-                    <div
-                      key={m.id}
-                      className={`flex items-center justify-between gap-2 rounded-md p-2 text-xs transition-colors ${
-                        isCurrent
-                          ? "bg-primary/10 border-primary/20 border"
-                          : "bg-muted/40 hover:bg-muted/60"
-                      }`}
-                    >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <Link
-                          href={`/staff/atlas/${m.id}`}
-                          className="shrink-0 transition-opacity hover:opacity-80"
-                          title={`Voir la fiche Atlas de ${name}`}
-                        >
-                          {m.minecraftUsername ? (
-                            <SkinHead size="sm" username={m.minecraftUsername} />
-                          ) : (
-                            <Avatar size="sm">
-                              <AvatarImage src={m.discordAvatarUrl ?? undefined} alt={name} />
-                              <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
-                            </Avatar>
-                          )}
-                        </Link>
-                        <div className="flex min-w-0 flex-col">
-                          <div className="flex items-center gap-1">
-                            <Link
-                              href={`/staff/atlas/${m.id}`}
-                              className={`truncate hover:underline ${
-                                isCurrent ? "text-primary font-semibold" : "font-medium"
-                              }`}
-                            >
-                              {name}
-                            </Link>
-                            {isCurrent && (
-                              <span className="text-primary/80 text-[10px] font-normal">
-                                (ce joueur)
-                              </span>
-                            )}
-                          </div>
-                          {sheet && (
-                            <span className="text-muted-foreground truncate text-[11px]">
-                              {sheet.name}
+                return (
+                  <div
+                    key={m.id}
+                    className={`flex items-center justify-between gap-2 rounded-md p-2 text-xs transition-colors ${
+                      isCurrent
+                        ? "bg-primary/10 border-primary/20 border"
+                        : "bg-muted/40 hover:bg-muted/60"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Link
+                        href={`/staff/atlas/${m.id}`}
+                        className="shrink-0 transition-opacity hover:opacity-80"
+                        title={`Voir la fiche Atlas de ${name}`}
+                      >
+                        {m.minecraftUsername ? (
+                          <SkinHead size="sm" username={m.minecraftUsername} />
+                        ) : (
+                          <Avatar size="sm">
+                            <AvatarImage src={m.discordAvatarUrl ?? undefined} alt={name} />
+                            <AvatarFallback>{name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        )}
+                      </Link>
+                      <div className="flex min-w-0 flex-col">
+                        <div className="flex items-center gap-1">
+                          <Link
+                            href={`/staff/atlas/${m.id}`}
+                            className={`truncate hover:underline ${
+                              isCurrent ? "text-primary font-semibold" : "font-medium"
+                            }`}
+                          >
+                            {name}
+                          </Link>
+                          {isCurrent && (
+                            <span className="text-primary/80 text-[10px] font-normal">
+                              (ce joueur)
                             </span>
                           )}
                         </div>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-1.5">
-                        <Badge
-                          variant={registrationStatusBadgeVariant(m.registrationStatus)}
-                          className="px-1.5 py-0 text-[10px]"
-                        >
-                          {registrationStatusLabels[m.registrationStatus]}
-                        </Badge>
                         {sheet && (
-                          <Badge
-                            variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}
-                            className="px-1.5 py-0 text-[10px]"
-                          >
-                            {characterSheetStatusLabels[sheet.reviewStatus]}
-                          </Badge>
+                          <span className="text-muted-foreground truncate text-[11px]">
+                            {sheet.name}
+                          </span>
                         )}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      <Badge
+                        variant={registrationStatusBadgeVariant(m.registrationStatus)}
+                        className="px-1.5 py-0 text-[10px]"
+                      >
+                        {registrationStatusLabels[m.registrationStatus]}
+                      </Badge>
+                      {sheet && (
+                        <Badge
+                          variant={characterSheetStatusBadgeVariant(sheet.reviewStatus)}
+                          className="px-1.5 py-0 text-[10px]"
+                        >
+                          {characterSheetStatusLabels[sheet.reviewStatus]}
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
+          </div>
         ) : (
           <p className="text-muted-foreground text-xs">Aucun groupe RP assigné à ce joueur.</p>
         )}

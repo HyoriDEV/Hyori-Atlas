@@ -20,12 +20,7 @@ export default async function NewBdaReportPage() {
     const { LockedFeatureCard } = await import("@/components/locked-feature-card");
     return (
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
-          <p className="text-muted-foreground text-sm">
-            Crée un nouveau dossier de litige et assigne les différentes parties.
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
         <LockedFeatureCard description="Un administrateur a temporairement désactivé la soumission de rapports." />
       </div>
     );
@@ -55,12 +50,7 @@ export default async function NewBdaReportPage() {
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <AtlasBackButton href="/staff/bda-reports" />
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
-          <p className="text-muted-foreground text-sm">
-            Crée un nouveau dossier de litige et assigne les différentes parties.
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold">Nouveau Rapport GC</h1>
       </div>
 
       <BdaReportForm

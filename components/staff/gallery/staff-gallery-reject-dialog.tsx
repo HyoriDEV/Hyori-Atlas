@@ -16,8 +16,8 @@ import { GalleryStatus } from "@/lib/generated/prisma/enums";
 import { toast } from "sonner";
 
 const PREDEFINED_REASONS = [
-  "Interface de jeu visible (HUD, barre d'inventaire ou F3 actif). Pensez à appuyer sur F1 pour les prochaines fois !",
-  "Capture hors-sujet ou ne provenant pas de l'univers Hyori RP.",
+  "Interface de jeu visible (HUD, inventaire ou menu actif).",
+  "Capture non conforme ou ne provenant pas de l'univers Hyori RP.",
   "Qualité d'image ou résolution insuffisante.",
   "Contenu inapproprié ou non-respect du règlement.",
   "Autre motif personnalisé...",
@@ -73,21 +73,22 @@ export function StaffGalleryRejectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="font-heading text-xl text-rose-500">
+          <DialogTitle className="font-heading text-lg font-semibold text-destructive">
             Refuser la capture
           </DialogTitle>
           <DialogDescription>
-            {itemTitle ? `Capture : "${itemTitle}"` : "Cette capture sera rejetée de la galerie."} Le motif sera visible par le joueur dans son espace personnel.
+            {itemTitle ? `Capture : "${itemTitle}"` : "Cette capture sera rejetée de la galerie."}{" "}
+            Le motif sera visible par le joueur dans son espace personnel.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col gap-3 py-2">
-          <span className="text-xs font-semibold text-foreground">Sélectionner un motif :</span>
+          <span className="text-foreground text-xs font-semibold">Sélectionner un motif :</span>
           <div className="flex flex-col gap-2">
             {PREDEFINED_REASONS.map((reason) => (
               <label
                 key={reason}
-                className="flex items-start gap-2.5 p-2.5 rounded-xl border border-border/80 bg-muted/20 hover:bg-muted/40 cursor-pointer text-xs transition-colors"
+                className="border-border bg-muted/20 hover:bg-muted/40 flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 text-xs transition-colors"
               >
                 <input
                   type="radio"
@@ -95,7 +96,7 @@ export function StaffGalleryRejectDialog({
                   value={reason}
                   checked={selectedReason === reason}
                   onChange={() => setSelectedReason(reason)}
-                  className="mt-0.5 text-primary"
+                  className="text-primary mt-0.5"
                 />
                 <span className="leading-snug">{reason}</span>
               </label>
@@ -103,25 +104,24 @@ export function StaffGalleryRejectDialog({
           </div>
 
           {selectedReason === "Autre motif personnalisé..." && (
-            <div className="flex flex-col gap-1.5 mt-2">
+            <div className="mt-2 flex flex-col gap-1.5">
               <span className="text-xs font-semibold">Précisez le motif :</span>
               <Textarea
                 rows={3}
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
                 placeholder="Indiquez clairement ce qui doit être corrigé..."
-                className="text-xs rounded-xl resize-none"
+                className="resize-none text-xs"
               />
             </div>
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
-            className="rounded-xl"
           >
             Annuler
           </Button>
@@ -130,7 +130,6 @@ export function StaffGalleryRejectDialog({
             variant="destructive"
             onClick={handleReject}
             disabled={isPending}
-            className="rounded-xl"
           >
             {isPending ? "Refus en cours..." : "Confirmer le refus"}
           </Button>

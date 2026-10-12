@@ -49,7 +49,10 @@ import { TablePagination } from "@/components/dashboard/table-pagination";
 import { getClientPagePrefs, DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import { getClassPaletteColor, NEUTRAL_PALETTE_COLOR } from "@/lib/class-palette";
 import { PlayerOverrideCell } from "@/components/staff/distribution/player-override-cell";
-import { toggleDistributionProcessedAction, resetDistributionAction } from "@/lib/actions/player-affiliation-actions";
+import {
+  toggleDistributionProcessedAction,
+  resetDistributionAction,
+} from "@/lib/actions/player-affiliation-actions";
 import type { SerializedPlayerClass } from "@/components/staff/distribution/player-class-card";
 import type { PlayerAffiliationOverview } from "@/lib/services/player-affiliation-overview-service";
 
@@ -425,7 +428,10 @@ export function DistributionOverview({
             }}
           >
             <SelectTrigger className="w-48 text-sm">
-              <SelectValue placeholder="Statut de traitement" />
+              <SelectValue placeholder="Statut de traitement">
+                {PROCESSED_FILTER_OPTIONS.find((item) => item.value === processedFilter)?.label ??
+                  "Statut de traitement"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {PROCESSED_FILTER_OPTIONS.map((item) => (

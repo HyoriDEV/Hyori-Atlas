@@ -26,13 +26,7 @@ const sortItems: { value: StaffWritingSort; label: string }[] = [
   { value: "player", label: "Nom du joueur (A-Z)" },
 ];
 
-export function WritingFilters({
-  query,
-  sort,
-}: {
-  query: string;
-  sort: StaffWritingSort;
-}) {
+export function WritingFilters({ query, sort }: { query: string; sort: StaffWritingSort }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -129,7 +123,7 @@ export function WritingFilters({
             value={queryInput}
             onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Rechercher par joueur, personnage, titre..."
-            className="w-72 pr-8 pl-8 sm:w-80"
+            className="w-80 pr-8 pl-8 sm:w-[350px]"
           />
           {queryInput ? (
             <button
@@ -145,11 +139,14 @@ export function WritingFilters({
 
         {/* Tri */}
         <Select
+          items={sortItems}
           value={sort}
           onValueChange={(val) => updateParams({ sort: val as StaffWritingSort })}
         >
           <SelectTrigger className="w-60">
-            <SelectValue placeholder="Trier par" />
+            <SelectValue placeholder="Trier par">
+              {sortItems.find((item) => item.value === sort)?.label ?? "Trier par"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {sortItems.map((item) => (

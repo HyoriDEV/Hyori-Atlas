@@ -2,7 +2,7 @@
 
 import { useState, useRef, useTransition } from "react";
 import Image from "next/image";
-import { UploadSimple, Image as ImageIcon, X, Sparkle, WarningCircle, EyeSlash } from "@phosphor-icons/react";
+import { UploadSimple, Image as ImageIcon, X } from "@phosphor-icons/react";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { submitGalleryItemAction } from "@/lib/actions/gallery-actions";
 import { GalleryCategory, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { GALLERY_CATEGORY_LABELS } from "@/components/gallery/gallery-card";
@@ -36,20 +36,29 @@ interface GalleryUploadDialogProps {
     registrationStatus?: string | null;
   } | null;
   submissionsEnabled?: boolean;
+  categories?: { id: GalleryCategory; label: string }[];
 }
 
 export function GalleryUploadDialog({
   currentUser,
   submissionsEnabled = true,
+  categories,
 }: GalleryUploadDialogProps) {
   const [open, setOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isSpoiler, setIsSpoiler] = useState(false);
   const [category, setCategory] = useState<GalleryCategory>(GalleryCategory.PAYSAGE);
   const [isPending, startTransition] = useTransition();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const availableCategories =
+    categories && categories.length > 0
+      ? categories
+      : Object.entries(GALLERY_CATEGORY_LABELS).map(([k, v]) => ({
+          id: k as GalleryCategory,
+          label: v,
+        }));
 
   const isWhitelisted =
     currentUser?.role === "ADMIN" ||
@@ -101,7 +110,6 @@ export function GalleryUploadDialog({
     const formData = new FormData(e.currentTarget);
     formData.set("file", selectedFile);
     formData.set("category", category);
-    formData.set("isSpoiler", isSpoiler ? "true" : "false");
 
     startTransition(async () => {
       try {
@@ -127,7 +135,7 @@ export function GalleryUploadDialog({
         onClick={() => {
           window.location.href = "/api/auth/signin/discord";
         }}
-        className="gap-2 rounded-xl shadow-md"
+        className="gap-2"
       >
         <UploadSimple className="size-4" />
         <span>Partager une capture</span>
@@ -140,9 +148,11 @@ export function GalleryUploadDialog({
       <Button
         variant="outline"
         onClick={() => {
-          toast.info("Seuls les joueurs acceptés sur la whitelist peuvent partager leurs captures.");
+          toast.info(
+            "Seuls les joueurs acceptés sur la whitelist peuvent partager leurs captures."
+          );
         }}
-        className="gap-2 rounded-xl text-muted-foreground"
+        className="text-muted-foreground gap-2"
       >
         <UploadSimple className="size-4" />
         <span>Partager une capture</span>
@@ -152,11 +162,7 @@ export function GalleryUploadDialog({
 
   if (!submissionsEnabled && currentUser.role !== "ADMIN") {
     return (
-      <Button
-        variant="outline"
-        disabled
-        className="gap-2 rounded-xl text-muted-foreground"
-      >
+      <Button variant="outline" disabled className="text-muted-foreground gap-2">
         <UploadSimple className="size-4" />
         <span>Soumissions suspendues</span>
       </Button>
@@ -167,191 +173,135 @@ export function GalleryUploadDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger
         render={
-          <Button className="gap-2 rounded-xl shadow-md transition-transform hover:scale-102" />
+          <Button className="gap-2">
+            <UploadSimple className="size-4" />
+            <span>Partager une capture</span>
+          </Button>
         }
-      >
-        <UploadSimple className="size-4" />
-        <span>Partager une capture</span>
-      </DialogTrigger>
+      />
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6">
+      <DialogContent className="sm:max-w-4xl p-6 gap-6">
         <DialogHeader>
-          <DialogTitle className="font-heading text-2xl flex items-center gap-2">
-            <Sparkle className="size-5 text-primary" />
-            Partager une capture en jeu
+          <DialogTitle className="font-heading text-xl font-semibold">
+            Partager une capture d&apos;écran
           </DialogTitle>
           <DialogDescription>
-            Partagez vos moments forts, vos décors et vos scènes de rôleplay avec toute la communauté.
+            Partagez vos moments forts et scènes avec la communauté de Hyori RP.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5 mt-2">
-          {/* Zone Drag & Drop ou Preview */}
-          {!previewUrl ? (
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-border hover:border-primary/60 bg-muted/20 hover:bg-muted/40 transition-colors rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer text-center"
-            >
-              <div className="size-14 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                <ImageIcon className="size-7" />
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-sm font-semibold">
-                  Cliquez pour choisir un screenshot ou glissez-le ici
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  Formats acceptés : JPEG, PNG, WEBP — Jusqu&apos;à 15 Mo
-                </span>
-              </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/webp"
-                onChange={handleFileChange}
-                className="hidden"
-              />
-            </div>
-          ) : (
-            <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden border bg-black/60 shadow-inner group">
-              <Image
-                src={previewUrl}
-                alt="Aperçu capture"
-                fill
-                className="object-contain"
-              />
-              <button
-                type="button"
-                onClick={handleClearFile}
-                className="absolute top-3 right-3 size-8 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center transition-transform hover:scale-110"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-          )}
-
-          {/* Astuce F1 */}
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground">
-            <WarningCircle className="size-4 text-primary shrink-0 mt-0.5" />
-            <span>
-              <strong>Conseil immersion :</strong> Pensez à activer le mode cinéma avec la touche <strong>F1</strong> en jeu pour cacher l&apos;interface (HUD, inventaire, chat) et sublimer votre scène !
-            </span>
-          </div>
-
-          {/* Formulaire métadonnées */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="title" className="text-xs font-semibold">
-                Titre de la capture <span className="text-rose-500">*</span>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+            {/* Colonne gauche : Téléversement ou aperçu */}
+            <div className="flex flex-col gap-2">
+              <Label className="text-foreground text-xs font-medium">
+                Image <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="title"
-                name="title"
-                required
-                maxLength={120}
-                placeholder="ex: Les lueurs de l'aube sur la Taverne..."
-                className="rounded-xl"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="category" className="text-xs font-semibold">
-                Catégorie
-              </Label>
-              <Select
-                value={category}
-                onValueChange={(val) => setCategory(val as GalleryCategory)}
-              >
-                <SelectTrigger id="category" className="rounded-xl">
-                  <SelectValue placeholder="Choisir une catégorie" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(GALLERY_CATEGORY_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="location" className="text-xs font-semibold">
-                Lieu en jeu (Optionnel)
-              </Label>
-              <Input
-                id="location"
-                name="location"
-                maxLength={100}
-                placeholder="ex: Le Port de Hyori, Forêt des Murmures"
-                className="rounded-xl"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="shader" className="text-xs font-semibold">
-                Shaders / Texture Pack (Optionnel)
-              </Label>
-              <Input
-                id="shader"
-                name="shader"
-                maxLength={100}
-                placeholder="ex: Complementary Reimagined, BSL v8..."
-                className="rounded-xl"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5 sm:col-span-2">
-              <Label htmlFor="description" className="text-xs font-semibold">
-                Récit & Contexte RP (Optionnel)
-              </Label>
-              <Textarea
-                id="description"
-                name="description"
-                rows={3}
-                maxLength={1000}
-                placeholder="Racontez le moment rôleplay, l'anecdote ou l'atmosphère de cette capture..."
-                className="rounded-xl resize-none font-serif text-sm"
-              />
-            </div>
-
-            {/* Switch Spoiler RP */}
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border/80 bg-muted/20 sm:col-span-2">
-              <div className="flex items-center gap-2.5">
-                <EyeSlash className="size-5 text-muted-foreground" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-semibold">Spoiler d&apos;intrigue RP</span>
-                  <span className="text-[11px] text-muted-foreground">
-                    Flouter la photo sur la galerie publique pour ne pas dévoiler de secret d&apos;histoire.
-                  </span>
+              {!previewUrl ? (
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-border hover:border-primary/50 bg-muted/20 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-colors min-h-[260px]"
+                >
+                  <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
+                    <ImageIcon className="size-6" />
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-medium">
+                      Cliquez pour importer ou glissez un fichier ici
+                    </span>
+                    <span className="text-muted-foreground text-xs">
+                      JPEG, PNG ou WebP — Jusqu&apos;à 15 Mo
+                    </span>
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
                 </div>
+              ) : (
+                <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-black/60 shadow-inner">
+                  <Image src={previewUrl} alt="Aperçu capture" fill className="object-contain" />
+                  <button
+                    type="button"
+                    onClick={handleClearFile}
+                    className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full bg-black/70 text-white transition-colors hover:bg-black"
+                    title="Changer d'image"
+                  >
+                    <X className="size-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Colonne droite : Champs essentiels (Titre, Catégorie, Description) */}
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="gallery-upload-title" className="text-foreground text-xs font-medium">
+                  Titre de la capture <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="gallery-upload-title"
+                  name="title"
+                  required
+                  maxLength={120}
+                  placeholder="ex: Les lueurs de l'aube sur la Taverne..."
+                />
               </div>
-              <Switch
-                checked={isSpoiler}
-                onCheckedChange={setIsSpoiler}
-              />
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="gallery-upload-category" className="text-foreground text-xs font-medium">
+                  Catégorie <span className="text-destructive">*</span>
+                </Label>
+                <Select value={category} onValueChange={(val) => val && setCategory(val as GalleryCategory)}>
+                  <SelectTrigger id="gallery-upload-category" className="w-full">
+                    <SelectValue placeholder="Choisir une catégorie">
+                      {availableCategories.find((c) => c.id === category)?.label ?? "Choisir une catégorie"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableCategories.map((cat) => (
+                      <SelectItem key={cat.id} value={cat.id}>
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="gallery-upload-description" className="text-foreground text-xs font-medium">
+                  Description (Optionnelle)
+                </Label>
+                <Textarea
+                  id="gallery-upload-description"
+                  name="description"
+                  rows={4}
+                  maxLength={1000}
+                  placeholder="Racontez le moment rôleplay ou l'atmosphère de cette capture..."
+                  className="resize-none text-sm"
+                />
+              </div>
             </div>
           </div>
 
           {/* Boutons d'action */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t">
+          <DialogFooter className="gap-2 sm:gap-0 pt-3 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="rounded-xl"
             >
               Annuler
             </Button>
-            <Button
-              type="submit"
-              disabled={isPending || !selectedFile}
-              className="rounded-xl"
-            >
-              {isPending ? "Traitement & Envoi..." : "Envoyer la capture"}
+            <Button type="submit" disabled={isPending || !selectedFile}>
+              {isPending ? "Envoi en cours..." : "Partager la capture"}
             </Button>
-          </div>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

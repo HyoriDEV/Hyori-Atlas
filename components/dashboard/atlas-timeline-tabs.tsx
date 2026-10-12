@@ -354,7 +354,7 @@ export function AtlasTimelineTabs({
                 <div className="flex flex-col gap-8">
                   {groupSessionsByDay(filteredSessions).map(([dayLabel, daySessions]) => (
                     <div key={dayLabel} className="flex flex-col gap-4">
-                      <h4 className="text-sm font-semibold capitalize text-foreground/90 border-b pb-2">
+                      <h4 className="text-foreground/90 border-b pb-2 text-sm font-semibold capitalize">
                         {dayLabel}
                       </h4>
                       <div className="flex flex-col">

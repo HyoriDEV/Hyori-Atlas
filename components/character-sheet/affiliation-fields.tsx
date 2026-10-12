@@ -147,7 +147,9 @@ export function AffiliationCard({
               onValueChange={(val) => handlePrimaryClassChange(val ?? "")}
             >
               <SelectTrigger id="primary-class" className="w-full">
-                <SelectValue placeholder="Sélectionner une classe..." />
+                <SelectValue placeholder="Sélectionner une classe...">
+                  {selectedPrimaryClass?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {playerClasses.map((c) => (
@@ -264,7 +266,9 @@ export function AffiliationCard({
               onValueChange={(val) => handleSecondaryClassChange(val ?? "")}
             >
               <SelectTrigger id="secondary-class" className="w-full">
-                <SelectValue placeholder="Sélectionner une seconde classe..." />
+                <SelectValue placeholder="Sélectionner une seconde classe...">
+                  {selectedSecondaryClass?.name}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {playerClasses

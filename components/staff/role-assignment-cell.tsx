@@ -120,7 +120,9 @@ export function RoleAssignmentCell({
         disabled={isPending}
       >
         <SelectTrigger size="sm" className="min-w-[170px]">
-          <SelectValue placeholder="Choisir un rôle" />
+          <SelectValue placeholder="Choisir un rôle">
+            {roleOptions.find((opt) => opt.value === selectedRole)?.label ?? "Choisir un rôle"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent align="end">
           {roleOptions.map((opt) => (

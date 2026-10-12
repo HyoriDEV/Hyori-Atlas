@@ -69,10 +69,7 @@ export function AtlasCharacterTabs({
               }}
             >
               <span
-                className={cn(
-                  "truncate text-sm",
-                  isSelected ? "font-semibold" : "font-medium"
-                )}
+                className={cn("truncate text-sm", isSelected ? "font-semibold" : "font-medium")}
               >
                 {charName}
               </span>

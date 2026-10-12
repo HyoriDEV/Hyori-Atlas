@@ -20,7 +20,7 @@ export default async function RpTrackingPage() {
   if (!settings.rpTrackingAccessEnabled) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-        <h1 className="font-heading shrink-0 text-2xl font-semibold">Suivi RP</h1>
+        <h1 className="font-heading text-2xl font-semibold">Suivi RP</h1>
         <LockedFeatureCard description="Un administrateur a temporairement désactivé l'accès au Suivi RP." />
       </div>
     );
@@ -78,7 +78,7 @@ export default async function RpTrackingPage() {
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-      <h1 className="font-heading shrink-0 text-2xl font-semibold">Suivi RP</h1>
+      <h1 className="font-heading text-2xl font-semibold">Suivi RP</h1>
       {unlocked && conversation ? (
         <ConversationChat
           conversationId={conversation.id}

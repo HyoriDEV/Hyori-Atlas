@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+import { getGalleryCategoriesConfig } from "@/lib/gallery-category-config";
 import { SettingsForm } from "@/components/staff/settings-form";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 
 export default async function SettingsPage() {
   await requireRole([Role.ADMIN]);
-  const [settings, discordTemplates] = await Promise.all([
+  const [settings, discordTemplates, galleryCategories] = await Promise.all([
     getGlobalSettings(),
     prisma.discordNotificationTemplate.findMany({
       select: {
@@ -25,18 +26,20 @@ export default async function SettingsPage() {
         roleId: true,
       },
     }),
+    getGalleryCategoriesConfig(),
   ]);
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Paramètres</h1>
-        <p className="text-muted-foreground text-sm">
-          Configuration globale des modules et services de l&apos;application.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold">Paramètres</h1>
       </div>
 
-      <SettingsForm defaultValues={settings} initialDiscordTemplates={discordTemplates} />
+      <SettingsForm
+        defaultValues={settings}
+        initialDiscordTemplates={discordTemplates}
+        initialGalleryCategories={galleryCategories}
+      />
     </div>
   );
 }

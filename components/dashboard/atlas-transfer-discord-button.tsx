@@ -154,36 +154,33 @@ export function AtlasTransferDiscordButton({
             <DialogTitle>Transférer le compte Discord</DialogTitle>
             <DialogDescription>
               Associe un nouveau compte Discord à ce joueur. Toutes ses données (fiches de
-              personnage, whitelist, historique, compte Minecraft) seront intégralement
-              conservées.
+              personnage, whitelist, historique, compte Minecraft) seront intégralement conservées.
             </DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">
             {/* Compte actuel */}
-            <div className="rounded-lg border bg-muted/40 p-3 text-xs flex items-center justify-between">
+            <div className="bg-muted/40 flex items-center justify-between rounded-lg border p-3 text-xs">
               <div className="flex items-center gap-2.5">
                 <Avatar size="sm">
                   <AvatarImage src={currentAvatarUrl ?? undefined} alt={currentDisplayName} />
                   <AvatarFallback>{currentDisplayName.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="font-semibold text-foreground">
+                  <span className="text-foreground font-semibold">
                     {currentDisplayName} ({currentUsername})
                   </span>
                   <span className="text-muted-foreground">ID actuel : {currentDiscordId}</span>
                 </div>
               </div>
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">
+              <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
                 Actuel
               </span>
             </div>
 
             {/* Saisie du nouveau compte */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="new-discord-id">
-                Nouvel identifiant Discord (ID / Snowflake)
-              </Label>
+              <Label htmlFor="new-discord-id">Nouvel identifiant Discord (ID / Snowflake)</Label>
               <div className="relative">
                 <Input
                   id="new-discord-id"
@@ -195,19 +192,20 @@ export function AtlasTransferDiscordButton({
                   className="pr-8 font-mono text-xs"
                 />
                 {isSearching && (
-                  <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  <div className="text-muted-foreground absolute top-1/2 right-2.5 -translate-y-1/2">
                     <CircleNotch className="size-4 animate-spin" />
                   </div>
                 )}
               </div>
-              <span className="text-[11px] text-muted-foreground">
-                L&apos;identifiant Discord est une suite de 17 à 20 chiffres (obtenu via le mode développeur de Discord).
+              <span className="text-muted-foreground text-[11px]">
+                L&apos;identifiant Discord est une suite de 17 à 20 chiffres (obtenu via le mode
+                développeur de Discord).
               </span>
             </div>
 
             {/* Erreur si même compte */}
             {isSameAsCurrent && (
-              <div className="flex items-center gap-2 rounded-md bg-destructive/10 p-2.5 text-xs text-destructive">
+              <div className="bg-destructive/10 text-destructive flex items-center gap-2 rounded-md p-2.5 text-xs">
                 <WarningCircle className="size-4 shrink-0" weight="fill" />
                 <span>Cet identifiant est déjà celui associé à ce joueur.</span>
               </div>
@@ -216,7 +214,7 @@ export function AtlasTransferDiscordButton({
             {/* Aperçu du compte cible */}
             {lookupResult && lookupResult.validFormat && (
               <div className="flex flex-col gap-2 rounded-lg border p-3 text-xs">
-                <span className="text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+                <span className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
                   Nouveau compte détecté
                 </span>
 
@@ -231,10 +229,10 @@ export function AtlasTransferDiscordButton({
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex flex-col">
-                    <span className="font-semibold text-foreground">
+                    <span className="text-foreground font-semibold">
                       {lookupResult.profile?.displayName ?? "Compte Discord"}
                       {lookupResult.profile?.username && (
-                        <span className="text-muted-foreground font-normal ml-1">
+                        <span className="text-muted-foreground ml-1 font-normal">
                           (@{lookupResult.profile.username})
                         </span>
                       )}
@@ -247,8 +245,8 @@ export function AtlasTransferDiscordButton({
 
                 {/* Cas 1: Collision bloquante avec un autre joueur actif */}
                 {isTargetBlocked && (
-                  <div className="mt-1 flex items-start gap-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
-                    <WarningCircle className="size-4 shrink-0 mt-0.5" weight="fill" />
+                  <div className="bg-destructive/10 text-destructive mt-1 flex items-start gap-2 rounded-md p-2 text-xs">
+                    <WarningCircle className="mt-0.5 size-4 shrink-0" weight="fill" />
                     <span>
                       Ce compte Discord est déjà associé à un joueur actif avec des données (
                       <strong>{lookupResult.existingUser?.name}</strong>). Transfert impossible pour
@@ -260,7 +258,7 @@ export function AtlasTransferDiscordButton({
                 {/* Cas 2: Compte orphelin temporaire sans données */}
                 {lookupResult.existingUser && !lookupResult.existingUser.hasData && (
                   <div className="mt-1 flex items-start gap-2 rounded-md bg-amber-500/10 p-2 text-xs text-amber-600 dark:text-amber-400">
-                    <Info className="size-4 shrink-0 mt-0.5" weight="fill" />
+                    <Info className="mt-0.5 size-4 shrink-0" weight="fill" />
                     <span>
                       Un compte vide sans données existe déjà pour cet ID. Il sera automatiquement
                       remplacé par les données de ce joueur.
@@ -288,14 +286,10 @@ export function AtlasTransferDiscordButton({
             >
               Annuler
             </Button>
-            <Button
-              type="button"
-              onClick={handleConfirmTransfer}
-              disabled={!canSubmit}
-            >
+            <Button type="button" onClick={handleConfirmTransfer} disabled={!canSubmit}>
               {isPending ? (
                 <>
-                  <CircleNotch className="size-4 animate-spin mr-1.5" />
+                  <CircleNotch className="mr-1.5 size-4 animate-spin" />
                   Transfert en cours...
                 </>
               ) : (

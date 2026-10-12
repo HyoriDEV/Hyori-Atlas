@@ -158,7 +158,7 @@ export function AtlasFilters({
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher par pseudo ou nom RP..."
-          className="w-72 pr-8 pl-8"
+          className="w-80 pr-8 pl-8"
         />
         {queryInput ? (
           <button
@@ -177,8 +177,11 @@ export function AtlasFilters({
         value={status ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ status: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Statut d'inscription" />
+        <SelectTrigger className="w-52">
+          <SelectValue placeholder="Statut d'inscription">
+            {statusItems.find((item) => item.value === (status ?? ALL_VALUE))?.label ??
+              "Statut d'inscription"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {statusItems.map((item) => (
@@ -194,8 +197,11 @@ export function AtlasFilters({
         value={sheetStatus ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ sheetStatus: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-48">
-          <SelectValue placeholder="Statut fiche RP" />
+        <SelectTrigger className="w-52">
+          <SelectValue placeholder="Statut fiche RP">
+            {sheetStatusItems.find((item) => item.value === (sheetStatus ?? ALL_VALUE))?.label ??
+              "Statut fiche RP"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {sheetStatusItems.map((item) => (

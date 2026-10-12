@@ -80,7 +80,6 @@ export async function GameActivityTab({ range }: { range: StatisticsRange }) {
             />
           </ChartCard>
         </div>
-
       </StatisticsSection>
 
       <StatisticsSection title="Joueurs">
@@ -133,7 +132,6 @@ export async function GameActivityTab({ range }: { range: StatisticsRange }) {
               </Table>
             )}
           </ChartCard>
-
         </div>
       </StatisticsSection>
     </div>

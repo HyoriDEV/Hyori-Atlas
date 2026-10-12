@@ -42,12 +42,7 @@ export interface RpTrackingFiltersProps {
   };
 }
 
-export function RpTrackingFilters({
-  query,
-  status,
-  writing,
-  counts,
-}: RpTrackingFiltersProps) {
+export function RpTrackingFilters({ query, status, writing, counts }: RpTrackingFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -145,6 +140,16 @@ export function RpTrackingFilters({
     };
   }, []);
 
+  const statusFilterItems = RP_TRACKING_FILTER_STATUSES.map((filterStatus) => ({
+    value: filterStatus,
+    label: rpTrackingFilterStatusLabels[filterStatus],
+  }));
+
+  const writingFilterItems = RP_TRACKING_WRITING_FILTERS.map((writingFilter) => ({
+    value: writingFilter,
+    label: rpTrackingWritingFilterLabels[writingFilter],
+  }));
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex flex-wrap items-center gap-3">
@@ -171,11 +176,14 @@ export function RpTrackingFilters({
 
         {/* Filtre État du suivi */}
         <Select
+          items={statusFilterItems}
           value={status}
           onValueChange={(val) => updateParams({ status: val as RpTrackingFilterStatus })}
         >
-          <SelectTrigger className="w-60">
-            <SelectValue placeholder="État du suivi" />
+          <SelectTrigger className="w-64">
+            <SelectValue placeholder="État du suivi">
+              {rpTrackingFilterStatusLabels[status]}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {RP_TRACKING_FILTER_STATUSES.map((filterStatus) => {
@@ -192,11 +200,14 @@ export function RpTrackingFilters({
 
         {/* Filtre Trame écrite */}
         <Select
+          items={writingFilterItems}
           value={writing}
           onValueChange={(val) => updateParams({ writing: val as RpTrackingWritingFilter })}
         >
           <SelectTrigger className="w-52">
-            <SelectValue placeholder="Trame écrite" />
+            <SelectValue placeholder="Trame écrite">
+              {rpTrackingWritingFilterLabels[writing]}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {RP_TRACKING_WRITING_FILTERS.map((writingFilter) => (

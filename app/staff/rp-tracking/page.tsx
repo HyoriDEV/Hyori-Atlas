@@ -13,7 +13,6 @@ import { rpTrackingStaffRoles } from "@/lib/navigation";
 import {
   DEFAULT_RP_TRACKING_FILTER_STATUS,
   DEFAULT_RP_TRACKING_WRITING_FILTER,
-  RP_TRACKING_ACTIVE_DAYS,
   RP_TRACKING_FILTER_STATUSES,
   RP_TRACKING_WRITING_FILTERS,
   rpTrackingStateLabels,
@@ -24,11 +23,9 @@ import {
 import {
   getRpTrackingLastMessages,
   getRpTrackingPlayerContexts,
-  getRpTrackingReplyStats,
   getRpTrackingStates,
 } from "@/lib/services/rp-tracking-service";
 import { formatDate } from "@/lib/date";
-import { formatDuration } from "@/lib/text-stats";
 import { cn, truncate } from "@/lib/utils";
 import {
   getServerPagePrefs,
@@ -48,7 +45,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { StatTile } from "@/components/dashboard/stat-tile";
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
@@ -88,27 +84,23 @@ export default async function RpTrackingStaffListPage(props: {
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
 
-  const statusFilter: RpTrackingFilterStatus =
-    RP_TRACKING_FILTER_STATUSES.includes(searchParams.status as RpTrackingFilterStatus)
-      ? (searchParams.status as RpTrackingFilterStatus)
-      : RP_TRACKING_FILTER_STATUSES.includes(savedPrefs.status as RpTrackingFilterStatus)
-        ? (savedPrefs.status as RpTrackingFilterStatus)
-        : DEFAULT_RP_TRACKING_FILTER_STATUS;
+  const statusFilter: RpTrackingFilterStatus = RP_TRACKING_FILTER_STATUSES.includes(
+    searchParams.status as RpTrackingFilterStatus
+  )
+    ? (searchParams.status as RpTrackingFilterStatus)
+    : RP_TRACKING_FILTER_STATUSES.includes(savedPrefs.status as RpTrackingFilterStatus)
+      ? (savedPrefs.status as RpTrackingFilterStatus)
+      : DEFAULT_RP_TRACKING_FILTER_STATUS;
 
-  const writingFilter: RpTrackingWritingFilter =
-    RP_TRACKING_WRITING_FILTERS.includes(searchParams.writing as RpTrackingWritingFilter)
-      ? (searchParams.writing as RpTrackingWritingFilter)
-      : RP_TRACKING_WRITING_FILTERS.includes(savedPrefs.writing as RpTrackingWritingFilter)
-        ? (savedPrefs.writing as RpTrackingWritingFilter)
-        : DEFAULT_RP_TRACKING_WRITING_FILTER;
+  const writingFilter: RpTrackingWritingFilter = RP_TRACKING_WRITING_FILTERS.includes(
+    searchParams.writing as RpTrackingWritingFilter
+  )
+    ? (searchParams.writing as RpTrackingWritingFilter)
+    : RP_TRACKING_WRITING_FILTERS.includes(savedPrefs.writing as RpTrackingWritingFilter)
+      ? (savedPrefs.writing as RpTrackingWritingFilter)
+      : DEFAULT_RP_TRACKING_WRITING_FILTER;
 
-  const now = new Date();
-  const activeWindowStart = new Date(now.getTime() - RP_TRACKING_ACTIVE_DAYS * 24 * 60 * 60 * 1000);
-
-  const [{ players, counts, totalWithWriting }, replyStats] = await Promise.all([
-    getRpTrackingStates(),
-    getRpTrackingReplyStats(activeWindowStart),
-  ]);
+  const { players, counts, totalWithWriting } = await getRpTrackingStates();
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
   let filteredPlayers = players;
@@ -147,9 +139,6 @@ export default async function RpTrackingStaffListPage(props: {
     getRpTrackingLastMessages(pagePlayers),
   ]);
 
-  // La liste est triée : le premier suivi à traiter est celui qui attend depuis le plus longtemps.
-  const longestWaiting = players.find((player) => player.state === "pending");
-
   return (
     <div className="flex flex-col gap-6">
       <RpHubHeader
@@ -157,37 +146,6 @@ export default async function RpTrackingStaffListPage(props: {
         pendingMessagesCount={counts.pending}
         totalStoriesCount={totalWithWriting}
       />
-
-      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-        <StatTile
-          label="À traiter"
-          value={counts.pending}
-          hint={counts.pending > 1 ? "réponses attendues" : "réponse attendue"}
-        />
-        <StatTile
-          label="Suivis actifs"
-          value={counts.recent}
-          hint={`échange < ${RP_TRACKING_ACTIVE_DAYS} j`}
-        />
-        <StatTile
-          label="Attente la plus longue"
-          value={
-            longestWaiting?.waitingSince
-              ? formatDuration(now.getTime() - longestWaiting.waitingSince.getTime())
-              : "—"
-          }
-          hint={longestWaiting ? longestWaiting.playerName : "aucun suivi en attente"}
-        />
-        <StatTile
-          label="Délai moyen de réponse"
-          value={formatDuration(replyStats.meanReplyMs)}
-          hint={
-            replyStats.repliesCount > 0
-              ? `${replyStats.repliesCount} réponse${replyStats.repliesCount > 1 ? "s" : ""} sur ${RP_TRACKING_ACTIVE_DAYS} j`
-              : `aucune réponse sur ${RP_TRACKING_ACTIVE_DAYS} j`
-          }
-        />
-      </div>
 
       <RpTrackingFilters
         query={query}
@@ -216,7 +174,9 @@ export default async function RpTrackingStaffListPage(props: {
                   colSpan={COLUMN_COUNT}
                   className="text-muted-foreground py-10 text-center text-sm"
                 >
-                  {query || statusFilter !== DEFAULT_RP_TRACKING_FILTER_STATUS || writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER
+                  {query ||
+                  statusFilter !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
+                  writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER
                     ? "Aucun joueur ne correspond aux filtres sélectionnés."
                     : "Aucun suivi en cours actuellement."}
                 </TableCell>
@@ -326,8 +286,9 @@ export default async function RpTrackingStaffListPage(props: {
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">
                       {writing && writing.chapterCount > 0 ? (
-                        <Badge variant="outline" className="font-normal text-xs">
-                          {writing.chapterCount} chap. · {writing.wordCount.toLocaleString("fr-FR")} mot{writing.wordCount > 1 ? "s" : ""}
+                        <Badge variant="outline" className="text-xs font-normal">
+                          {writing.chapterCount} chap. · {writing.wordCount.toLocaleString("fr-FR")}{" "}
+                          mot{writing.wordCount > 1 ? "s" : ""}
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground/60 text-xs">Aucune trame</span>

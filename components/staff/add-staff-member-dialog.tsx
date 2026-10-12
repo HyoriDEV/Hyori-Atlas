@@ -155,7 +155,10 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
               onValueChange={(val) => val && setSelectedRole(val as Role)}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Sélectionner un rôle" />
+                <SelectValue placeholder="Sélectionner un rôle">
+                  {staffRoleOptions.find((opt) => opt.value === selectedRole)?.label ??
+                    "Sélectionner un rôle"}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {staffRoleOptions.map((opt) => (

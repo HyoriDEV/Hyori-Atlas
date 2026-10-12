@@ -238,7 +238,7 @@ export function AppShell({
             tooltip="Verrouillé pour le moment"
             className="pointer-events-none h-9 gap-3 rounded-md px-2.5 opacity-50 transition-all duration-150 ease-out"
           >
-            <Icon className="size-4 shrink-0 text-muted-foreground/60" />
+            <Icon className="text-muted-foreground/60 size-4 shrink-0" />
             <span>{item.label}</span>
             <LockSimple className="text-muted-foreground/60 ml-auto size-3.5" />
           </SidebarMenuButton>
@@ -247,9 +247,7 @@ export function AppShell({
     }
 
     const currentBadgeCount =
-      typeof countsOverride[item.href] === "number"
-        ? countsOverride[item.href]
-        : item.badgeCount;
+      typeof countsOverride[item.href] === "number" ? countsOverride[item.href] : item.badgeCount;
 
     return (
       <SidebarMenuItem key={item.href}>
@@ -383,9 +381,7 @@ export function AppShell({
                   </SidebarGroupLabel>
                 )}
                 <SidebarGroupContent>
-                  <SidebarMenu className="gap-1">
-                    {group.items.map(renderNavItem)}
-                  </SidebarMenu>
+                  <SidebarMenu className="gap-1">{group.items.map(renderNavItem)}</SidebarMenu>
                 </SidebarGroupContent>
                 {groupIndex === 0 && !group.title && groups.length > 1 && (
                   <Separator className="mt-2.5 mb-1 opacity-50" />

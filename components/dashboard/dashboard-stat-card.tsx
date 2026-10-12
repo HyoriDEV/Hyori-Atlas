@@ -124,7 +124,7 @@ export function DashboardStatCard({
             <div className="flex min-w-0 items-center gap-1.5">
               <h3
                 className={cn(
-                  "font-heading text-foreground font-semibold tracking-tight truncate",
+                  "font-heading text-foreground truncate font-semibold tracking-tight",
                   compact ? "text-sm" : "text-base"
                 )}
               >
@@ -152,7 +152,10 @@ export function DashboardStatCard({
             {locked && !badge && (
               <Badge
                 variant="outline"
-                className={cn("text-muted-foreground shrink-0 gap-1", compact ? "text-[10px]" : "text-[11px]")}
+                className={cn(
+                  "text-muted-foreground shrink-0 gap-1",
+                  compact ? "text-[10px]" : "text-[11px]"
+                )}
               >
                 <LockSimple className={compact ? "size-2.5" : "size-3"} />
                 <span>Verrouillé</span>
@@ -174,7 +177,7 @@ export function DashboardStatCard({
       <div
         className={cn(
           "border-border/50 flex items-center justify-between border-t",
-          compact ? "mt-2 pt-2 min-h-5" : "mt-4 pt-3 min-h-7"
+          compact ? "mt-2 min-h-5 pt-2" : "mt-4 min-h-7 pt-3"
         )}
       >
         {stat !== undefined && stat !== null ? (
@@ -207,7 +210,10 @@ export function DashboardStatCard({
           <div className="text-muted-foreground group-hover:text-primary ml-auto flex shrink-0 items-center gap-1 font-medium transition-colors">
             <span className={compact ? "text-[11px]" : "text-xs"}>Accéder</span>
             <ArrowRight
-              className={cn(compact ? "size-3" : "size-3.5", "transition-transform group-hover:translate-x-0.5")}
+              className={cn(
+                compact ? "size-3" : "size-3.5",
+                "transition-transform group-hover:translate-x-0.5"
+              )}
             />
           </div>
         )}

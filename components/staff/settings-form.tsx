@@ -14,6 +14,8 @@ import { refreshAllSkinsStaffAction } from "@/lib/actions/minecraft-actions";
 import { GlobalSettings } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { DiscordSettingsTab, type DiscordTemplateData } from "./discord-settings-tab";
+import { GallerySettingsTab } from "./gallery-settings-tab";
+import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
 
 interface SettingsFormProps {
   defaultValues: GlobalSettings & {
@@ -39,9 +41,14 @@ interface SettingsFormProps {
     galleryMaxDailyUploads?: number;
   };
   initialDiscordTemplates?: DiscordTemplateData[];
+  initialGalleryCategories?: GalleryCategoryItemConfig[];
 }
 
-export function SettingsForm({ defaultValues, initialDiscordTemplates = [] }: SettingsFormProps) {
+export function SettingsForm({
+  defaultValues,
+  initialDiscordTemplates = [],
+  initialGalleryCategories = [],
+}: SettingsFormProps) {
   const { initialDate, initialTime } = useMemo(() => {
     if (!defaultValues.countdownTargetDate) return { initialDate: "", initialTime: "18:00" };
     try {
@@ -183,6 +190,7 @@ export function SettingsForm({ defaultValues, initialDiscordTemplates = [] }: Se
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="public">Pages publiques</TabsTrigger>
+          <TabsTrigger value="gallery">Galerie</TabsTrigger>
           <TabsTrigger value="countdown">Accueil</TabsTrigger>
           <TabsTrigger value="minecraft">Minecraft</TabsTrigger>
           <TabsTrigger value="discord">Discord</TabsTrigger>
@@ -242,38 +250,20 @@ export function SettingsForm({ defaultValues, initialDiscordTemplates = [] }: Se
               label="Page Univers & Lore (/lore)"
               defaultChecked={defaultValues.publicLoreEnabled ?? true}
             />
-            <SettingRow
-              name="publicGalleryEnabled"
-              label="Page Galerie (/gallery)"
-              defaultChecked={defaultValues.publicGalleryEnabled ?? true}
-            />
-            <SettingRow
-              name="gallerySubmissionsEnabled"
-              label="Autoriser les soumissions de captures par les joueurs whitelistés"
-              defaultChecked={defaultValues.gallerySubmissionsEnabled ?? true}
-            />
-            <SettingRow
-              name="galleryAutoApprove"
-              label="Publication automatique (sans validation préalable du staff)"
-              defaultChecked={defaultValues.galleryAutoApprove ?? false}
-            />
-            <div className="flex items-center justify-between p-4">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium">Limite quotidienne par joueur</span>
-                <span className="text-muted-foreground text-xs">
-                  Nombre maximum de captures qu&apos;un joueur peut soumettre par jour
-                </span>
-              </div>
-              <input
-                type="number"
-                name="galleryMaxDailyUploads"
-                min="1"
-                max="50"
-                defaultValue={defaultValues.galleryMaxDailyUploads ?? 5}
-                className="border-input bg-background w-20 rounded-md border px-3 py-1.5 text-right text-sm font-medium"
-              />
-            </div>
           </div>
+        </TabsContent>
+
+        {/* 3. GALERIE */}
+        <TabsContent value="gallery" keepMounted={true}>
+          <GallerySettingsTab
+            defaultValues={{
+              publicGalleryEnabled: defaultValues.publicGalleryEnabled,
+              gallerySubmissionsEnabled: defaultValues.gallerySubmissionsEnabled,
+              galleryAutoApprove: defaultValues.galleryAutoApprove,
+              galleryMaxDailyUploads: defaultValues.galleryMaxDailyUploads,
+            }}
+            initialCategories={initialGalleryCategories}
+          />
         </TabsContent>
 
         {/* 3. ACCUEIL & COMPTE À REBOURS */}

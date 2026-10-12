@@ -18,6 +18,14 @@ import { RpGroupCard } from "./rp-group-card";
 import { CreateRpGroupDialog } from "./create-rp-group-dialog";
 import type { PlayerOption } from "@/components/player-select";
 
+const groupStatusFilterItems = [
+  { value: "ALL", label: "Tous les états" },
+  { value: "READY_FOR_WHITELIST", label: "Prêts pour validation" },
+  { value: "PENDING_REVIEW", label: "Fiches à évaluer" },
+  { value: "IN_PROGRESS", label: "En cours de rédaction" },
+  { value: "ALL_WHITELISTED", label: "Tous whitelistés" },
+];
+
 interface RpGroupsDashboardProps {
   groups: RpGroupWithMembers[];
   availablePlayers: PlayerOption[];
@@ -80,20 +88,13 @@ export function RpGroupsDashboard({
     <div className="flex flex-col gap-6">
       {/* Top Header & Action */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold tracking-tight">Groupes RP</h1>
-          <p className="text-muted-foreground mt-0.5 text-sm">
-            Suivez l&apos;avancement de la whitelist des équipes de joueurs pour éviter de les
-            bloquer.
-          </p>
-        </div>
-
+        <h1 className="font-heading text-2xl font-semibold">Groupes RP</h1>
         {canManageGroups && <CreateRpGroupDialog availablePlayers={availablePlayers} />}
       </div>
 
       {/* Filter Bar */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-sm flex-1">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full sm:w-80">
           <MagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             value={searchQuery}
@@ -105,28 +106,47 @@ export function RpGroupsDashboard({
             <button
               type="button"
               onClick={() => setSearchQuery("")}
-              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2"
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer p-0.5"
             >
               <X className="size-3.5" />
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-muted-foreground text-sm whitespace-nowrap">Filtrer par :</span>
-          <Select value={statusFilter} onValueChange={(val) => setStatusFilter(val ?? "ALL")}>
-            <SelectTrigger className="h-9 w-[190px] text-sm">
-              <SelectValue placeholder="Tous les états" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Tous les états</SelectItem>
-              <SelectItem value="READY_FOR_WHITELIST">Prêts pour validation</SelectItem>
-              <SelectItem value="PENDING_REVIEW">Fiches à évaluer</SelectItem>
-              <SelectItem value="IN_PROGRESS">En cours de rédaction</SelectItem>
-              <SelectItem value="ALL_WHITELISTED">Tous whitelistés</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select
+          items={groupStatusFilterItems}
+          value={statusFilter}
+          onValueChange={(val) => setStatusFilter(val ?? "ALL")}
+        >
+          <SelectTrigger className="h-9 w-52 text-sm">
+            <SelectValue placeholder="Tous les états">
+              {groupStatusFilterItems.find((item) => item.value === statusFilter)?.label ??
+                "Tous les états"}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {groupStatusFilterItems.map((item) => (
+              <SelectItem key={item.value} value={item.value}>
+                {item.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {(searchQuery || statusFilter !== "ALL") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setSearchQuery("");
+              setStatusFilter("ALL");
+            }}
+            className="text-muted-foreground hover:text-foreground h-9 gap-1.5 px-2.5 text-xs"
+          >
+            <X className="size-3.5" />
+            <span>Réinitialiser</span>
+          </Button>
+        )}
       </div>
 
       {/* Groups List */}

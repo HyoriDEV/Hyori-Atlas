@@ -101,7 +101,7 @@ export function BacklogFilters({ filters, users, labels, onChange }: BacklogFilt
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <div className="relative w-full sm:w-56">
+      <div className="relative w-full sm:w-64">
         <MagnifyingGlass className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           value={filters.search}
@@ -130,7 +130,10 @@ export function BacklogFilters({ filters, users, labels, onChange }: BacklogFilt
         onValueChange={(value) => onChange({ ...filters, assignee: value ?? BACKLOG_FILTER_ALL })}
       >
         <SelectTrigger className="h-9 text-sm" aria-label="Filtrer par assignation">
-          <SelectValue />
+          <SelectValue placeholder="Toutes les assignations">
+            {assigneeItems.find((item) => item.value === filters.assignee)?.label ??
+              "Toutes les assignations"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-52">
           {assigneeItems.map((item) => (
@@ -147,7 +150,10 @@ export function BacklogFilters({ filters, users, labels, onChange }: BacklogFilt
         onValueChange={(value) => onChange({ ...filters, priority: value ?? BACKLOG_FILTER_ALL })}
       >
         <SelectTrigger className="h-9 text-sm" aria-label="Filtrer par priorité">
-          <SelectValue />
+          <SelectValue placeholder="Toutes les priorités">
+            {priorityItems.find((item) => item.value === filters.priority)?.label ??
+              "Toutes les priorités"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-44">
           {priorityItems.map((item) => (
@@ -164,7 +170,10 @@ export function BacklogFilters({ filters, users, labels, onChange }: BacklogFilt
         onValueChange={(value) => onChange({ ...filters, label: value ?? BACKLOG_FILTER_ALL })}
       >
         <SelectTrigger className="h-9 text-sm" aria-label="Filtrer par étiquette">
-          <SelectValue />
+          <SelectValue placeholder="Toutes les étiquettes">
+            {labelItems.find((item) => item.value === filters.label)?.label ??
+              "Toutes les étiquettes"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-44">
           {labelItems.map((item) => (

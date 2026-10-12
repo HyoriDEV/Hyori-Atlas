@@ -134,10 +134,7 @@ export function TicketRowActions({
           {isAdmin && (
             <>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setDeleteOpen(true)}
-              >
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
                 <Trash className="size-3.5" />
                 <span>Supprimer définitivement</span>
               </DropdownMenuItem>
