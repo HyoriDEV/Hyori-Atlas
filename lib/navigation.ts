@@ -31,7 +31,8 @@ export type NavIconKey =
   | "scales"
   | "chart"
   | "gavel"
-  | "kanban";
+  | "kanban"
+  | "image";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -133,6 +134,12 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         iconKey: "pen",
         requiredStatus: RegistrationStatus.WHITELISTED,
         fullWidth: true,
+      },
+      {
+        label: "Mes captures",
+        href: "/player/gallery",
+        iconKey: "image",
+        requiredStatus: RegistrationStatus.WHITELISTED,
       },
     ],
   },
@@ -314,6 +321,14 @@ export const staffRulesItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffGalleryItem: StaffNavItem = {
+  label: "Galerie",
+  href: "/staff/gallery",
+  iconKey: "image",
+  roles: [Role.ADMIN],
+  fullWidth: true,
+};
+
 export const staffStaffTeamItem: StaffNavItem = {
   label: "Équipe staff",
   href: "/staff/staff-team",
@@ -337,6 +352,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffInterviewGuideItem,
   staffNewsItem,
   staffRulesItem,
+  staffGalleryItem,
   staffStaffTeamItem,
   staffStatisticsItem,
   staffSettingsItem,
@@ -377,7 +393,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Contenu",
         iconKey: "newspaper",
-        items: [staffNewsItem, staffRulesItem],
+        items: [staffNewsItem, staffRulesItem, staffGalleryItem],
       },
       {
         title: "Administration",

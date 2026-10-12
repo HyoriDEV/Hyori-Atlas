@@ -52,6 +52,10 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const publicRulesEnabled = formData.get("publicRulesEnabled") === "true";
   const publicLoreEnabled = formData.get("publicLoreEnabled") === "true";
   const publicGalleryEnabled = formData.get("publicGalleryEnabled") === "true";
+  const gallerySubmissionsEnabled = formData.get("gallerySubmissionsEnabled") === "true";
+  const galleryAutoApprove = formData.get("galleryAutoApprove") === "true";
+  const rawMaxDaily = formData.get("galleryMaxDailyUploads");
+  const galleryMaxDailyUploads = rawMaxDaily ? parseInt(rawMaxDaily as string, 10) || 5 : 5;
 
   await updateGlobalSettings(
     {
@@ -68,6 +72,9 @@ export async function saveGlobalSettingsAction(formData: FormData) {
       publicRulesEnabled,
       publicLoreEnabled,
       publicGalleryEnabled,
+      gallerySubmissionsEnabled,
+      galleryAutoApprove,
+      galleryMaxDailyUploads,
       ...({
         countdownEnabled,
         countdownBadgeText,

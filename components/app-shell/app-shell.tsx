@@ -29,6 +29,7 @@ import {
   Gavel,
   Kanban,
   MagnifyingGlass,
+  Image as PhosphorImage,
 } from "@phosphor-icons/react";
 
 import { GlobalSearchDialog } from "@/components/staff/global-search-dialog";
@@ -90,6 +91,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   chart: ChartBar,
   gavel: Gavel,
   kanban: Kanban,
+  image: PhosphorImage,
 };
 
 export interface AppShellNavEntry {
