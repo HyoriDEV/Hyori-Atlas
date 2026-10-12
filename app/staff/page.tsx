@@ -353,12 +353,24 @@ export default async function StaffDashboardPage() {
 
   const navGroups = getStaffNavGroups(user.role);
   const dashboardSections = navGroups
-    .map((group) => ({
-      title: group.title,
-      items: group.items
-        .filter((item) => item.href !== "/staff" && Boolean(cardConfigs[item.href]))
-        .map((item) => cardConfigs[item.href]!),
-    }))
+    .map((group, groupIdx) => {
+      let title = group.title;
+      if (!title) {
+        if (group.items.some((item) => item.href === "/staff/atlas")) {
+          title = "Général";
+        } else if (group.items.some((item) => item.href === "/staff/backlog")) {
+          title = "Organisation";
+        }
+      }
+
+      return {
+        key: title ?? `section-${groupIdx}`,
+        title,
+        items: group.items
+          .filter((item) => item.href !== "/staff" && Boolean(cardConfigs[item.href]))
+          .map((item) => cardConfigs[item.href]!),
+      };
+    })
     .filter((group) => group.items.length > 0);
 
   const urgentActions = [
@@ -473,7 +485,7 @@ export default async function StaffDashboardPage() {
       {/* Sections de modules organisées comme la sidebar */}
       <div className="flex flex-col gap-5">
         {dashboardSections.map((section) => (
-          <div key={section.title ?? "modules"} className="flex flex-col gap-2.5">
+          <div key={section.key} className="flex flex-col gap-2.5">
             {section.title && (
               <div className="flex items-center gap-2">
                 <h2 className="text-foreground/75 font-heading text-xs font-semibold uppercase tracking-wider">

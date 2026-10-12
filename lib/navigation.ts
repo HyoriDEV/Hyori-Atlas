@@ -324,11 +324,11 @@ export const staffStaffTeamItem: StaffNavItem = {
 
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
+  staffAtlasItem,
   staffTicketsItem,
   staffBdaReportsItem,
   staffSanctionsItem,
   staffBacklogItem,
-  staffAtlasItem,
   staffRpGroupsItem,
   staffRpTrackingItem,
   staffDistributionItem,
@@ -344,7 +344,11 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: [staffDashboardItem],
+    items: [staffDashboardItem, staffAtlasItem],
+  };
+
+  const backlogStandaloneGroup: StaffNavGroup = {
+    items: [staffBacklogItem],
   };
 
   if (role === Role.ADMIN) {
@@ -359,15 +363,11 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
           staffSanctionsItem,
         ],
       },
-      {
-        title: "Organisation",
-        iconKey: "kanban",
-        items: [staffBacklogItem],
-      },
+      backlogStandaloneGroup,
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffAtlasItem, staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
+        items: [staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
       },
       {
         title: "Admission",
@@ -395,11 +395,6 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
         iconKey: "shield",
         items: [staffTicketsItem, staffBdaReportsItem],
       },
-      {
-        title: "Gestion RP",
-        iconKey: "users",
-        items: [staffAtlasItem],
-      },
     ];
   }
 
@@ -411,16 +406,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
         iconKey: "shield",
         items: [staffTicketsItem],
       },
-      {
-        title: "Organisation",
-        iconKey: "kanban",
-        items: [staffBacklogItem],
-      },
-      {
-        title: "Gestion RP",
-        iconKey: "users",
-        items: [staffAtlasItem],
-      },
+      backlogStandaloneGroup,
     ];
   }
 
@@ -435,7 +421,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffAtlasItem, staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
+        items: [staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
       },
     ];
   }
@@ -448,16 +434,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
         iconKey: "shield",
         items: [staffTicketsItem],
       },
-      {
-        title: "Organisation",
-        iconKey: "kanban",
-        items: [staffBacklogItem],
-      },
-      {
-        title: "Gestion RP",
-        iconKey: "users",
-        items: [staffAtlasItem],
-      },
+      backlogStandaloneGroup,
     ];
   }
 
