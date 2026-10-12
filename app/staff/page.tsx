@@ -185,11 +185,7 @@ export default async function StaffDashboardPage() {
       iconKey: "ticket",
       stat: pendingTicketsCount > 0 ? pendingTicketsCount : totalOpenTicketsCount,
       statLabel:
-        pendingTicketsCount > 0
-          ? "à traiter"
-          : totalOpenTicketsCount > 1
-            ? "ouverts"
-            : "ouvert",
+        pendingTicketsCount > 0 ? "à traiter" : totalOpenTicketsCount > 1 ? "ouverts" : "ouvert",
       badge:
         pendingTicketsCount > 0
           ? {
@@ -404,8 +400,14 @@ export default async function StaffDashboardPage() {
       href: "/staff/backlog",
       variant: "outline" as const,
     },
-  ].filter((action): action is { label: string; href: string; variant: "destructive" | "secondary" | "outline" } =>
-    Boolean(action)
+  ].filter(
+    (
+      action
+    ): action is {
+      label: string;
+      href: string;
+      variant: "destructive" | "secondary" | "outline";
+    } => Boolean(action)
   );
 
   return (
@@ -488,7 +490,7 @@ export default async function StaffDashboardPage() {
           <div key={section.key} className="flex flex-col gap-2.5">
             {section.title && (
               <div className="flex items-center gap-2">
-                <h2 className="text-foreground/75 font-heading text-xs font-semibold uppercase tracking-wider">
+                <h2 className="text-foreground/75 font-heading text-xs font-semibold tracking-wider uppercase">
                   {section.title}
                 </h2>
                 <span className="bg-border/60 h-px flex-1" />

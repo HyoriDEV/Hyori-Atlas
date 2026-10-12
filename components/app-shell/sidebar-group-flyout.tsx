@@ -43,14 +43,15 @@ export function SidebarGroupFlyout({
   }
 
   const groupTitle = group.title ?? "Groupe";
-  const groupIconKey: NavIconKey =
-    group.iconKey ?? defaultGroupIcons[groupTitle] ?? "squares-four";
+  const groupIconKey: NavIconKey = group.iconKey ?? defaultGroupIcons[groupTitle] ?? "squares-four";
   const GroupIcon = iconMap[groupIconKey] ?? iconMap["squares-four"];
 
   // Déterminer si le groupe contient la page actuellement active
   const isGroupActive = group.items.some((item) => {
     const isRoot = item.href === "/staff" || item.href === "/player";
-    return isRoot ? pathname === item.href : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+    return isRoot
+      ? pathname === item.href
+      : pathname === item.href || pathname?.startsWith(`${item.href}/`);
   });
 
   // Somme totale des badges pour ce groupe
@@ -58,7 +59,7 @@ export function SidebarGroupFlyout({
     const count =
       typeof countsOverride[item.href] === "number"
         ? countsOverride[item.href]
-        : item.badgeCount ?? 0;
+        : (item.badgeCount ?? 0);
     return acc + (count > 0 ? count : 0);
   }, 0);
 
@@ -82,7 +83,7 @@ export function SidebarGroupFlyout({
               className={cn(
                 "group/flyout-btn h-9 w-full cursor-pointer justify-between rounded-md px-2.5 transition-all duration-150 ease-out",
                 isGroupActive
-                  ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   : "text-sidebar-foreground/80 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground",
                 open && "bg-sidebar-accent text-sidebar-accent-foreground"
               )}
@@ -93,7 +94,9 @@ export function SidebarGroupFlyout({
             <GroupIcon
               className={cn(
                 "size-4 shrink-0 transition-colors",
-                isGroupActive ? "text-primary" : "text-sidebar-foreground/70 group-hover/flyout-btn:text-sidebar-foreground"
+                isGroupActive
+                  ? "text-primary"
+                  : "text-sidebar-foreground/70 group-hover/flyout-btn:text-sidebar-foreground"
               )}
             />
             <span className="truncate text-sm">{groupTitle}</span>
@@ -105,12 +108,14 @@ export function SidebarGroupFlyout({
                 {totalBadgeCount > 99 ? "99+" : totalBadgeCount}
               </span>
             ) : hasGroupNotification ? (
-              <span className="bg-primary size-2 rounded-full animate-pulse" />
+              <span className="bg-primary size-2 animate-pulse rounded-full" />
             ) : null}
             <CaretRight
               className={cn(
                 "text-sidebar-foreground/40 size-3.5 transition-transform duration-150",
-                open ? "rotate-90 text-primary" : "group-hover/flyout-btn:translate-x-0.5 group-hover/flyout-btn:text-sidebar-foreground/70"
+                open
+                  ? "text-primary rotate-90"
+                  : "group-hover/flyout-btn:text-sidebar-foreground/70 group-hover/flyout-btn:translate-x-0.5"
               )}
             />
           </div>
@@ -126,11 +131,11 @@ export function SidebarGroupFlyout({
           >
             <PopoverPrimitive.Popup
               className={cn(
-                "border-border/80 bg-popover/95 text-popover-foreground z-50 flex w-64 origin-(--transform-origin) flex-col rounded-xl border p-1.5 text-xs shadow-xl ring-1 ring-black/5 backdrop-blur-md outline-hidden duration-150 dark:ring-white/10",
+                "border-border/80 bg-popover/95 text-popover-foreground z-50 flex w-64 origin-(--transform-origin) flex-col rounded-xl border p-1.5 text-xs shadow-xl ring-1 ring-black/5 outline-hidden backdrop-blur-md duration-150 dark:ring-white/10",
                 "data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-open:slide-in-from-left-2",
                 "data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
                 // Pont invisible de survol pour fluidifier le passage curseur trigger -> popover
-                "before:absolute before:-left-3.5 before:top-0 before:h-full before:w-3.5 before:content-['']"
+                "before:absolute before:top-0 before:-left-3.5 before:h-full before:w-3.5 before:content-['']"
               )}
             >
               {/* Onglets du groupe */}
@@ -151,7 +156,7 @@ export function SidebarGroupFlyout({
                     return (
                       <div
                         key={item.href}
-                        className="text-muted-foreground/50 flex h-8.5 items-center gap-2.5 rounded-lg px-2.5 text-xs opacity-60 cursor-not-allowed select-none"
+                        className="text-muted-foreground/50 flex h-8.5 cursor-not-allowed items-center gap-2.5 rounded-lg px-2.5 text-xs opacity-60 select-none"
                         title="Verrouillé pour le moment"
                       >
                         <ItemIcon className="size-4 shrink-0" />
@@ -187,12 +192,13 @@ export function SidebarGroupFlyout({
 
                       {typeof itemBadgeCount === "number" && itemBadgeCount > 0 ? (
                         <span className="bg-primary/15 text-primary ml-auto flex h-4.5 min-w-4.5 items-center justify-center rounded-full px-1.5 text-[10px] leading-none font-semibold tabular-nums">
-                          {itemBadgeCount > (item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99))
+                          {itemBadgeCount >
+                          (item.maxBadgeCount ?? (item.href === "/staff/atlas" ? 999 : 99))
                             ? `${item.maxBadgeCount ?? 99}+`
                             : itemBadgeCount}
                         </span>
                       ) : item.hasNotification && typeof countsOverride[item.href] !== "number" ? (
-                        <span className="bg-primary ml-auto size-2 rounded-full animate-pulse" />
+                        <span className="bg-primary ml-auto size-2 animate-pulse rounded-full" />
                       ) : null}
                     </Link>
                   );

@@ -7,9 +7,7 @@ import {
   X,
   Sparkle,
   Trash,
-  MapPin,
   Eye,
-  EyeSlash,
   Clock,
   ArrowCounterClockwise,
 } from "@phosphor-icons/react";
@@ -17,12 +15,21 @@ import { SkinHead } from "@/components/ui/skin-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   reviewGalleryItemAction,
   toggleFeaturedGalleryItemAction,
   deleteGalleryItemAction,
+  updateGalleryItemCategoryAction,
 } from "@/lib/actions/gallery-actions";
-import { GalleryStatus } from "@/lib/generated/prisma/enums";
+import { GalleryStatus, GalleryCategory } from "@/lib/generated/prisma/enums";
 import { GALLERY_CATEGORY_LABELS, GalleryCardItem } from "@/components/gallery/gallery-card";
+import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
 import { formatDate } from "@/lib/date";
 import { toast } from "sonner";
 
@@ -38,19 +45,37 @@ export interface StaffGalleryItem extends GalleryCardItem {
 
 interface StaffGalleryReviewCardProps {
   item: StaffGalleryItem;
+  categories: GalleryCategoryItemConfig[];
   onRejectRequest: (item: StaffGalleryItem) => void;
   onPreview: (item: StaffGalleryItem) => void;
 }
 
 export function StaffGalleryReviewCard({
   item,
+  categories,
   onRejectRequest,
   onPreview,
 }: StaffGalleryReviewCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isFeatured, setIsFeatured] = useState(item.isFeatured);
+  const [category, setCategory] = useState<GalleryCategory>(item.category);
 
   const authorName = item.author.minecraftUsername ?? item.author.discordDisplayName ?? "Joueur";
+
+  const handleCategoryChange = (newCat: string) => {
+    const nextCategory = newCat as GalleryCategory;
+    setCategory(nextCategory);
+
+    startTransition(async () => {
+      try {
+        await updateGalleryItemCategoryAction(item.id, nextCategory);
+        toast.success("Catégorie mise à jour.");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Erreur lors de la modification de la catégorie.");
+        setCategory(item.category);
+      }
+    });
+  };
 
   const handleApprove = () => {
     startTransition(async () => {
@@ -83,7 +108,11 @@ export function StaffGalleryReviewCard({
   };
 
   const handleDelete = () => {
-    if (!confirm(`Supprimer définitivement la capture "${item.title}" ? Cette action est irréversible.`)) {
+    if (
+      !confirm(
+        `Supprimer définitivement la capture "${item.title}" ? Cette action est irréversible.`
+      )
+    ) {
       return;
     }
 
@@ -98,41 +127,54 @@ export function StaffGalleryReviewCard({
   };
 
   return (
-    <div className="flex flex-col sm:flex-row gap-5 p-5 rounded-2xl border border-border/80 bg-card shadow-xs transition-all hover:shadow-md">
+    <div className="border-border bg-card flex flex-col gap-4 rounded-lg border p-4 shadow-xs transition-colors sm:flex-row">
       {/* Aperçu Image */}
       <div
         onClick={() => onPreview(item)}
-        className="group relative h-48 sm:h-auto sm:w-64 shrink-0 rounded-xl overflow-hidden bg-black/40 cursor-pointer border border-border/60"
+        className="group relative h-44 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-black/40 sm:h-auto sm:w-56"
       >
         <Image
           src={item.thumbnailUrl || item.imageUrl}
           alt={item.title}
           fill
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
+          className="object-cover transition-transform duration-300 group-hover:scale-103"
         />
-        <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs gap-1 font-medium backdrop-blur-xs">
+        <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/30 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
           <Eye className="size-4" />
           <span>Agrandir</span>
         </div>
-
-        {item.isSpoiler && (
-          <Badge className="absolute top-2 left-2 bg-amber-500/90 text-amber-950 text-[10px] flex items-center gap-1">
-            <EyeSlash className="size-3" /> Spoiler RP
-          </Badge>
-        )}
       </div>
 
       {/* Contenu et Détails */}
-      <div className="flex flex-1 flex-col justify-between gap-4">
-        <div className="flex flex-col gap-2.5">
-          {/* Header avec Catégorie et Statut */}
+      <div className="flex flex-1 flex-col justify-between gap-3">
+        <div className="flex flex-col gap-2">
+          {/* Header avec Catégorie (Sélecteur Staff) et Statut */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Badge variant="outline" className="text-xs">
-                {GALLERY_CATEGORY_LABELS[item.category] || "Capture"}
-              </Badge>
+              {/* Sélecteur de catégorie modifiable par le staff */}
+              <Select
+                value={category}
+                onValueChange={(val) => val && handleCategoryChange(val)}
+                disabled={isPending}
+              >
+                <SelectTrigger className="h-7 w-36 text-xs">
+                  <SelectValue placeholder="Catégorie">
+                    {categories.find((c) => c.id === category)?.label ??
+                      GALLERY_CATEGORY_LABELS[category] ??
+                      "Catégorie"}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((c) => (
+                    <SelectItem key={c.id} value={c.id} className="text-xs">
+                      {c.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               {isFeatured && (
-                <Badge className="border-amber-400/40 bg-amber-500/90 text-amber-950 text-xs font-semibold flex items-center gap-1">
+                <Badge className="flex items-center gap-1 border-amber-400/40 bg-amber-500/90 text-[11px] font-semibold text-amber-950">
                   <Sparkle className="size-3 fill-current" /> Coup de cœur
                 </Badge>
               )}
@@ -140,29 +182,29 @@ export function StaffGalleryReviewCard({
 
             {/* Statut Badge */}
             {item.status === GalleryStatus.PENDING && (
-              <Badge className="bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/30 text-xs flex items-center gap-1 font-medium">
-                <Clock className="size-3" /> En attente de validation
+              <Badge className="flex items-center gap-1 border-amber-500/30 bg-amber-500/15 text-xs font-medium text-amber-700 dark:text-amber-400">
+                <Clock className="size-3" /> En attente
               </Badge>
             )}
             {item.status === GalleryStatus.APPROVED && (
-              <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30 text-xs flex items-center gap-1 font-medium">
+              <Badge className="flex items-center gap-1 border-emerald-500/30 bg-emerald-500/15 text-xs font-medium text-emerald-700 dark:text-emerald-400">
                 <Check className="size-3" /> Publiée
               </Badge>
             )}
             {item.status === GalleryStatus.REJECTED && (
-              <Badge className="bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/30 text-xs flex items-center gap-1 font-medium">
+              <Badge className="flex items-center gap-1 border-rose-500/30 bg-rose-500/15 text-xs font-medium text-rose-700 dark:text-rose-400">
                 <X className="size-3" /> Refusée
               </Badge>
             )}
           </div>
 
           {/* Titre */}
-          <h3 className="font-heading text-lg font-bold text-foreground tracking-tight">
+          <h3 className="font-heading text-foreground text-base font-semibold tracking-tight">
             {item.title}
           </h3>
 
           {/* Auteur & Date */}
-          <div className="flex items-center gap-2.5 text-xs text-muted-foreground">
+          <div className="text-muted-foreground flex items-center gap-2 text-xs">
             <SkinHead
               size="sm"
               username={item.author.minecraftUsername}
@@ -170,7 +212,7 @@ export function StaffGalleryReviewCard({
               avatarUrl={item.author.minecraftAvatarUrl}
               updatedAt={item.author.minecraftSkinUpdatedAt}
             />
-            <span className="font-medium text-foreground">{authorName}</span>
+            <span className="text-foreground font-medium">{authorName}</span>
             <span>•</span>
             <span>
               {formatDate(item.createdAt, {
@@ -181,36 +223,23 @@ export function StaffGalleryReviewCard({
             </span>
           </div>
 
-          {/* Métadonnées optionnelles */}
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">
-            {item.location && (
-              <span className="flex items-center gap-1 text-foreground/80">
-                <MapPin className="size-3.5 text-primary" />
-                Lieu : {item.location}
-              </span>
-            )}
-            {item.shader && (
-              <span>Shader : <strong className="text-foreground/80 font-normal">{item.shader}</strong></span>
-            )}
-          </div>
-
           {/* Description */}
           {item.description && (
-            <p className="text-xs text-muted-foreground line-clamp-2 bg-muted/30 p-2.5 rounded-lg border border-border/40 font-serif">
+            <p className="text-muted-foreground bg-muted/30 border-border/40 line-clamp-2 rounded-md border p-2 text-xs">
               {item.description}
             </p>
           )}
 
           {/* Motif de refus si REJECTED */}
           {item.status === GalleryStatus.REJECTED && item.rejectionReason && (
-            <div className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20 text-xs text-rose-700 dark:text-rose-400">
+            <div className="rounded-md border border-rose-500/20 bg-rose-500/10 p-2 text-xs text-rose-700 dark:text-rose-400">
               <strong>Motif du refus :</strong> {item.rejectionReason}
             </div>
           )}
         </div>
 
-        {/* Barre d'actions */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/60">
+        {/* Barre d'actions standard */}
+        <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
           <div className="flex items-center gap-2">
             {item.status === GalleryStatus.PENDING && (
               <>
@@ -218,9 +247,9 @@ export function StaffGalleryReviewCard({
                   size="sm"
                   onClick={handleApprove}
                   disabled={isPending}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl gap-1.5 text-xs"
+                  className="gap-1.5 bg-emerald-600 text-xs text-white hover:bg-emerald-500"
                 >
-                  <Check className="size-4" />
+                  <Check className="size-3.5" />
                   Approuver
                 </Button>
                 <Button
@@ -228,9 +257,9 @@ export function StaffGalleryReviewCard({
                   variant="outline"
                   onClick={() => onRejectRequest(item)}
                   disabled={isPending}
-                  className="text-rose-600 border-rose-200 hover:bg-rose-50 dark:border-rose-900/60 dark:hover:bg-rose-950/40 rounded-xl gap-1.5 text-xs"
+                  className="gap-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                 >
-                  <X className="size-4" />
+                  <X className="size-3.5" />
                   Refuser
                 </Button>
               </>
@@ -243,9 +272,9 @@ export function StaffGalleryReviewCard({
                   variant={isFeatured ? "default" : "outline"}
                   onClick={handleToggleFeatured}
                   disabled={isPending}
-                  className="rounded-xl gap-1.5 text-xs"
+                  className="gap-1.5 text-xs"
                 >
-                  <Sparkle className="size-4 text-amber-400" />
+                  <Sparkle className="size-3.5 text-amber-400" />
                   {isFeatured ? "Retirer de la une" : "Mettre en avant"}
                 </Button>
                 <Button
@@ -253,7 +282,7 @@ export function StaffGalleryReviewCard({
                   variant="outline"
                   onClick={() => onRejectRequest(item)}
                   disabled={isPending}
-                  className="rounded-xl text-xs"
+                  className="text-xs"
                 >
                   Dépublier
                 </Button>
@@ -266,9 +295,9 @@ export function StaffGalleryReviewCard({
                 variant="outline"
                 onClick={handleApprove}
                 disabled={isPending}
-                className="rounded-xl gap-1.5 text-xs"
+                className="gap-1.5 text-xs"
               >
-                <ArrowCounterClockwise className="size-4" />
+                <ArrowCounterClockwise className="size-3.5" />
                 Réhabiliter & Publier
               </Button>
             )}
@@ -279,9 +308,9 @@ export function StaffGalleryReviewCard({
             variant="ghost"
             onClick={handleDelete}
             disabled={isPending}
-            className="text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 rounded-xl gap-1.5 text-xs"
+            className="gap-1.5 text-xs text-muted-foreground hover:text-destructive"
           >
-            <Trash className="size-4" />
+            <Trash className="size-3.5" />
             Supprimer
           </Button>
         </div>

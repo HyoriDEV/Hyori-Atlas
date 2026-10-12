@@ -124,11 +124,7 @@ export function TicketStatusActions({
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
-              <AlertDialogAction
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={isPending}
-              >
+              <AlertDialogAction variant="destructive" onClick={handleDelete} disabled={isPending}>
                 {isPending ? "Suppression en cours..." : "Supprimer définitivement"}
               </AlertDialogAction>
             </AlertDialogFooter>

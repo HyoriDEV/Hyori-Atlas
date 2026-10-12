@@ -36,14 +36,8 @@ export function InterviewGuideView({ guideData }: InterviewGuideViewProps) {
   return (
     <div className="flex w-full max-w-full min-w-0 flex-col gap-6">
       {/* Page header */}
-      <div className="flex flex-col gap-1.5">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight sm:text-3xl">
-          Guide d&apos;entretien Whitelist
-        </h1>
-        <p className="text-muted-foreground text-xs sm:text-sm">
-          Trame d&apos;entretien vocal pour évaluer les candidatures (Volet A : Communauté • Volet B
-          : Monde RP).
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold">Guide d&apos;entretien Whitelist</h1>
       </div>
 
       {/* Tabs */}

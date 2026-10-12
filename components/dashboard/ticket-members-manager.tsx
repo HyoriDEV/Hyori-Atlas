@@ -156,7 +156,7 @@ export function TicketMembersManager({
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium">{name}</span>
                         {member.isCreator && (
-                          <span className="rounded-md bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+                          <span className="bg-primary/10 py-0.2 text-primary rounded-md px-1.5 text-[10px] font-semibold">
                             Créateur
                           </span>
                         )}
@@ -181,7 +181,7 @@ export function TicketMembersManager({
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium hover:underline">{name}</span>
                         {member.isCreator && (
-                          <span className="rounded-md bg-primary/10 px-1.5 py-0.2 text-[10px] font-semibold text-primary">
+                          <span className="bg-primary/10 py-0.2 text-primary rounded-md px-1.5 text-[10px] font-semibold">
                             Créateur
                           </span>
                         )}

@@ -1,13 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import {
-  Clock,
-  CheckCircle,
-  Archive,
-  MagnifyingGlass,
-  Images,
-} from "@phosphor-icons/react";
+import { Clock, CheckCircle, Archive, MagnifyingGlass, Images, X } from "@phosphor-icons/react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +12,19 @@ import {
 import { StaffGalleryRejectDialog } from "@/components/staff/gallery/staff-gallery-reject-dialog";
 import { GalleryLightbox } from "@/components/gallery/gallery-lightbox";
 import { GalleryStatus } from "@/lib/generated/prisma/enums";
+import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
 
 interface StaffGalleryViewProps {
   initialItems: StaffGalleryItem[];
   currentUserId: string;
+  categories: GalleryCategoryItemConfig[];
 }
 
-export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryViewProps) {
+export function StaffGalleryView({
+  initialItems,
+  currentUserId,
+  categories,
+}: StaffGalleryViewProps) {
   const items = initialItems;
   const [search, setSearch] = useState("");
   const [rejectItem, setRejectItem] = useState<StaffGalleryItem | null>(null);
@@ -50,10 +50,14 @@ export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryVi
     if (!search.trim()) return list;
     const q = search.toLowerCase();
     return list.filter((i) => {
-      const author = (i.author.minecraftUsername ?? i.author.discordDisplayName ?? "").toLowerCase();
+      const author = (
+        i.author.minecraftUsername ??
+        i.author.discordDisplayName ??
+        ""
+      ).toLowerCase();
       return (
         i.title.toLowerCase().includes(q) ||
-        (i.location?.toLowerCase().includes(q) ?? false) ||
+        (i.description?.toLowerCase().includes(q) ?? false) ||
         author.includes(q)
       );
     });
@@ -62,45 +66,48 @@ export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryVi
   return (
     <div className="flex flex-col gap-6">
       {/* En-tête et Recherche */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl font-bold tracking-tight text-foreground">
-            Modération de la Galerie
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Gérez les soumissions des joueurs, validez les captures d&apos;écran et sélectionnez les coups de cœur.
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold">Modération de la galerie</h1>
 
-        <div className="relative w-full sm:w-72">
-          <MagnifyingGlass className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+        <div className="relative w-full sm:w-80">
+          <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
           <Input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Filtrer les captures..."
-            className="pl-10 rounded-xl"
+            placeholder="Rechercher par titre, joueur..."
+            className="w-full pr-8 pl-9"
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="text-muted-foreground hover:text-foreground absolute top-1/2 right-2.5 -translate-y-1/2 cursor-pointer p-0.5"
+              title="Effacer la recherche"
+            >
+              <X className="size-3.5" />
+            </button>
+          )}
         </div>
       </div>
 
       {/* Onglets de triage */}
       <Tabs defaultValue={defaultTab} className="flex flex-col gap-6">
-        <TabsList className="bg-muted/60 p-1 rounded-xl self-start">
-          <TabsTrigger value="pending" className="rounded-lg gap-2 text-xs font-semibold">
+        <TabsList className="bg-muted/50 self-start p-1">
+          <TabsTrigger value="pending" className="gap-2 text-xs">
             <Clock className="size-4" />
             <span>En attente</span>
             {pendingItems.length > 0 && (
-              <Badge className="bg-amber-500 text-white rounded-full px-1.5 py-0.2 text-[10px]">
+              <Badge className="py-0.2 rounded-full bg-amber-500 px-1.5 text-[10px] text-white">
                 {pendingItems.length}
               </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="approved" className="rounded-lg gap-2 text-xs font-semibold">
+          <TabsTrigger value="approved" className="gap-2 text-xs">
             <CheckCircle className="size-4 text-emerald-500" />
             <span>Publiées ({approvedItems.length})</span>
           </TabsTrigger>
-          <TabsTrigger value="rejected" className="rounded-lg gap-2 text-xs font-semibold">
+          <TabsTrigger value="rejected" className="gap-2 text-xs">
             <Archive className="size-4 text-rose-500" />
             <span>Refusées ({rejectedItems.length})</span>
           </TabsTrigger>
@@ -114,19 +121,20 @@ export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryVi
                 <StaffGalleryReviewCard
                   key={item.id}
                   item={item}
+                  categories={categories}
                   onRejectRequest={setRejectItem}
                   onPreview={setPreviewItem}
                 />
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 p-16 text-center rounded-2xl border border-dashed border-border bg-card/40">
-              <div className="size-14 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+            <div className="border-border bg-card/40 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-16 text-center">
+              <div className="flex size-14 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
                 <CheckCircle className="size-7" />
               </div>
-              <div className="flex flex-col gap-1 max-w-sm">
+              <div className="flex max-w-sm flex-col gap-1">
                 <h3 className="font-heading text-lg font-semibold">Aucune capture en attente</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Toutes les captures d&apos;écran soumises ont été modérées.
                 </p>
               </div>
@@ -142,19 +150,20 @@ export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryVi
                 <StaffGalleryReviewCard
                   key={item.id}
                   item={item}
+                  categories={categories}
                   onRejectRequest={setRejectItem}
                   onPreview={setPreviewItem}
                 />
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 p-16 text-center rounded-2xl border border-dashed border-border bg-card/40">
-              <div className="size-14 rounded-full bg-muted/60 text-muted-foreground flex items-center justify-center">
+            <div className="border-border bg-card/40 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-16 text-center">
+              <div className="bg-muted/60 text-muted-foreground flex size-14 items-center justify-center rounded-full">
                 <Images className="size-7" />
               </div>
-              <div className="flex flex-col gap-1 max-w-sm">
+              <div className="flex max-w-sm flex-col gap-1">
                 <h3 className="font-heading text-lg font-semibold">Aucune capture publiée</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Aucune capture n&apos;est actuellement active sur la galerie publique.
                 </p>
               </div>
@@ -170,19 +179,20 @@ export function StaffGalleryView({ initialItems, currentUserId }: StaffGalleryVi
                 <StaffGalleryReviewCard
                   key={item.id}
                   item={item}
+                  categories={categories}
                   onRejectRequest={setRejectItem}
                   onPreview={setPreviewItem}
                 />
               ))}
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-3 p-16 text-center rounded-2xl border border-dashed border-border bg-card/40">
-              <div className="size-14 rounded-full bg-muted/60 text-muted-foreground flex items-center justify-center">
+            <div className="border-border bg-card/40 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-16 text-center">
+              <div className="bg-muted/60 text-muted-foreground flex size-14 items-center justify-center rounded-full">
                 <Archive className="size-7" />
               </div>
-              <div className="flex flex-col gap-1 max-w-sm">
+              <div className="flex max-w-sm flex-col gap-1">
                 <h3 className="font-heading text-lg font-semibold">Aucune capture refusée</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   L&apos;historique des captures rejetées est vide.
                 </p>
               </div>

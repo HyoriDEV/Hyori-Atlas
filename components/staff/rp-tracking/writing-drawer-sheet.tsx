@@ -3,13 +3,7 @@
 import Link from "next/link";
 import { ArrowsOutSimple, BookOpen } from "@phosphor-icons/react";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChapterReader, type ChapterItem } from "@/components/dashboard/chapter-reader";
@@ -55,7 +49,7 @@ export function WritingDrawerSheet({
       />
       <SheetContent
         side="right"
-        className="w-full sm:max-w-2xl lg:max-w-3xl flex h-full flex-col gap-0 p-0"
+        className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-2xl lg:max-w-3xl"
       >
         <SheetHeader className="border-border flex-row items-center justify-between border-b px-6 py-4">
           <div className="flex min-w-0 flex-col gap-1 pr-8">

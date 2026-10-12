@@ -63,9 +63,7 @@ export async function CharactersTab({ range }: { range: StatisticsRange }) {
         />
       </div>
 
-      <StatisticsSection
-        title="Personnages"
-      >
+      <StatisticsSection title="Personnages">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
           <ChartCard title="Statut" description="Tous les personnages créés.">
             <BarList items={stats.byStatus} showShare emptyLabel="Aucun personnage." />
@@ -77,7 +75,6 @@ export async function CharactersTab({ range }: { range: StatisticsRange }) {
             <BarList items={stats.ageBands} showShare emptyLabel="Aucun personnage en jeu." />
           </ChartCard>
         </div>
-
       </StatisticsSection>
 
       <StatisticsSection title="Écriture de trame">

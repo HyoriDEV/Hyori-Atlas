@@ -36,7 +36,7 @@ export default async function WritingPage(props: {
   if (!isWhitelisted) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-        <h1 className="font-heading shrink-0 text-2xl font-semibold">Écriture de trame</h1>
+        <h1 className="font-heading text-2xl font-semibold">Écriture de trame</h1>
         <LockedFeatureCard description="Débloqué une fois ton inscription acceptée à la whitelist." />
       </div>
     );
@@ -54,7 +54,7 @@ export default async function WritingPage(props: {
   if (!selectedCharacter) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-        <h1 className="font-heading shrink-0 text-2xl font-semibold">Écriture de trame</h1>
+        <h1 className="font-heading text-2xl font-semibold">Écriture de trame</h1>
         <LockedFeatureCard description="Aucun personnage actif trouvé. Attends que le staff t'attribue un personnage." />
       </div>
     );

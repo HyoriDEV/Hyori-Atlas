@@ -133,7 +133,7 @@ export function TicketFilters({
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher par intitulé ou joueur..."
-          className="w-72 pr-8 pl-8"
+          className="w-80 pr-8 pl-8"
         />
         {queryInput ? (
           <button
@@ -153,7 +153,10 @@ export function TicketFilters({
         onValueChange={(value) => updateParams({ category: value ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-52">
-          <SelectValue placeholder="Catégorie" />
+          <SelectValue placeholder="Catégorie">
+            {categoryItems.find((item) => item.value === (category ?? ALL_VALUE))?.label ??
+              "Catégorie"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {categoryItems.map((item) => (
@@ -170,8 +173,10 @@ export function TicketFilters({
           value={team ?? ALL_VALUE}
           onValueChange={(value) => updateParams({ team: value ?? ALL_VALUE })}
         >
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="Accès staff" />
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Accès staff">
+              {teamItems.find((item) => item.value === (team ?? ALL_VALUE))?.label ?? "Accès staff"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {teamItems.map((item) => (

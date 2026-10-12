@@ -5,10 +5,14 @@ import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { getPlayerGalleryItems } from "@/lib/services/gallery-service";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+import {
+  getActiveGalleryCategories,
+  getGalleryCategoryLabelsMap,
+} from "@/lib/gallery-category-config";
 import { PlayerGalleryView } from "@/components/player/player-gallery-view";
 
 export const metadata: Metadata = {
-  title: "Mes Captures d'Écran",
+  title: "Mes captures",
 };
 
 export default async function PlayerGalleryPage() {
@@ -22,13 +26,17 @@ export default async function PlayerGalleryPage() {
   if (!isWhitelisted) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-        <h1 className="font-heading shrink-0 text-2xl font-semibold">Mes Captures d&apos;Écran</h1>
+        <h1 className="font-heading shrink-0 text-2xl font-semibold">Mes captures</h1>
         <LockedFeatureCard description="Le partage de captures d'écran est débloqué une fois ton inscription acceptée à la whitelist." />
       </div>
     );
   }
 
-  const items = await getPlayerGalleryItems(user.id);
+  const [items, categories, categoryLabels] = await Promise.all([
+    getPlayerGalleryItems(user.id),
+    getActiveGalleryCategories(),
+    getGalleryCategoryLabelsMap(),
+  ]);
 
   const currentUser = {
     id: user.id,
@@ -42,6 +50,8 @@ export default async function PlayerGalleryPage() {
         items={items}
         currentUser={currentUser}
         submissionsEnabled={settings.gallerySubmissionsEnabled}
+        categories={categories}
+        categoryLabels={categoryLabels}
       />
     </div>
   );

@@ -140,7 +140,7 @@ export default async function StaffTeamPage(props: PageProps) {
     <div className="flex flex-col gap-6">
       {/* En-tête de la page */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">Équipe du staff</h1>
+        <h1 className="font-heading text-2xl font-semibold">Équipe du staff</h1>
         <div className="flex flex-wrap items-center gap-3">
           <StaffTeamFilters query={query} roleFilter={roleParam} />
           <AddStaffMemberDialog availablePlayers={availablePlayers} />

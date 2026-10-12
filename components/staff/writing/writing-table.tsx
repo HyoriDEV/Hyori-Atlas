@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowRight, BookOpen, ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, BookOpen, ChatCircle } from "@phosphor-icons/react";
 
 import type { StaffWritingStory } from "@/lib/services/staff-writing-service";
 import { formatDate } from "@/lib/date";
@@ -17,13 +19,7 @@ import {
 } from "@/components/ui/table";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 
-export function WritingTable({
-  stories,
-  query,
-}: {
-  stories: StaffWritingStory[];
-  query: string;
-}) {
+export function WritingTable({ stories, query }: { stories: StaffWritingStory[]; query: string }) {
   const COLUMN_COUNT = 6;
 
   return (
@@ -34,7 +30,7 @@ export function WritingTable({
           <TableHead>Volume</TableHead>
           <TableHead>Dernier chapitre</TableHead>
           <TableHead>Dernière modification</TableHead>
-          <TableHead className="text-right pr-6">Actions</TableHead>
+          <TableHead className="pr-6 text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -101,7 +97,7 @@ export function WritingTable({
                 {/* Volume */}
                 <TableCell className="whitespace-nowrap">
                   <div className="flex flex-col gap-0.5">
-                    <span className="font-medium text-sm">
+                    <span className="text-sm font-medium">
                       {story.wordCount.toLocaleString("fr-FR")} mot{story.wordCount > 1 ? "s" : ""}
                     </span>
                     <span className="text-muted-foreground text-xs">
@@ -121,12 +117,12 @@ export function WritingTable({
                 </TableCell>
 
                 {/* Date */}
-                <TableCell className="text-muted-foreground whitespace-nowrap text-sm">
+                <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                   {formatDate(story.lastUpdatedAt, { style: "chat", fallback: "—" })}
                 </TableCell>
 
                 {/* Actions */}
-                <TableCell className="text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                <TableCell className="pr-6 text-right" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-end gap-2">
                     <Button
                       size="sm"

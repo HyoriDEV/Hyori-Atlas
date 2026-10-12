@@ -13,11 +13,7 @@ import {
   resolvePageSize,
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
-import {
-  staffNavItems,
-  ticketCategoryLabels,
-  ticketSummonableTeams,
-} from "@/lib/navigation";
+import { staffNavItems, ticketCategoryLabels, ticketSummonableTeams } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import {
   DEFAULT_TICKET_VIEW,
@@ -64,10 +60,7 @@ type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = ["player", "category", "status", "activity", "created"];
 
-function getViewFilter(
-  view: TicketView,
-  unreadTicketIds: Set<string>
-): Prisma.TicketWhereInput {
+function getViewFilter(view: TicketView, unreadTicketIds: Set<string>): Prisma.TicketWhereInput {
   switch (view) {
     case "active":
       return { status: { not: TicketStatus.ARCHIVED } };
@@ -189,9 +182,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
     });
   }
 
-  const hasActiveFilters = Boolean(
-    query || category || teamFilter || noAccessGrantedOnly
-  );
+  const hasActiveFilters = Boolean(query || category || teamFilter || noAccessGrantedOnly);
 
   const [statusCounts, unreadCount, tickets] = await Promise.all([
     prisma.ticket.groupBy({

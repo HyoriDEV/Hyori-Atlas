@@ -6,11 +6,7 @@ import { Prisma } from "@/lib/generated/prisma/client";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import {
-  Role,
-  SanctionSource,
-  SanctionType,
-} from "@/lib/generated/prisma/enums";
+import { Role, SanctionSource, SanctionType } from "@/lib/generated/prisma/enums";
 import {
   DEFAULT_PAGE_SIZE_OPTIONS,
   checkRedirectWithSavedPrefs,
@@ -18,14 +14,8 @@ import {
   resolvePageSize,
 } from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
-import {
-  sanctionSourceLabels,
-  sanctionTypeLabels,
-} from "@/lib/navigation";
-import {
-  sanctionStatusBadgeVariant,
-  sanctionTypeBadgeVariant,
-} from "@/lib/atlas-status";
+import { sanctionSourceLabels, sanctionTypeLabels } from "@/lib/navigation";
+import { sanctionStatusBadgeVariant, sanctionTypeBadgeVariant } from "@/lib/atlas-status";
 
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -52,14 +42,7 @@ export const metadata: Metadata = {
 
 const DEFAULT_PAGE_SIZE = 10;
 
-type SortKey =
-  | "createdAt"
-  | "player"
-  | "type"
-  | "reason"
-  | "status"
-  | "issuedBy"
-  | "expiresAt";
+type SortKey = "createdAt" | "player" | "type" | "reason" | "status" | "issuedBy" | "expiresAt";
 
 type SortDirection = "asc" | "desc";
 
@@ -93,11 +76,7 @@ export default async function SanctionsPage(props: PageProps) {
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
   const savedPrefs = getServerPagePrefs(cookieStore, "/staff/sanctions");
-  const redirectUrl = checkRedirectWithSavedPrefs(
-    "/staff/sanctions",
-    searchParams,
-    savedPrefs
-  );
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/sanctions", searchParams, savedPrefs);
   if (redirectUrl) {
     redirect(redirectUrl);
   }
@@ -121,15 +100,9 @@ export default async function SanctionsPage(props: PageProps) {
           : "asc";
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
-  const pageSize = resolvePageSize(
-    searchParams.pageSize,
-    savedPrefs.pageSize,
-    DEFAULT_PAGE_SIZE
-  );
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
 
   const now = new Date();
-
-
 
   // Construction des conditions de filtrage
   const conditions: Prisma.SanctionWhereInput[] = [];
@@ -175,8 +148,7 @@ export default async function SanctionsPage(props: PageProps) {
     });
   }
 
-  const whereClause: Prisma.SanctionWhereInput =
-    conditions.length > 0 ? { AND: conditions } : {};
+  const whereClause: Prisma.SanctionWhereInput = conditions.length > 0 ? { AND: conditions } : {};
 
   // Récupération des sanctions avec relations
   const rawSanctions = await prisma.sanction.findMany({
@@ -214,9 +186,7 @@ export default async function SanctionsPage(props: PageProps) {
   // Calcul du statut uniforme pour chaque sanction
   const sanctionsWithStatus: SanctionRowData[] = rawSanctions.map((sanction) => {
     const isRevoked = Boolean(sanction.revokedAt);
-    const isExpired = Boolean(
-      !isRevoked && sanction.expiresAt && sanction.expiresAt <= now
-    );
+    const isExpired = Boolean(!isRevoked && sanction.expiresAt && sanction.expiresAt <= now);
     const status: "ACTIVE" | "EXPIRED" | "REVOKED" = isRevoked
       ? "REVOKED"
       : isExpired
@@ -235,15 +205,9 @@ export default async function SanctionsPage(props: PageProps) {
 
     if (sortKey === "player") {
       const nameA =
-        a.user.minecraftUsername ??
-        a.user.discordDisplayName ??
-        a.user.discordUsername ??
-        "";
+        a.user.minecraftUsername ?? a.user.discordDisplayName ?? a.user.discordUsername ?? "";
       const nameB =
-        b.user.minecraftUsername ??
-        b.user.discordDisplayName ??
-        b.user.discordUsername ??
-        "";
+        b.user.minecraftUsername ?? b.user.discordDisplayName ?? b.user.discordUsername ?? "";
       comparison = nameA.localeCompare(nameB, "fr", { sensitivity: "base" });
     } else if (sortKey === "type") {
       const rank: Record<SanctionType, number> = {
@@ -261,15 +225,9 @@ export default async function SanctionsPage(props: PageProps) {
       comparison = statusRank[a.status] - statusRank[b.status];
     } else if (sortKey === "issuedBy") {
       const issuerA =
-        a.issuedByName ??
-        a.issuedBy?.minecraftUsername ??
-        a.issuedBy?.discordDisplayName ??
-        "";
+        a.issuedByName ?? a.issuedBy?.minecraftUsername ?? a.issuedBy?.discordDisplayName ?? "";
       const issuerB =
-        b.issuedByName ??
-        b.issuedBy?.minecraftUsername ??
-        b.issuedBy?.discordDisplayName ??
-        "";
+        b.issuedByName ?? b.issuedBy?.minecraftUsername ?? b.issuedBy?.discordDisplayName ?? "";
       comparison = issuerA.localeCompare(issuerB, "fr", {
         sensitivity: "base",
       });
@@ -291,16 +249,13 @@ export default async function SanctionsPage(props: PageProps) {
   // Pagination
   const totalCount = sanctionsWithStatus.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
-  const pageSanctions = sanctionsWithStatus.slice(
-    (page - 1) * pageSize,
-    page * pageSize
-  );
+  const pageSanctions = sanctionsWithStatus.slice((page - 1) * pageSize, page * pageSize);
 
   const hasActiveFilters = Boolean(
     query ||
-      (typeParam && typeParam !== "ALL") ||
-      (statusParam && statusParam !== "ALL") ||
-      (sourceParam && sourceParam !== "ALL")
+    (typeParam && typeParam !== "ALL") ||
+    (statusParam && statusParam !== "ALL") ||
+    (sourceParam && sourceParam !== "ALL")
   );
 
   const sortHeaderProps = {
@@ -313,25 +268,17 @@ export default async function SanctionsPage(props: PageProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête */}
-      <div>
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
-          Sanctions
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Gestion et historique des avertissements, suspensions et exclusions des joueurs.
-        </p>
+      {/* En-tête avec filtres alignés */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold">Sanctions</h1>
+        <SanctionsFilters
+          query={query}
+          typeFilter={typeParam}
+          statusFilter={statusParam}
+          sourceFilter={sourceParam}
+          hasActiveSort={Boolean(rawSortKey && rawSortKey !== "createdAt")}
+        />
       </div>
-
-      {/* Barre de recherche et filtres */}
-      <SanctionsFilters
-        query={query}
-        typeFilter={typeParam}
-        statusFilter={statusParam}
-        sourceFilter={sourceParam}
-        hasActiveSort={Boolean(rawSortKey && rawSortKey !== "createdAt")}
-      />
-
 
       {/* Tableau des sanctions */}
       <Card className="gap-0 overflow-hidden py-0">
@@ -394,16 +341,13 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Date"
                 />
               </TableHead>
-              <TableHead className="w-28 text-right pr-6">Actions</TableHead>
+              <TableHead className="w-28 pr-6 text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {pageSanctions.length === 0 ? (
               <TableRow>
-                <TableCell
-                  colSpan={8}
-                  className="text-muted-foreground py-12 text-center text-sm"
-                >
+                <TableCell colSpan={8} className="text-muted-foreground py-12 text-center text-sm">
                   {hasActiveFilters
                     ? "Aucune sanction ne correspond à vos critères de recherche."
                     : "Aucune sanction enregistrée pour le moment."}
@@ -457,10 +401,7 @@ export default async function SanctionsPage(props: PageProps) {
 
                     {/* Raison / Motif */}
                     <TableCell className="max-w-[260px]">
-                      <span
-                        className="block truncate text-sm"
-                        title={sanction.reason}
-                      >
+                      <span className="block truncate text-sm" title={sanction.reason}>
                         {sanction.reason}
                       </span>
                     </TableCell>
@@ -504,9 +445,7 @@ export default async function SanctionsPage(props: PageProps) {
                           withTime: true,
                         })
                       ) : sanction.type === SanctionType.EXCLUSION ? (
-                        <span className="text-destructive font-medium">
-                          Définitive
-                        </span>
+                        <span className="text-destructive font-medium">Définitive</span>
                       ) : (
                         "—"
                       )}
@@ -521,7 +460,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Actions */}
-                    <TableCell className="text-right pr-6">
+                    <TableCell className="pr-6 text-right">
                       <SanctionRowActions sanction={sanction} />
                     </TableCell>
                   </TableRow>

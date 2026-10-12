@@ -21,12 +21,7 @@ export function RpHubHeader({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-2xl font-semibold">Suivi & Narration RP</h1>
-          <p className="text-muted-foreground text-sm">
-            Animation des salons de discussion RP et bibliothèque des trames rédigées par les joueurs.
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold">Suivi & Narration RP</h1>
       </div>
 
       <nav
@@ -39,7 +34,7 @@ export function RpHubHeader({
             "inline-flex items-center gap-2 border-b-2 px-3.5 py-2 text-sm font-medium transition-colors",
             isMessaging
               ? "border-primary text-foreground font-semibold"
-              : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+              : "text-muted-foreground hover:border-border hover:text-foreground border-transparent"
           )}
         >
           <ChatCircle className="size-4" />
@@ -57,7 +52,7 @@ export function RpHubHeader({
             "inline-flex items-center gap-2 border-b-2 px-3.5 py-2 text-sm font-medium transition-colors",
             isWriting
               ? "border-primary text-foreground font-semibold"
-              : "border-transparent text-muted-foreground hover:border-border hover:text-foreground"
+              : "text-muted-foreground hover:border-border hover:text-foreground border-transparent"
           )}
         >
           <PenNib className="size-4" />

@@ -71,7 +71,9 @@ export function CharacterSwitcher({
         </span>
         <Select value={selected.id} onValueChange={handleSelect}>
           <SelectTrigger className="h-9 min-w-[200px] text-xs sm:text-sm">
-            <SelectValue placeholder="Choisir un personnage" />
+            <SelectValue placeholder="Choisir un personnage">
+              {selected.name || "Sans nom"}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent align="end">
             {characters.map((character) => {

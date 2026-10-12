@@ -3,21 +3,13 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
-import {
-  ArrowCounterClockwise,
-  ArrowSquareOut,
-  Eye,
-  Gavel,
-} from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ArrowSquareOut, Eye, Gavel } from "@phosphor-icons/react";
 
 import { revokeSanction } from "@/lib/actions/sanction-actions";
 import { formatDate } from "@/lib/date";
 import { SanctionSource, SanctionType } from "@/lib/generated/prisma/enums";
 import { sanctionSourceLabels, sanctionTypeLabels } from "@/lib/navigation";
-import {
-  sanctionStatusBadgeVariant,
-  sanctionTypeBadgeVariant,
-} from "@/lib/atlas-status";
+import { sanctionStatusBadgeVariant, sanctionTypeBadgeVariant } from "@/lib/atlas-status";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SkinHead } from "@/components/ui/skin-head";
@@ -145,7 +137,6 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
         </Button>
       </div>
 
-
       {/* Dialog Détails */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
         <DialogContent className="max-w-lg">
@@ -167,8 +158,12 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
                 <div>
                   <div className="font-semibold">{playerDisplayName}</div>
                   <div className="text-muted-foreground text-xs">
-                    {sanction.user.minecraftUsername ? `Minecraft: ${sanction.user.minecraftUsername}` : null}
-                    {sanction.user.discordUsername ? ` · Discord: @${sanction.user.discordUsername}` : null}
+                    {sanction.user.minecraftUsername
+                      ? `Minecraft: ${sanction.user.minecraftUsername}`
+                      : null}
+                    {sanction.user.discordUsername
+                      ? ` · Discord: @${sanction.user.discordUsername}`
+                      : null}
                   </div>
                 </div>
               </div>
@@ -187,7 +182,11 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
                 {sanctionTypeLabels[sanction.type]}
               </Badge>
               <Badge variant={sanctionStatusBadgeVariant(sanction.status)}>
-                {sanction.status === "ACTIVE" ? "Active" : sanction.status === "EXPIRED" ? "Expirée" : "Levée"}
+                {sanction.status === "ACTIVE"
+                  ? "Active"
+                  : sanction.status === "EXPIRED"
+                    ? "Expirée"
+                    : "Levée"}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {sanctionSourceLabels[sanction.source]}
@@ -196,7 +195,9 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
 
             {/* Motif / Raison */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-muted-foreground text-xs font-medium">Motif de la sanction</span>
+              <span className="text-muted-foreground text-xs font-medium">
+                Motif de la sanction
+              </span>
               <div className="border-border/80 bg-background rounded-lg border p-3 font-mono text-xs whitespace-pre-wrap">
                 {sanction.reason}
               </div>
@@ -258,12 +259,7 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
                 Lever la sanction
               </Button>
             )}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setDetailsOpen(false)}
-            >
+            <Button type="button" variant="outline" size="sm" onClick={() => setDetailsOpen(false)}>
               Fermer
             </Button>
           </DialogFooter>
@@ -277,8 +273,8 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
             <AlertDialogTitle>Lever la sanction</AlertDialogTitle>
             <AlertDialogDescription>
               Êtes-vous sûr de vouloir lever cette sanction pour{" "}
-              <strong>{playerDisplayName}</strong> ? Le joueur pourra de nouveau se
-              connecter au serveur si aucune autre exclusion ou suspension n&apos;est active.
+              <strong>{playerDisplayName}</strong> ? Le joueur pourra de nouveau se connecter au
+              serveur si aucune autre exclusion ou suspension n&apos;est active.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

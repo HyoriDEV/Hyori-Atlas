@@ -92,7 +92,7 @@ export default async function GettingStartedPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-2xl font-semibold">Premier pas</h1>
+      <h1 className="font-heading text-2xl font-semibold">Premiers pas</h1>
       <div className="grid gap-6 lg:grid-cols-2">
         <div className="flex flex-col gap-6">
           <Card>

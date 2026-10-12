@@ -17,7 +17,6 @@ import {
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
 import { Card } from "@/components/ui/card";
-import { StatTile } from "@/components/dashboard/stat-tile";
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { RpHubHeader } from "@/components/staff/rp-hub/rp-hub-header";
 import { WritingFilters } from "@/components/staff/writing/writing-filters";
@@ -70,29 +69,6 @@ export default async function WritingStaffListPage(props: {
         pendingMessagesCount={counts.pending}
         totalStoriesCount={stats.totalAuthors}
       />
-
-      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-4">
-        <StatTile
-          label="Chapitres rédigés"
-          value={stats.totalChapters}
-          hint={`sur ${stats.totalAuthors} auteur${stats.totalAuthors > 1 ? "s" : ""}`}
-        />
-        <StatTile
-          label="Volume total"
-          value={stats.totalWords.toLocaleString("fr-FR")}
-          hint={stats.totalWords > 1 ? "mots rédigés" : "mot rédigé"}
-        />
-        <StatTile
-          label="Auteurs actifs"
-          value={stats.activeAuthors}
-          hint="écriture sur 30 jours"
-        />
-        <StatTile
-          label="Moyenne / chapitre"
-          value={stats.avgWordsPerChapter.toLocaleString("fr-FR")}
-          hint="mots par chapitre"
-        />
-      </div>
 
       <WritingFilters query={query} sort={sort} />
 

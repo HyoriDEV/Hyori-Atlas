@@ -221,15 +221,8 @@ export function InterviewSlotsManager({
   return (
     <div className="flex flex-col gap-6">
       {/* 1. En-tête : Titre & Actions principales */}
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div>
-          <h1 className="font-heading text-foreground text-2xl font-semibold">
-            Créneaux d&apos;entretien
-          </h1>
-          <p className="text-muted-foreground mt-1 text-xs">
-            Gérez le planning des entretiens whitelist avec les candidats acceptés.
-          </p>
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="font-heading text-2xl font-semibold">Créneaux d&apos;entretien</h1>
 
         <div className="flex items-center gap-2">
           <DropdownMenu>

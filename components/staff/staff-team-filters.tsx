@@ -160,8 +160,11 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
         value={roleFilter ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ role: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-52">
-          <SelectValue placeholder="Filtrer par rôle" />
+        <SelectTrigger className="w-56">
+          <SelectValue placeholder="Filtrer par rôle">
+            {roleFilterItems.find((item) => item.value === (roleFilter ?? ALL_VALUE))?.label ??
+              "Tous les pôles"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {roleFilterItems.map((item) => (

@@ -147,15 +147,15 @@ export function SanctionsFilters({
 
   const hasActiveFilters = Boolean(
     queryInput.trim() ||
-      (typeFilter && typeFilter !== ALL_VALUE) ||
-      (statusFilter && statusFilter !== ALL_VALUE) ||
-      (sourceFilter && sourceFilter !== ALL_VALUE)
+    (typeFilter && typeFilter !== ALL_VALUE) ||
+    (statusFilter && statusFilter !== ALL_VALUE) ||
+    (sourceFilter && sourceFilter !== ALL_VALUE)
   );
 
   return (
     <div className="flex flex-wrap items-center gap-2.5">
       {/* Barre de recherche */}
-      <div className="relative min-w-[280px] flex-1 sm:w-80 sm:flex-initial">
+      <div className="relative min-w-[280px] flex-1 sm:w-[340px] sm:flex-initial">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
         <Input
           type="text"
@@ -178,15 +178,15 @@ export function SanctionsFilters({
 
       {/* Filtre par Type */}
       <Select
+        items={typeFilterItems}
         value={typeFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ type: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[160px]">
-          {typeFilter && typeFilter !== ALL_VALUE ? (
-            <SelectValue />
-          ) : (
-            <span className="text-muted-foreground">Tous les types</span>
-          )}
+          <SelectValue placeholder="Tous les types">
+            {typeFilterItems.find((item) => item.value === (typeFilter ?? ALL_VALUE))?.label ??
+              "Tous les types"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {typeFilterItems.map((item) => (
@@ -199,15 +199,15 @@ export function SanctionsFilters({
 
       {/* Filtre par Statut */}
       <Select
+        items={statusFilterItems}
         value={statusFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ status: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[150px]">
-          {statusFilter && statusFilter !== ALL_VALUE ? (
-            <SelectValue />
-          ) : (
-            <span className="text-muted-foreground">Tous les statuts</span>
-          )}
+          <SelectValue placeholder="Tous les statuts">
+            {statusFilterItems.find((item) => item.value === (statusFilter ?? ALL_VALUE))?.label ??
+              "Tous les statuts"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {statusFilterItems.map((item) => (
@@ -220,15 +220,15 @@ export function SanctionsFilters({
 
       {/* Filtre par Source */}
       <Select
+        items={sourceFilterItems}
         value={sourceFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ source: val ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-[150px]">
-          {sourceFilter && sourceFilter !== ALL_VALUE ? (
-            <SelectValue />
-          ) : (
-            <span className="text-muted-foreground">Toutes les sources</span>
-          )}
+          <SelectValue placeholder="Toutes les sources">
+            {sourceFilterItems.find((item) => item.value === (sourceFilter ?? ALL_VALUE))?.label ??
+              "Toutes les sources"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {sourceFilterItems.map((item) => (
@@ -256,11 +256,7 @@ export function SanctionsFilters({
 
       {/* Réinitialisation du tri */}
       {hasActiveSort && (
-        <ResetSortButton
-          dirParamName="dir"
-          keyParamName="sort"
-          resetParamNames={["page"]}
-        />
+        <ResetSortButton dirParamName="dir" keyParamName="sort" resetParamNames={["page"]} />
       )}
     </div>
   );

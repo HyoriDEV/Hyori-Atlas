@@ -58,7 +58,7 @@ export default async function StaffNewsEditPage(props: { params: Promise<{ id: s
     <div className="flex flex-col gap-6">
       <div className="flex items-center gap-3">
         <AtlasBackButton href="/staff/news" />
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-2xl font-semibold">
           {initialData ? "Modifier l'actualité" : "Nouvelle actualité"}
         </h1>
       </div>

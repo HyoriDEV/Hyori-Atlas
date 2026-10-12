@@ -48,13 +48,7 @@ import { UnreadDot } from "@/components/ui/unread-dot";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-type SortKey =
-  | "player"
-  | "rpName"
-  | "sheetUpdatedAt"
-  | "sheetStatus"
-  | "playtime"
-  | "status";
+type SortKey = "player" | "rpName" | "sheetUpdatedAt" | "sheetStatus" | "playtime" | "status";
 type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = [

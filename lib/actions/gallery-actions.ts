@@ -17,6 +17,10 @@ import {
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
+import {
+  saveGalleryCategoriesConfig,
+  type GalleryCategoryItemConfig,
+} from "@/lib/gallery-category-config";
 
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads", "gallery");
 
@@ -317,3 +321,37 @@ export async function updateGalleryItemMetadataAction(
 
   return { success: true };
 }
+
+export async function updateGalleryItemCategoryAction(
+  itemId: string,
+  category: GalleryCategory
+) {
+  await requireRole([Role.ADMIN]);
+
+  await prisma.galleryItem.update({
+    where: { id: itemId },
+    data: { category },
+  });
+
+  revalidatePath("/gallery");
+  revalidatePath("/staff/gallery");
+  revalidatePath("/player/gallery");
+
+  return { success: true };
+}
+
+export async function saveGalleryCategoriesConfigAction(
+  categories: GalleryCategoryItemConfig[]
+) {
+  await requireRole([Role.ADMIN]);
+
+  await saveGalleryCategoriesConfig(categories);
+
+  revalidatePath("/staff/settings");
+  revalidatePath("/gallery");
+  revalidatePath("/player/gallery");
+  revalidatePath("/staff/gallery");
+
+  return { success: true };
+}
+
