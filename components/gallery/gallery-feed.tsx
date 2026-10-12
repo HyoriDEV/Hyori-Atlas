@@ -258,7 +258,7 @@ export function GalleryFeed({
         item={activeLightboxItem}
         items={filteredItems}
         onClose={handleCloseLightbox}
-        onNavigate={setActiveLightboxItem}
+        onNavigate={handleOpenLightbox}
         currentUserId={currentUser?.id}
         currentUserRole={currentUser?.role}
       />
