@@ -40,6 +40,7 @@ export default async function StaffLayout({ children }: { children: React.ReactN
     <AppShell
       sectionLabel="Espace Staff"
       navGroups={navGroups}
+      useFlyouts={user.role === Role.ADMIN}
       user={{
         id: user.id,
         name: user.minecraftUsername ?? user.discordUsername ?? "Staff",

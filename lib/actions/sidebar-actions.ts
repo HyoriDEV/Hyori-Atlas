@@ -3,11 +3,13 @@
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { getUnreadTickets } from "@/lib/ticket-access";
-import { backlogRoles } from "@/lib/navigation";
+import { backlogRoles, rpTrackingStaffRoles } from "@/lib/navigation";
+import { getRpTrackingStates } from "@/lib/services/rp-tracking-service";
 import {
   BacklogStatus,
   BdaReportStatus,
   CharacterStatus,
+  GalleryStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -103,6 +105,8 @@ export async function getStaffBadgeCounts(
     atlasPlayersCount,
     registeredInterviewBookingsCount,
     assignedBacklogTasksCount,
+    pendingRpTrackingCount,
+    pendingGalleryCount,
   ] = await Promise.all([
     getUnreadTickets({ id: userId, role }),
     prisma.bdaReport.count({
@@ -132,6 +136,14 @@ export async function getStaffBadgeCounts(
           },
         })
       : 0,
+    rpTrackingStaffRoles.includes(role)
+      ? getRpTrackingStates().then((res) => res.counts.pending)
+      : 0,
+    role === Role.ADMIN
+      ? prisma.galleryItem.count({
+          where: { status: GalleryStatus.PENDING },
+        })
+      : 0,
   ]);
 
   return {
@@ -140,6 +152,8 @@ export async function getStaffBadgeCounts(
     "/staff/atlas": atlasPlayersCount,
     "/staff/interview-slots": registeredInterviewBookingsCount,
     "/staff/backlog": assignedBacklogTasksCount,
+    "/staff/rp-tracking": pendingRpTrackingCount,
+    "/staff/gallery": pendingGalleryCount,
   };
 }
 

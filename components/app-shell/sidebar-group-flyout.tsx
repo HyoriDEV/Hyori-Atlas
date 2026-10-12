@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { Popover as PopoverPrimitive } from "@base-ui/react/popover";
 import { CaretRight, LockSimple } from "@phosphor-icons/react";
@@ -36,11 +36,11 @@ export function SidebarGroupFlyout({
   iconMap,
 }: SidebarGroupFlyoutProps) {
   const [open, setOpen] = useState(false);
-
-  // Fermer la pop-up immédiatement lors d'une navigation
-  useEffect(() => {
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   const groupTitle = group.title ?? "Groupe";
   const groupIconKey: NavIconKey =

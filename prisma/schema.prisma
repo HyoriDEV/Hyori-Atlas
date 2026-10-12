@@ -28,6 +28,20 @@ enum RegistrationStatus {
   REJECTED
 }
 
+enum GalleryCategory {
+  PAYSAGE
+  SCENE_RP
+  PORTRAIT
+  ARCHITECTURE
+  EVENEMENT
+}
+
+enum GalleryStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum SanctionType {
   WARNING
   SUSPENSION
@@ -177,6 +191,10 @@ model User {
   createdBacklogTasks     BacklogTask[]                 @relation("BacklogTaskCreator")
   assignedBacklogTasks    BacklogTask[]                 @relation("BacklogTaskAssignee")
   backlogActivities       BacklogActivity[]
+  galleryItems            GalleryItem[]                 @relation("GalleryAuthor")
+  reviewedGalleryItems    GalleryItem[]                 @relation("GalleryReviewer")
+  galleryLikes            GalleryLike[]                 @relation("UserGalleryLikes")
+  galleryTags             GalleryTaggedUser[]           @relation("UserGalleryTags")
 
   @@index([rpGroupId])
   @@map("users")
@@ -644,6 +662,9 @@ model GlobalSettings {
   publicRulesEnabled         Boolean   @default(true)
   publicLoreEnabled          Boolean   @default(true)
   publicGalleryEnabled       Boolean   @default(true)
+  gallerySubmissionsEnabled  Boolean   @default(true)
+  galleryAutoApprove         Boolean   @default(false)
+  galleryMaxDailyUploads     Int       @default(5)
   updatedAt                  DateTime  @updatedAt
   updatedById                String?
 
@@ -919,4 +940,63 @@ model BacklogActivity {
 
   @@index([taskId, createdAt])
   @@map("backlog_activities")
+}
+
+model GalleryItem {
+  id              String          @id @default(cuid())
+  title           String          @db.VarChar(120)
+  description     String?         @db.VarChar(1000)
+  imageUrl        String          @db.VarChar(500)
+  thumbnailUrl    String          @db.VarChar(500)
+  width           Int?
+  height          Int?
+  category        GalleryCategory @default(PAYSAGE)
+  location        String?         @db.VarChar(100)
+  shader          String?         @db.VarChar(100)
+  status          GalleryStatus   @default(PENDING)
+  rejectionReason String?         @db.VarChar(500)
+  isFeatured      Boolean         @default(false)
+  isSpoiler       Boolean         @default(false)
+  authorId        String
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  author       User                @relation("GalleryAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  reviewedBy   User?               @relation("GalleryReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+  likes        GalleryLike[]
+  taggedUsers  GalleryTaggedUser[]
+
+  @@index([status, createdAt])
+  @@index([authorId])
+  @@index([isFeatured])
+  @@index([category])
+  @@map("gallery_items")
+}
+
+model GalleryLike {
+  id            String      @id @default(cuid())
+  galleryItemId String
+  userId        String
+  createdAt     DateTime    @default(now())
+
+  galleryItem GalleryItem @relation(fields: [galleryItemId], references: [id], onDelete: Cascade)
+  user        User        @relation("UserGalleryLikes", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([galleryItemId, userId])
+  @@index([userId])
+  @@map("gallery_likes")
+}
+
+model GalleryTaggedUser {
+  galleryItemId String
+  userId        String
+
+  galleryItem GalleryItem @relation(fields: [galleryItemId], references: [id], onDelete: Cascade)
+  user        User        @relation("UserGalleryTags", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([galleryItemId, userId])
+  @@index([userId])
+  @@map("gallery_tagged_users")
 }

@@ -50,6 +50,9 @@ export const getGlobalSettings = cache(async () => {
     publicRulesEnabled?: boolean;
     publicLoreEnabled?: boolean;
     publicGalleryEnabled?: boolean;
+    gallerySubmissionsEnabled?: boolean;
+    galleryAutoApprove?: boolean;
+    galleryMaxDailyUploads?: number;
   };
 
   const s = settings as ExtendedSettings;
@@ -71,6 +74,9 @@ export const getGlobalSettings = cache(async () => {
     publicRulesEnabled: s.publicRulesEnabled ?? true,
     publicLoreEnabled: s.publicLoreEnabled ?? true,
     publicGalleryEnabled: s.publicGalleryEnabled ?? true,
+    gallerySubmissionsEnabled: s.gallerySubmissionsEnabled ?? true,
+    galleryAutoApprove: s.galleryAutoApprove ?? false,
+    galleryMaxDailyUploads: s.galleryMaxDailyUploads ?? 5,
   };
 });
 

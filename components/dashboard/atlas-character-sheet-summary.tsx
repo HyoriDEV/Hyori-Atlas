@@ -95,7 +95,7 @@ export function AtlasCharacterSheetSummary({
                   variant="outline"
                   render={
                     <Link
-                      href={`/staff/writing/${playerId}?characterId=${sheet.id}`}
+                      href={`/staff/writing/${playerId}?characterId=${sheet.id}&from=atlas`}
                       prefetch={false}
                     />
                   }

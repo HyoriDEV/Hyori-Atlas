@@ -69,11 +69,13 @@ export default async function WritingStaffDetailPage(props: {
   });
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
-  // Ouvert depuis un salon de suivi RP : le retour ramène au salon plutôt qu'à l'Atlas.
+  // Retour au bon module selon le point d'entrée
   const backHref =
     searchParams.from === "rp-tracking"
       ? `/staff/rp-tracking/${playerId}`
-      : `/staff/atlas/${playerId}`;
+      : searchParams.from === "atlas"
+        ? `/staff/atlas/${playerId}`
+        : `/staff/writing`;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">

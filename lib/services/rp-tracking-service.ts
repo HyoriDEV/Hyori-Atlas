@@ -35,11 +35,14 @@ export interface RpTrackingPlayerState {
   lastActivityAt: Date | null;
   /** Premier message du joueur resté sans réponse (état « pending » uniquement). */
   waitingSince: Date | null;
+  /** Indique si le joueur a rédigé au moins un chapitre de trame. */
+  hasWriting: boolean;
 }
 
 export interface RpTrackingStates {
   players: RpTrackingPlayerState[];
-  counts: Record<RpTrackingState, number>;
+  counts: Record<RpTrackingState, number> & { ongoing: number; all: number };
+  totalWithWriting: number;
 }
 
 const STATE_ORDER: Record<RpTrackingState, number> = {
@@ -69,7 +72,7 @@ function compareRpTrackingPlayers(a: RpTrackingPlayerState, b: RpTrackingPlayerS
  * d'abord), actifs, en sommeil, puis sans échange.
  */
 export async function getRpTrackingStates(): Promise<RpTrackingStates> {
-  const [players, messageStats] = await Promise.all([
+  const [players, messageStats, writingPlayers] = await Promise.all([
     prisma.user.findMany({
       where: { registrationStatus: RegistrationStatus.WHITELISTED },
       select: {
@@ -92,7 +95,16 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       _count: { _all: true },
       _max: { createdAt: true },
     }),
+    prisma.chapter.findMany({
+      where: {
+        player: { registrationStatus: RegistrationStatus.WHITELISTED },
+      },
+      distinct: ["playerId"],
+      select: { playerId: true },
+    }),
   ]);
+
+  const writingPlayerIds = new Set(writingPlayers.map((w) => w.playerId));
 
   const statsByConversation = new Map<
     string,
@@ -148,6 +160,7 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       lastStaffMessageAt: lastStaffAt,
       lastActivityAt,
       waitingSince: null,
+      hasWriting: writingPlayerIds.has(player.id),
     };
   });
 
@@ -178,12 +191,20 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
 
   states.sort(compareRpTrackingPlayers);
 
-  const counts: Record<RpTrackingState, number> = { pending: 0, recent: 0, dormant: 0, none: 0 };
+  const counts: Record<RpTrackingState, number> & { ongoing: number; all: number } = {
+    pending: 0,
+    recent: 0,
+    dormant: 0,
+    none: 0,
+    ongoing: 0,
+    all: states.length,
+  };
   for (const entry of states) {
     counts[entry.state] += 1;
   }
+  counts.ongoing = counts.pending + counts.recent;
 
-  return { players: states, counts };
+  return { players: states, counts, totalWithWriting: writingPlayerIds.size };
 }
 
 export interface RpTrackingPlayerContext {

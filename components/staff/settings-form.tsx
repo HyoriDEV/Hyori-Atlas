@@ -34,6 +34,9 @@ interface SettingsFormProps {
     publicRulesEnabled?: boolean;
     publicLoreEnabled?: boolean;
     publicGalleryEnabled?: boolean;
+    gallerySubmissionsEnabled?: boolean;
+    galleryAutoApprove?: boolean;
+    galleryMaxDailyUploads?: number;
   };
   initialDiscordTemplates?: DiscordTemplateData[];
 }
@@ -244,6 +247,32 @@ export function SettingsForm({ defaultValues, initialDiscordTemplates = [] }: Se
               label="Page Galerie (/gallery)"
               defaultChecked={defaultValues.publicGalleryEnabled ?? true}
             />
+            <SettingRow
+              name="gallerySubmissionsEnabled"
+              label="Autoriser les soumissions de captures par les joueurs whitelistés"
+              defaultChecked={defaultValues.gallerySubmissionsEnabled ?? true}
+            />
+            <SettingRow
+              name="galleryAutoApprove"
+              label="Publication automatique (sans validation préalable du staff)"
+              defaultChecked={defaultValues.galleryAutoApprove ?? false}
+            />
+            <div className="flex items-center justify-between p-4">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">Limite quotidienne par joueur</span>
+                <span className="text-muted-foreground text-xs">
+                  Nombre maximum de captures qu&apos;un joueur peut soumettre par jour
+                </span>
+              </div>
+              <input
+                type="number"
+                name="galleryMaxDailyUploads"
+                min="1"
+                max="50"
+                defaultValue={defaultValues.galleryMaxDailyUploads ?? 5}
+                className="border-input bg-background w-20 rounded-md border px-3 py-1.5 text-right text-sm font-medium"
+              />
+            </div>
           </div>
         </TabsContent>
 

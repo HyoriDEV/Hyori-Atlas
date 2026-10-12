@@ -23,6 +23,7 @@ import {
   ChartBar,
   Gavel,
   Kanban,
+  Image as PhosphorImage,
 } from "@phosphor-icons/react/dist/ssr";
 import type { VariantProps } from "class-variance-authority";
 
@@ -52,6 +53,7 @@ const iconMap: Record<NavIconKey | "user" | "shield-check", typeof Flag> = {
   chart: ChartBar,
   gavel: Gavel,
   kanban: Kanban,
+  image: PhosphorImage,
 };
 
 export interface DashboardStatCardProps {

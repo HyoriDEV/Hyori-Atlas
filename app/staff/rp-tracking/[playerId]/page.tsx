@@ -88,6 +88,23 @@ export default async function RpTrackingStaffDetailPage({
   const messages = conversation.messages || [];
   const playerContext = (await getRpTrackingPlayerContexts([playerId])).get(playerId);
 
+  const chapters =
+    playerContext?.character?.id && playerContext.writing.chapterCount > 0
+      ? await prisma.chapter.findMany({
+          where: {
+            playerId,
+            characterSheetId: playerContext.character.id,
+          },
+          orderBy: { order: "asc" },
+          select: {
+            id: true,
+            title: true,
+            content: true,
+            order: true,
+          },
+        })
+      : [];
+
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
 
   return (
@@ -111,7 +128,14 @@ export default async function RpTrackingStaffDetailPage({
         </Link>
       </div>
 
-      {playerContext && <WritingSummaryBanner playerId={playerId} context={playerContext} />}
+      {playerContext && (
+        <WritingSummaryBanner
+          playerId={playerId}
+          playerName={playerName}
+          context={playerContext}
+          chapters={chapters}
+        />
+      )}
 
       <ConversationChat
         conversationId={conversation.id}

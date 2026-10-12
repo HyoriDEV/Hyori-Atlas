@@ -1,16 +1,20 @@
-import Link from "next/link";
-import { ArrowRight, PenNib } from "@phosphor-icons/react/dist/ssr";
+import { PenNib } from "@phosphor-icons/react/dist/ssr";
 
 import { formatDate } from "@/lib/date";
 import type { RpTrackingPlayerContext } from "@/lib/services/rp-tracking-service";
-import { Button } from "@/components/ui/button";
+import type { ChapterItem } from "@/components/dashboard/chapter-reader";
+import { WritingDrawerSheet } from "@/components/staff/rp-tracking/writing-drawer-sheet";
 
 export function WritingSummaryBanner({
   playerId,
+  playerName,
   context,
+  chapters = [],
 }: {
   playerId: string;
+  playerName: string;
   context: RpTrackingPlayerContext;
+  chapters?: ChapterItem[];
 }) {
   const { character, writing, lastConnectedAt } = context;
   const hasChapters = writing.chapterCount > 0;
@@ -56,19 +60,15 @@ export function WritingSummaryBanner({
       </div>
 
       {character && hasChapters && (
-        <Button
-          size="sm"
-          variant="outline"
-          render={
-            <Link
-              href={`/staff/writing/${playerId}?characterId=${character.id}&from=rp-tracking`}
-              prefetch={false}
-            />
-          }
-        >
-          Lire la trame
-          <ArrowRight className="size-3.5" />
-        </Button>
+        <WritingDrawerSheet
+          playerId={playerId}
+          playerName={playerName}
+          characterName={character.name || "Personnage"}
+          characterClassName={character.className}
+          characterId={character.id}
+          chapters={chapters}
+          wordCount={writing.wordCount}
+        />
       )}
     </div>
   );
