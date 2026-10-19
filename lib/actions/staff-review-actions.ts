@@ -371,4 +371,3 @@ export async function rejectWhitelistPlayer(userId: string) {
     discordNotified,
   };
 }
-

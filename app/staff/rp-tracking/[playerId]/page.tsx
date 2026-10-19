@@ -1,9 +1,19 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import {
+  CharacterStatus,
+  ConversationType,
+  MessageAuthorType,
+  RegistrationStatus,
+  SanctionType,
+} from "@/lib/generated/prisma/enums";
+import { characterSheetReviewerRoles, rpTrackingStaffRoles } from "@/lib/navigation";
+import { serializeConversationMessage } from "@/lib/conversation";
+import { markConversationAsRead } from "@/lib/actions/conversation-actions";
+import { RpTrackingWorkspace } from "@/components/staff/rp-tracking/rp-tracking-workspace";
 
 export async function generateMetadata({
   params,
@@ -22,28 +32,42 @@ export async function generateMetadata({
     title: playerName ? `Suivi RP : ${playerName}` : "Suivi RP joueur",
   };
 }
-import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enums";
-import { rpTrackingStaffRoles } from "@/lib/navigation";
-import { serializeConversationMessage } from "@/lib/conversation";
-import { sendStaffConversationMessage } from "@/lib/actions/rp-tracking-actions";
-import { getRpTrackingPlayerContexts } from "@/lib/services/rp-tracking-service";
-import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
-import { ConversationChat } from "@/components/conversations/conversation-chat";
-import { WritingSummaryBanner } from "@/components/staff/rp-tracking/writing-summary-banner";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SkinHead } from "@/components/ui/skin-head";
 
-export default async function RpTrackingStaffDetailPage({
-  params,
-}: {
+export default async function RpTrackingStaffDetailPage(props: {
   params: Promise<{ playerId: string }>;
+  searchParams: Promise<{ characterId?: string }>;
 }) {
-  const { playerId } = await params;
+  const { playerId } = await props.params;
+  const searchParams = await props.searchParams;
   const staffUser = await requireRole(rpTrackingStaffRoles);
 
-  const player = await prisma.user.findUnique({ where: { id: playerId } });
+  const player = await prisma.user.findUnique({
+    where: { id: playerId },
+    include: {
+      sanctions: {
+        where: {
+          type: SanctionType.EXCLUSION,
+          revokedAt: null,
+        },
+      },
+      characterSheets: {
+        orderBy: { createdAt: "desc" },
+        include: {
+          primaryClass: true,
+          primaryRole: true,
+          secondaryClass: true,
+          secondaryRole: true,
+        },
+      },
+    },
+  });
 
-  if (!player || player.registrationStatus !== RegistrationStatus.WHITELISTED) {
+  // Les joueurs exclus ou non whitelistés ne doivent pas apparaître dans les interfaces de suivi RP
+  if (
+    !player ||
+    player.registrationStatus !== RegistrationStatus.WHITELISTED ||
+    player.sanctions.length > 0
+  ) {
     notFound();
   }
 
@@ -53,6 +77,13 @@ export default async function RpTrackingStaffDetailPage({
       members: { some: { userId: playerId } },
     },
     include: {
+      lastHandledBy: {
+        select: {
+          id: true,
+          minecraftUsername: true,
+          discordDisplayName: true,
+        },
+      },
       messages: {
         include: {
           author: true,
@@ -75,6 +106,13 @@ export default async function RpTrackingStaffDetailPage({
         },
       },
       include: {
+        lastHandledBy: {
+          select: {
+            id: true,
+            minecraftUsername: true,
+            discordDisplayName: true,
+          },
+        },
         messages: {
           include: {
             author: true,
@@ -85,67 +123,91 @@ export default async function RpTrackingStaffDetailPage({
     });
   }
 
+  // Marquer automatiquement la conversation comme lue par le staff dès consultation
+  await markConversationAsRead(conversation.id, true);
+
   const messages = conversation.messages || [];
-  const playerContext = (await getRpTrackingPlayerContexts([playerId])).get(playerId);
 
-  const chapters =
-    playerContext?.character?.id && playerContext.writing.chapterCount > 0
-      ? await prisma.chapter.findMany({
-          where: {
-            playerId,
-            characterSheetId: playerContext.character.id,
-          },
-          orderBy: { order: "asc" },
-          select: {
-            id: true,
-            title: true,
-            content: true,
-            order: true,
-          },
-        })
-      : [];
+  // Sélection du personnage actif ou filtré
+  const selectedCharacter =
+    (searchParams.characterId
+      ? player.characterSheets.find((c) => c.id === searchParams.characterId)
+      : null) ??
+    player.characterSheets.find((c) => c.status === CharacterStatus.ACTIVE) ??
+    player.characterSheets[0] ??
+    null;
 
-  const playerName = player.minecraftUsername ?? player.discordDisplayName;
+  // Chapitres de narration du personnage
+  const chapters = await prisma.chapter.findMany({
+    where: {
+      playerId,
+      ...(selectedCharacter ? { characterSheetId: selectedCharacter.id } : {}),
+    },
+    orderBy: { order: "asc" },
+    select: {
+      id: true,
+      title: true,
+      content: true,
+      order: true,
+    },
+  });
+
+  const playerName =
+    player.minecraftUsername ?? player.discordDisplayName ?? player.discordUsername;
+
+  // Calcul du statut de traitement
+  const lastPlayerMessage = messages.find((m) => m.authorType === MessageAuthorType.PLAYER);
+  const lastStaffMessage = messages.find((m) => m.authorType === MessageAuthorType.STAFF);
+
+  const lastPlayerTime = lastPlayerMessage ? new Date(lastPlayerMessage.createdAt).getTime() : 0;
+  const lastStaffTime = lastStaffMessage ? new Date(lastStaffMessage.createdAt).getTime() : 0;
+  const lastHandledTime = conversation.lastHandledAt
+    ? new Date(conversation.lastHandledAt).getTime()
+    : 0;
+
+  const isPending = Boolean(
+    lastPlayerTime > 0 && lastStaffTime < lastPlayerTime && lastHandledTime < lastPlayerTime
+  );
+
+  const isHandledWithoutReply =
+    !isPending && lastHandledTime > 0 && (lastStaffTime === 0 || lastHandledTime > lastStaffTime);
+
+  const lastHandledByName =
+    conversation.lastHandledBy?.minecraftUsername ??
+    conversation.lastHandledBy?.discordDisplayName ??
+    null;
+
+  const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 items-center gap-3">
-        <AtlasBackButton href="/staff/rp-tracking" />
-        <Link
-          href={`/staff/atlas/${player.id}`}
-          className="font-heading hover:text-primary flex items-center gap-2.5 text-lg font-semibold transition-opacity hover:opacity-85"
-          title={`Voir la fiche Atlas de ${playerName}`}
-        >
-          {player.minecraftUsername ? (
-            <SkinHead size="sm" username={player.minecraftUsername} />
-          ) : (
-            <Avatar size="sm">
-              <AvatarImage src={player.discordAvatarUrl ?? undefined} alt={playerName} />
-              <AvatarFallback>{playerName.charAt(0).toUpperCase()}</AvatarFallback>
-            </Avatar>
-          )}
-          <span className="hover:underline">{playerName}</span>
-        </Link>
-      </div>
-
-      {playerContext && (
-        <WritingSummaryBanner
-          playerId={playerId}
-          playerName={playerName}
-          context={playerContext}
-          chapters={chapters}
-        />
-      )}
-
-      <ConversationChat
-        conversationId={conversation.id}
-        initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true))}
-        viewerId={staffUser.id}
-        viewerIsStaff
-        sendAction={sendStaffConversationMessage}
-        emptyBadge="Début du suivi RP."
-        className="min-h-0 flex-1"
-      />
-    </div>
+    <RpTrackingWorkspace
+      conversationId={conversation.id}
+      initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true))}
+      viewerId={staffUser.id}
+      player={{
+        id: player.id,
+        playerName,
+        minecraftUsername: player.minecraftUsername,
+        discordDisplayName: player.discordDisplayName,
+        discordUsername: player.discordUsername,
+        discordAvatarUrl: player.discordAvatarUrl,
+      }}
+      handledState={{
+        isPending,
+        isHandledWithoutReply,
+        lastHandledAt: conversation.lastHandledAt ? conversation.lastHandledAt.toISOString() : null,
+        lastHandledByName,
+      }}
+      characters={player.characterSheets.map((c) => ({
+        id: c.id,
+        name: c.name,
+        status: c.status,
+        reviewStatus: c.reviewStatus,
+        createdAt: c.createdAt,
+      }))}
+      selectedCharacter={selectedCharacter}
+      chapters={chapters}
+      canReviewSheet={canReviewSheet}
+    />
   );
 }

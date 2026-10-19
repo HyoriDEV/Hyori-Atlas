@@ -403,6 +403,63 @@ export async function notifyPlayerTicketMessage(
   );
 }
 
+export interface RpTrackingMessageNotificationOptions {
+  discordId: string;
+  authorName: string;
+  characterName?: string | null;
+  messagePreview?: string | null;
+  customRpTrackingUrl?: string;
+  override?: DiscordEmbedOverride | null;
+}
+
+/**
+ * Notifie le joueur par message privé Discord lors de la réception d'un nouveau message staff sur son suivi RP.
+ */
+export async function notifyPlayerRpTrackingMessage(
+  options: RpTrackingMessageNotificationOptions
+): Promise<BotNotificationResult> {
+  const rpTrackingUrl = options.customRpTrackingUrl || getPlayerSpaceUrl(`/player/rp-tracking`);
+
+  let effectiveOverride = options.override;
+  if (effectiveOverride === undefined) {
+    effectiveOverride = await getEffectiveDiscordOverride("RP_TRACKING_MESSAGE", {
+      author: options.authorName,
+      preview: options.messagePreview ?? "",
+      characterName: options.characterName ?? "",
+      url: rpTrackingUrl,
+    }).catch(() => null);
+  }
+
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/rp-tracking-message",
+    "POST",
+    {
+      discordId: options.discordId,
+      authorName: options.authorName,
+      characterName: options.characterName ?? undefined,
+      messagePreview: options.messagePreview ?? undefined,
+      rpTrackingUrl,
+      override: effectiveOverride ?? undefined,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "RP tracking notification sent successfully",
+    }
+  );
+}
+
 export interface TicketCreatedNotificationOptions {
   channelId?: string | null;
   mentionRoleId?: string | null;
@@ -715,8 +772,7 @@ export interface WaitlistRegistrationNotificationOptions {
 export async function notifyWaitlistRegistration(
   options: WaitlistRegistrationNotificationOptions
 ): Promise<BotNotificationResult> {
-  const waitlistStaffUrl =
-    options.customWaitlistStaffUrl || `${getAtlasBaseUrl()}/staff/waitlist`;
+  const waitlistStaffUrl = options.customWaitlistStaffUrl || `${getAtlasBaseUrl()}/staff/waitlist`;
 
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/waitlist-registration",
@@ -766,10 +822,7 @@ export async function notifyWaitlistRegistrationForUser(user: {
   const { getChannelNotificationConfig } = await import("./discord-template-service");
 
   const playerName =
-    user.discordDisplayName ||
-    user.discordUsername ||
-    user.minecraftUsername ||
-    "Un joueur";
+    user.discordDisplayName || user.discordUsername || user.minecraftUsername || "Un joueur";
   const waitlistStaffUrl = `${getAtlasBaseUrl()}/staff/waitlist`;
 
   const config = await getChannelNotificationConfig("WAITLIST_REGISTRATION", {
@@ -799,4 +852,3 @@ export async function notifyWaitlistRegistrationForUser(user: {
     override: config.override,
   });
 }
-

@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { AtlasEvaluateSheetButton } from "@/components/dashboard/atlas-evaluate-sheet-button";
 import { AtlasReopenSheetButton } from "@/components/dashboard/atlas-reopen-sheet-button";
 import { CHARACTER_CLASSES } from "@/lib/character-classes";
+import { BookOpen, ChatCircle } from "@phosphor-icons/react/dist/ssr";
 
 interface CharacterSheetSummaryData extends SkillValues {
   id: string;
@@ -59,11 +60,15 @@ export function AtlasCharacterSheetSummary({
   playerId,
   pseudo,
   canReview,
+  rpTracking,
+  chapterCount = 0,
 }: {
   sheet: CharacterSheetSummaryData | null;
   playerId: string;
   pseudo?: string;
   canReview: boolean;
+  rpTracking?: { conversationId: string; isPending: boolean } | null;
+  chapterCount?: number;
 }) {
   const isValidated = sheet?.reviewStatus === CharacterSheetStatus.VALIDATED;
 
@@ -84,31 +89,43 @@ export function AtlasCharacterSheetSummary({
           )}
         </div>
         {sheet && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {canReview && isValidated && (
               <AtlasReopenSheetButton sheetId={sheet.id} pseudo={pseudo ?? sheet.name} />
             )}
-            {isValidated ? (
-              <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  render={
-                    <Link
-                      href={`/staff/writing/${playerId}?characterId=${sheet.id}&from=atlas`}
-                      prefetch={false}
-                    />
-                  }
-                >
-                  Lire la narration
-                </Button>
-                <AtlasEvaluateSheetButton
-                  playerId={playerId}
-                  sheetId={sheet.id}
-                  label="Lire la fiche"
-                />
-              </>
-            ) : canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
+            {rpTracking && (
+              <Button
+                size="sm"
+                variant={rpTracking.isPending ? "default" : "outline"}
+                render={<Link href={`/staff/rp-tracking/${playerId}`} prefetch={false} />}
+                className="gap-2"
+              >
+                <ChatCircle className="size-3.5" />
+                <span>Suivi RP</span>
+                {rpTracking.isPending && (
+                  <Badge variant="secondary" className="px-1 text-[10px] leading-tight">
+                    À traiter
+                  </Badge>
+                )}
+              </Button>
+            )}
+            {chapterCount > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                render={
+                  <Link
+                    href={`/staff/rp-tracking/${playerId}?tab=writing&characterId=${sheet.id}`}
+                    prefetch={false}
+                  />
+                }
+                className="gap-2"
+              >
+                <BookOpen className="size-3.5" />
+                <span>Narration ({chapterCount})</span>
+              </Button>
+            )}
+            {canReview && sheet.reviewStatus === CharacterSheetStatus.PENDING_STAFF ? (
               <AtlasEvaluateSheetButton playerId={playerId} sheetId={sheet.id} label="Évaluer" />
             ) : (
               <AtlasEvaluateSheetButton

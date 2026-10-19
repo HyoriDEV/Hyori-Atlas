@@ -321,11 +321,13 @@ export const staffRulesItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const galleryRoles: Role[] = [Role.ADMIN, Role.EVENT, Role.RP_TRACKING];
+
 export const staffGalleryItem: StaffNavItem = {
   label: "Galerie",
   href: "/staff/gallery",
   iconKey: "image",
-  roles: [Role.ADMIN],
+  roles: galleryRoles,
   fullWidth: true,
 };
 
@@ -373,11 +375,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Modération",
         iconKey: "shield",
-        items: [
-          staffTicketsItem,
-          staffBdaReportsItem,
-          staffSanctionsItem,
-        ],
+        items: [staffTicketsItem, staffBdaReportsItem, staffSanctionsItem],
       },
       backlogStandaloneGroup,
       {
@@ -438,6 +436,11 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
         title: "Gestion RP",
         iconKey: "users",
         items: [staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
+      },
+      {
+        title: "Contenu",
+        iconKey: "newspaper",
+        items: [staffGalleryItem],
       },
     ];
   }

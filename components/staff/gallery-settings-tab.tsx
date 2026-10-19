@@ -21,23 +21,16 @@ interface GallerySettingsTabProps {
   initialCategories: GalleryCategoryItemConfig[];
 }
 
-export function GallerySettingsTab({
-  defaultValues,
-  initialCategories,
-}: GallerySettingsTabProps) {
+export function GallerySettingsTab({ defaultValues, initialCategories }: GallerySettingsTabProps) {
   const [categories, setCategories] = useState<GalleryCategoryItemConfig[]>(initialCategories);
   const [isPendingCategories, startCategoriesTransition] = useTransition();
 
   const handleToggleCategory = (id: string, enabled: boolean) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? { ...cat, enabled } : cat))
-    );
+    setCategories((prev) => prev.map((cat) => (cat.id === id ? { ...cat, enabled } : cat)));
   };
 
   const handleLabelChange = (id: string, label: string) => {
-    setCategories((prev) =>
-      prev.map((cat) => (cat.id === id ? { ...cat, label } : cat))
-    );
+    setCategories((prev) => prev.map((cat) => (cat.id === id ? { ...cat, label } : cat)));
   };
 
   const handleSaveCategories = () => {
@@ -101,18 +94,17 @@ export function GallerySettingsTab({
 
       {/* 2. GESTION DES CATÉGORIES STAFF */}
       <Card>
-        <CardHeader className="p-4 sm:p-6 pb-2">
+        <CardHeader className="p-4 pb-2 sm:p-6">
           <div className="flex items-center gap-2">
             <Tag className="text-primary size-5" />
-            <CardTitle className="text-base font-semibold">
-              Catégories de la galerie
-            </CardTitle>
+            <CardTitle className="text-base font-semibold">Catégories de la galerie</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Activez ou désactivez les catégories disponibles pour les joueurs et personnalisez leurs libellés affichés sur le site.
+            Activez ou désactivez les catégories disponibles pour les joueurs et personnalisez leurs
+            libellés affichés sur le site.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4 p-4 sm:p-6 pt-2">
+        <CardContent className="space-y-4 p-4 pt-2 sm:p-6">
           <div className="bg-muted/20 divide-border divide-y rounded-lg border">
             {categories.map((cat) => (
               <div
@@ -126,12 +118,12 @@ export function GallerySettingsTab({
                     id={`cat-switch-${cat.id}`}
                   />
                   <div className="flex flex-col">
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {cat.id}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground font-mono text-xs">{cat.id}</span>
+                    <span className="text-muted-foreground text-xs">
                       {cat.enabled ? (
-                        <span className="text-emerald-600 dark:text-emerald-400 font-medium">Active</span>
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          Active
+                        </span>
                       ) : (
                         <span>Désactivée</span>
                       )}
@@ -140,7 +132,10 @@ export function GallerySettingsTab({
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <label htmlFor={`cat-label-${cat.id}`} className="text-xs text-muted-foreground sm:sr-only">
+                  <label
+                    htmlFor={`cat-label-${cat.id}`}
+                    className="text-muted-foreground text-xs sm:sr-only"
+                  >
                     Libellé :
                   </label>
                   <Input
@@ -149,7 +144,7 @@ export function GallerySettingsTab({
                     onChange={(e) => handleLabelChange(cat.id, e.target.value)}
                     disabled={!cat.enabled}
                     placeholder="Libellé affiché"
-                    className="h-8 w-full sm:w-48 text-sm"
+                    className="h-8 w-full text-sm sm:w-48"
                   />
                 </div>
               </div>
@@ -201,9 +196,7 @@ function SettingRow({
     >
       <div className="flex flex-col gap-0.5">
         <span className="text-sm font-medium">{label}</span>
-        {description && (
-          <span className="text-muted-foreground text-xs">{description}</span>
-        )}
+        {description && <span className="text-muted-foreground text-xs">{description}</span>}
       </div>
       <div onClick={(e) => e.stopPropagation()} className="flex items-center">
         <Switch

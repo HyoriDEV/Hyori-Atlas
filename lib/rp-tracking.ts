@@ -54,4 +54,3 @@ export const DEFAULT_RP_TRACKING_WRITING_FILTER: RpTrackingWritingFilter = "all"
 export const RP_TRACKING_VIEWS = ["all", ...RP_TRACKING_STATES] as const;
 export type RpTrackingView = (typeof RP_TRACKING_VIEWS)[number];
 export const DEFAULT_RP_TRACKING_VIEW: RpTrackingView = "all";
-

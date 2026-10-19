@@ -39,9 +39,14 @@ export default async function GalleryPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête standard */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-heading text-2xl font-semibold">Galerie</h1>
+      {/* En-tête harmonisé avec le design éditorial */}
+      <div className="border-border/60 flex flex-wrap items-end justify-between gap-4 border-b pb-6">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="font-heading text-3xl tracking-tight sm:text-[40px]">Galerie</h1>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Moments forts, paysages et récits visuels capturés par la communauté de Hyori RP.
+          </p>
+        </div>
         <GalleryUploadDialog
           currentUser={currentUser}
           submissionsEnabled={settings.gallerySubmissionsEnabled}

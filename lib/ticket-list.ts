@@ -8,4 +8,3 @@ export type TicketView = (typeof TICKET_VIEWS)[number];
 export const DEFAULT_TICKET_VIEW: TicketView = "active";
 
 export const TICKET_TEAM_FILTER_NONE = "NONE";
-

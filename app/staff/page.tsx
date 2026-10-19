@@ -8,6 +8,7 @@ import {
   BacklogStatus,
   BdaReportStatus,
   CharacterSheetStatus,
+  GalleryStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -17,6 +18,7 @@ import {
 import {
   allStaffRoles,
   backlogRoles,
+  galleryRoles,
   getStaffNavGroups,
   rpManagementRoles,
   rpTrackingStaffRoles,
@@ -58,6 +60,7 @@ export default async function StaffDashboardPage() {
   const canAccessBacklog = backlogAccessRoles.includes(user.role);
   const canAccessGroups = rpManagementRoles.includes(user.role);
   const canAccessAdminModules = adminOnlyRoles.includes(user.role);
+  const canAccessGallery = galleryRoles.includes(user.role);
 
   const ticketWhereBase = ticketAccessWhere(user);
 
@@ -80,6 +83,7 @@ export default async function StaffDashboardPage() {
     rulesCount,
     staffMembersCount,
     activeSanctionsCount,
+    pendingGalleryCount,
   ] = await Promise.all([
     prisma.ticket.count({
       where: { AND: [ticketWhereBase, { status: TicketStatus.PENDING_STAFF }] },
@@ -151,6 +155,11 @@ export default async function StaffDashboardPage() {
               { expiresAt: { gt: new Date() } },
             ],
           },
+        })
+      : 0,
+    canAccessGallery
+      ? prisma.galleryItem.count({
+          where: { status: GalleryStatus.PENDING },
         })
       : 0,
   ]);
@@ -323,6 +332,21 @@ export default async function StaffDashboardPage() {
       stat: rulesCount,
       statLabel: rulesCount > 1 ? "articles" : "article",
     },
+    "/staff/gallery": {
+      title: "Galerie",
+      description: "Modération des captures partagées.",
+      href: "/staff/gallery",
+      iconKey: "image",
+      stat: pendingGalleryCount,
+      statLabel: pendingGalleryCount > 1 ? "en attente" : "en attente",
+      badge:
+        pendingGalleryCount > 0
+          ? {
+              label: `${pendingGalleryCount} à modérer`,
+              variant: "destructive",
+            }
+          : undefined,
+    },
     "/staff/staff-team": {
       title: "Équipe staff",
       description: "Permissions et rôles de l'équipe.",
@@ -378,6 +402,11 @@ export default async function StaffDashboardPage() {
     unreadBdaReportsCount > 0 && {
       label: `${unreadBdaReportsCount} dossier${unreadBdaReportsCount > 1 ? "s" : ""} GC non lu${unreadBdaReportsCount > 1 ? "s" : ""}`,
       href: "/staff/bda-reports",
+      variant: "destructive" as const,
+    },
+    pendingGalleryCount > 0 && {
+      label: `${pendingGalleryCount} capture${pendingGalleryCount > 1 ? "s" : ""} à modérer`,
+      href: "/staff/gallery",
       variant: "destructive" as const,
     },
     pendingSheetsCount > 0 && {

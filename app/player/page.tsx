@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 import {
   CharacterSheetStatus,
   CharacterStatus,
+  GalleryStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
@@ -71,7 +72,7 @@ export default async function PlayerDashboardPage() {
 
   const characterSheet = latestSheet;
 
-  const [activeTicketsCount, pendingStaffTicketsCount, latestBooking, chapterCount] =
+  const [activeTicketsCount, pendingStaffTicketsCount, latestBooking, chapterCount, galleryCount] =
     await Promise.all([
       prisma.ticket.count({
         where: {
@@ -93,6 +94,11 @@ export default async function PlayerDashboardPage() {
       isWhitelisted && characterSheet
         ? prisma.chapter.count({
             where: { playerId: user.id, characterSheetId: characterSheet.id },
+          })
+        : 0,
+      isWhitelisted
+        ? prisma.galleryItem.count({
+            where: { authorId: user.id, status: GalleryStatus.APPROVED },
           })
         : 0,
     ]);
@@ -296,6 +302,19 @@ export default async function PlayerDashboardPage() {
             iconKey="chat"
             stat={isWhitelisted ? "Actif" : null}
             statLabel={isWhitelisted ? "Canal ouvert" : null}
+            locked={!isWhitelisted}
+            lockedDescription="Débloqué après validation de la whitelist."
+          />
+
+          <DashboardStatCard
+            title="Mes captures"
+            description="Galerie et partage de tes captures d'écran."
+            href="/player/gallery"
+            iconKey="image"
+            stat={isWhitelisted ? galleryCount : null}
+            statLabel={
+              isWhitelisted ? (galleryCount > 1 ? "captures publiées" : "capture publiée") : null
+            }
             locked={!isWhitelisted}
             lockedDescription="Débloqué après validation de la whitelist."
           />

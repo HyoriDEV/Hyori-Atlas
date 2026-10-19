@@ -21,6 +21,7 @@ import {
   saveGalleryCategoriesConfig,
   type GalleryCategoryItemConfig,
 } from "@/lib/gallery-category-config";
+import { galleryRoles } from "@/lib/navigation";
 
 const UPLOADS_ROOT = path.join(process.cwd(), "public", "uploads", "gallery");
 
@@ -200,7 +201,7 @@ export async function reviewGalleryItemAction({
   rejectionReason?: string;
 }) {
   // Règle stricte validée : Seuls les Administrateurs gèrent la galerie
-  const staff = await requireRole([Role.ADMIN]);
+  const staff = await requireRole(galleryRoles);
 
   await prisma.galleryItem.update({
     where: { id: itemId },
@@ -220,7 +221,7 @@ export async function reviewGalleryItemAction({
 }
 
 export async function toggleFeaturedGalleryItemAction(itemId: string) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(galleryRoles);
 
   const item = await prisma.galleryItem.findUnique({
     where: { id: itemId },
@@ -253,8 +254,8 @@ export async function deleteGalleryItemAction(itemId: string) {
     throw new Error("Capture introuvable.");
   }
 
-  // Seul l'auteur ou un Administrateur peut supprimer
-  if (item.authorId !== user.id && user.role !== Role.ADMIN) {
+  // Seul l'auteur ou un rôle autorisé de la galerie peut supprimer
+  if (item.authorId !== user.id && !galleryRoles.includes(user.role as Role)) {
     throw new Error("Tu n'as pas l'autorisation de supprimer cette capture.");
   }
 
@@ -322,11 +323,8 @@ export async function updateGalleryItemMetadataAction(
   return { success: true };
 }
 
-export async function updateGalleryItemCategoryAction(
-  itemId: string,
-  category: GalleryCategory
-) {
-  await requireRole([Role.ADMIN]);
+export async function updateGalleryItemCategoryAction(itemId: string, category: GalleryCategory) {
+  await requireRole(galleryRoles);
 
   await prisma.galleryItem.update({
     where: { id: itemId },
@@ -340,9 +338,7 @@ export async function updateGalleryItemCategoryAction(
   return { success: true };
 }
 
-export async function saveGalleryCategoriesConfigAction(
-  categories: GalleryCategoryItemConfig[]
-) {
+export async function saveGalleryCategoriesConfigAction(categories: GalleryCategoryItemConfig[]) {
   await requireRole([Role.ADMIN]);
 
   await saveGalleryCategoriesConfig(categories);
@@ -354,4 +350,3 @@ export async function saveGalleryCategoriesConfigAction(
 
   return { success: true };
 }
-

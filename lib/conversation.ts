@@ -26,9 +26,7 @@ export function serializeConversationMessage(
       : message.author
         ? (message.author.minecraftUsername ?? message.author.discordDisplayName)
         : null,
-    authorMinecraftUsername: isAnonymizedStaff
-      ? null
-      : (message.author?.minecraftUsername ?? null),
+    authorMinecraftUsername: isAnonymizedStaff ? null : (message.author?.minecraftUsername ?? null),
     authorAvatarUrl: isAnonymizedStaff
       ? "/HYORI-LOGO-COMPRESSED.jpg"
       : (message.author?.discordAvatarUrl ?? null),

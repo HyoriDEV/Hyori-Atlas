@@ -189,9 +189,12 @@ export async function transferDiscordAccount({
 
   // Récupération des informations fraîches Discord via l'API
   const profileData = await fetchDiscordProfileFromApi(cleanDiscordId);
-  const newDisplayName = profileData?.global_name ?? profileData?.username ?? targetPlayer.discordDisplayName;
+  const newDisplayName =
+    profileData?.global_name ?? profileData?.username ?? targetPlayer.discordDisplayName;
   const newUsername = profileData?.username ?? targetPlayer.discordUsername;
-  const newAvatarUrl = profileData ? buildDiscordAvatarUrl(profileData) : targetPlayer.discordAvatarUrl;
+  const newAvatarUrl = profileData
+    ? buildDiscordAvatarUrl(profileData)
+    : targetPlayer.discordAvatarUrl;
 
   await prisma.$transaction(async (tx) => {
     // 1. Si un compte orphelin sans données existait déjà avec ce nouveau Discord ID, on le supprime

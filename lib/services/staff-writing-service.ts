@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { ConversationType, RegistrationStatus } from "@/lib/generated/prisma/enums";
+import { ConversationType, RegistrationStatus, SanctionType } from "@/lib/generated/prisma/enums";
 import { countWords } from "@/lib/text-stats";
 
 export interface StaffWritingStats {
@@ -47,6 +47,12 @@ export async function getStaffWritingStats(): Promise<StaffWritingStats> {
       where: {
         player: {
           registrationStatus: RegistrationStatus.WHITELISTED,
+          sanctions: {
+            none: {
+              type: SanctionType.EXCLUSION,
+              revokedAt: null,
+            },
+          },
         },
       },
       select: {
@@ -60,6 +66,12 @@ export async function getStaffWritingStats(): Promise<StaffWritingStats> {
         updatedAt: { gte: thirtyDaysAgo },
         player: {
           registrationStatus: RegistrationStatus.WHITELISTED,
+          sanctions: {
+            none: {
+              type: SanctionType.EXCLUSION,
+              revokedAt: null,
+            },
+          },
         },
       },
       distinct: ["playerId"],
@@ -109,6 +121,12 @@ export async function getStaffWritingStories(options: {
     where: {
       player: {
         registrationStatus: RegistrationStatus.WHITELISTED,
+        sanctions: {
+          none: {
+            type: SanctionType.EXCLUSION,
+            revokedAt: null,
+          },
+        },
       },
       chapters: {
         some: {}, // Au moins un chapitre
@@ -188,7 +206,8 @@ export async function getStaffWritingStories(options: {
         return (
           story.playerName.toLocaleLowerCase("fr").includes(query) ||
           story.characterName.toLocaleLowerCase("fr").includes(query) ||
-          (story.lastChapterTitle && story.lastChapterTitle.toLocaleLowerCase("fr").includes(query)) ||
+          (story.lastChapterTitle &&
+            story.lastChapterTitle.toLocaleLowerCase("fr").includes(query)) ||
           (story.characterClassName &&
             story.characterClassName.toLocaleLowerCase("fr").includes(query))
         );

@@ -3,12 +3,13 @@
 import { getCurrentUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { getUnreadTickets } from "@/lib/ticket-access";
-import { backlogRoles, rpTrackingStaffRoles } from "@/lib/navigation";
+import { backlogRoles, galleryRoles, rpTrackingStaffRoles } from "@/lib/navigation";
 import { getRpTrackingStates } from "@/lib/services/rp-tracking-service";
 import {
   BacklogStatus,
   BdaReportStatus,
   CharacterStatus,
+  ConversationType,
   GalleryStatus,
   InterviewBookingStatus,
   RegistrationStatus,
@@ -89,9 +90,40 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
     return lastMessage.createdAt > readThreshold;
   }).length;
 
+  const userRpConversation = await prisma.conversation.findFirst({
+    where: {
+      type: ConversationType.RP_TRACKING,
+      members: { some: { userId } },
+    },
+    select: {
+      members: {
+        where: { userId },
+        select: { lastReadAt: true, joinedAt: true },
+      },
+      messages: {
+        where: {
+          deletedAt: null,
+          authorId: { not: userId },
+        },
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { createdAt: true },
+      },
+    },
+  });
+
+  const rpMember = userRpConversation?.members[0];
+  const lastRpMessage = userRpConversation?.messages[0];
+  const unreadRpTracking =
+    lastRpMessage &&
+    lastRpMessage.createdAt > (rpMember?.lastReadAt ?? rpMember?.joinedAt ?? new Date(0))
+      ? 1
+      : 0;
+
   return {
     "/player/character-sheet": staffCommentsCount,
     "/player/tickets": unreadTicketsCount,
+    "/player/rp-tracking": unreadRpTracking,
   };
 }
 
@@ -139,7 +171,7 @@ export async function getStaffBadgeCounts(
     rpTrackingStaffRoles.includes(role)
       ? getRpTrackingStates().then((res) => res.counts.pending)
       : 0,
-    role === Role.ADMIN
+    galleryRoles.includes(role)
       ? prisma.galleryItem.count({
           where: { status: GalleryStatus.PENDING },
         })
