@@ -141,12 +141,12 @@ export function RpTrackingWorkspace({
         </div>
       )}
 
-      {/* Espace de travail Principal (70% Trame - 30% Chat de suivi) */}
+      {/* Espace de travail Principal (60% Trame - 40% Chat de suivi) */}
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-10">
         {/* ========================================================= */}
-        {/* TRAME DE NARRATION (70%)                                   */}
+        {/* TRAME DE NARRATION (60%)                                   */}
         {/* ========================================================= */}
-        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[45%] lg:col-span-7">
+        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[45%] lg:col-span-6">
           {chapters.length > 0 ? (
             <ChapterReader chapters={chapters} />
           ) : (
@@ -165,9 +165,9 @@ export function RpTrackingWorkspace({
         </div>
 
         {/* ========================================================= */}
-        {/* CHAT DE SUIVI RP (30%)                                     */}
+        {/* CHAT DE SUIVI RP (40%)                                     */}
         {/* ========================================================= */}
-        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[55%] lg:col-span-3">
+        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[55%] lg:col-span-4">
           <ConversationChat
             conversationId={conversationId}
             initialMessages={initialMessages}
