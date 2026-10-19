@@ -151,6 +151,7 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         href: "/player/rp-tracking",
         iconKey: "chat",
         requiredStatus: RegistrationStatus.WHITELISTED,
+        fullWidth: true,
       },
       {
         label: "Tickets",
