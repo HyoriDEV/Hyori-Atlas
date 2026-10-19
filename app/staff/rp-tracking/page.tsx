@@ -318,7 +318,7 @@ export default async function RpTrackingStaffListPage(props: {
                     <TableCell className="text-muted-foreground whitespace-nowrap">
                       {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
                     </TableCell>
-                    <TableCell className="pr-6 text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="pr-6 text-right">
                       {player.conversationId ? (
                         <MarkHandledButton
                           conversationId={player.conversationId}
