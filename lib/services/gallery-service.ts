@@ -20,7 +20,64 @@ const AUTHOR_SELECT = {
   minecraftUuid: true,
   minecraftAvatarUrl: true,
   minecraftSkinUpdatedAt: true,
+  characterSheets: {
+    orderBy: [{ status: "asc" as const }, { createdAt: "desc" as const }],
+    select: {
+      name: true,
+    },
+    take: 1,
+  },
 };
+
+interface AuthorWithSheets {
+  id: string;
+  discordDisplayName: string | null;
+  discordUsername: string | null;
+  discordAvatarUrl?: string | null;
+  minecraftUsername: string | null;
+  minecraftUuid: string | null;
+  minecraftAvatarUrl?: string | null;
+  minecraftSkinUpdatedAt?: Date | string | null;
+  characterSheets?: { name: string }[];
+}
+
+interface TaggedUserWithSheets {
+  user: AuthorWithSheets;
+}
+
+function formatGalleryItem<
+  T extends {
+    author: AuthorWithSheets;
+    _count?: { likes: number };
+    likes?: { id: string }[] | false;
+    taggedUsers?: TaggedUserWithSheets[];
+  },
+>(item: T, currentUserId?: string) {
+  return {
+    ...item,
+    likeCount: item._count?.likes ?? 0,
+    isLikedByCurrentUser: currentUserId
+      ? Array.isArray(item.likes)
+        ? item.likes.length > 0
+        : false
+      : false,
+    author: {
+      ...item.author,
+      characterName: item.author?.characterSheets?.[0]?.name ?? null,
+      characterSheets: undefined,
+    },
+    taggedUsers: item.taggedUsers?.map((t) => ({
+      ...t,
+      user: {
+        ...t.user,
+        characterName: t.user?.characterSheets?.[0]?.name ?? null,
+        characterSheets: undefined,
+      },
+    })),
+    likes: undefined,
+    _count: undefined,
+  };
+}
 
 export async function getApprovedGalleryItems(options: GalleryFilterOptions = {}) {
   const { category, search, sort = "recent", currentUserId } = options;
@@ -84,13 +141,7 @@ export async function getApprovedGalleryItems(options: GalleryFilterOptions = {}
     },
   });
 
-  return items.map((item) => ({
-    ...item,
-    likeCount: item._count.likes,
-    isLikedByCurrentUser: currentUserId ? (item.likes?.length ?? 0) > 0 : false,
-    likes: undefined,
-    _count: undefined,
-  }));
+  return items.map((item) => formatGalleryItem(item, currentUserId));
 }
 
 export async function getFeaturedGalleryItem(currentUserId?: string) {
@@ -156,13 +207,7 @@ export async function getFeaturedGalleryItem(currentUserId?: string) {
 
   if (!item) return null;
 
-  return {
-    ...item,
-    likeCount: item._count.likes,
-    isLikedByCurrentUser: currentUserId ? (item.likes?.length ?? 0) > 0 : false,
-    likes: undefined,
-    _count: undefined,
-  };
+  return formatGalleryItem(item, currentUserId);
 }
 
 export async function getGalleryItemById(id: string, currentUserId?: string) {
@@ -199,13 +244,7 @@ export async function getGalleryItemById(id: string, currentUserId?: string) {
 
   if (!item) return null;
 
-  return {
-    ...item,
-    likeCount: item._count.likes,
-    isLikedByCurrentUser: currentUserId ? (item.likes?.length ?? 0) > 0 : false,
-    likes: undefined,
-    _count: undefined,
-  };
+  return formatGalleryItem(item, currentUserId);
 }
 
 export async function getPlayerGalleryItems(userId: string) {
@@ -229,11 +268,7 @@ export async function getPlayerGalleryItems(userId: string) {
     },
   });
 
-  return items.map((item) => ({
-    ...item,
-    likeCount: item._count.likes,
-    _count: undefined,
-  }));
+  return items.map((item) => formatGalleryItem(item));
 }
 
 export async function getStaffGalleryItems(status?: GalleryStatus, search?: string) {
@@ -281,11 +316,7 @@ export async function getStaffGalleryItems(status?: GalleryStatus, search?: stri
     },
   });
 
-  return items.map((item) => ({
-    ...item,
-    likeCount: item._count.likes,
-    _count: undefined,
-  }));
+  return items.map((item) => formatGalleryItem(item));
 }
 
 export async function getPendingGalleryCount(): Promise<number> {

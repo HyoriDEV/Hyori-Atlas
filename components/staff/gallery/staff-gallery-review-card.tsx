@@ -187,7 +187,18 @@ export function StaffGalleryReviewCard({
               avatarUrl={item.author.minecraftAvatarUrl}
               updatedAt={item.author.minecraftSkinUpdatedAt}
             />
-            <span className="text-foreground font-medium">{authorName}</span>
+            {item.author.characterName ? (
+              <span className="text-foreground font-medium">
+                {item.author.characterName}{" "}
+                {item.author.minecraftUsername && (
+                  <span className="text-muted-foreground font-normal">
+                    ({item.author.minecraftUsername})
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="text-foreground font-medium">{authorName}</span>
+            )}
             <span>•</span>
             <span>
               {formatDate(item.createdAt, {

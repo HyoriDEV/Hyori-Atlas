@@ -20,6 +20,7 @@ export interface GalleryCardAuthor {
   minecraftUuid: string | null;
   minecraftAvatarUrl?: string | null;
   minecraftSkinUpdatedAt?: Date | string | null;
+  characterName?: string | null;
 }
 
 export interface GalleryCardItem {
@@ -110,12 +111,12 @@ export function GalleryCard({
   const isMaskedSpoiler = item.isSpoiler && !spoilerRevealed;
 
   return (
-    <div
+    <article
       onClick={handleCardClick}
-      className="group bg-card text-card-foreground border-border hover:border-primary/50 relative flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-xs transition-colors"
+      className="group bg-card text-card-foreground border-border/70 hover:border-primary/50 relative flex cursor-pointer flex-col overflow-hidden rounded-xl border shadow-xs transition-all duration-300 hover:shadow-md"
     >
-      {/* Conteneur image 16:9 standard */}
-      <div className="bg-muted/40 relative aspect-video w-full overflow-hidden">
+      {/* Conteneur image épuré sans rien dessus */}
+      <div className="bg-muted/30 relative aspect-video w-full overflow-hidden">
         <Image
           src={item.thumbnailUrl || item.imageUrl}
           alt={item.title}
@@ -123,85 +124,106 @@ export function GalleryCard({
           priority={priority}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className={cn(
-            "object-cover transition-transform duration-300",
-            isMaskedSpoiler ? "scale-105 blur-md" : "group-hover:scale-103"
+            "object-cover transition-transform duration-500 ease-out",
+            isMaskedSpoiler ? "scale-105 blur-md" : "group-hover:scale-[1.025]"
           )}
         />
 
-        {/* Masque Spoiler RP */}
+        {/* Masque Spoiler RP uniquement si non révélé */}
         {isMaskedSpoiler && (
-          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 bg-black/60 p-4 text-center text-white backdrop-blur-xs">
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 bg-black/65 p-4 text-center text-white backdrop-blur-xs">
             <WarningCircle className="size-5 text-amber-400" />
             <span className="text-xs font-semibold">Spoiler RP</span>
             <span className="text-[11px] text-white/80">Cliquer pour révéler</span>
           </div>
         )}
-
-        {/* Badges Supérieurs */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-2.5">
-          <Badge
-            variant="secondary"
-            className="border-border/40 bg-background/80 text-foreground text-[11px] font-medium backdrop-blur-md"
-          >
-            {categoryLabel}
-          </Badge>
-
-          {item.isSpoiler && spoilerRevealed && (
-            <Badge
-              variant="outline"
-              className="border-amber-500/40 bg-black/70 text-[10px] font-medium text-amber-400 backdrop-blur-md"
-            >
-              Spoiler
-            </Badge>
-          )}
-        </div>
-
-        {/* Bouton Like flottant */}
-        <button
-          type="button"
-          onClick={handleLike}
-          disabled={isPending}
-          aria-label={liked ? "Ne plus aimer" : "Aimer"}
-          className={cn(
-            "absolute right-2.5 bottom-2.5 z-20 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-colors",
-            liked
-              ? "bg-rose-500 text-white shadow-xs"
-              : "bg-background/80 text-foreground hover:bg-background border-border/60 border hover:text-rose-500"
-          )}
-        >
-          <Heart
-            className={cn("size-3.5 transition-transform", liked && "scale-105 fill-current")}
-          />
-          <span>{likesCount}</span>
-        </button>
       </div>
 
-      {/* Détails de la carte */}
-      <div className="flex flex-col gap-2 p-3.5">
-        <div className="flex flex-col gap-1">
-          <h3 className="font-heading text-foreground group-hover:text-primary line-clamp-1 text-sm font-semibold tracking-tight transition-colors">
-            {item.title}
-          </h3>
-          {item.description && (
-            <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
-              {item.description}
-            </p>
-          )}
+      {/* Détails et métadonnées sous l'image */}
+      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
+        <div className="flex flex-col gap-2">
+          {/* Ligne catégorie & Like */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              <Badge
+                variant="secondary"
+                className="border-border/50 bg-muted/60 text-muted-foreground text-[11px] font-normal"
+              >
+                {categoryLabel}
+              </Badge>
+
+              {item.isSpoiler && spoilerRevealed && (
+                <Badge
+                  variant="outline"
+                  className="border-amber-500/40 text-[10px] font-medium text-amber-500"
+                >
+                  Spoiler
+                </Badge>
+              )}
+            </div>
+
+            {/* Bouton Like élégant sous l'image */}
+            <button
+              type="button"
+              onClick={handleLike}
+              disabled={isPending}
+              aria-label={liked ? "Ne plus aimer" : "Aimer"}
+              className={cn(
+                "flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                liked
+                  ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20"
+                  : "text-muted-foreground hover:bg-muted hover:text-rose-500"
+              )}
+            >
+              <Heart
+                className={cn("size-3.5 transition-transform", liked && "scale-110 fill-current")}
+              />
+              <span className="font-mono text-xs">{likesCount}</span>
+            </button>
+          </div>
+
+          {/* Titre et description */}
+          <div className="flex flex-col gap-1">
+            <h3 className="font-heading text-foreground group-hover:text-primary line-clamp-1 text-base font-semibold tracking-tight transition-colors">
+              {item.title}
+            </h3>
+            {item.description && (
+              <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
+                {item.description}
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* Footer avec Auteur & Date */}
-        <div className="border-border/60 mt-1 flex items-center justify-between border-t pt-2 text-xs">
-          <div className="flex items-center gap-2 overflow-hidden">
+        {/* Pied de carte avec Auteur (Nom RP + Pseudo Minecraft) & Date */}
+        <div className="border-border/60 mt-1 flex items-center justify-between border-t pt-2.5 text-xs">
+          <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             <SkinHead
               size="sm"
               username={item.author.minecraftUsername}
               uuid={item.author.minecraftUuid}
               avatarUrl={item.author.minecraftAvatarUrl}
               updatedAt={item.author.minecraftSkinUpdatedAt}
+              className="shrink-0"
             />
-            <span className="text-muted-foreground group-hover:text-foreground line-clamp-1 font-medium transition-colors">
-              {authorName}
-            </span>
+            <div className="flex min-w-0 items-baseline gap-1.5 overflow-hidden">
+              {item.author.characterName ? (
+                <>
+                  <span className="text-foreground line-clamp-1 font-medium">
+                    {item.author.characterName}
+                  </span>
+                  {item.author.minecraftUsername && (
+                    <span className="text-muted-foreground line-clamp-1 shrink-0 text-[11px]">
+                      ({item.author.minecraftUsername})
+                    </span>
+                  )}
+                </>
+              ) : (
+                <span className="text-muted-foreground group-hover:text-foreground line-clamp-1 font-medium transition-colors">
+                  {authorName}
+                </span>
+              )}
+            </div>
           </div>
 
           <span className="text-muted-foreground shrink-0 text-[11px]">
@@ -213,6 +235,6 @@ export function GalleryCard({
           </span>
         </div>
       </div>
-    </div>
+    </article>
   );
 }
