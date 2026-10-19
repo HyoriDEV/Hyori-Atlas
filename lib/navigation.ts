@@ -151,6 +151,7 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         href: "/player/rp-tracking",
         iconKey: "chat",
         requiredStatus: RegistrationStatus.WHITELISTED,
+        fullWidth: true,
       },
       {
         label: "Tickets",
@@ -346,15 +347,15 @@ export const staffNavItems: StaffNavItem[] = [
   staffBdaReportsItem,
   staffSanctionsItem,
   staffBacklogItem,
-  staffRpGroupsItem,
   staffRpTrackingItem,
+  staffRpGroupsItem,
   staffDistributionItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
   staffInterviewGuideItem,
+  staffGalleryItem,
   staffNewsItem,
   staffRulesItem,
-  staffGalleryItem,
   staffStaffTeamItem,
   staffStatisticsItem,
   staffSettingsItem,
@@ -381,7 +382,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
+        items: [staffRpTrackingItem, staffRpGroupsItem, staffDistributionItem],
       },
       {
         title: "Admission",
@@ -391,7 +392,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Contenu",
         iconKey: "newspaper",
-        items: [staffNewsItem, staffRulesItem, staffGalleryItem],
+        items: [staffGalleryItem, staffNewsItem, staffRulesItem],
       },
       {
         title: "Administration",
@@ -435,7 +436,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpGroupsItem, staffRpTrackingItem, staffDistributionItem],
+        items: [staffRpTrackingItem, staffRpGroupsItem, staffDistributionItem],
       },
       {
         title: "Contenu",
