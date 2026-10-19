@@ -352,9 +352,9 @@ export const staffNavItems: StaffNavItem[] = [
   staffWaitlistItem,
   staffInterviewSlotsItem,
   staffInterviewGuideItem,
+  staffGalleryItem,
   staffNewsItem,
   staffRulesItem,
-  staffGalleryItem,
   staffStaffTeamItem,
   staffStatisticsItem,
   staffSettingsItem,
@@ -391,7 +391,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Contenu",
         iconKey: "newspaper",
-        items: [staffNewsItem, staffRulesItem, staffGalleryItem],
+        items: [staffGalleryItem, staffNewsItem, staffRulesItem],
       },
       {
         title: "Administration",
