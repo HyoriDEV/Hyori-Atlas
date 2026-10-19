@@ -107,4 +107,3 @@ export async function getChannelNotificationConfig(
  * Alias de compatibilité pour les notifications de tickets.
  */
 export const getTicketChannelNotificationConfig = getChannelNotificationConfig;
-

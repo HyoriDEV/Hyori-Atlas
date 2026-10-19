@@ -10,6 +10,7 @@ export type DiscordTemplateId =
   | "TICKET_CREATED"
   | TicketSummonTemplateId
   | "TICKET_MESSAGE"
+  | "RP_TRACKING_MESSAGE"
   | "REGISTRATION_ACCEPTED"
   | "REGISTRATION_WHITELISTED"
   | "REGISTRATION_REJECTED"
@@ -22,7 +23,7 @@ export type DiscordTemplateId =
 export interface DefaultTemplateConfig {
   id: DiscordTemplateId;
   label: string;
-  category: "ticket" | "registration" | "character_sheet" | "interview";
+  category: "ticket" | "registration" | "character_sheet" | "interview" | "rp_tracking";
   defaultTitle: string;
   defaultDescription: string;
   defaultButtonLabel: string;
@@ -92,6 +93,21 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
       { key: "{subject}", description: "Sujet du ticket" },
       { key: "{preview}", description: "Aperçu textuel du message" },
       { key: "{url}", description: "Lien direct vers le ticket du joueur" },
+    ],
+  },
+  RP_TRACKING_MESSAGE: {
+    id: "RP_TRACKING_MESSAGE",
+    label: "Nouveau message de suivi RP (MP Joueur)",
+    category: "rp_tracking",
+    defaultTitle: "Suivi RP — Nouveau message de l'équipe",
+    defaultDescription:
+      "Un nouveau message a été posté par **{author}** dans votre suivi RP.\n\n> {preview}\n\nRendez-vous sur votre espace joueur pour consulter l'échange et y répondre.",
+    defaultButtonLabel: "Consulter mon suivi RP",
+    availableVariables: [
+      { key: "{author}", description: "Auteur du message (L'équipe staff)" },
+      { key: "{preview}", description: "Aperçu textuel du message" },
+      { key: "{characterName}", description: "Nom du personnage RP" },
+      { key: "{url}", description: "Lien direct vers le suivi RP du joueur" },
     ],
   },
   REGISTRATION_ACCEPTED: {

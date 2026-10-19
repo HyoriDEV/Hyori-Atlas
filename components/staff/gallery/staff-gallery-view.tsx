@@ -17,12 +17,14 @@ import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
 interface StaffGalleryViewProps {
   initialItems: StaffGalleryItem[];
   currentUserId: string;
+  currentUserRole?: string;
   categories: GalleryCategoryItemConfig[];
 }
 
 export function StaffGalleryView({
   initialItems,
   currentUserId,
+  currentUserRole,
   categories,
 }: StaffGalleryViewProps) {
   const items = initialItems;
@@ -216,7 +218,7 @@ export function StaffGalleryView({
         onClose={() => setPreviewItem(null)}
         onNavigate={(it) => setPreviewItem(it as StaffGalleryItem)}
         currentUserId={currentUserId}
-        currentUserRole="ADMIN"
+        currentUserRole={currentUserRole}
       />
     </div>
   );

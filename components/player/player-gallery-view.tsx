@@ -2,21 +2,13 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import {
-  Clock,
-  CheckCircle,
-  XCircle,
-  Heart,
-  Trash,
-  Sparkle,
-  Images,
-  Eye,
-} from "@phosphor-icons/react";
+import { Clock, CheckCircle, XCircle, Heart, Trash, Images, Eye } from "@phosphor-icons/react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { GalleryUploadDialog } from "@/components/gallery/gallery-upload-dialog";
 import { GalleryLightbox } from "@/components/gallery/gallery-lightbox";
 import { GalleryCardItem, GALLERY_CATEGORY_LABELS } from "@/components/gallery/gallery-card";
+import { GalleryEditDialog } from "@/components/player/gallery-edit-dialog";
 import { deleteGalleryItemAction } from "@/lib/actions/gallery-actions";
 import { GalleryStatus, GalleryCategory } from "@/lib/generated/prisma/enums";
 import { formatDate } from "@/lib/date";
@@ -49,10 +41,6 @@ export function PlayerGalleryView({
   const [previewItem, setPreviewItem] = useState<PlayerGalleryItem | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  const publishedCount = items.filter((i) => i.status === GalleryStatus.APPROVED).length;
-  const pendingCount = items.filter((i) => i.status === GalleryStatus.PENDING).length;
-  const totalLikes = items.reduce((acc, curr) => acc + curr.likeCount, 0);
-
   const handleDelete = (id: string, title: string) => {
     if (!confirm(`Supprimer la capture "${title}" ?`)) return;
 
@@ -68,9 +56,14 @@ export function PlayerGalleryView({
 
   return (
     <div className="flex flex-col gap-6">
-      {/* En-tête */}
+      {/* En-tête épuré et aligné */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-heading text-2xl font-semibold">Mes captures</h1>
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold">Mes captures</h1>
+          <p className="text-muted-foreground text-xs">
+            Gérez vos clichés et suivez leur statut de modération.
+          </p>
+        </div>
 
         <GalleryUploadDialog
           currentUser={currentUser}
@@ -79,33 +72,7 @@ export function PlayerGalleryView({
         />
       </div>
 
-      {/* Cartes Métriques */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <div className="border-border bg-card flex flex-col gap-1 rounded-lg border p-4 shadow-xs">
-          <span className="text-muted-foreground text-xs font-medium">Total soumises</span>
-          <span className="text-foreground font-mono text-2xl font-bold">{items.length}</span>
-        </div>
-        <div className="border-border bg-card flex flex-col gap-1 rounded-lg border p-4 shadow-xs">
-          <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            Publiées
-          </span>
-          <span className="font-mono text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-            {publishedCount}
-          </span>
-        </div>
-        <div className="border-border bg-card flex flex-col gap-1 rounded-lg border p-4 shadow-xs">
-          <span className="text-xs font-medium text-amber-600 dark:text-amber-400">En attente</span>
-          <span className="font-mono text-2xl font-bold text-amber-600 dark:text-amber-400">
-            {pendingCount}
-          </span>
-        </div>
-        <div className="border-border bg-card flex flex-col gap-1 rounded-lg border p-4 shadow-xs">
-          <span className="text-xs font-medium text-rose-500">Likes reçus</span>
-          <span className="font-mono text-2xl font-bold text-rose-500">{totalLikes}</span>
-        </div>
-      </div>
-
-      {/* Liste des Captures */}
+      {/* Liste des Captures au format 16:9 */}
       {items.length > 0 ? (
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((item) => {
@@ -117,12 +84,12 @@ export function PlayerGalleryView({
             return (
               <div
                 key={item.id}
-                className="border-border bg-card flex flex-col overflow-hidden rounded-lg border shadow-xs transition-colors hover:border-primary/50"
+                className="border-border bg-card hover:border-primary/50 flex flex-col overflow-hidden rounded-lg border shadow-xs transition-colors"
               >
-                {/* Image Preview */}
+                {/* Image Preview 16:9 standard */}
                 <div
                   onClick={() => setPreviewItem(item)}
-                  className="group relative aspect-[16/10] w-full cursor-pointer overflow-hidden bg-black/40"
+                  className="group relative aspect-video w-full cursor-pointer overflow-hidden bg-black/40"
                 >
                   <Image
                     src={item.thumbnailUrl || item.imageUrl}
@@ -153,19 +120,13 @@ export function PlayerGalleryView({
                       </Badge>
                     )}
                   </div>
-
-                  {item.isFeatured && (
-                    <Badge className="absolute top-2.5 right-2.5 flex items-center gap-1 bg-amber-400 text-xs font-semibold text-amber-950 shadow-xs">
-                      <Sparkle className="size-3 fill-current" /> Coup de cœur
-                    </Badge>
-                  )}
                 </div>
 
                 {/* Détails */}
                 <div className="flex flex-1 flex-col justify-between gap-3 p-3.5">
                   <div className="flex flex-col gap-1.5">
                     <div className="text-muted-foreground flex items-center justify-between text-xs">
-                      <span className="font-medium text-foreground">{catLabel}</span>
+                      <span className="text-foreground font-medium">{catLabel}</span>
                       <span>
                         {formatDate(item.createdAt, {
                           style: "prefix-long",
@@ -199,16 +160,19 @@ export function PlayerGalleryView({
                       <span>{item.likeCount}</span>
                     </div>
 
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => handleDelete(item.id, item.title)}
-                      disabled={isPending}
-                      className="size-7 p-0 text-muted-foreground hover:text-destructive"
-                      title="Supprimer la capture"
-                    >
-                      <Trash className="size-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <GalleryEditDialog item={item} categories={categories} />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleDelete(item.id, item.title)}
+                        disabled={isPending}
+                        className="text-muted-foreground hover:text-destructive size-7 p-0"
+                        title="Supprimer la capture"
+                      >
+                        <Trash className="size-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -223,7 +187,15 @@ export function PlayerGalleryView({
           <div className="flex max-w-sm flex-col gap-1">
             <h3 className="font-heading text-lg font-semibold">Aucune capture partagée</h3>
             <p className="text-muted-foreground text-sm">
-              Vous n&apos;avez pas encore envoyé de captures d&apos;écran. Partagez dès maintenant vos plus beaux moments sur Hyori RP !
+              Vous n&apos;avez pas encore envoyé de captures d&apos;écran. Partagez dès maintenant
+              vos plus beaux moments sur Hyori RP !
+            </p>
+            <p className="text-muted-foreground/75 pt-1 text-xs">
+              Astuce : activez la touche{" "}
+              <kbd className="border-border bg-muted rounded border px-1 py-0.5 font-mono text-[10px]">
+                F1
+              </kbd>{" "}
+              en jeu pour masquer votre interface avant de prendre un cliché.
             </p>
           </div>
         </div>

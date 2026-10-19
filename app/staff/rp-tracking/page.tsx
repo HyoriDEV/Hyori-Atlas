@@ -48,12 +48,12 @@ import {
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
-import { RpHubHeader } from "@/components/staff/rp-hub/rp-hub-header";
 import { RpTrackingFilters } from "@/components/staff/rp-tracking/rp-tracking-filters";
+import { MarkHandledButton } from "@/components/staff/rp-tracking/mark-handled-button";
 
 const DEFAULT_PAGE_SIZE = 10;
 const LAST_MESSAGE_PREVIEW_LENGTH = 90;
-const COLUMN_COUNT = 7;
+const COLUMN_COUNT = 8;
 
 const stateBadgeVariant: Record<RpTrackingState, "default" | "secondary" | "outline"> = {
   pending: "default",
@@ -100,7 +100,7 @@ export default async function RpTrackingStaffListPage(props: {
       ? (savedPrefs.writing as RpTrackingWritingFilter)
       : DEFAULT_RP_TRACKING_WRITING_FILTER;
 
-  const { players, counts, totalWithWriting } = await getRpTrackingStates();
+  const { players, counts } = await getRpTrackingStates();
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
   let filteredPlayers = players;
@@ -141,11 +141,15 @@ export default async function RpTrackingStaffListPage(props: {
 
   return (
     <div className="flex flex-col gap-6">
-      <RpHubHeader
-        activeTab="messaging"
-        pendingMessagesCount={counts.pending}
-        totalStoriesCount={totalWithWriting}
-      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-heading text-2xl font-semibold">Suivi & Narration RP</h1>
+          <p className="text-muted-foreground text-sm">
+            Espace centralisé pour le suivi des échanges en direct et des trames écrites des
+            joueurs.
+          </p>
+        </div>
+      </div>
 
       <RpTrackingFilters
         query={query}
@@ -165,6 +169,7 @@ export default async function RpTrackingStaffListPage(props: {
               <TableHead>Trame écrite</TableHead>
               <TableHead>Dernière connexion</TableHead>
               <TableHead>Dernière activité</TableHead>
+              <TableHead className="w-12 pr-6 text-right">Traité</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -250,15 +255,28 @@ export default async function RpTrackingStaffListPage(props: {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={stateBadgeVariant[player.state]}
-                        className={cn(
-                          "text-xs",
-                          player.state === "none" && "text-muted-foreground"
-                        )}
-                      >
-                        {rpTrackingStateLabels[player.state]}
-                      </Badge>
+                      {player.isHandledWithoutReply ? (
+                        <div className="flex flex-col gap-0.5">
+                          <Badge variant="secondary" className="w-fit text-xs font-medium">
+                            Traité
+                          </Badge>
+                          {player.lastHandledByName && (
+                            <span className="text-muted-foreground text-[10px]">
+                              par {player.lastHandledByName}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <Badge
+                          variant={stateBadgeVariant[player.state]}
+                          className={cn(
+                            "text-xs",
+                            player.state === "none" && "text-muted-foreground"
+                          )}
+                        >
+                          {rpTrackingStateLabels[player.state]}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="max-w-md">
                       {lastMessage ? (
@@ -299,6 +317,15 @@ export default async function RpTrackingStaffListPage(props: {
                     </TableCell>
                     <TableCell className="text-muted-foreground whitespace-nowrap">
                       {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
+                    </TableCell>
+                    <TableCell className="pr-6 text-right" onClick={(e) => e.stopPropagation()}>
+                      {player.conversationId ? (
+                        <MarkHandledButton
+                          conversationId={player.conversationId}
+                          isHandled={player.isHandledWithoutReply}
+                          playerName={player.playerName}
+                        />
+                      ) : null}
                     </TableCell>
                   </TicketTableRow>
                 );

@@ -6,6 +6,7 @@ import {
   ConversationType,
   MessageAuthorType,
   RegistrationStatus,
+  SanctionType,
 } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { RP_TRACKING_ACTIVE_DAYS, type RpTrackingState } from "@/lib/rp-tracking";
@@ -35,6 +36,12 @@ export interface RpTrackingPlayerState {
   lastActivityAt: Date | null;
   /** Premier message du joueur resté sans réponse (état « pending » uniquement). */
   waitingSince: Date | null;
+  /** Date à laquelle un staff a marqué le suivi comme traité (sans forcément répondre). */
+  lastHandledAt: Date | null;
+  lastHandledById: string | null;
+  lastHandledByName: string | null;
+  /** Vrai si le suivi a été acquitté par un staff sans envoi de nouveau message. */
+  isHandledWithoutReply: boolean;
   /** Indique si le joueur a rédigé au moins un chapitre de trame. */
   hasWriting: boolean;
 }
@@ -74,7 +81,15 @@ function compareRpTrackingPlayers(a: RpTrackingPlayerState, b: RpTrackingPlayerS
 export async function getRpTrackingStates(): Promise<RpTrackingStates> {
   const [players, messageStats, writingPlayers] = await Promise.all([
     prisma.user.findMany({
-      where: { registrationStatus: RegistrationStatus.WHITELISTED },
+      where: {
+        registrationStatus: RegistrationStatus.WHITELISTED,
+        sanctions: {
+          none: {
+            type: SanctionType.EXCLUSION,
+            revokedAt: null,
+          },
+        },
+      },
       select: {
         id: true,
         minecraftUsername: true,
@@ -85,7 +100,21 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
           where: { conversation: { type: ConversationType.RP_TRACKING } },
           orderBy: { joinedAt: "asc" },
           take: 1,
-          select: { conversationId: true },
+          select: {
+            conversationId: true,
+            conversation: {
+              select: {
+                lastHandledAt: true,
+                lastHandledById: true,
+                lastHandledBy: {
+                  select: {
+                    minecraftUsername: true,
+                    discordDisplayName: true,
+                  },
+                },
+              },
+            },
+          },
         },
       },
     }),
@@ -127,10 +156,18 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
 
   const now = Date.now();
   const states: RpTrackingPlayerState[] = players.map((player) => {
-    const conversationId = player.conversationMemberships[0]?.conversationId ?? null;
+    const membership = player.conversationMemberships[0];
+    const conversationId = membership?.conversationId ?? null;
+    const convData = membership?.conversation;
     const stats = conversationId ? statsByConversation.get(conversationId) : undefined;
     const lastPlayerAt = stats?.lastPlayerAt ?? null;
     const lastStaffAt = stats?.lastStaffAt ?? null;
+    const lastHandledAt = convData?.lastHandledAt ?? null;
+    const lastHandledById = convData?.lastHandledById ?? null;
+    const lastHandledByName = convData?.lastHandledBy
+      ? (convData.lastHandledBy.minecraftUsername ?? convData.lastHandledBy.discordDisplayName)
+      : null;
+
     const lastActivityAt =
       lastPlayerAt && lastStaffAt
         ? lastPlayerAt > lastStaffAt
@@ -138,10 +175,22 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
           : lastStaffAt
         : (lastPlayerAt ?? lastStaffAt);
 
+    const isHandledByStaff = Boolean(
+      (lastStaffAt && lastPlayerAt && lastStaffAt >= lastPlayerAt) ||
+      (lastHandledAt && lastPlayerAt && lastHandledAt >= lastPlayerAt)
+    );
+
+    const isHandledWithoutReply = Boolean(
+      lastHandledAt &&
+      lastPlayerAt &&
+      lastHandledAt >= lastPlayerAt &&
+      (!lastStaffAt || lastHandledAt >= lastStaffAt)
+    );
+
     let state: RpTrackingState;
     if (!lastActivityAt) {
       state = "none";
-    } else if (lastPlayerAt && (!lastStaffAt || lastPlayerAt > lastStaffAt)) {
+    } else if (lastPlayerAt && !isHandledByStaff) {
       state = "pending";
     } else {
       state = now - lastActivityAt.getTime() < ACTIVE_WINDOW_MS ? "recent" : "dormant";
@@ -160,6 +209,10 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       lastStaffMessageAt: lastStaffAt,
       lastActivityAt,
       waitingSince: null,
+      lastHandledAt,
+      lastHandledById,
+      lastHandledByName,
+      isHandledWithoutReply,
       hasWriting: writingPlayerIds.has(player.id),
     };
   });
@@ -170,10 +223,18 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       where: {
         deletedAt: null,
         authorType: MessageAuthorType.PLAYER,
-        OR: pending.map((entry) => ({
-          conversationId: entry.conversationId!,
-          ...(entry.lastStaffMessageAt ? { createdAt: { gt: entry.lastStaffMessageAt } } : {}),
-        })),
+        OR: pending.map((entry) => {
+          const cutoff =
+            entry.lastStaffMessageAt && entry.lastHandledAt
+              ? entry.lastStaffMessageAt > entry.lastHandledAt
+                ? entry.lastStaffMessageAt
+                : entry.lastHandledAt
+              : (entry.lastStaffMessageAt ?? entry.lastHandledAt);
+          return {
+            conversationId: entry.conversationId!,
+            ...(cutoff ? { createdAt: { gt: cutoff } } : {}),
+          };
+        }),
       },
       orderBy: { createdAt: "asc" },
       select: { conversationId: true, createdAt: true },

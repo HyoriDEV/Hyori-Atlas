@@ -137,7 +137,10 @@ export function GalleryFeed({
           </div>
 
           {/* Filtre par catégorie */}
-          <Select value={selectedCategory} onValueChange={(val) => setSelectedCategory(val ?? "ALL")}>
+          <Select
+            value={selectedCategory}
+            onValueChange={(val) => setSelectedCategory(val ?? "ALL")}
+          >
             <SelectTrigger className="w-48">
               <SelectValue placeholder="Toutes les catégories" />
             </SelectTrigger>

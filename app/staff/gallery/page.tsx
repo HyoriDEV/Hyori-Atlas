@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
-import { Role } from "@/lib/generated/prisma/enums";
+import { galleryRoles } from "@/lib/navigation";
 import { getStaffGalleryItems } from "@/lib/services/gallery-service";
 import { getGalleryCategoriesConfig } from "@/lib/gallery-category-config";
 import { StaffGalleryView } from "@/components/staff/gallery/staff-gallery-view";
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function StaffGalleryPage() {
-  const user = await requireRole([Role.ADMIN]);
+  const user = await requireRole(galleryRoles);
 
   const [items, categories] = await Promise.all([
     getStaffGalleryItems(),
@@ -22,6 +22,7 @@ export default async function StaffGalleryPage() {
       <StaffGalleryView
         initialItems={items}
         currentUserId={user.id}
+        currentUserRole={user.role}
         categories={categories}
       />
     </div>

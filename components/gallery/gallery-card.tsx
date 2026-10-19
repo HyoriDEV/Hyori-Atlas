@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import { Heart, Sparkle } from "@phosphor-icons/react";
+import { Heart, WarningCircle } from "@phosphor-icons/react";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Badge } from "@/components/ui/badge";
 import { toggleGalleryLikeAction } from "@/lib/actions/gallery-actions";
@@ -67,10 +67,12 @@ export function GalleryCard({
 }: GalleryCardProps) {
   const [liked, setLiked] = useState(item.isLikedByCurrentUser ?? false);
   const [likesCount, setLikesCount] = useState(item.likeCount);
+  const [spoilerRevealed, setSpoilerRevealed] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const authorName = item.author.minecraftUsername ?? item.author.discordDisplayName ?? "Joueur";
-  const categoryLabel = categoryLabels?.[item.category] ?? GALLERY_CATEGORY_LABELS[item.category] ?? "Capture";
+  const categoryLabel =
+    categoryLabels?.[item.category] ?? GALLERY_CATEGORY_LABELS[item.category] ?? "Capture";
 
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -97,24 +99,46 @@ export function GalleryCard({
     });
   };
 
+  const handleCardClick = () => {
+    if (item.isSpoiler && !spoilerRevealed) {
+      setSpoilerRevealed(true);
+      return;
+    }
+    onOpen(item);
+  };
+
+  const isMaskedSpoiler = item.isSpoiler && !spoilerRevealed;
+
   return (
     <div
-      onClick={() => onOpen(item)}
+      onClick={handleCardClick}
       className="group bg-card text-card-foreground border-border hover:border-primary/50 relative flex cursor-pointer flex-col overflow-hidden rounded-lg border shadow-xs transition-colors"
     >
-      {/* Conteneur image */}
-      <div className="relative aspect-[16/10] w-full overflow-hidden bg-muted/40">
+      {/* Conteneur image 16:9 standard */}
+      <div className="bg-muted/40 relative aspect-video w-full overflow-hidden">
         <Image
           src={item.thumbnailUrl || item.imageUrl}
           alt={item.title}
           fill
           priority={priority}
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-300 group-hover:scale-103"
+          className={cn(
+            "object-cover transition-transform duration-300",
+            isMaskedSpoiler ? "scale-105 blur-md" : "group-hover:scale-103"
+          )}
         />
 
+        {/* Masque Spoiler RP */}
+        {isMaskedSpoiler && (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-1.5 bg-black/60 p-4 text-center text-white backdrop-blur-xs">
+            <WarningCircle className="size-5 text-amber-400" />
+            <span className="text-xs font-semibold">Spoiler RP</span>
+            <span className="text-[11px] text-white/80">Cliquer pour révéler</span>
+          </div>
+        )}
+
         {/* Badges Supérieurs */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-between p-2.5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-center justify-between p-2.5">
           <Badge
             variant="secondary"
             className="border-border/40 bg-background/80 text-foreground text-[11px] font-medium backdrop-blur-md"
@@ -122,10 +146,12 @@ export function GalleryCard({
             {categoryLabel}
           </Badge>
 
-          {item.isFeatured && (
-            <Badge className="flex items-center gap-1 border-amber-400/40 bg-amber-500/90 text-[11px] font-semibold text-amber-950 shadow-xs backdrop-blur-md dark:bg-amber-400/90">
-              <Sparkle className="size-3 fill-current" />
-              Coup de cœur
+          {item.isSpoiler && spoilerRevealed && (
+            <Badge
+              variant="outline"
+              className="border-amber-500/40 bg-black/70 text-[10px] font-medium text-amber-400 backdrop-blur-md"
+            >
+              Spoiler
             </Badge>
           )}
         </div>
@@ -137,10 +163,10 @@ export function GalleryCard({
           disabled={isPending}
           aria-label={liked ? "Ne plus aimer" : "Aimer"}
           className={cn(
-            "absolute right-2.5 bottom-2.5 z-10 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-colors",
+            "absolute right-2.5 bottom-2.5 z-20 flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium backdrop-blur-md transition-colors",
             liked
               ? "bg-rose-500 text-white shadow-xs"
-              : "bg-background/80 text-foreground hover:bg-background border border-border/60 hover:text-rose-500"
+              : "bg-background/80 text-foreground hover:bg-background border-border/60 border hover:text-rose-500"
           )}
         >
           <Heart

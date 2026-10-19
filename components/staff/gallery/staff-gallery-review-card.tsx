@@ -2,15 +2,7 @@
 
 import { useState, useTransition } from "react";
 import Image from "next/image";
-import {
-  Check,
-  X,
-  Sparkle,
-  Trash,
-  Eye,
-  Clock,
-  ArrowCounterClockwise,
-} from "@phosphor-icons/react";
+import { Check, X, Trash, Eye, Clock, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import {
   reviewGalleryItemAction,
-  toggleFeaturedGalleryItemAction,
   deleteGalleryItemAction,
   updateGalleryItemCategoryAction,
 } from "@/lib/actions/gallery-actions";
@@ -57,7 +48,6 @@ export function StaffGalleryReviewCard({
   onPreview,
 }: StaffGalleryReviewCardProps) {
   const [isPending, startTransition] = useTransition();
-  const [isFeatured, setIsFeatured] = useState(item.isFeatured);
   const [category, setCategory] = useState<GalleryCategory>(item.category);
 
   const authorName = item.author.minecraftUsername ?? item.author.discordDisplayName ?? "Joueur";
@@ -71,7 +61,9 @@ export function StaffGalleryReviewCard({
         await updateGalleryItemCategoryAction(item.id, nextCategory);
         toast.success("Catégorie mise à jour.");
       } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : "Erreur lors de la modification de la catégorie.");
+        toast.error(
+          err instanceof Error ? err.message : "Erreur lors de la modification de la catégorie."
+        );
         setCategory(item.category);
       }
     });
@@ -87,22 +79,6 @@ export function StaffGalleryReviewCard({
         toast.success(`La capture "${item.title}" a été approuvée !`);
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Erreur lors de l'approbation.");
-      }
-    });
-  };
-
-  const handleToggleFeatured = () => {
-    startTransition(async () => {
-      try {
-        const res = await toggleFeaturedGalleryItemAction(item.id);
-        setIsFeatured(res.isFeatured);
-        toast.success(
-          res.isFeatured
-            ? "Capture mise en avant (Coup de cœur) !"
-            : "Capture retirée des coups de cœur."
-        );
-      } catch (err: unknown) {
-        toast.error(err instanceof Error ? err.message : "Erreur lors de la mise à la une.");
       }
     });
   };
@@ -128,10 +104,10 @@ export function StaffGalleryReviewCard({
 
   return (
     <div className="border-border bg-card flex flex-col gap-4 rounded-lg border p-4 shadow-xs transition-colors sm:flex-row">
-      {/* Aperçu Image */}
+      {/* Aperçu Image en 16:9 standard */}
       <div
         onClick={() => onPreview(item)}
-        className="group relative h-44 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-black/40 sm:h-auto sm:w-56"
+        className="group border-border relative aspect-video shrink-0 cursor-pointer overflow-hidden rounded-md border bg-black/40 sm:w-60"
       >
         <Image
           src={item.thumbnailUrl || item.imageUrl}
@@ -139,7 +115,7 @@ export function StaffGalleryReviewCard({
           fill
           className="object-cover transition-transform duration-300 group-hover:scale-103"
         />
-        <div className="absolute inset-0 flex items-center justify-center gap-1 bg-black/30 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity group-hover:opacity-100">
           <Eye className="size-4" />
           <span>Agrandir</span>
         </div>
@@ -151,7 +127,6 @@ export function StaffGalleryReviewCard({
           {/* Header avec Catégorie (Sélecteur Staff) et Statut */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              {/* Sélecteur de catégorie modifiable par le staff */}
               <Select
                 value={category}
                 onValueChange={(val) => val && handleCategoryChange(val)}
@@ -173,26 +148,26 @@ export function StaffGalleryReviewCard({
                 </SelectContent>
               </Select>
 
-              {isFeatured && (
-                <Badge className="flex items-center gap-1 border-amber-400/40 bg-amber-500/90 text-[11px] font-semibold text-amber-950">
-                  <Sparkle className="size-3 fill-current" /> Coup de cœur
+              {item.isSpoiler && (
+                <Badge variant="outline" className="border-amber-500/40 text-[10px] text-amber-500">
+                  Spoiler RP
                 </Badge>
               )}
             </div>
 
             {/* Statut Badge */}
             {item.status === GalleryStatus.PENDING && (
-              <Badge className="flex items-center gap-1 border-amber-500/30 bg-amber-500/15 text-xs font-medium text-amber-700 dark:text-amber-400">
+              <Badge className="flex items-center gap-1 bg-amber-500 text-xs font-semibold text-amber-950 shadow-xs">
                 <Clock className="size-3" /> En attente
               </Badge>
             )}
             {item.status === GalleryStatus.APPROVED && (
-              <Badge className="flex items-center gap-1 border-emerald-500/30 bg-emerald-500/15 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+              <Badge className="flex items-center gap-1 bg-emerald-600 text-xs font-semibold text-white shadow-xs">
                 <Check className="size-3" /> Publiée
               </Badge>
             )}
             {item.status === GalleryStatus.REJECTED && (
-              <Badge className="flex items-center gap-1 border-rose-500/30 bg-rose-500/15 text-xs font-medium text-rose-700 dark:text-rose-400">
+              <Badge className="flex items-center gap-1 bg-rose-600 text-xs font-semibold text-white shadow-xs">
                 <X className="size-3" /> Refusée
               </Badge>
             )}
@@ -225,7 +200,7 @@ export function StaffGalleryReviewCard({
 
           {/* Description */}
           {item.description && (
-            <p className="text-muted-foreground bg-muted/30 border-border/40 line-clamp-2 rounded-md border p-2 text-xs">
+            <p className="text-muted-foreground bg-muted/20 border-border/40 line-clamp-2 rounded-md border p-2 text-xs leading-relaxed">
               {item.description}
             </p>
           )}
@@ -238,7 +213,7 @@ export function StaffGalleryReviewCard({
           )}
         </div>
 
-        {/* Barre d'actions standard */}
+        {/* Barre d'actions */}
         <div className="border-border/60 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
           <div className="flex items-center gap-2">
             {item.status === GalleryStatus.PENDING && (
@@ -257,7 +232,7 @@ export function StaffGalleryReviewCard({
                   variant="outline"
                   onClick={() => onRejectRequest(item)}
                   disabled={isPending}
-                  className="gap-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  className="gap-1.5 border-rose-500/30 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                 >
                   <X className="size-3.5" />
                   Refuser
@@ -266,27 +241,15 @@ export function StaffGalleryReviewCard({
             )}
 
             {item.status === GalleryStatus.APPROVED && (
-              <>
-                <Button
-                  size="sm"
-                  variant={isFeatured ? "default" : "outline"}
-                  onClick={handleToggleFeatured}
-                  disabled={isPending}
-                  className="gap-1.5 text-xs"
-                >
-                  <Sparkle className="size-3.5 text-amber-400" />
-                  {isFeatured ? "Retirer de la une" : "Mettre en avant"}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => onRejectRequest(item)}
-                  disabled={isPending}
-                  className="text-xs"
-                >
-                  Dépublier
-                </Button>
-              </>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => onRejectRequest(item)}
+                disabled={isPending}
+                className="text-xs"
+              >
+                Dépublier
+              </Button>
             )}
 
             {item.status === GalleryStatus.REJECTED && (
@@ -308,7 +271,7 @@ export function StaffGalleryReviewCard({
             variant="ghost"
             onClick={handleDelete}
             disabled={isPending}
-            className="gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+            className="text-muted-foreground hover:text-destructive gap-1.5 text-xs"
           >
             <Trash className="size-3.5" />
             Supprimer

@@ -23,6 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { submitGalleryItemAction } from "@/lib/actions/gallery-actions";
 import { GalleryCategory, RegistrationStatus } from "@/lib/generated/prisma/enums";
 import { GALLERY_CATEGORY_LABELS } from "@/components/gallery/gallery-card";
@@ -48,6 +49,7 @@ export function GalleryUploadDialog({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [category, setCategory] = useState<GalleryCategory>(GalleryCategory.PAYSAGE);
+  const [isSpoiler, setIsSpoiler] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -110,6 +112,7 @@ export function GalleryUploadDialog({
     const formData = new FormData(e.currentTarget);
     formData.set("file", selectedFile);
     formData.set("category", category);
+    formData.set("isSpoiler", isSpoiler ? "true" : "false");
 
     startTransition(async () => {
       try {
@@ -121,6 +124,7 @@ export function GalleryUploadDialog({
         }
         setOpen(false);
         handleClearFile();
+        setIsSpoiler(false);
       } catch (err: unknown) {
         toast.error(err instanceof Error ? err.message : "Erreur lors de l'envoi.");
       }
@@ -180,19 +184,20 @@ export function GalleryUploadDialog({
         }
       />
 
-      <DialogContent className="sm:max-w-4xl p-6 gap-6">
+      <DialogContent className="gap-6 p-6 sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="font-heading text-xl font-semibold">
             Partager une capture d&apos;écran
           </DialogTitle>
           <DialogDescription>
-            Partagez vos moments forts et scènes avec la communauté de Hyori RP.
+            Partagez vos scènes et vos paysages avec la communauté de Hyori RP (format 16:9
+            recommandé).
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Colonne gauche : Téléversement ou aperçu */}
+          <div className="grid grid-cols-1 items-start gap-6 md:grid-cols-2">
+            {/* Colonne gauche : Téléversement ou aperçu 16:9 */}
             <div className="flex flex-col gap-2">
               <Label className="text-foreground text-xs font-medium">
                 Image <span className="text-destructive">*</span>
@@ -202,7 +207,7 @@ export function GalleryUploadDialog({
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-border hover:border-primary/50 bg-muted/20 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-colors min-h-[260px]"
+                  className="border-border hover:border-primary/50 bg-muted/20 hover:bg-muted/40 flex aspect-video cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 text-center transition-colors"
                 >
                   <div className="bg-primary/10 text-primary flex size-12 items-center justify-center rounded-full">
                     <ImageIcon className="size-6" />
@@ -224,8 +229,8 @@ export function GalleryUploadDialog({
                   />
                 </div>
               ) : (
-                <div className="group relative aspect-[16/10] w-full overflow-hidden rounded-lg border bg-black/60 shadow-inner">
-                  <Image src={previewUrl} alt="Aperçu capture" fill className="object-contain" />
+                <div className="group relative aspect-video w-full overflow-hidden rounded-lg border bg-black/60 shadow-inner">
+                  <Image src={previewUrl} alt="Aperçu capture" fill className="object-cover" />
                   <button
                     type="button"
                     onClick={handleClearFile}
@@ -238,10 +243,13 @@ export function GalleryUploadDialog({
               )}
             </div>
 
-            {/* Colonne droite : Champs essentiels (Titre, Catégorie, Description) */}
+            {/* Colonne droite : Champs essentiels (Titre, Catégorie, Description, Spoiler) */}
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="gallery-upload-title" className="text-foreground text-xs font-medium">
+                <Label
+                  htmlFor="gallery-upload-title"
+                  className="text-foreground text-xs font-medium"
+                >
                   Titre de la capture <span className="text-destructive">*</span>
                 </Label>
                 <Input
@@ -249,18 +257,25 @@ export function GalleryUploadDialog({
                   name="title"
                   required
                   maxLength={120}
-                  placeholder="ex: Les lueurs de l'aube sur la Taverne..."
+                  placeholder="ex: Les lueurs de l'aube sur la taverne..."
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="gallery-upload-category" className="text-foreground text-xs font-medium">
+                <Label
+                  htmlFor="gallery-upload-category"
+                  className="text-foreground text-xs font-medium"
+                >
                   Catégorie <span className="text-destructive">*</span>
                 </Label>
-                <Select value={category} onValueChange={(val) => val && setCategory(val as GalleryCategory)}>
+                <Select
+                  value={category}
+                  onValueChange={(val) => val && setCategory(val as GalleryCategory)}
+                >
                   <SelectTrigger id="gallery-upload-category" className="w-full">
                     <SelectValue placeholder="Choisir une catégorie">
-                      {availableCategories.find((c) => c.id === category)?.label ?? "Choisir une catégorie"}
+                      {availableCategories.find((c) => c.id === category)?.label ??
+                        "Choisir une catégorie"}
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
@@ -274,28 +289,42 @@ export function GalleryUploadDialog({
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="gallery-upload-description" className="text-foreground text-xs font-medium">
+                <Label
+                  htmlFor="gallery-upload-description"
+                  className="text-foreground text-xs font-medium"
+                >
                   Description (Optionnelle)
                 </Label>
                 <Textarea
                   id="gallery-upload-description"
                   name="description"
-                  rows={4}
+                  rows={3}
                   maxLength={1000}
                   placeholder="Racontez le moment rôleplay ou l'atmosphère de cette capture..."
-                  className="resize-none text-sm"
+                  className="resize-none text-xs"
+                />
+              </div>
+
+              {/* Spoiler RP Switch */}
+              <div className="border-border bg-muted/20 flex items-center justify-between rounded-lg border p-3">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-medium">Contenu sensible / Spoiler RP</span>
+                  <span className="text-muted-foreground text-[11px]">
+                    Floute l&apos;image par défaut sur la galerie
+                  </span>
+                </div>
+                <Switch
+                  checked={isSpoiler}
+                  onCheckedChange={setIsSpoiler}
+                  id="gallery-upload-spoiler"
                 />
               </div>
             </div>
           </div>
 
           {/* Boutons d'action */}
-          <DialogFooter className="gap-2 sm:gap-0 pt-3 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
+          <DialogFooter className="gap-2 border-t pt-3 sm:gap-0">
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>
             <Button type="submit" disabled={isPending || !selectedFile}>

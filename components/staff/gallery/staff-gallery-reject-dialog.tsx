@@ -73,7 +73,7 @@ export function StaffGalleryRejectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md p-6">
         <DialogHeader>
-          <DialogTitle className="font-heading text-lg font-semibold text-destructive">
+          <DialogTitle className="font-heading text-destructive text-lg font-semibold">
             Refuser la capture
           </DialogTitle>
           <DialogDescription>
@@ -117,20 +117,11 @@ export function StaffGalleryRejectDialog({
           )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-          >
+        <DialogFooter className="gap-2 border-t pt-2 sm:gap-0">
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleReject}
-            disabled={isPending}
-          >
+          <Button type="button" variant="destructive" onClick={handleReject} disabled={isPending}>
             {isPending ? "Refus en cours..." : "Confirmer le refus"}
           </Button>
         </DialogFooter>

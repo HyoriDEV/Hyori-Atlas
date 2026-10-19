@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import {
   Bell,
   Check,
+  ChatCircle,
   DiscordLogo,
   ArrowCounterClockwise,
   PencilSimple,
@@ -91,6 +92,13 @@ const CATEGORIES = [
     label: "Entretien Vocal (MP Joueur)",
     icon: CalendarCheck,
     description: "Relances pour la réservation des créneaux d'entretien",
+  },
+  {
+    key: "rp_tracking",
+    label: "Suivi RP (MP Joueur)",
+    icon: ChatCircle,
+    description:
+      "Notifications envoyées en message privé lors d'un nouveau message staff sur le suivi RP",
   },
 ] as const;
 

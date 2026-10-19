@@ -30,12 +30,18 @@ import {
 import {
   CharacterSheetStatus,
   CharacterStatus,
+  ConversationType,
   InterviewBookingStatus,
+  MessageAuthorType,
   RegistrationStatus,
   Role,
   SanctionSource,
   SanctionType,
 } from "@/lib/generated/prisma/enums";
+import Link from "next/link";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 import {
   characterSheetReviewerRoles,
   characterSheetStatusLabels,
@@ -93,78 +99,121 @@ export default async function AtlasPlayerPage({
   const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
-  const [player, allGroups, sanctions, activeBan, sessionStats] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: playerId },
-      include: {
-        rpGroup: {
-          include: {
-            members: {
-              select: {
-                id: true,
-                discordDisplayName: true,
-                minecraftUsername: true,
-                discordAvatarUrl: true,
-                registrationStatus: true,
-                characterSheets: {
-                  where: { status: CharacterStatus.ACTIVE },
-                  take: 1,
-                  select: {
-                    name: true,
-                    reviewStatus: true,
-                    assignedClass: true,
-                    primaryClassId: true,
-                    secondaryClassId: true,
+  const [player, allGroups, sanctions, activeBan, sessionStats, rpTrackingConv, chapterCount] =
+    await Promise.all([
+      prisma.user.findUnique({
+        where: { id: playerId },
+        include: {
+          rpGroup: {
+            include: {
+              members: {
+                select: {
+                  id: true,
+                  discordDisplayName: true,
+                  minecraftUsername: true,
+                  discordAvatarUrl: true,
+                  registrationStatus: true,
+                  characterSheets: {
+                    where: { status: CharacterStatus.ACTIVE },
+                    take: 1,
+                    select: {
+                      name: true,
+                      reviewStatus: true,
+                      assignedClass: true,
+                      primaryClassId: true,
+                      secondaryClassId: true,
+                    },
                   },
                 },
+                orderBy: { createdAt: "asc" },
               },
-              orderBy: { createdAt: "asc" },
+            },
+          },
+          characterSheets: {
+            orderBy: { createdAt: "desc" },
+            include: {
+              primaryClass: true,
+              primaryRole: true,
+              secondaryClass: true,
+              secondaryRole: true,
+              reviewHistory: {
+                orderBy: { createdAt: "desc" },
+                include: { author: true },
+              },
+            },
+          },
+          interviewBookings: {
+            orderBy: { createdAt: "desc" },
+            include: { slot: true, reviewer: true },
+          },
+          registrationHistory: {
+            orderBy: { createdAt: "asc" },
+            include: { author: true },
+          },
+          tickets: { where: ticketAccessWhere(staffUser), orderBy: { createdAt: "desc" } },
+          staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
+        },
+      }),
+      prisma.rpGroup.findMany({
+        select: {
+          id: true,
+          name: true,
+          _count: { select: { members: true } },
+        },
+        orderBy: { name: "asc" },
+      }),
+      listSanctions(playerId),
+      getActiveBan(playerId),
+      getGameSessionStats(playerId),
+      prisma.conversation.findFirst({
+        where: {
+          type: ConversationType.RP_TRACKING,
+          members: { some: { userId: playerId } },
+        },
+        select: {
+          id: true,
+          lastHandledAt: true,
+          messages: {
+            orderBy: { createdAt: "desc" },
+            take: 10,
+            select: {
+              authorType: true,
+              createdAt: true,
             },
           },
         },
-        characterSheets: {
-          orderBy: { createdAt: "desc" },
-          include: {
-            primaryClass: true,
-            primaryRole: true,
-            secondaryClass: true,
-            secondaryRole: true,
-            reviewHistory: {
-              orderBy: { createdAt: "desc" },
-              include: { author: true },
-            },
-          },
+      }),
+      prisma.chapter.count({
+        where: {
+          playerId,
         },
-        interviewBookings: {
-          orderBy: { createdAt: "desc" },
-          include: { slot: true, reviewer: true },
-        },
-        registrationHistory: {
-          orderBy: { createdAt: "asc" },
-          include: { author: true },
-        },
-        tickets: { where: ticketAccessWhere(staffUser), orderBy: { createdAt: "desc" } },
-        staffNotes: { orderBy: { createdAt: "desc" }, include: { author: true } },
-      },
-    }),
-    prisma.rpGroup.findMany({
-      select: {
-        id: true,
-        name: true,
-        _count: { select: { members: true } },
-      },
-      orderBy: { name: "asc" },
-    }),
-    listSanctions(playerId),
-    getActiveBan(playerId),
-    getGameSessionStats(playerId),
-  ]);
+      }),
+    ]);
 
   if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
     notFound();
   }
 
   const playerName = player.minecraftUsername ?? player.discordDisplayName;
+  const isExcluded = Boolean(activeBan && activeBan.type === SanctionType.EXCLUSION);
+
+  const lastPlayerMessage = rpTrackingConv?.messages.find(
+    (m) => m.authorType === MessageAuthorType.PLAYER
+  );
+  const lastStaffMessage = rpTrackingConv?.messages.find(
+    (m) => m.authorType === MessageAuthorType.STAFF
+  );
+
+  const lastPlayerTime = lastPlayerMessage ? new Date(lastPlayerMessage.createdAt).getTime() : 0;
+  const lastStaffTime = lastStaffMessage ? new Date(lastStaffMessage.createdAt).getTime() : 0;
+  const lastHandledTime = rpTrackingConv?.lastHandledAt
+    ? new Date(rpTrackingConv.lastHandledAt).getTime()
+    : 0;
+
+  const isPendingRpTracking = Boolean(
+    lastPlayerTime > 0 && lastStaffTime < lastPlayerTime && lastHandledTime < lastPlayerTime
+  );
+
   const activeSheet = player.characterSheets.find((s) => s.status === CharacterStatus.ACTIVE);
   const sheet =
     (sheetId ? player.characterSheets.find((s) => s.id === sheetId) : null) ??
@@ -348,6 +397,20 @@ export default async function AtlasPlayerPage({
             secondaryClassId={sheet?.secondaryClassId ?? null}
           />
         )}
+        {player.registrationStatus === RegistrationStatus.WHITELISTED && !isExcluded && (
+          <Link
+            href={`/staff/rp-tracking/${player.id}`}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2")}
+          >
+            <ChatCircle className="size-4" />
+            <span>Suivi RP</span>
+            {isPendingRpTracking && (
+              <Badge variant="destructive" className="ml-0.5 px-1.5 py-0 text-[10px]">
+                À traiter
+              </Badge>
+            )}
+          </Link>
+        )}
       </div>
 
       <div className="grid grid-cols-1 items-start gap-4 min-[1600px]:grid-cols-[2fr_minmax(300px,1fr)]">
@@ -453,6 +516,12 @@ export default async function AtlasPlayerPage({
             playerId={player.id}
             pseudo={playerName}
             canReview={canReviewSheet}
+            rpTracking={
+              !isExcluded && rpTrackingConv
+                ? { conversationId: rpTrackingConv.id, isPending: isPendingRpTracking }
+                : null
+            }
+            chapterCount={chapterCount}
           />
 
           <AtlasStaffNotes
