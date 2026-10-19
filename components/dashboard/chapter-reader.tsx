@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChapterSelect } from "@/components/dashboard/chapter-select";
 
 const FONT_FAMILY_STORAGE_KEY = "hyori_writing_font_family";
 const FONT_SIZE_STORAGE_KEY = "hyori_writing_font_size";
@@ -79,7 +80,13 @@ export interface ChapterItem {
   order?: number;
 }
 
-export function ChapterReader({ chapters }: { chapters: ChapterItem[] }) {
+export function ChapterReader({
+  chapters,
+  className,
+}: {
+  chapters: ChapterItem[];
+  className?: string;
+}) {
   const [fontFamily, setFontFamily] = useWritingPreference<"serif" | "sans">(
     FONT_FAMILY_STORAGE_KEY,
     "serif",
@@ -134,10 +141,11 @@ export function ChapterReader({ chapters }: { chapters: ChapterItem[] }) {
     <div
       className={cn(
         "border-border/70 bg-card/40 relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border shadow-lg backdrop-blur-xs transition-colors duration-200",
-        theme === "light" && "editor-light"
+        theme === "light" && "editor-light",
+        className
       )}
     >
-      <div className="bg-card/90 border-border/80 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-5 py-2.5 backdrop-blur-md">
+      <div className="bg-card/90 border-border/80 sticky top-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-5 py-2.5 backdrop-blur-md">
         <div className="text-muted-foreground flex items-center gap-2.5 text-xs sm:text-sm">
           <span className="text-foreground/90 font-semibold">
             {totalStats.chaptersCount} chapitre{totalStats.chaptersCount > 1 ? "s" : ""}
@@ -152,6 +160,7 @@ export function ChapterReader({ chapters }: { chapters: ChapterItem[] }) {
         </div>
 
         <div className="flex items-center gap-2">
+          {chapters.length > 1 && <ChapterSelect chapters={chapters} />}
           <DropdownMenu>
             <Tooltip>
               <TooltipTrigger
@@ -257,7 +266,7 @@ export function ChapterReader({ chapters }: { chapters: ChapterItem[] }) {
 
               <article
                 id={`chapter-${chapter.id}`}
-                className="flex scroll-mt-8 flex-col sm:scroll-mt-10"
+                className="flex scroll-mt-14 flex-col"
               >
                 <header className="mb-6 flex flex-col gap-1.5">
                   <div

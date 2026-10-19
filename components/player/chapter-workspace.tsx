@@ -202,7 +202,7 @@ export function ChapterWorkspace({
       <div className="border-border/70 bg-card/40 flex min-h-0 flex-1 overflow-hidden rounded-xl border shadow-lg backdrop-blur-xs">
         {isSidebarOpen && (
           <aside className="border-border/70 bg-card/60 flex min-h-0 w-80 shrink-0 flex-col border-r transition-all sm:w-[22rem]">
-            <div className="border-border/60 flex shrink-0 flex-col gap-3.5 border-b p-4">
+            <div className="border-border/60 bg-card/90 sticky top-0 z-10 flex shrink-0 flex-col gap-3.5 border-b p-4 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <BookBookmark className="text-primary size-4.5" />

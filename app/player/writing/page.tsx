@@ -94,30 +94,34 @@ export default async function WritingPage(props: {
       </div>
 
       {allCharacters.length > 1 && (
-        <CharacterSwitcher
-          characters={allCharacters.map((c) => ({
-            id: c.id,
-            name: c.name,
-            status: c.status,
-            reviewStatus: c.reviewStatus,
-            createdAt: c.createdAt,
-          }))}
-          selectedCharacterId={selectedCharacter.id}
-        />
+        <div className="shrink-0">
+          <CharacterSwitcher
+            characters={allCharacters.map((c) => ({
+              id: c.id,
+              name: c.name,
+              status: c.status,
+              reviewStatus: c.reviewStatus,
+              createdAt: c.createdAt,
+            }))}
+            selectedCharacterId={selectedCharacter.id}
+          />
+        </div>
       )}
 
       {!isCharacterActive && (
-        <Card className="border-border/60 bg-muted/40 flex flex-col gap-1 p-4">
-          <p className="text-foreground text-sm font-semibold">
-            {selectedCharacter.status === CharacterStatus.DEAD
-              ? "Trame archivée d'un personnage décédé (Mort)."
-              : "Trame archivée d'un personnage désactivé."}
-          </p>
-          <p className="text-muted-foreground text-xs">
-            Ces chapitres sont conservés pour votre historique et restent consultables en lecture
-            seule.
-          </p>
-        </Card>
+        <div className="shrink-0">
+          <Card className="border-border/60 bg-muted/40 flex flex-col gap-1 p-4">
+            <p className="text-foreground text-sm font-semibold">
+              {selectedCharacter.status === CharacterStatus.DEAD
+                ? "Trame archivée d'un personnage décédé (Mort)."
+                : "Trame archivée d'un personnage désactivé."}
+            </p>
+            <p className="text-muted-foreground text-xs">
+              Ces chapitres sont conservés pour votre historique et restent consultables en lecture
+              seule.
+            </p>
+          </Card>
+        </div>
       )}
 
       {!isSheetValidated ? (

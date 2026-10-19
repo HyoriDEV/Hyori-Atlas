@@ -204,10 +204,8 @@ export function AppShell({
     const isExactRoot =
       item.href === "/player" ||
       item.href === "/staff" ||
-      item.href === "/player/writing" ||
       item.href === "/staff/tickets" ||
-      item.href === "/staff/backlog" ||
-      item.href === "/staff/rp-tracking";
+      item.href === "/staff/backlog";
     return isExactRoot
       ? pathname === item.href
       : pathname === item.href || pathname?.startsWith(`${item.href}/`);
@@ -218,7 +216,9 @@ export function AppShell({
     (pathname?.startsWith("/player/tickets/") && pathname !== "/player/tickets") ||
     (pathname?.startsWith("/staff/rp-tracking/") && pathname !== "/staff/rp-tracking") ||
     pathname === "/player/rp-tracking" ||
-    pathname === "/staff/backlog"
+    pathname === "/staff/backlog" ||
+    pathname === "/player/writing" ||
+    pathname?.startsWith("/player/writing/")
   );
 
   const isStaffDashboard = sectionLabel === "Espace Staff";

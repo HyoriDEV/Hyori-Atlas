@@ -401,7 +401,7 @@ export function ChapterEditor({
         </BubbleMenu>
       )}
 
-      <div className="bg-card/90 border-border/80 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-5 py-2.5 backdrop-blur-md">
+      <div className="bg-card/90 border-border/80 sticky top-0 z-10 flex shrink-0 flex-wrap items-center justify-between gap-3 border-b px-5 py-2.5 backdrop-blur-md">
         <div className="flex flex-wrap items-center gap-1.5">
           {onToggleSidebar && (
             <Tooltip>
@@ -894,7 +894,7 @@ export function ChapterEditor({
         </div>
       </div>
 
-      <div className="bg-card/70 border-border/60 text-muted-foreground flex shrink-0 items-center justify-between border-t px-6 py-2.5 text-xs backdrop-blur-xs select-none sm:text-sm">
+      <div className="bg-card/70 border-border/60 text-muted-foreground sticky bottom-0 z-10 flex shrink-0 items-center justify-between border-t px-6 py-2.5 text-xs backdrop-blur-xs select-none sm:text-sm">
         <div className="flex items-center gap-4">
           <span className="text-foreground/90 font-semibold">
             {wordCount.toLocaleString("fr-FR")} {wordCount > 1 ? "mots" : "mot"}

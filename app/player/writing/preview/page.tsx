@@ -9,7 +9,6 @@ import { CharacterStatus, RegistrationStatus } from "@/lib/generated/prisma/enum
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ChapterReader } from "@/components/dashboard/chapter-reader";
-import { ChapterSelect } from "@/components/dashboard/chapter-select";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 
 export default async function WritingPlayerPreviewPage(props: {
@@ -58,7 +57,6 @@ export default async function WritingPlayerPreviewPage(props: {
             {characterLabel}
           </h1>
         </div>
-        {chapters.length > 0 && <ChapterSelect chapters={chapters} />}
       </div>
 
       <ChapterReader chapters={chapters} />
