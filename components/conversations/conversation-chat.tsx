@@ -5,9 +5,13 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
+  ArrowCounterClockwise,
+  CaretDown,
   CircleNotch,
   Copy,
   DotsThreeVertical,
+  Eye,
+  EyeSlash,
   Image as ImageIcon,
   PaperPlaneTilt,
   PencilSimple,
@@ -104,6 +108,33 @@ export function ConversationChat({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editBody, setEditBody] = useState("");
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const [expandedDeletedIds, setExpandedDeletedIds] = useState<Set<string>>(() => new Set());
+  const [expandedHistoryIds, setExpandedHistoryIds] = useState<Set<string>>(() => new Set());
+
+  function toggleDeleted(messageId: string) {
+    setExpandedDeletedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+      } else {
+        next.add(messageId);
+      }
+      return next;
+    });
+  }
+
+  function toggleHistory(messageId: string) {
+    setExpandedHistoryIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(messageId)) {
+        next.delete(messageId);
+      } else {
+        next.add(messageId);
+      }
+      return next;
+    });
+  }
+
   const [isPending, startTransition] = useTransition();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -628,8 +659,10 @@ export function ConversationChat({
                   const isFirst = msgIndex === 0;
                   const isEditing = editingId === message.id;
                   const isDeleted = Boolean(message.deletedAt);
+                  const isDeletedExpanded = expandedDeletedIds.has(message.id);
+                  const isHistoryExpanded = expandedHistoryIds.has(message.id);
                   const hasActions = isDeleted
-                    ? Boolean(message.body?.trim())
+                    ? viewerIsStaff
                     : Boolean(message.body?.trim()) || group.isOwn;
 
                   return (
@@ -810,65 +843,124 @@ export function ConversationChat({
                           ) : (
                             <>
                               <div className="flex max-w-full flex-col gap-1">
-                                {viewerIsStaff &&
-                                  message.versions &&
-                                  message.versions.length > 0 && (
-                                    <div className="flex flex-col gap-1">
-                                      {message.versions.map((version, vIdx) => (
-                                        <div
-                                          key={version.id}
-                                          className={cn(
-                                            "rounded-2xl border border-dashed px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-2xs",
-                                            group.isOwn
-                                              ? "bg-primary/20 text-foreground border-primary/40 rounded-tr-xs"
-                                              : "bg-muted/45 text-foreground border-border/60 rounded-tl-xs"
-                                          )}
-                                        >
-                                          <p>{version.body}</p>
-                                          <div className="text-muted-foreground/80 mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none">
-                                            <PencilSimple className="size-3 shrink-0" />
-                                            <span>
-                                              {vIdx === 0
-                                                ? "Version initiale"
-                                                : `Version ${vIdx + 1}`}
-                                              {version.createdAt
-                                                ? ` (${formatDate(version.createdAt, { style: "chat" })})`
-                                                : ""}
-                                            </span>
-                                          </div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-
                                 {viewerIsStaff && isDeleted ? (
-                                  <div
-                                    className={cn(
-                                      "border-destructive/40 bg-destructive/5 dark:bg-destructive/10 text-muted-foreground rounded-2xl border border-dashed px-3.5 py-2 text-sm leading-relaxed break-words whitespace-pre-wrap shadow-2xs",
-                                      group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
-                                    )}
-                                  >
-                                    {message.body && <p className="italic">{message.body}</p>}
-                                    {message.imageUrl && (
-                                      <img
-                                        src={message.imageUrl}
-                                        alt=""
-                                        className={cn(
-                                          "border-destructive/30 max-h-64 max-w-full rounded-lg border border-dashed object-contain opacity-75",
-                                          message.body && "mt-1.5"
-                                        )}
-                                      />
-                                    )}
-                                    <div className="text-destructive/80 mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none">
-                                      <Trash className="size-3 shrink-0" />
-                                      <span>
-                                        Message supprimé
+                                  !isDeletedExpanded ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => toggleDeleted(message.id)}
+                                      aria-expanded={false}
+                                      className={cn(
+                                        "group/del flex items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-xs transition-colors cursor-pointer select-none",
+                                        "border-destructive/35 bg-destructive/5 hover:bg-destructive/10 dark:bg-destructive/15 dark:hover:bg-destructive/25 text-destructive",
+                                        group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
+                                      )}
+                                      title="Cliquer pour afficher le message supprimé"
+                                    >
+                                      <Trash className="size-3.5 shrink-0 opacity-80 group-hover/del:opacity-100" />
+                                      <span className="font-medium">Message supprimé</span>
+                                      <span className="text-muted-foreground/80 font-normal text-[11px]">
                                         {message.deletedAt
-                                          ? ` (${formatDate(message.deletedAt, { style: "chat" })})`
-                                          : ""}
+                                          ? `(${formatShortTime(message.deletedAt)})`
+                                          : `(${formatShortTime(message.createdAt)})`}
                                       </span>
+                                      <span className="bg-destructive/15 text-destructive group-hover/del:bg-destructive/25 dark:bg-destructive/25 dark:group-hover/del:bg-destructive/35 ml-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-medium transition-colors">
+                                        <Eye className="size-3" />
+                                        <span>Afficher</span>
+                                      </span>
+                                    </button>
+                                  ) : (
+                                    <div
+                                      className={cn(
+                                        "border-destructive/40 bg-destructive/5 dark:bg-destructive/15 text-muted-foreground rounded-2xl border border-dashed p-3 text-sm leading-relaxed shadow-2xs transition-all animate-in fade-in-50 duration-150",
+                                        group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
+                                      )}
+                                    >
+                                      <div className="flex items-center justify-between gap-3 border-b border-destructive/20 pb-2 mb-2 select-none">
+                                        <div className="flex items-center gap-1.5 text-destructive text-xs font-medium">
+                                          <Trash className="size-3.5 shrink-0" />
+                                          <span>Message supprimé</span>
+                                          <span className="text-muted-foreground font-normal text-[11px]">
+                                            {message.deletedAt
+                                              ? `le ${formatDate(message.deletedAt, { style: "chat" })}`
+                                              : `(envoyé à ${formatShortTime(message.createdAt)})`}
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleDeleted(message.id)}
+                                          aria-expanded={true}
+                                          className="text-destructive/80 hover:text-destructive bg-destructive/10 hover:bg-destructive/20 dark:bg-destructive/25 dark:hover:bg-destructive/35 flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer"
+                                          title="Masquer le contenu supprimé"
+                                        >
+                                          <EyeSlash className="size-3" />
+                                          <span>Masquer</span>
+                                        </button>
+                                      </div>
+
+                                      {message.body && (
+                                        <p className="italic text-foreground/90 break-words whitespace-pre-wrap">
+                                          {message.body}
+                                        </p>
+                                      )}
+                                      {message.imageUrl && (
+                                        <img
+                                          src={message.imageUrl}
+                                          alt="Image supprimée"
+                                          className={cn(
+                                            "border-destructive/30 max-h-64 max-w-full rounded-lg border border-dashed object-contain opacity-85",
+                                            message.body && "mt-2"
+                                          )}
+                                        />
+                                      )}
+
+                                      {message.versions && message.versions.length > 0 && (
+                                        <div className="mt-2.5 border-t border-destructive/20 pt-2">
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleHistory(message.id)}
+                                            aria-expanded={isHistoryExpanded}
+                                            className="text-destructive/80 hover:text-destructive flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer"
+                                          >
+                                            <ArrowCounterClockwise className="size-3" />
+                                            <span>
+                                              {isHistoryExpanded
+                                                ? "Masquer les versions antérieures"
+                                                : `Voir les versions antérieures (${message.versions.length})`}
+                                            </span>
+                                            <CaretDown
+                                              className={cn(
+                                                "size-2.5 transition-transform duration-200",
+                                                isHistoryExpanded && "rotate-180"
+                                              )}
+                                            />
+                                          </button>
+
+                                          {isHistoryExpanded && (
+                                            <div className="mt-2 flex flex-col gap-1.5 pl-2 border-l-2 border-destructive/30">
+                                              {message.versions.map((version, vIdx) => (
+                                                <div
+                                                  key={version.id}
+                                                  className="rounded-lg bg-background/60 p-2 text-xs border border-destructive/20"
+                                                >
+                                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mb-1">
+                                                    <span className="font-semibold text-foreground/80 font-sans">
+                                                      {vIdx === 0 ? "Version initiale" : `Version ${vIdx + 1}`}
+                                                    </span>
+                                                    <span>
+                                                      {version.createdAt ? formatDate(version.createdAt, { style: "chat" }) : ""}
+                                                    </span>
+                                                  </div>
+                                                  <p className="text-xs break-words whitespace-pre-wrap leading-relaxed text-foreground/85 italic">
+                                                    {version.body}
+                                                  </p>
+                                                </div>
+                                              ))}
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
                                     </div>
-                                  </div>
+                                  )
                                 ) : (
                                   <div
                                     className={cn(
@@ -892,23 +984,119 @@ export function ConversationChat({
                                     {message.isEdited && (
                                       <div
                                         className={cn(
-                                          "mt-1 flex items-center gap-1.5 text-[11px] font-medium select-none",
+                                          "mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-medium select-none",
                                           group.isOwn
                                             ? "text-primary-foreground/75"
                                             : "text-muted-foreground/80"
                                         )}
                                       >
-                                        <PencilSimple className="size-3 shrink-0" />
-                                        <span>
-                                          Modifié
-                                          {message.updatedAt
-                                            ? ` (${formatDate(message.updatedAt, { style: "chat" })})`
-                                            : ""}
-                                        </span>
+                                        <div className="flex items-center gap-1">
+                                          <PencilSimple className="size-3 shrink-0" />
+                                          <span>
+                                            Modifié
+                                            {message.updatedAt
+                                              ? ` (${formatDate(message.updatedAt, { style: "chat" })})`
+                                              : ""}
+                                          </span>
+                                        </div>
+
+                                        {viewerIsStaff && message.versions && message.versions.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleHistory(message.id);
+                                            }}
+                                            aria-expanded={isHistoryExpanded}
+                                            className={cn(
+                                              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-medium transition-colors cursor-pointer",
+                                              group.isOwn
+                                                ? isHistoryExpanded
+                                                  ? "bg-primary-foreground/25 text-primary-foreground underline"
+                                                  : "bg-primary-foreground/15 text-primary-foreground/90 hover:bg-primary-foreground/25"
+                                                : isHistoryExpanded
+                                                  ? "bg-foreground/15 text-foreground underline"
+                                                  : "bg-background/80 text-foreground/80 hover:bg-background hover:text-foreground border border-border/50"
+                                            )}
+                                            title={
+                                              isHistoryExpanded
+                                                ? "Masquer l'historique des modifications"
+                                                : "Afficher l'historique des modifications"
+                                            }
+                                          >
+                                            <ArrowCounterClockwise className="size-3 shrink-0" />
+                                            <span>
+                                              {isHistoryExpanded
+                                                ? "Masquer l'historique"
+                                                : `Historique (${message.versions.length})`}
+                                            </span>
+                                            <CaretDown
+                                              className={cn(
+                                                "size-2.5 transition-transform duration-200",
+                                                isHistoryExpanded && "rotate-180"
+                                              )}
+                                            />
+                                          </button>
+                                        )}
                                       </div>
                                     )}
                                   </div>
                                 )}
+
+                                {viewerIsStaff &&
+                                  !isDeleted &&
+                                  isHistoryExpanded &&
+                                  message.versions &&
+                                  message.versions.length > 0 && (
+                                    <div
+                                      className={cn(
+                                        "my-1 flex w-full flex-col gap-2 rounded-xl border border-dashed p-3 text-xs shadow-2xs animate-in fade-in-50 duration-150",
+                                        group.isOwn
+                                          ? "border-primary/40 bg-primary/10 text-foreground"
+                                          : "border-border/70 bg-muted/60 text-foreground"
+                                      )}
+                                    >
+                                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1.5 text-[11px] font-medium text-muted-foreground">
+                                        <div className="flex items-center gap-1.5">
+                                          <ArrowCounterClockwise className="size-3.5 text-primary shrink-0" />
+                                          <span className="font-semibold text-foreground/90">
+                                            Historique des modifications ({message.versions.length} version{message.versions.length > 1 ? "s" : ""} antérieure{message.versions.length > 1 ? "s" : ""})
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => toggleHistory(message.id)}
+                                          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] hover:underline cursor-pointer"
+                                          title="Fermer l'historique"
+                                        >
+                                          <EyeSlash className="size-3" />
+                                          <span>Fermer</span>
+                                        </button>
+                                      </div>
+
+                                      <div className="flex flex-col gap-2 pt-0.5">
+                                        {message.versions.map((version, vIdx) => (
+                                          <div
+                                            key={version.id}
+                                            className="flex flex-col gap-1 rounded-lg bg-background/80 p-2.5 border border-border/40 shadow-2xs"
+                                          >
+                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                                              <span className="font-medium text-foreground/80 flex items-center gap-1.5">
+                                                <span className="size-1.5 rounded-full bg-primary/70 shrink-0" />
+                                                {vIdx === 0 ? "Version initiale" : `Version ${vIdx + 1}`}
+                                              </span>
+                                              <span className="font-mono text-[10px]">
+                                                {version.createdAt ? formatDate(version.createdAt, { style: "chat" }) : ""}
+                                              </span>
+                                            </div>
+                                            <p className="text-sm break-words whitespace-pre-wrap leading-relaxed text-foreground/90 pl-3 border-l-2 border-primary/30">
+                                              {version.body}
+                                            </p>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                               </div>
 
                               {!isChatDisabled && hasActions && (
@@ -937,6 +1125,34 @@ export function ConversationChat({
                                         <span>Copier</span>
                                       </DropdownMenuItem>
                                     )}
+                                    {viewerIsStaff && isDeleted && (
+                                      <DropdownMenuItem onClick={() => toggleDeleted(message.id)}>
+                                        {isDeletedExpanded ? (
+                                          <>
+                                            <EyeSlash className="size-3.5" />
+                                            <span>Masquer le message supprimé</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <Eye className="size-3.5" />
+                                            <span>Afficher le message supprimé</span>
+                                          </>
+                                        )}
+                                      </DropdownMenuItem>
+                                    )}
+                                    {viewerIsStaff &&
+                                      !isDeleted &&
+                                      message.versions &&
+                                      message.versions.length > 0 && (
+                                        <DropdownMenuItem onClick={() => toggleHistory(message.id)}>
+                                          <ArrowCounterClockwise className="size-3.5" />
+                                          <span>
+                                            {isHistoryExpanded
+                                              ? "Masquer l'historique"
+                                              : "Historique des modifications"}
+                                          </span>
+                                        </DropdownMenuItem>
+                                      )}
                                     {group.isOwn && !isDeleted && (
                                       <>
                                         {message.body?.trim() && (
