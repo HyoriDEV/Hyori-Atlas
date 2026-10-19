@@ -27,7 +27,7 @@ export async function PublicNav() {
 
   return (
     <header className="border-border bg-background/80 sticky top-0 z-40 border-b backdrop-blur">
-      <div className="mx-auto flex h-18 max-w-[960px] items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-18 w-full items-center justify-between px-4 sm:px-6 lg:px-10 xl:px-12">
         <Link
           href="/"
           className="font-heading flex h-full items-center gap-2.5 text-base font-normal transition-opacity hover:opacity-85"

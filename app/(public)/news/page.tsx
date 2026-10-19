@@ -75,20 +75,22 @@ export default async function NewsPage() {
   const changelog = news.filter((item) => item.type === NewsType.CHANGELOG);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-3xl tracking-tight sm:text-[40px]">Actualités</h1>
-      <Tabs defaultValue="annonces">
-        <TabsList>
-          <TabsTrigger value="annonces">Annonces</TabsTrigger>
-          <TabsTrigger value="changelog">Changelog</TabsTrigger>
-        </TabsList>
-        <TabsContent value="annonces" className="pt-0">
-          <NewsFeed items={announcements} />
-        </TabsContent>
-        <TabsContent value="changelog" className="pt-0">
-          <NewsFeed items={changelog} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <main className="mx-auto w-full max-w-[960px] flex-1 px-4 py-12 sm:px-6">
+      <div className="flex flex-col gap-6">
+        <h1 className="font-heading text-3xl tracking-tight sm:text-[40px]">Actualités</h1>
+        <Tabs defaultValue="annonces">
+          <TabsList>
+            <TabsTrigger value="annonces">Annonces</TabsTrigger>
+            <TabsTrigger value="changelog">Changelog</TabsTrigger>
+          </TabsList>
+          <TabsContent value="annonces" className="pt-0">
+            <NewsFeed items={announcements} />
+          </TabsContent>
+          <TabsContent value="changelog" className="pt-0">
+            <NewsFeed items={changelog} />
+          </TabsContent>
+        </Tabs>
+      </div>
+    </main>
   );
 }

@@ -131,37 +131,9 @@ export function GalleryUploadDialog({
     });
   };
 
-  // Bouton déclencheur
-  if (!currentUser) {
-    return (
-      <Button
-        variant="default"
-        onClick={() => {
-          window.location.href = "/api/auth/signin/discord";
-        }}
-        className="gap-2"
-      >
-        <UploadSimple className="size-4" />
-        <span>Partager une capture</span>
-      </Button>
-    );
-  }
-
-  if (!isWhitelisted) {
-    return (
-      <Button
-        variant="outline"
-        onClick={() => {
-          toast.info(
-            "Seuls les joueurs acceptés sur la whitelist peuvent partager leurs captures."
-          );
-        }}
-        className="text-muted-foreground gap-2"
-      >
-        <UploadSimple className="size-4" />
-        <span>Partager une capture</span>
-      </Button>
-    );
+  // Le bouton ne doit être visible que lorsque l'on est connecté et whitelisté
+  if (!currentUser || !isWhitelisted) {
+    return null;
   }
 
   if (!submissionsEnabled && currentUser.role !== "ADMIN") {

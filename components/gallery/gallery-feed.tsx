@@ -41,6 +41,22 @@ export function GalleryFeed({
   const [sortBy, setSortBy] = useState<"recent" | "likes">("recent");
   const [selectedLightboxItem, setSelectedLightboxItem] = useState<GalleryCardItem | null>(null);
 
+  const categoryItems = useMemo(
+    () => [
+      { value: "ALL", label: "Toutes les catégories" },
+      ...categories.map((cat) => ({ value: cat.id, label: cat.label })),
+    ],
+    [categories]
+  );
+
+  const sortItems = useMemo(
+    () => [
+      { value: "recent", label: "Plus récentes" },
+      { value: "likes", label: "Plus aimées" },
+    ],
+    []
+  );
+
   // Synchronisation avec le query param `?photo=[id]` via état dérivé
   const photoId = searchParams.get("photo");
   const urlMatchedItem = useMemo(() => {
@@ -90,9 +106,10 @@ export function GalleryFeed({
             item.author.discordDisplayName ??
             ""
           ).toLowerCase();
+          const characterName = (item.author.characterName ?? "").toLowerCase();
           const matchesTitle = item.title.toLowerCase().includes(q);
           const matchesDesc = item.description?.toLowerCase().includes(q) ?? false;
-          const matchesAuthor = authorName.includes(q);
+          const matchesAuthor = authorName.includes(q) || characterName.includes(q);
 
           if (!matchesTitle && !matchesDesc && !matchesAuthor) {
             return false;
@@ -110,9 +127,9 @@ export function GalleryFeed({
   }, [initialItems, selectedCategory, search, sortBy]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
       {/* Barre de recherche et filtres harmonisée */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Champ de recherche */}
           <div className="relative">
@@ -138,16 +155,19 @@ export function GalleryFeed({
 
           {/* Filtre par catégorie */}
           <Select
+            items={categoryItems}
             value={selectedCategory}
             onValueChange={(val) => setSelectedCategory(val ?? "ALL")}
           >
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Toutes les catégories" />
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="Toutes les catégories">
+                {categoryItems.find((c) => c.value === selectedCategory)?.label ??
+                  "Toutes les catégories"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="ALL">Toutes les catégories</SelectItem>
-              {categories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
+              {categoryItems.map((cat) => (
+                <SelectItem key={cat.value} value={cat.value}>
                   {cat.label}
                 </SelectItem>
               ))}
@@ -156,15 +176,21 @@ export function GalleryFeed({
 
           {/* Tri */}
           <Select
+            items={sortItems}
             value={sortBy}
             onValueChange={(val) => val && setSortBy(val as "recent" | "likes")}
           >
             <SelectTrigger className="w-44">
-              <SelectValue placeholder="Trier par" />
+              <SelectValue placeholder="Trier par">
+                {sortItems.find((s) => s.value === sortBy)?.label ?? "Trier par"}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="recent">Plus récentes</SelectItem>
-              <SelectItem value="likes">Plus aimées</SelectItem>
+              {sortItems.map((item) => (
+                <SelectItem key={item.value} value={item.value}>
+                  {item.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
 
@@ -187,9 +213,9 @@ export function GalleryFeed({
         </div>
       </div>
 
-      {/* Grille des captures */}
+      {/* Grille des captures en plus grand */}
       {filteredItems.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
           {filteredItems.map((item, idx) => (
             <GalleryCard
               key={item.id}
