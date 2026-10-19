@@ -57,6 +57,7 @@ interface GalleryCardProps {
   currentUserId?: string;
   priority?: boolean;
   categoryLabels?: Record<string, string>;
+  gridSize?: "sm" | "md" | "lg";
 }
 
 export function GalleryCard({
@@ -65,6 +66,7 @@ export function GalleryCard({
   currentUserId,
   priority = false,
   categoryLabels,
+  gridSize = "md",
 }: GalleryCardProps) {
   const [liked, setLiked] = useState(item.isLikedByCurrentUser ?? false);
   const [likesCount, setLikesCount] = useState(item.likeCount);
@@ -110,6 +112,13 @@ export function GalleryCard({
 
   const isMaskedSpoiler = item.isSpoiler && !spoilerRevealed;
 
+  const imageSizes =
+    gridSize === "sm"
+      ? "(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 20vw"
+      : gridSize === "lg"
+        ? "(max-width: 768px) 100vw, 50vw"
+        : "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw";
+
   return (
     <article
       onClick={handleCardClick}
@@ -122,7 +131,7 @@ export function GalleryCard({
           alt={item.title}
           fill
           priority={priority}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+          sizes={imageSizes}
           className={cn(
             "object-cover transition-transform duration-500 ease-out",
             isMaskedSpoiler ? "scale-105 blur-md" : "group-hover:scale-[1.025]"
@@ -140,14 +149,22 @@ export function GalleryCard({
       </div>
 
       {/* Détails et métadonnées sous l'image */}
-      <div className="flex flex-1 flex-col justify-between gap-3 p-4">
-        <div className="flex flex-col gap-2">
+      <div
+        className={cn(
+          "flex flex-1 flex-col justify-between",
+          gridSize === "sm" ? "gap-2 p-3" : gridSize === "lg" ? "gap-4 p-5 sm:p-6" : "gap-3 p-4"
+        )}
+      >
+        <div className={cn("flex flex-col", gridSize === "sm" ? "gap-1.5" : "gap-2")}>
           {/* Ligne catégorie & Like */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5">
               <Badge
                 variant="secondary"
-                className="border-border/50 bg-muted/60 text-muted-foreground text-[11px] font-normal"
+                className={cn(
+                  "border-border/50 bg-muted/60 text-muted-foreground font-normal",
+                  gridSize === "sm" ? "px-1.5 py-0 text-[10px]" : "text-[11px]"
+                )}
               >
                 {categoryLabel}
               </Badge>
@@ -155,7 +172,10 @@ export function GalleryCard({
               {item.isSpoiler && spoilerRevealed && (
                 <Badge
                   variant="outline"
-                  className="border-amber-500/40 text-[10px] font-medium text-amber-500"
+                  className={cn(
+                    "border-amber-500/40 font-medium text-amber-500",
+                    gridSize === "sm" ? "px-1 py-0 text-[9px]" : "text-[10px]"
+                  )}
                 >
                   Spoiler
                 </Badge>
@@ -169,34 +189,68 @@ export function GalleryCard({
               disabled={isPending}
               aria-label={liked ? "Ne plus aimer" : "Aimer"}
               className={cn(
-                "flex cursor-pointer items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors",
+                "flex cursor-pointer items-center rounded-full font-medium transition-colors",
+                gridSize === "sm" ? "gap-1 px-2 py-0.5 text-[11px]" : "gap-1.5 px-2.5 py-1 text-xs",
                 liked
                   ? "bg-rose-500/10 text-rose-500 hover:bg-rose-500/20"
                   : "text-muted-foreground hover:bg-muted hover:text-rose-500"
               )}
             >
               <Heart
-                className={cn("size-3.5 transition-transform", liked && "scale-110 fill-current")}
+                className={cn(
+                  "transition-transform",
+                  gridSize === "sm" ? "size-3" : "size-3.5",
+                  liked && "scale-110 fill-current"
+                )}
               />
-              <span className="font-mono text-xs">{likesCount}</span>
+              <span className={cn("font-mono", gridSize === "sm" ? "text-[11px]" : "text-xs")}>
+                {likesCount}
+              </span>
             </button>
           </div>
 
           {/* Titre et description */}
           <div className="flex flex-col gap-1">
-            <h3 className="font-heading text-foreground group-hover:text-primary line-clamp-1 text-base font-semibold tracking-tight transition-colors">
+            <h3
+              className={cn(
+                "font-heading text-foreground group-hover:text-primary line-clamp-1 font-semibold tracking-tight transition-colors",
+                gridSize === "sm"
+                  ? "text-sm"
+                  : gridSize === "lg"
+                    ? "text-lg sm:text-xl"
+                    : "text-base"
+              )}
+            >
               {item.title}
             </h3>
             {item.description && (
-              <p className="text-muted-foreground line-clamp-2 text-xs leading-relaxed">
+              <p
+                className={cn(
+                  "text-muted-foreground leading-relaxed",
+                  gridSize === "sm"
+                    ? "line-clamp-1 text-[11px]"
+                    : gridSize === "lg"
+                      ? "line-clamp-3 text-sm"
+                      : "line-clamp-2 text-xs"
+                )}
+              >
                 {item.description}
               </p>
             )}
           </div>
         </div>
 
-        {/* Pied de carte avec Auteur (Nom RP + Pseudo Minecraft) & Date */}
-        <div className="border-border/60 mt-1 flex items-center justify-between border-t pt-2.5 text-xs">
+        {/* Pied de carte avec Auteur (Nom RP + Pseudo Minecraft) & Date - Alignement vertical centré sur la tête */}
+        <div
+          className={cn(
+            "border-border/60 flex items-center justify-between border-t text-xs",
+            gridSize === "sm"
+              ? "mt-0.5 min-h-5 pt-2"
+              : gridSize === "lg"
+                ? "mt-2 min-h-7 pt-3.5"
+                : "mt-1 min-h-6 pt-2.5"
+          )}
+        >
           <div className="flex min-w-0 items-center gap-2 overflow-hidden">
             <SkinHead
               size="sm"
@@ -206,27 +260,27 @@ export function GalleryCard({
               updatedAt={item.author.minecraftSkinUpdatedAt}
               className="shrink-0"
             />
-            <div className="flex min-w-0 items-baseline gap-1.5 overflow-hidden">
+            <div className="flex min-w-0 items-center gap-1.5 overflow-hidden">
               {item.author.characterName ? (
                 <>
-                  <span className="text-foreground line-clamp-1 font-medium">
+                  <span className="text-foreground line-clamp-1 leading-none font-medium">
                     {item.author.characterName}
                   </span>
                   {item.author.minecraftUsername && (
-                    <span className="text-muted-foreground line-clamp-1 shrink-0 text-[11px]">
+                    <span className="text-muted-foreground line-clamp-1 shrink-0 text-[11px] leading-none">
                       ({item.author.minecraftUsername})
                     </span>
                   )}
                 </>
               ) : (
-                <span className="text-muted-foreground group-hover:text-foreground line-clamp-1 font-medium transition-colors">
+                <span className="text-muted-foreground group-hover:text-foreground line-clamp-1 leading-none font-medium transition-colors">
                   {authorName}
                 </span>
               )}
             </div>
           </div>
 
-          <span className="text-muted-foreground shrink-0 text-[11px]">
+          <span className="text-muted-foreground shrink-0 text-[11px] leading-none">
             {formatDate(item.createdAt, {
               style: "prefix-long",
               withTime: false,
