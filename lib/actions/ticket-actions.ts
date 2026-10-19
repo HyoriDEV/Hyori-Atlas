@@ -61,12 +61,23 @@ export async function createTicket(category: TicketCategory, subject: string, de
     throw new Error("Le sujet et la description sont requis.");
   }
 
+  const isRpRequest = category === TicketCategory.RP_REQUEST;
+
   // Create the conversation, the conversation members, the messages, and the ticket all at once
   const ticket = await prisma.ticket.create({
     data: {
       player: { connect: { id: user.id } },
       category,
       subject: trimmedSubject,
+      teamSummons: isRpRequest
+        ? {
+            create: [
+              {
+                team: Role.RP_TRACKING,
+              },
+            ],
+          }
+        : undefined,
       conversation: {
         create: {
           type: ConversationType.TICKET,
@@ -93,7 +104,7 @@ export async function createTicket(category: TicketCategory, subject: string, de
   });
 
   // If RP request, also post to the user's RP tracking conversation
-  if (category === TicketCategory.RP_REQUEST) {
+  if (isRpRequest) {
     // Check if the user has an RP tracking conversation
     let rpConversation = await prisma.conversation.findFirst({
       where: {
@@ -162,7 +173,45 @@ export async function createTicket(category: TicketCategory, subject: string, de
       );
     });
 
+  // Si demande RP, notifier également l'équipe RP sur son salon Discord dédié
+  if (isRpRequest) {
+    const rpSummonTemplateId = TICKET_SUMMON_TEMPLATE_IDS[Role.RP_TRACKING];
+    if (rpSummonTemplateId) {
+      getTicketChannelNotificationConfig(rpSummonTemplateId, {
+        author: authorName,
+        subject: trimmedSubject,
+        category: categoryLabel,
+        description: trimmedDescription,
+        ticketId: ticket.id,
+        url: ticketStaffUrl,
+      })
+        .then((config) => {
+          if (config.enabled) {
+            return notifyTicketTeamSummoned({
+              team: Role.RP_TRACKING,
+              channelId: config.channelId,
+              mentionRoleId: config.mentionRoleId,
+              ticketId: ticket.id,
+              ticketSubject: trimmedSubject,
+              ticketCategory: categoryLabel,
+              authorName,
+              ticketDescription: trimmedDescription,
+              customTicketStaffUrl: ticketStaffUrl,
+              override: config.override,
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn(
+            "[TicketNotification] Échec lors de la convocation automatique Discord de l'équipe RP:",
+            err
+          );
+        });
+    }
+  }
+
   revalidatePath("/player/tickets");
+  revalidatePath("/staff/tickets");
   return { id: ticket.id };
 }
 

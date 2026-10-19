@@ -147,7 +147,7 @@ export function TicketStaffAccessPanel({
                 <span className="text-muted-foreground truncate text-[11px]">
                   {isSummoned
                     ? `${formatDate(teamState.summonedAt, { style: "prefix-short" })}${
-                        teamState.summonedByName ? ` par ${teamState.summonedByName}` : ""
+                        teamState.summonedByName ? ` par ${teamState.summonedByName}` : " (automatique)"
                       }`
                     : "Non convoquée"}
                 </span>
