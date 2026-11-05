@@ -149,6 +149,7 @@ export default async function RpTrackingStaffDetailPage(props: {
       title: true,
       content: true,
       order: true,
+      updatedAt: true,
     },
   });
 

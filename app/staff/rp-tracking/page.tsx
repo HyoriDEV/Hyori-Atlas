@@ -304,10 +304,19 @@ export default async function RpTrackingStaffListPage(props: {
                     </TableCell>
                     <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
                       {writing && writing.chapterCount > 0 ? (
-                        <Badge variant="outline" className="text-xs font-normal">
-                          {writing.chapterCount} chap. · {writing.wordCount.toLocaleString("fr-FR")}{" "}
-                          mot{writing.wordCount > 1 ? "s" : ""}
-                        </Badge>
+                        <div className="flex flex-col items-start gap-1">
+                          <Badge variant="outline" className="text-xs font-normal">
+                            {writing.chapterCount} chap. ·{" "}
+                            {writing.wordCount.toLocaleString("fr-FR")} mot
+                            {writing.wordCount > 1 ? "s" : ""}
+                          </Badge>
+                          {writing.lastUpdatedAt && (
+                            <span className="text-muted-foreground text-xs">
+                              Modifiée :{" "}
+                              {formatDate(writing.lastUpdatedAt, { style: "chat", fallback: "—" })}
+                            </span>
+                          )}
+                        </div>
                       ) : (
                         <span className="text-muted-foreground/60 text-xs">Aucune trame</span>
                       )}

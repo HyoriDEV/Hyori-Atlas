@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChapterSelect } from "@/components/dashboard/chapter-select";
+import { FormattedDate } from "@/components/ui/formatted-date";
 
 const FONT_FAMILY_STORAGE_KEY = "hyori_writing_font_family";
 const FONT_SIZE_STORAGE_KEY = "hyori_writing_font_size";
@@ -78,6 +79,8 @@ export interface ChapterItem {
   title: string;
   content: string;
   order?: number;
+  /** Dernière modification par le joueur. Affichée sous le titre si fournie. */
+  updatedAt?: Date | string | null;
 }
 
 export function ChapterReader({
@@ -286,6 +289,12 @@ export function ChapterReader({
                   >
                     {chapter.title}
                   </h2>
+                  {chapter.updatedAt && (
+                    <span className="text-muted-foreground text-xs">
+                      Modifié :{" "}
+                      <FormattedDate date={chapter.updatedAt} style="compact" withTime />
+                    </span>
+                  )}
                 </header>
 
                 <div
