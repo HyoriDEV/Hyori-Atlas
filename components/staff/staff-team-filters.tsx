@@ -128,20 +128,20 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
   const hasActiveFilters = Boolean(query || (roleFilter !== undefined && roleFilter !== ALL_VALUE));
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       {hasActiveFilters && (
         <Button variant="outline" size="sm" onClick={handleResetFilters} className="h-9 text-xs">
           Réinitialiser les filtres
         </Button>
       )}
 
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
         <Input
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher..."
-          className="w-72 pr-8 pl-8"
+          className="w-full sm:w-72 pr-8 pl-8"
         />
         {queryInput ? (
           <button
@@ -160,7 +160,7 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
         value={roleFilter ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ role: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-56">
+        <SelectTrigger className="w-full sm:w-56">
           <SelectValue placeholder="Filtrer par rôle">
             {roleFilterItems.find((item) => item.value === (roleFilter ?? ALL_VALUE))?.label ??
               "Tous les pôles"}

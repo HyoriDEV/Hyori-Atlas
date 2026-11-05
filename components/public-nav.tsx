@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import { auth } from "@/auth";
 import { PlayerSpaceCta } from "@/components/player-space-cta";
+import { PublicNavMobileMenu } from "@/components/public-nav-mobile-menu";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export async function PublicNav() {
@@ -39,10 +40,10 @@ export async function PublicNav() {
             height={48}
             className="size-12 shrink-0 rounded-[8px] object-cover shadow-xs"
           />
-          <span>Hyori RP</span>
+          <span className="hidden sm:inline">Hyori RP</span>
         </Link>
-        <nav className="flex h-full items-center gap-4 sm:gap-8">
-          <div className="flex items-center gap-4 sm:gap-8">
+        <nav className="flex h-full items-center gap-2.5 sm:gap-8">
+          <div className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
@@ -53,6 +54,9 @@ export async function PublicNav() {
               </Link>
             ))}
           </div>
+          <PublicNavMobileMenu
+            links={navLinks.map((link) => ({ label: link.label, href: link.href }))}
+          />
           <PlayerSpaceCta
             user={user}
             registrationEnabled={settings.registrationEnabled}

@@ -115,15 +115,15 @@ export function WritingFilters({ query, sort }: { query: string; sort: StaffWrit
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
         {/* Recherche texte */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={queryInput}
             onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Rechercher par joueur, personnage, titre..."
-            className="w-80 pr-8 pl-8 sm:w-[350px]"
+            className="w-full pr-8 pl-8 sm:w-[350px]"
           />
           {queryInput ? (
             <button
@@ -143,7 +143,7 @@ export function WritingFilters({ query, sort }: { query: string; sort: StaffWrit
           value={sort}
           onValueChange={(val) => updateParams({ sort: val as StaffWritingSort })}
         >
-          <SelectTrigger className="w-60">
+          <SelectTrigger className="w-full sm:w-60">
             <SelectValue placeholder="Trier par">
               {sortItems.find((item) => item.value === sort)?.label ?? "Trier par"}
             </SelectValue>

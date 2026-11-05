@@ -153,7 +153,7 @@ export function SanctionsFilters({
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-2.5">
+    <div className="flex w-full flex-wrap items-center gap-2.5 sm:w-auto">
       {/* Barre de recherche */}
       <div className="relative min-w-[280px] flex-1 sm:w-[340px] sm:flex-initial">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -182,7 +182,7 @@ export function SanctionsFilters({
         value={typeFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ type: val ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-full sm:w-[160px]">
           <SelectValue placeholder="Tous les types">
             {typeFilterItems.find((item) => item.value === (typeFilter ?? ALL_VALUE))?.label ??
               "Tous les types"}
@@ -203,7 +203,7 @@ export function SanctionsFilters({
         value={statusFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ status: val ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-[150px]">
+        <SelectTrigger className="w-full sm:w-[150px]">
           <SelectValue placeholder="Tous les statuts">
             {statusFilterItems.find((item) => item.value === (statusFilter ?? ALL_VALUE))?.label ??
               "Tous les statuts"}
@@ -224,7 +224,7 @@ export function SanctionsFilters({
         value={sourceFilter ?? ALL_VALUE}
         onValueChange={(val) => updateParams({ source: val ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-[150px]">
+        <SelectTrigger className="w-full sm:w-[150px]">
           <SelectValue placeholder="Toutes les sources">
             {sourceFilterItems.find((item) => item.value === (sourceFilter ?? ALL_VALUE))?.label ??
               "Toutes les sources"}

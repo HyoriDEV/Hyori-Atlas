@@ -217,14 +217,14 @@ export function GalleryFeed({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex flex-wrap items-center gap-3">
           {/* Champ de recherche */}
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
             <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher par titre ou joueur..."
-              className="w-72 pr-8 pl-8 sm:w-80"
+              className="w-full pr-8 pl-8 sm:w-80"
             />
             {search ? (
               <button
@@ -244,7 +244,7 @@ export function GalleryFeed({
             value={selectedCategory}
             onValueChange={(val) => setSelectedCategory(val ?? "ALL")}
           >
-            <SelectTrigger className="w-52">
+            <SelectTrigger className="w-full sm:w-52">
               <SelectValue placeholder="Toutes les catégories">
                 {categoryItems.find((c) => c.value === selectedCategory)?.label ??
                   "Toutes les catégories"}
@@ -265,7 +265,7 @@ export function GalleryFeed({
             value={sortBy}
             onValueChange={(val) => val && setSortBy(val as "recent" | "likes")}
           >
-            <SelectTrigger className="w-44">
+            <SelectTrigger className="w-full sm:w-44">
               <SelectValue placeholder="Trier par">
                 {sortItems.find((s) => s.value === sortBy)?.label ?? "Trier par"}
               </SelectValue>
