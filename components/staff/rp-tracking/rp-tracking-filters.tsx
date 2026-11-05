@@ -152,15 +152,15 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
         {/* Recherche texte */}
-        <div className="relative">
+        <div className="relative w-full sm:w-auto">
           <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={queryInput}
             onChange={(event) => handleQueryChange(event.target.value)}
             placeholder="Rechercher un joueur..."
-            className="w-64 pr-8 pl-8 sm:w-72"
+            className="w-full pr-8 pl-8 sm:w-72"
           />
           {queryInput ? (
             <button
@@ -180,7 +180,7 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
           value={status}
           onValueChange={(val) => updateParams({ status: val as RpTrackingFilterStatus })}
         >
-          <SelectTrigger className="w-64">
+          <SelectTrigger className="w-full sm:w-64">
             <SelectValue placeholder="État du suivi">
               {rpTrackingFilterStatusLabels[status]}
             </SelectValue>
@@ -204,7 +204,7 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
           value={writing}
           onValueChange={(val) => updateParams({ writing: val as RpTrackingWritingFilter })}
         >
-          <SelectTrigger className="w-52">
+          <SelectTrigger className="w-full sm:w-52">
             <SelectValue placeholder="Trame écrite">
               {rpTrackingWritingFilterLabels[writing]}
             </SelectValue>

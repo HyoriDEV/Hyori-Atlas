@@ -283,7 +283,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-heading text-2xl font-semibold">Tickets</h1>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
           <TicketFilters
             query={query}
             category={category}
@@ -329,7 +329,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                   label="Statut"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden md:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="activity"
@@ -337,7 +337,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                   label="Dernière activité"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden xl:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="created"
@@ -447,10 +447,10 @@ export default async function TicketsStaffListPage(props: PageProps) {
                             : "Archivé"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden md:table-cell text-muted-foreground whitespace-nowrap">
                       {formatDate(ticket.lastMessageAt, { style: "compact" })}
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden xl:table-cell text-muted-foreground whitespace-nowrap">
                       {formatDate(ticket.createdAt, { style: "compact" })}
                     </TableCell>
                     <TableCell className="w-10 pr-4">

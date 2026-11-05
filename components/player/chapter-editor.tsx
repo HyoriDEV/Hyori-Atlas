@@ -894,15 +894,15 @@ export function ChapterEditor({
         </div>
       </div>
 
-      <div className="bg-card/70 border-border/60 text-muted-foreground sticky bottom-0 z-10 flex shrink-0 items-center justify-between border-t px-6 py-2.5 text-xs backdrop-blur-xs select-none sm:text-sm">
+      <div className="bg-card/70 border-border/60 text-muted-foreground sticky bottom-0 z-10 flex shrink-0 items-center justify-between border-t px-4 py-2.5 sm:px-6 text-xs backdrop-blur-xs select-none sm:text-sm">
         <div className="flex items-center gap-4">
           <span className="text-foreground/90 font-semibold">
             {wordCount.toLocaleString("fr-FR")} {wordCount > 1 ? "mots" : "mot"}
           </span>
           <span className="text-border">•</span>
           <span>{charCount.toLocaleString("fr-FR")} caractères</span>
-          <span className="text-border">•</span>
-          <span>~{computeReadingTime(wordCount)} min de lecture</span>
+          <span className="text-border hidden sm:inline">•</span>
+          <span className="hidden sm:inline">~{computeReadingTime(wordCount)} min de lecture</span>
         </div>
 
         <div className="text-muted-foreground/60 hidden items-center gap-3 text-xs sm:flex">

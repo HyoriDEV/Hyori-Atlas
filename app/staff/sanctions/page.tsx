@@ -301,7 +301,7 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Type"
                 />
               </TableHead>
-              <TableHead className="max-w-[260px]">
+              <TableHead className="hidden md:table-cell max-w-[260px]">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="reason"
@@ -317,7 +317,7 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Statut"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden lg:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="issuedBy"
@@ -325,7 +325,7 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Émetteur"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden lg:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="expiresAt"
@@ -333,7 +333,7 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Expiration / Fin"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden md:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="createdAt"
@@ -400,7 +400,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Raison / Motif */}
-                    <TableCell className="max-w-[260px]">
+                    <TableCell className="hidden md:table-cell max-w-[260px]">
                       <span className="block truncate text-sm" title={sanction.reason}>
                         {sanction.reason}
                       </span>
@@ -428,7 +428,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Émetteur & Source */}
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       <div className="flex flex-col gap-0.5 text-xs">
                         <span className="font-medium">{issuerName}</span>
                         <span className="text-muted-foreground text-[11px]">
@@ -438,7 +438,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Expiration */}
-                    <TableCell className="text-muted-foreground text-xs">
+                    <TableCell className="hidden lg:table-cell text-muted-foreground text-xs">
                       {sanction.expiresAt ? (
                         formatDate(sanction.expiresAt, {
                           style: "prefix-short",
@@ -452,7 +452,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Date d'émission */}
-                    <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-xs whitespace-nowrap">
                       {formatDate(sanction.createdAt, {
                         style: "prefix-short",
                         withTime: true,

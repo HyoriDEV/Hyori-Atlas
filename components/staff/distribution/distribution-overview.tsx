@@ -393,7 +393,7 @@ export function DistributionOverview({
 
       <div className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-72">
+          <div className="relative w-full sm:w-72">
             <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
             <Input
               placeholder="Rechercher un joueur..."
@@ -402,7 +402,7 @@ export function DistributionOverview({
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-72 pr-8 pl-8 text-sm"
+              className="w-full pr-8 pl-8 text-sm"
             />
             {search ? (
               <button
@@ -427,7 +427,7 @@ export function DistributionOverview({
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-48 text-sm">
+            <SelectTrigger className="w-full sm:w-48 text-sm">
               <SelectValue placeholder="Statut de traitement">
                 {PROCESSED_FILTER_OPTIONS.find((item) => item.value === processedFilter)?.label ??
                   "Statut de traitement"}
@@ -494,7 +494,7 @@ export function DistributionOverview({
                   </div>
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none"
+                  className="hidden md:table-cell cursor-pointer select-none"
                   onClick={() => handleSort("choice1")}
                 >
                   <div className="hover:text-foreground flex items-center gap-1.5">
@@ -503,7 +503,7 @@ export function DistributionOverview({
                   </div>
                 </TableHead>
                 <TableHead
-                  className="cursor-pointer select-none"
+                  className="hidden md:table-cell cursor-pointer select-none"
                   onClick={() => handleSort("choice2")}
                 >
                   <div className="hover:text-foreground flex items-center gap-1.5">
@@ -553,7 +553,7 @@ export function DistributionOverview({
                         <span className="font-medium hover:underline">{row.playerName}</span>
                       </Link>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                       {row.primaryClassName ? (
                         <span>
                           {row.primaryClassName} — {row.primaryRoleName}
@@ -562,7 +562,7 @@ export function DistributionOverview({
                         "—"
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
                       {row.secondaryClassName ? (
                         <span>
                           {row.secondaryClassName} — {row.secondaryRoleName}

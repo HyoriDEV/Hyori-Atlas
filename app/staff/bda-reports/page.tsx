@@ -81,7 +81,7 @@ export default async function BdaReportsPage(props: {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-heading text-2xl font-semibold">Rapports GC</h1>
         {creationEnabled ? (
           <Link href="/staff/bda-reports/new" className={buttonVariants()}>
@@ -110,7 +110,7 @@ export default async function BdaReportsPage(props: {
             <TableRow>
               <TableHead className="pl-6">Intitulé</TableHead>
               <TableHead>Statut</TableHead>
-              <TableHead>Dernière modification</TableHead>
+              <TableHead className="hidden sm:table-cell">Dernière modification</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -139,7 +139,7 @@ export default async function BdaReportsPage(props: {
                         {bdaReportStatusLabels[report.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden sm:table-cell text-muted-foreground">
                       {formatDate(report.updatedAt, { style: "prefix-long", withTime: true })}
                     </TableCell>
                   </TicketTableRow>

@@ -141,12 +141,12 @@ export function CountdownTimer({
               {units.map((unit) => (
                 <div
                   key={unit.label}
-                  className="group relative flex flex-col items-center justify-center rounded-lg border border-[#262626] bg-[#1a1a1a]/90 p-3.5 shadow-sm transition-all duration-300 hover:border-[#d4af35]/40 hover:bg-[#1f1f1f] sm:p-5 md:p-6"
+                  className="group relative flex flex-col items-center justify-center rounded-lg border border-[#262626] bg-[#1a1a1a]/90 px-1.5 py-3.5 shadow-sm sm:p-3.5 transition-all duration-300 hover:border-[#d4af35]/40 hover:bg-[#1f1f1f] sm:p-5 md:p-6"
                 >
                   <span className="font-heading text-3xl font-normal tracking-normal text-[#f8f5e8] sm:text-5xl md:text-6xl">
                     {mounted ? String(unit.value).padStart(2, "0") : "00"}
                   </span>
-                  <span className="mt-2 font-sans text-[10px] font-semibold tracking-[0.25em] text-[#a3a39e] uppercase transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
+                  <span className="mt-2 font-sans text-[10px] font-semibold tracking-[0.12em] text-[#a3a39e] uppercase sm:tracking-[0.25em] transition-colors group-hover:text-[#d4af35] sm:text-[11px]">
                     {unit.label}
                   </span>
                 </div>

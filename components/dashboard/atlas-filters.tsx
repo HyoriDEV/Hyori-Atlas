@@ -149,16 +149,16 @@ export function AtlasFilters({
   }, []);
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
       {hasActiveSort ? <ResetSortButton /> : null}
 
-      <div className="relative">
+      <div className="relative w-full sm:w-auto">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
         <Input
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher par pseudo ou nom RP..."
-          className="w-80 pr-8 pl-8"
+          className="w-full sm:w-80 pr-8 pl-8"
         />
         {queryInput ? (
           <button
@@ -177,7 +177,7 @@ export function AtlasFilters({
         value={status ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ status: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-52">
+        <SelectTrigger className="w-full sm:w-52">
           <SelectValue placeholder="Statut d'inscription">
             {statusItems.find((item) => item.value === (status ?? ALL_VALUE))?.label ??
               "Statut d'inscription"}
@@ -197,7 +197,7 @@ export function AtlasFilters({
         value={sheetStatus ?? ALL_VALUE}
         onValueChange={(value) => updateParams({ sheetStatus: value ?? ALL_VALUE })}
       >
-        <SelectTrigger className="w-52">
+        <SelectTrigger className="w-full sm:w-52">
           <SelectValue placeholder="Statut fiche RP">
             {sheetStatusItems.find((item) => item.value === (sheetStatus ?? ALL_VALUE))?.label ??
               "Statut fiche RP"}

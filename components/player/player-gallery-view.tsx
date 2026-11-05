@@ -180,7 +180,7 @@ export function PlayerGalleryView({
           })}
         </div>
       ) : (
-        <div className="border-border bg-card/40 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-16 text-center">
+        <div className="border-border bg-card/40 flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-8 text-center sm:p-16">
           <div className="bg-muted/60 text-muted-foreground flex size-14 items-center justify-center rounded-full">
             <Images className="size-7" />
           </div>
