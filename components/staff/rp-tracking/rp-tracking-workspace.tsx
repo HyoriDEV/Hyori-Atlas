@@ -1,9 +1,20 @@
 "use client";
 
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type PointerEvent,
+} from "react";
 import Link from "next/link";
 import {
   BookOpen,
   ArrowSquareOut,
+  ArrowsInSimple,
+  ArrowsOutSimple,
   Clock,
   CheckCircle,
 } from "@phosphor-icons/react";
@@ -49,6 +60,66 @@ export interface RpTrackingWorkspaceProps {
   canReviewSheet?: boolean;
 }
 
+/** Largeur du chat de suivi (en % de l'espace de travail, écrans larges). */
+const CHAT_WIDTH_DEFAULT = 40;
+const CHAT_WIDTH_MIN = 25;
+const CHAT_WIDTH_MAX = 75;
+const CHAT_WIDTH_STORAGE_KEY = "hyori-atlas:rp-tracking:chat-width";
+const CHAT_EXPANDED_STORAGE_KEY = "hyori-atlas:rp-tracking:chat-expanded";
+
+function clampChatWidth(value: number) {
+  return Math.min(CHAT_WIDTH_MAX, Math.max(CHAT_WIDTH_MIN, Math.round(value)));
+}
+
+function readStorage(key: string): string | null {
+  try {
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function writeStorage(key: string, value: string) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch {
+    // Stockage indisponible (navigation privée…) : le réglage vaut pour la page seulement.
+  }
+}
+
+/**
+ * Largeur du chat réglable au séparateur et mode « chat agrandi » (trame masquée),
+ * mémorisés par navigateur.
+ */
+function useChatLayout() {
+  const [chatWidth, setChatWidth] = useState(CHAT_WIDTH_DEFAULT);
+  const [chatExpanded, setChatExpanded] = useState(false);
+
+  // Lu après le montage : le rendu serveur ne connaît pas le stockage du navigateur.
+  useEffect(() => {
+    const savedWidth = Number(readStorage(CHAT_WIDTH_STORAGE_KEY));
+    if (Number.isFinite(savedWidth) && savedWidth > 0) {
+      setChatWidth(clampChatWidth(savedWidth));
+    }
+    setChatExpanded(readStorage(CHAT_EXPANDED_STORAGE_KEY) === "1");
+  }, []);
+
+  const updateChatWidth = useCallback((value: number) => {
+    const next = clampChatWidth(value);
+    setChatWidth(next);
+    writeStorage(CHAT_WIDTH_STORAGE_KEY, String(next));
+  }, []);
+
+  const toggleChatExpanded = useCallback(() => {
+    setChatExpanded((prev) => {
+      writeStorage(CHAT_EXPANDED_STORAGE_KEY, prev ? "0" : "1");
+      return !prev;
+    });
+  }, []);
+
+  return { chatWidth, chatExpanded, updateChatWidth, toggleChatExpanded };
+}
+
 export function RpTrackingWorkspace({
   conversationId,
   initialMessages,
@@ -59,6 +130,45 @@ export function RpTrackingWorkspace({
   selectedCharacter,
   chapters,
 }: RpTrackingWorkspaceProps) {
+  const { chatWidth, chatExpanded, updateChatWidth, toggleChatExpanded } = useChatLayout();
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const [isResizing, setIsResizing] = useState(false);
+
+  function widthFromPointer(clientX: number) {
+    const rect = workspaceRef.current?.getBoundingClientRect();
+    if (!rect || rect.width === 0) return chatWidth;
+    return ((rect.right - clientX) / rect.width) * 100;
+  }
+
+  function handleSeparatorPointerDown(event: PointerEvent<HTMLDivElement>) {
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    setIsResizing(true);
+  }
+
+  function handleSeparatorPointerMove(event: PointerEvent<HTMLDivElement>) {
+    if (!isResizing) return;
+    updateChatWidth(widthFromPointer(event.clientX));
+  }
+
+  function handleSeparatorPointerUp(event: PointerEvent<HTMLDivElement>) {
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    setIsResizing(false);
+  }
+
+  function handleSeparatorKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    // Le chat est à droite : flèche gauche = chat plus large.
+    if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      updateChatWidth(chatWidth + 5);
+    } else if (event.key === "ArrowRight") {
+      event.preventDefault();
+      updateChatWidth(chatWidth - 5);
+    }
+  }
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {/* Barre supérieure unifiée */}
@@ -123,6 +233,21 @@ export function RpTrackingWorkspace({
             variant="header"
           />
 
+          {/* Agrandir le chat (trame masquée) */}
+          <button
+            type="button"
+            onClick={toggleChatExpanded}
+            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs")}
+            aria-pressed={chatExpanded}
+          >
+            {chatExpanded ? (
+              <ArrowsInSimple className="size-3.5" />
+            ) : (
+              <ArrowsOutSimple className="size-3.5" />
+            )}
+            <span>{chatExpanded ? "Afficher la trame" : "Agrandir le suivi"}</span>
+          </button>
+
           {/* Lien direct Atlas */}
           <Link
             href={`/staff/atlas/${player.id}`}
@@ -141,12 +266,24 @@ export function RpTrackingWorkspace({
         </div>
       )}
 
-      {/* Espace de travail Principal (60% Trame - 40% Chat de suivi) */}
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden lg:grid-cols-10">
+      {/* Espace de travail principal : trame à gauche, chat de suivi à droite (largeur réglable) */}
+      <div
+        ref={workspaceRef}
+        className={cn(
+          "flex min-h-0 flex-1 flex-col gap-4 overflow-hidden lg:flex-row lg:gap-0",
+          isResizing && "cursor-col-resize select-none"
+        )}
+        style={{ "--rp-chat-width": `${chatWidth}%` } as CSSProperties}
+      >
         {/* ========================================================= */}
-        {/* TRAME DE NARRATION (60%)                                   */}
+        {/* TRAME DE NARRATION                                         */}
         {/* ========================================================= */}
-        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[45%] lg:col-span-6">
+        <div
+          className={cn(
+            "flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[45%] lg:flex-1",
+            chatExpanded && "hidden"
+          )}
+        >
           {chapters.length > 0 ? (
             <ChapterReader chapters={chapters} />
           ) : (
@@ -164,10 +301,45 @@ export function RpTrackingWorkspace({
           )}
         </div>
 
+        {/* Séparateur glissable (écrans larges) ; double-clic = largeur par défaut */}
+        {!chatExpanded && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Redimensionner le chat de suivi"
+            aria-valuemin={CHAT_WIDTH_MIN}
+            aria-valuemax={CHAT_WIDTH_MAX}
+            aria-valuenow={chatWidth}
+            tabIndex={0}
+            title="Glisser pour redimensionner · double-clic pour réinitialiser"
+            onPointerDown={handleSeparatorPointerDown}
+            onPointerMove={handleSeparatorPointerMove}
+            onPointerUp={handleSeparatorPointerUp}
+            onPointerCancel={handleSeparatorPointerUp}
+            onDoubleClick={() => updateChatWidth(CHAT_WIDTH_DEFAULT)}
+            onKeyDown={handleSeparatorKeyDown}
+            className="group relative hidden w-4 shrink-0 cursor-col-resize touch-none outline-none lg:block"
+          >
+            <span
+              className={cn(
+                "bg-border/70 group-hover:bg-primary/50 group-focus-visible:bg-primary/70 absolute inset-y-0 left-1/2 w-px -translate-x-1/2 transition-colors",
+                isResizing && "bg-primary/70"
+              )}
+            />
+          </div>
+        )}
+
         {/* ========================================================= */}
-        {/* CHAT DE SUIVI RP (40%)                                     */}
+        {/* CHAT DE SUIVI RP                                           */}
         {/* ========================================================= */}
-        <div className="flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[55%] lg:col-span-4">
+        <div
+          className={cn(
+            "flex min-h-0 min-w-0 flex-col overflow-hidden",
+            chatExpanded
+              ? "flex-1"
+              : "max-lg:h-[55%] lg:w-[var(--rp-chat-width)] lg:shrink-0"
+          )}
+        >
           <ConversationChat
             conversationId={conversationId}
             initialMessages={initialMessages}
@@ -175,6 +347,7 @@ export function RpTrackingWorkspace({
             viewerIsStaff
             sendAction={sendStaffConversationMessage}
             emptyBadge="Début du suivi RP."
+            composerMaxHeight="40vh"
             className="min-h-0 flex-1"
           />
         </div>

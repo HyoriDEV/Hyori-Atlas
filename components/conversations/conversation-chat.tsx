@@ -71,6 +71,7 @@ export function ConversationChat({
   disabledMessage,
   emptyBadge,
   unreadSince,
+  composerMaxHeight = "160px",
   className,
 }: {
   conversationId: string;
@@ -87,6 +88,8 @@ export function ConversationChat({
   emptyBadge?: string;
   /** Dernière lecture du lecteur : affiche un séparateur avant le premier message plus récent. */
   unreadSince?: string | null;
+  /** Hauteur max de la zone de saisie (valeur CSS) : elle grandit avec le texte jusque-là. */
+  composerMaxHeight?: string;
   className?: string;
 }) {
   const router = useRouter();
@@ -258,10 +261,12 @@ export function ConversationChat({
 
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+      const textarea = textareaRef.current;
+      textarea.style.height = "auto";
+      const maxHeight = parseFloat(getComputedStyle(textarea).maxHeight) || 160;
+      textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
     }
-  }, [body]);
+  }, [body, composerMaxHeight]);
 
   function resolveLinkHref(linkHref: string) {
     if (!viewerIsStaff && linkHref.startsWith("/staff/tickets/")) {
@@ -1257,7 +1262,8 @@ export function ConversationChat({
               onPaste={handlePaste}
               placeholder="Écrire un message..."
               rows={1}
-              className="placeholder:text-muted-foreground/60 max-h-[160px] min-h-[38px] w-full resize-none border-0 bg-transparent p-0 text-sm leading-relaxed outline-none focus:outline-none focus-visible:ring-0 md:text-sm"
+              style={{ maxHeight: composerMaxHeight }}
+              className="placeholder:text-muted-foreground/60 min-h-[38px] w-full resize-none border-0 bg-transparent p-0 text-sm leading-relaxed outline-none focus:outline-none focus-visible:ring-0 md:text-sm"
               disabled={isUploading}
             />
           </div>
