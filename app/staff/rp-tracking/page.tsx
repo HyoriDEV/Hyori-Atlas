@@ -164,11 +164,11 @@ export default async function RpTrackingStaffListPage(props: {
             <TableRow>
               <TableHead className="pl-6">Joueur</TableHead>
               <TableHead>État</TableHead>
-              <TableHead>Dernier message</TableHead>
-              <TableHead>Messages</TableHead>
-              <TableHead>Trame écrite</TableHead>
-              <TableHead>Dernière connexion</TableHead>
-              <TableHead>Dernière activité</TableHead>
+              <TableHead className="hidden md:table-cell">Dernier message</TableHead>
+              <TableHead className="hidden lg:table-cell">Messages</TableHead>
+              <TableHead className="hidden lg:table-cell">Trame écrite</TableHead>
+              <TableHead className="hidden xl:table-cell">Dernière connexion</TableHead>
+              <TableHead className="hidden md:table-cell">Dernière activité</TableHead>
               <TableHead className="w-12 pr-6 text-right">Traité</TableHead>
             </TableRow>
           </TableHeader>
@@ -278,7 +278,7 @@ export default async function RpTrackingStaffListPage(props: {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="max-w-md">
+                    <TableCell className="hidden md:table-cell max-w-md">
                       {lastMessage ? (
                         <span
                           className={cn(
@@ -296,13 +296,13 @@ export default async function RpTrackingStaffListPage(props: {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden lg:table-cell text-muted-foreground">
                       <span className="inline-flex items-center gap-1.5">
                         <ChatCircle className="size-3.5" />
                         {player.messageCount}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
                       {writing && writing.chapterCount > 0 ? (
                         <Badge variant="outline" className="text-xs font-normal">
                           {writing.chapterCount} chap. · {writing.wordCount.toLocaleString("fr-FR")}{" "}
@@ -312,10 +312,10 @@ export default async function RpTrackingStaffListPage(props: {
                         <span className="text-muted-foreground/60 text-xs">Aucune trame</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden xl:table-cell text-muted-foreground whitespace-nowrap">
                       {formatDate(context?.lastConnectedAt, { style: "chat", fallback: "Jamais" })}
                     </TableCell>
-                    <TableCell className="text-muted-foreground whitespace-nowrap">
+                    <TableCell className="hidden md:table-cell text-muted-foreground whitespace-nowrap">
                       {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
                     </TableCell>
                     <TableCell className="pr-6 text-right">

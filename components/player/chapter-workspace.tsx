@@ -83,6 +83,18 @@ export function ChapterWorkspace({
 
   const activeChapter = chapters.find((chapter) => chapter.id === activeChapterId) ?? null;
 
+  // Sur téléphone, la liste prend tout l'écran : ouvrir un chapitre la referme.
+  function closeSidebarOnPhone() {
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 767px)").matches) {
+      setIsSidebarOpen(false);
+    }
+  }
+
+  function openChapter(chapterId: string) {
+    setActiveChapterId(chapterId);
+    closeSidebarOnPhone();
+  }
+
   const filteredChapters = useMemo(() => {
     if (!searchQuery.trim()) return chapters;
     const query = searchQuery.toLowerCase().trim();
@@ -112,7 +124,7 @@ export function ChapterWorkspace({
         const newTitle = `Chapitre ${chapters.length + 1}`;
         const chapter = await createChapter(newTitle);
         setChapters((previous) => [...previous, chapter]);
-        setActiveChapterId(chapter.id);
+        openChapter(chapter.id);
         toast.success("Nouveau chapitre créé.");
       } catch (error) {
         toast.error(
@@ -201,7 +213,7 @@ export function ChapterWorkspace({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="border-border/70 bg-card/40 flex min-h-0 flex-1 overflow-hidden rounded-xl border shadow-lg backdrop-blur-xs">
         {isSidebarOpen && (
-          <aside className="border-border/70 bg-card/60 flex min-h-0 w-80 shrink-0 flex-col border-r transition-all sm:w-[22rem]">
+          <aside className="border-border/70 bg-card/60 flex min-h-0 w-full shrink-0 flex-col transition-all md:w-[22rem] md:border-r">
             <div className="border-border/60 bg-card/90 sticky top-0 z-10 flex shrink-0 flex-col gap-3.5 border-b p-4 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -306,7 +318,7 @@ export function ChapterWorkspace({
                         ) : (
                           <button
                             type="button"
-                            onClick={() => setActiveChapterId(chapter.id)}
+                            onClick={() => openChapter(chapter.id)}
                             className="flex min-w-0 flex-1 items-baseline gap-2 text-left"
                           >
                             <span className="text-primary/90 shrink-0 font-mono text-xs font-semibold">
@@ -389,7 +401,7 @@ export function ChapterWorkspace({
 
                       <button
                         type="button"
-                        onClick={() => setActiveChapterId(chapter.id)}
+                        onClick={() => openChapter(chapter.id)}
                         className="pl-1 text-left"
                       >
                         <p className="text-muted-foreground/85 line-clamp-2 text-xs leading-relaxed">
@@ -411,7 +423,12 @@ export function ChapterWorkspace({
           </aside>
         )}
 
-        <main className="bg-background/50 flex min-h-0 flex-1 flex-col overflow-hidden">
+        <main
+          className={cn(
+            "bg-background/50 flex min-h-0 flex-1 flex-col overflow-hidden",
+            isSidebarOpen && "max-md:hidden"
+          )}
+        >
           {activeChapter ? (
             <ChapterEditor
               key={activeChapter.id}

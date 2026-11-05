@@ -141,7 +141,7 @@ export default async function StaffTeamPage(props: PageProps) {
       {/* En-tête de la page */}
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
         <h1 className="font-heading text-2xl font-semibold">Équipe du staff</h1>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-3 md:w-auto">
           <StaffTeamFilters query={query} roleFilter={roleParam} />
           <AddStaffMemberDialog availablePlayers={availablePlayers} />
         </div>
@@ -191,7 +191,7 @@ export default async function StaffTeamPage(props: PageProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="pl-6">Membre du staff</TableHead>
-              <TableHead>Pôle actuel</TableHead>
+              <TableHead className="hidden md:table-cell">Pôle actuel</TableHead>
               <TableHead>Changer de rôle</TableHead>
               <TableHead className="pr-6 text-right">Action</TableHead>
             </TableRow>
@@ -260,7 +260,7 @@ export default async function StaffTeamPage(props: PageProps) {
                       </Link>
                     </TableCell>
 
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <StaffRoleBadge role={member.role} />
                     </TableCell>
 

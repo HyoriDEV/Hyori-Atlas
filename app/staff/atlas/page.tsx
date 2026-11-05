@@ -254,7 +254,7 @@ export default async function AtlasPage(props: PageProps) {
                   label="Nom RP"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden md:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="sheetUpdatedAt"
@@ -263,7 +263,7 @@ export default async function AtlasPage(props: PageProps) {
                   label="Modification fiche"
                 />
               </TableHead>
-              <TableHead>
+              <TableHead className="hidden lg:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="sheetStatus"
@@ -313,12 +313,12 @@ export default async function AtlasPage(props: PageProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{sheet?.name || "—"}</TableCell>
-                    <TableCell className="text-muted-foreground">
+                    <TableCell className="hidden md:table-cell text-muted-foreground">
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
                         : "—"}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden lg:table-cell">
                       {sheet ? (
                         <div className="flex items-center gap-1.5">
                           <Badge

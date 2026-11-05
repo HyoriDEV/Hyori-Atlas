@@ -135,7 +135,7 @@ export default async function GettingStartedPage() {
                 {minecraftLinked ? "Connecté" : "Non lié"}
               </Badge>
             </div>
-            <CardContent className="flex items-center justify-between gap-3">
+            <CardContent className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-3">
                 <SkinHead
                   size="xl"

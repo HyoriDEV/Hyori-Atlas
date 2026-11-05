@@ -210,9 +210,9 @@ export default async function TicketStaffDetailPage({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="flex shrink-0 flex-wrap items-center gap-3">
         <AtlasBackButton href="/staff/tickets" />
-        <div className="flex flex-1 flex-col gap-0.5">
+        <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">
             <Link
               href={`/staff/atlas/${ticket.playerId}`}
@@ -224,7 +224,7 @@ export default async function TicketStaffDetailPage({
             · {ticketCategoryLabels[ticket.category]} ·{" "}
             {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
-          <span className="font-heading text-lg font-semibold">{ticket.subject}</span>
+          <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
           {canUseBacklog && ticket.backlogTasks.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1.5">
               {ticket.backlogTasks.map((task) => (
