@@ -23,6 +23,8 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { FormattedDate } from "@/components/ui/formatted-date";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
@@ -132,6 +134,15 @@ export function RpTrackingWorkspace({
 }: RpTrackingWorkspaceProps) {
   const { chatWidth, chatExpanded, updateChatWidth, toggleChatExpanded } = useChatLayout();
   const workspaceRef = useRef<HTMLDivElement>(null);
+  // Sous `lg`, trame et chat sont dans deux onglets au lieu d'être empilés.
+  const [mobilePanel, setMobilePanel] = useState<"narration" | "suivi">("suivi");
+
+  // Dernière modification de la trame par le joueur (chapitre le plus récemment modifié).
+  const narrationUpdatedAt = chapters.reduce<number | null>((latest, chapter) => {
+    const time = chapter.updatedAt ? new Date(chapter.updatedAt).getTime() : NaN;
+    if (Number.isNaN(time)) return latest;
+    return latest === null || time > latest ? time : latest;
+  }, null);
   const [isResizing, setIsResizing] = useState(false);
 
   function widthFromPointer(clientX: number) {
@@ -221,6 +232,23 @@ export function RpTrackingWorkspace({
               </Badge>
             )}
           </div>
+
+          {/* Dernière modification de la trame */}
+          <span className="text-muted-foreground text-xs">
+            {narrationUpdatedAt ? (
+              <>
+                Trame modifiée :{" "}
+                <FormattedDate
+                  date={narrationUpdatedAt}
+                  style="compact"
+                  withTime
+                  className="text-foreground font-medium"
+                />
+              </>
+            ) : (
+              "Aucune trame"
+            )}
+          </span>
         </div>
 
         {/* Actions à droite */}
@@ -237,7 +265,10 @@ export function RpTrackingWorkspace({
           <button
             type="button"
             onClick={toggleChatExpanded}
-            className={cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-1.5 text-xs")}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "hidden gap-1.5 text-xs lg:inline-flex"
+            )}
             aria-pressed={chatExpanded}
           >
             {chatExpanded ? (
@@ -266,6 +297,22 @@ export function RpTrackingWorkspace({
         </div>
       )}
 
+      {/* Onglets Narration / Suivi (sous lg seulement) */}
+      <Tabs
+        value={mobilePanel}
+        onValueChange={(value) => setMobilePanel(value as "narration" | "suivi")}
+        className="shrink-0 lg:hidden"
+      >
+        <TabsList className="w-full">
+          <TabsTrigger value="narration" className="flex-1">
+            Narration RP
+          </TabsTrigger>
+          <TabsTrigger value="suivi" className="flex-1">
+            Suivi RP
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
       {/* Espace de travail principal : trame à gauche, chat de suivi à droite (largeur réglable) */}
       <div
         ref={workspaceRef}
@@ -280,8 +327,9 @@ export function RpTrackingWorkspace({
         {/* ========================================================= */}
         <div
           className={cn(
-            "flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:h-[45%] lg:flex-1",
-            chatExpanded && "hidden"
+            "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
+            mobilePanel !== "narration" && "max-lg:hidden",
+            chatExpanded && "lg:hidden"
           )}
         >
           {chapters.length > 0 ? (
@@ -334,10 +382,9 @@ export function RpTrackingWorkspace({
         {/* ========================================================= */}
         <div
           className={cn(
-            "flex min-h-0 min-w-0 flex-col overflow-hidden",
-            chatExpanded
-              ? "flex-1"
-              : "max-lg:h-[55%] lg:w-[var(--rp-chat-width)] lg:shrink-0"
+            "flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:flex-1",
+            mobilePanel !== "suivi" && "max-lg:hidden",
+            chatExpanded ? "lg:flex-1" : "lg:w-[var(--rp-chat-width)] lg:shrink-0"
           )}
         >
           <ConversationChat

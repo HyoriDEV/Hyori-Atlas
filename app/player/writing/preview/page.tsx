@@ -59,7 +59,9 @@ export default async function WritingPlayerPreviewPage(props: {
         </div>
       </div>
 
-      <ChapterReader chapters={chapters} />
+      <ChapterReader
+        chapters={chapters.map(({ id, title, content, order }) => ({ id, title, content, order }))}
+      />
     </div>
   );
 }
