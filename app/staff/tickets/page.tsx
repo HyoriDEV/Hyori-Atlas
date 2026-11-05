@@ -298,6 +298,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
       </div>
 
       <ViewTabs
+        mobileSelect
         activeView={view}
         defaultView={DEFAULT_TICKET_VIEW}
         tabs={[
