@@ -10,13 +10,14 @@ import {
   ticketStaffRoles,
   ticketSummonableTeams,
 } from "@/lib/navigation";
-import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
+import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { TICKET_SUMMON_TEMPLATE_IDS } from "@/lib/discord-template-constants";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
   ConversationType,
   MessageAuthorType,
+  RegistrationStatus,
   Role,
   TicketCategory,
   TicketStatus,
@@ -208,6 +209,121 @@ export async function createTicket(category: TicketCategory, subject: string, de
           );
         });
     }
+  }
+
+  revalidatePath("/player/tickets");
+  revalidatePath("/staff/tickets");
+  return { id: ticket.id };
+}
+
+/** Le staff peut-il ouvrir un ticket lui-même ? Il doit pouvoir le voir ensuite. */
+function canStaffOpenTicket(role: Role): boolean {
+  return hasFullTicketAccess(role) || ticketSummonableTeams.includes(role);
+}
+
+/**
+ * Ouvre un ticket à l'initiative du staff pour contacter un joueur. Le ticket appartient au
+ * joueur (il le voit dans son espace comme s'il l'avait ouvert), le premier message est un
+ * message staff (anonymisé côté joueur) et le ticket attend la réponse du joueur.
+ */
+export async function createStaffTicket(input: {
+  playerId: string;
+  category: TicketCategory;
+  subject: string;
+  message: string;
+}): Promise<{ id: string }> {
+  const staffUser = await requireRole(allStaffRoles);
+  if (!canStaffOpenTicket(staffUser.role)) {
+    throw new Error("Ton rôle ne permet pas d'ouvrir un ticket.");
+  }
+
+  const subject = input.subject.trim();
+  const message = input.message.trim();
+  if (!subject || !message) {
+    throw new Error("Le sujet et le message sont requis.");
+  }
+  if (!Object.values(TicketCategory).includes(input.category)) {
+    throw new Error("Catégorie invalide.");
+  }
+
+  const player = await prisma.user.findUnique({
+    where: { id: input.playerId },
+    select: { id: true, role: true, registrationStatus: true, discordId: true },
+  });
+  if (!player || player.role !== Role.PLAYER) {
+    throw new Error("Joueur introuvable.");
+  }
+  if (player.registrationStatus === RegistrationStatus.REJECTED) {
+    // Un joueur refusé est redirigé hors de son espace : il ne pourrait pas répondre.
+    throw new Error("Ce joueur a été refusé : il n'a plus accès aux tickets.");
+  }
+
+  const now = new Date();
+  const ticket = await prisma.ticket.create({
+    data: {
+      player: { connect: { id: player.id } },
+      category: input.category,
+      subject,
+      status: TicketStatus.PENDING_PLAYER,
+      lastMessageAt: now,
+      // Un staff sans accès complet garde la main sur le ticket qu'il vient d'ouvrir.
+      staffAccesses: hasFullTicketAccess(staffUser.role)
+        ? undefined
+        : { create: [{ userId: staffUser.id, addedById: staffUser.id }] },
+      conversation: {
+        create: {
+          type: ConversationType.TICKET,
+          members: {
+            create: [{ userId: player.id }],
+          },
+          reads: {
+            create: [{ userId: staffUser.id, lastReadAt: now }],
+          },
+          messages: {
+            create: [
+              {
+                authorType: MessageAuthorType.SYSTEM,
+                body: "Ticket ouvert par l'équipe staff.",
+                createdAt: now,
+              },
+              {
+                authorType: MessageAuthorType.STAFF,
+                authorId: staffUser.id,
+                body: message,
+                createdAt: now,
+              },
+            ],
+          },
+        },
+      },
+    },
+    select: { id: true },
+  });
+
+  // MP Discord au joueur (même gabarit qu'une réponse staff).
+  if (player.discordId) {
+    const discordId = player.discordId;
+    const authorName = "L'équipe staff";
+    getEffectiveDiscordOverride("TICKET_MESSAGE", {
+      author: authorName,
+      subject,
+      preview: message,
+      url: `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/player/tickets/${ticket.id}`,
+    })
+      .catch(() => null)
+      .then((override) =>
+        notifyPlayerTicketMessage({
+          discordId,
+          ticketId: ticket.id,
+          ticketSubject: subject,
+          authorName,
+          messagePreview: message,
+          override: override ?? undefined,
+        })
+      )
+      .catch((err) => {
+        console.warn("[TicketNotification] Échec de la notification d'un ticket staff:", err);
+      });
   }
 
   revalidatePath("/player/tickets");
