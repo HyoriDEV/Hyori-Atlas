@@ -15,7 +15,9 @@ import {
   ArrowSquareOut,
   ArrowsInSimple,
   ArrowsOutSimple,
+  Columns,
   Clock,
+  Tabs as TabsIcon,
   CheckCircle,
 } from "@phosphor-icons/react";
 
@@ -68,6 +70,10 @@ const CHAT_WIDTH_MIN = 25;
 const CHAT_WIDTH_MAX = 75;
 const CHAT_WIDTH_STORAGE_KEY = "hyori-atlas:rp-tracking:chat-width";
 const CHAT_EXPANDED_STORAGE_KEY = "hyori-atlas:rp-tracking:chat-expanded";
+const LAYOUT_STORAGE_KEY = "hyori-atlas:rp-tracking:layout";
+
+/** Disposition sur grand écran : trame et chat côte à côte, ou dans deux onglets. */
+type WorkspaceLayout = "split" | "tabs";
 
 function clampChatWidth(value: number) {
   return Math.min(CHAT_WIDTH_MAX, Math.max(CHAT_WIDTH_MIN, Math.round(value)));
@@ -90,12 +96,13 @@ function writeStorage(key: string, value: string) {
 }
 
 /**
- * Largeur du chat réglable au séparateur et mode « chat agrandi » (trame masquée),
- * mémorisés par navigateur.
+ * Largeur du chat réglable au séparateur, mode « chat agrandi » (trame masquée) et
+ * disposition côte à côte / onglets, mémorisés par navigateur.
  */
 function useChatLayout() {
   const [chatWidth, setChatWidth] = useState(CHAT_WIDTH_DEFAULT);
   const [chatExpanded, setChatExpanded] = useState(false);
+  const [layout, setLayout] = useState<WorkspaceLayout>("split");
 
   // Lu après le montage : le rendu serveur ne connaît pas le stockage du navigateur.
   useEffect(() => {
@@ -104,6 +111,7 @@ function useChatLayout() {
       setChatWidth(clampChatWidth(savedWidth));
     }
     setChatExpanded(readStorage(CHAT_EXPANDED_STORAGE_KEY) === "1");
+    setLayout(readStorage(LAYOUT_STORAGE_KEY) === "tabs" ? "tabs" : "split");
   }, []);
 
   const updateChatWidth = useCallback((value: number) => {
@@ -119,7 +127,22 @@ function useChatLayout() {
     });
   }, []);
 
-  return { chatWidth, chatExpanded, updateChatWidth, toggleChatExpanded };
+  const toggleLayout = useCallback(() => {
+    setLayout((prev) => {
+      const next: WorkspaceLayout = prev === "split" ? "tabs" : "split";
+      writeStorage(LAYOUT_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
+
+  return {
+    chatWidth,
+    chatExpanded,
+    layout,
+    updateChatWidth,
+    toggleChatExpanded,
+    toggleLayout,
+  };
 }
 
 export function RpTrackingWorkspace({
@@ -132,9 +155,11 @@ export function RpTrackingWorkspace({
   selectedCharacter,
   chapters,
 }: RpTrackingWorkspaceProps) {
-  const { chatWidth, chatExpanded, updateChatWidth, toggleChatExpanded } = useChatLayout();
+  const { chatWidth, chatExpanded, layout, updateChatWidth, toggleChatExpanded, toggleLayout } =
+    useChatLayout();
+  const isTabsLayout = layout === "tabs";
   const workspaceRef = useRef<HTMLDivElement>(null);
-  // Sous `lg`, trame et chat sont dans deux onglets au lieu d'être empilés.
+  // Onglet affiché : toujours sous `lg`, et sur grand écran en disposition « onglets ».
   const [mobilePanel, setMobilePanel] = useState<"narration" | "suivi">("suivi");
 
   // Dernière modification de la trame par le joueur (chapitre le plus récemment modifié).
@@ -267,7 +292,8 @@ export function RpTrackingWorkspace({
             onClick={toggleChatExpanded}
             className={cn(
               buttonVariants({ variant: "outline", size: "sm" }),
-              "hidden gap-1.5 text-xs lg:inline-flex"
+              "hidden gap-1.5 text-xs",
+              !isTabsLayout && "lg:inline-flex"
             )}
             aria-pressed={chatExpanded}
           >
@@ -277,6 +303,20 @@ export function RpTrackingWorkspace({
               <ArrowsOutSimple className="size-3.5" />
             )}
             <span>{chatExpanded ? "Afficher la trame" : "Agrandir le suivi"}</span>
+          </button>
+
+          {/* Disposition grand écran : côte à côte ou onglets */}
+          <button
+            type="button"
+            onClick={toggleLayout}
+            className={cn(
+              buttonVariants({ variant: "outline", size: "sm" }),
+              "hidden gap-1.5 text-xs lg:inline-flex"
+            )}
+            aria-pressed={isTabsLayout}
+          >
+            {isTabsLayout ? <Columns className="size-3.5" /> : <TabsIcon className="size-3.5" />}
+            <span>{isTabsLayout ? "Côte à côte" : "Onglets"}</span>
           </button>
 
           {/* Lien direct Atlas */}
@@ -297,11 +337,11 @@ export function RpTrackingWorkspace({
         </div>
       )}
 
-      {/* Onglets Narration / Suivi (sous lg seulement) */}
+      {/* Onglets Narration / Suivi (sous lg, ou disposition « onglets ») */}
       <Tabs
         value={mobilePanel}
         onValueChange={(value) => setMobilePanel(value as "narration" | "suivi")}
-        className="shrink-0 lg:hidden"
+        className={cn("shrink-0", !isTabsLayout && "lg:hidden")}
       >
         <TabsList className="w-full">
           <TabsTrigger value="narration" className="flex-1">
@@ -328,8 +368,8 @@ export function RpTrackingWorkspace({
         <div
           className={cn(
             "flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden",
-            mobilePanel !== "narration" && "max-lg:hidden",
-            chatExpanded && "lg:hidden"
+            mobilePanel !== "narration" && (isTabsLayout ? "hidden" : "max-lg:hidden"),
+            !isTabsLayout && chatExpanded && "lg:hidden"
           )}
         >
           {chapters.length > 0 ? (
@@ -350,7 +390,7 @@ export function RpTrackingWorkspace({
         </div>
 
         {/* Séparateur glissable (écrans larges) ; double-clic = largeur par défaut */}
-        {!chatExpanded && (
+        {!chatExpanded && !isTabsLayout && (
           <div
             role="separator"
             aria-orientation="vertical"
@@ -383,8 +423,10 @@ export function RpTrackingWorkspace({
         <div
           className={cn(
             "flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:flex-1",
-            mobilePanel !== "suivi" && "max-lg:hidden",
-            chatExpanded ? "lg:flex-1" : "lg:w-[var(--rp-chat-width)] lg:shrink-0"
+            mobilePanel !== "suivi" && (isTabsLayout ? "hidden" : "max-lg:hidden"),
+            isTabsLayout || chatExpanded
+              ? "lg:flex-1"
+              : "lg:w-[var(--rp-chat-width)] lg:shrink-0"
           )}
         >
           <ConversationChat
