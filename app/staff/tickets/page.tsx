@@ -26,6 +26,7 @@ import { formatDate } from "@/lib/date";
 import { cn, truncate } from "@/lib/utils";
 import {
   MessageAuthorType,
+  RegistrationStatus,
   Role,
   TicketCategory,
   TicketStatus,
@@ -51,6 +52,8 @@ import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { TicketRowActions } from "@/components/dashboard/ticket-row-actions";
 import { TicketListRefresher } from "@/components/dashboard/ticket-list-refresher";
 import { UnreadDot } from "@/components/ui/unread-dot";
+import { NewStaffTicketDialog } from "@/components/staff/tickets/new-staff-ticket-dialog";
+import type { PlayerOption } from "@/components/player-select";
 
 const DEFAULT_PAGE_SIZE = 10;
 const LAST_MESSAGE_PREVIEW_LENGTH = 90;
@@ -114,6 +117,8 @@ export default async function TicketsStaffListPage(props: PageProps) {
   const staffUser = await requireRole(item.roles);
   const canManageAccess = hasFullTicketAccess(staffUser.role);
   const isAdmin = staffUser.role === Role.ADMIN;
+  // Même règle que createStaffTicket : le staff doit pouvoir voir le ticket qu'il ouvre.
+  const canOpenTicket = canManageAccess || ticketSummonableTeams.includes(staffUser.role);
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -184,7 +189,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const hasActiveFilters = Boolean(query || category || teamFilter || noAccessGrantedOnly);
 
-  const [statusCounts, unreadCount, tickets] = await Promise.all([
+  const [statusCounts, unreadCount, tickets, contactablePlayers] = await Promise.all([
     prisma.ticket.groupBy({
       by: ["status"],
       where: { AND: filters },
@@ -225,6 +230,25 @@ export default async function TicketsStaffListPage(props: PageProps) {
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
+    canOpenTicket
+      ? prisma.user.findMany({
+          where: {
+            role: Role.PLAYER,
+            registrationStatus: { not: RegistrationStatus.REJECTED },
+          },
+          select: {
+            id: true,
+            minecraftUsername: true,
+            discordDisplayName: true,
+            discordUsername: true,
+            discordAvatarUrl: true,
+            role: true,
+            registrationStatus: true,
+            characterSheets: { select: { name: true, status: true } },
+          },
+          orderBy: { discordDisplayName: "asc" },
+        })
+      : Promise.resolve([]),
   ]);
 
   const countByStatus = (status: TicketStatus) =>
@@ -259,13 +283,18 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="font-heading text-2xl font-semibold">Tickets</h1>
-        <TicketFilters
-          query={query}
-          category={category}
-          team={teamFilter ?? (noAccessGrantedOnly ? TICKET_TEAM_FILTER_NONE : undefined)}
-          showTeamFilter={canManageAccess}
-          hasActiveSort={Boolean(sortKey)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <TicketFilters
+            query={query}
+            category={category}
+            team={teamFilter ?? (noAccessGrantedOnly ? TICKET_TEAM_FILTER_NONE : undefined)}
+            showTeamFilter={canManageAccess}
+            hasActiveSort={Boolean(sortKey)}
+          />
+          {canOpenTicket && (
+            <NewStaffTicketDialog availablePlayers={contactablePlayers as PlayerOption[]} />
+          )}
+        </div>
       </div>
 
       <ViewTabs
