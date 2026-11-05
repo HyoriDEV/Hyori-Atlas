@@ -386,7 +386,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                   <TicketTableRow key={ticket.id} href={`/staff/tickets/${ticket.id}`}>
                     <TableCell className="relative max-w-md pl-6">
                       {isUnread && <UnreadDot placement="table" title="Non lu" />}
-                      <div className="flex min-w-0 flex-col gap-0.5">
+                      <div className="flex min-w-0 max-w-[55vw] flex-col gap-0.5 sm:max-w-md">
                         <div className="flex min-w-0 items-center gap-1.5">
                           <span
                             className={cn("truncate", isUnread ? "font-semibold" : "font-medium")}
