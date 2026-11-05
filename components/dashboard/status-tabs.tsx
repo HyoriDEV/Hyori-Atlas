@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
+import { cn } from "@/lib/utils";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { setClientPagePref } from "@/lib/table-preferences";
 
@@ -50,7 +51,7 @@ export function StatusTabs({
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleValueChange} className={className}>
+    <Tabs value={activeTab} onValueChange={handleValueChange} className={cn("max-w-full min-w-0 overflow-x-auto", className)}>
       <TabsList variant={variant}>
         <TabsTrigger value="active">
           {activeLabel} ({activeCount})
