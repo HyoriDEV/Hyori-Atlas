@@ -44,6 +44,8 @@ export interface RpTrackingPlayerState {
   isHandledWithoutReply: boolean;
   /** Indique si le joueur a rédigé au moins un chapitre de trame. */
   hasWriting: boolean;
+  /** Date de la dernière modification d'un chapitre de trame (null si aucune trame). */
+  writingUpdatedAt: Date | null;
 }
 
 export interface RpTrackingStates {
@@ -124,16 +126,18 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       _count: { _all: true },
       _max: { createdAt: true },
     }),
-    prisma.chapter.findMany({
+    prisma.chapter.groupBy({
+      by: ["playerId"],
       where: {
         player: { registrationStatus: RegistrationStatus.WHITELISTED },
       },
-      distinct: ["playerId"],
-      select: { playerId: true },
+      _max: { updatedAt: true },
     }),
   ]);
 
-  const writingPlayerIds = new Set(writingPlayers.map((w) => w.playerId));
+  const writingUpdatedByPlayer = new Map<string, Date | null>(
+    writingPlayers.map((w) => [w.playerId, w._max.updatedAt] as const)
+  );
 
   const statsByConversation = new Map<
     string,
@@ -213,7 +217,8 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       lastHandledById,
       lastHandledByName,
       isHandledWithoutReply,
-      hasWriting: writingPlayerIds.has(player.id),
+      hasWriting: writingUpdatedByPlayer.has(player.id),
+      writingUpdatedAt: writingUpdatedByPlayer.get(player.id) ?? null,
     };
   });
 
@@ -265,7 +270,7 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
   }
   counts.ongoing = counts.pending + counts.recent;
 
-  return { players: states, counts, totalWithWriting: writingPlayerIds.size };
+  return { players: states, counts, totalWithWriting: writingUpdatedByPlayer.size };
 }
 
 export interface RpTrackingPlayerContext {
