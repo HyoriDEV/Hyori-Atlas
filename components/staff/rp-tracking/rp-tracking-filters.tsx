@@ -15,12 +15,16 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_RP_TRACKING_FILTER_STATUS,
+  DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
   DEFAULT_RP_TRACKING_WRITING_FILTER,
   RP_TRACKING_FILTER_STATUSES,
+  RP_TRACKING_WRITING_EDITED_FILTERS,
   RP_TRACKING_WRITING_FILTERS,
   rpTrackingFilterStatusLabels,
+  rpTrackingWritingEditedFilterLabels,
   rpTrackingWritingFilterLabels,
   type RpTrackingFilterStatus,
+  type RpTrackingWritingEditedFilter,
   type RpTrackingWritingFilter,
 } from "@/lib/rp-tracking";
 import { setClientPagePref } from "@/lib/table-preferences";
@@ -32,6 +36,7 @@ export interface RpTrackingFiltersProps {
   query: string;
   status: RpTrackingFilterStatus;
   writing: RpTrackingWritingFilter;
+  writingEdited: RpTrackingWritingEditedFilter;
   counts?: {
     pending: number;
     recent: number;
@@ -42,7 +47,13 @@ export interface RpTrackingFiltersProps {
   };
 }
 
-export function RpTrackingFilters({ query, status, writing, counts }: RpTrackingFiltersProps) {
+export function RpTrackingFilters({
+  query,
+  status,
+  writing,
+  writingEdited,
+  counts,
+}: RpTrackingFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,7 +79,8 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
       if (
         value &&
         !(key === "status" && value === DEFAULT_RP_TRACKING_FILTER_STATUS) &&
-        !(key === "writing" && value === DEFAULT_RP_TRACKING_WRITING_FILTER)
+        !(key === "writing" && value === DEFAULT_RP_TRACKING_WRITING_FILTER) &&
+        !(key === "writingEdited" && value === DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER)
       ) {
         params.set(key, value);
         if (!TRANSIENT_PARAMS.has(key)) {
@@ -124,13 +136,15 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
       q: undefined,
       status: DEFAULT_RP_TRACKING_FILTER_STATUS,
       writing: DEFAULT_RP_TRACKING_WRITING_FILTER,
+      writingEdited: DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
     });
   }
 
   const isFiltered =
     Boolean(query) ||
     status !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
-    writing !== DEFAULT_RP_TRACKING_WRITING_FILTER;
+    writing !== DEFAULT_RP_TRACKING_WRITING_FILTER ||
+    writingEdited !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
 
   useEffect(() => {
     return () => {
@@ -148,6 +162,11 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
   const writingFilterItems = RP_TRACKING_WRITING_FILTERS.map((writingFilter) => ({
     value: writingFilter,
     label: rpTrackingWritingFilterLabels[writingFilter],
+  }));
+
+  const writingEditedFilterItems = RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => ({
+    value: editedFilter,
+    label: rpTrackingWritingEditedFilterLabels[editedFilter],
   }));
 
   return (
@@ -213,6 +232,28 @@ export function RpTrackingFilters({ query, status, writing, counts }: RpTracking
             {RP_TRACKING_WRITING_FILTERS.map((writingFilter) => (
               <SelectItem key={writingFilter} value={writingFilter}>
                 {rpTrackingWritingFilterLabels[writingFilter]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Filtre Dernière modification de la trame */}
+        <Select
+          items={writingEditedFilterItems}
+          value={writingEdited}
+          onValueChange={(val) =>
+            updateParams({ writingEdited: val as RpTrackingWritingEditedFilter })
+          }
+        >
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue placeholder="Dernière modification de la trame">
+              {rpTrackingWritingEditedFilterLabels[writingEdited]}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => (
+              <SelectItem key={editedFilter} value={editedFilter}>
+                {rpTrackingWritingEditedFilterLabels[editedFilter]}
               </SelectItem>
             ))}
           </SelectContent>

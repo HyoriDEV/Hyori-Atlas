@@ -50,6 +50,41 @@ export const rpTrackingWritingFilterLabels: Record<RpTrackingWritingFilter, stri
 
 export const DEFAULT_RP_TRACKING_WRITING_FILTER: RpTrackingWritingFilter = "all";
 
+/** Options de filtrage par date de dernière modification de la trame */
+export const RP_TRACKING_WRITING_EDITED_FILTERS = [
+  "all",
+  "day",
+  "week",
+  "month",
+  "stale",
+  "never",
+] as const;
+
+export type RpTrackingWritingEditedFilter = (typeof RP_TRACKING_WRITING_EDITED_FILTERS)[number];
+
+export const rpTrackingWritingEditedFilterLabels: Record<RpTrackingWritingEditedFilter, string> = {
+  all: "Trame modifiée : toutes dates",
+  day: "Modifiée depuis moins de 24 h",
+  week: "Modifiée depuis moins de 7 jours",
+  month: "Modifiée depuis moins de 30 jours",
+  stale: "Non modifiée depuis 30 jours +",
+  never: "Aucune trame",
+};
+
+export const DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER: RpTrackingWritingEditedFilter = "all";
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Fenêtre (en ms) des filtres « modifiée depuis moins de … ». */
+export const RP_TRACKING_WRITING_EDITED_WINDOWS_MS: Partial<
+  Record<RpTrackingWritingEditedFilter, number>
+> = {
+  day: DAY_MS,
+  week: 7 * DAY_MS,
+  month: 30 * DAY_MS,
+  stale: 30 * DAY_MS,
+};
+
 // Rétrocompatibilité pour éventuels imports existants
 export const RP_TRACKING_VIEWS = ["all", ...RP_TRACKING_STATES] as const;
 export type RpTrackingView = (typeof RP_TRACKING_VIEWS)[number];

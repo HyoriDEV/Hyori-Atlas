@@ -12,12 +12,16 @@ export const metadata: Metadata = {
 import { rpTrackingStaffRoles } from "@/lib/navigation";
 import {
   DEFAULT_RP_TRACKING_FILTER_STATUS,
+  DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
   DEFAULT_RP_TRACKING_WRITING_FILTER,
   RP_TRACKING_FILTER_STATUSES,
+  RP_TRACKING_WRITING_EDITED_FILTERS,
+  RP_TRACKING_WRITING_EDITED_WINDOWS_MS,
   RP_TRACKING_WRITING_FILTERS,
   rpTrackingStateLabels,
   type RpTrackingFilterStatus,
   type RpTrackingState,
+  type RpTrackingWritingEditedFilter,
   type RpTrackingWritingFilter,
 } from "@/lib/rp-tracking";
 import {
@@ -67,6 +71,7 @@ export default async function RpTrackingStaffListPage(props: {
     q?: string;
     status?: string;
     writing?: string;
+    writingEdited?: string;
     page?: string;
     pageSize?: string;
   }>;
@@ -100,6 +105,17 @@ export default async function RpTrackingStaffListPage(props: {
       ? (savedPrefs.writing as RpTrackingWritingFilter)
       : DEFAULT_RP_TRACKING_WRITING_FILTER;
 
+  const writingEditedFilter: RpTrackingWritingEditedFilter =
+    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+      searchParams.writingEdited as RpTrackingWritingEditedFilter
+    )
+      ? (searchParams.writingEdited as RpTrackingWritingEditedFilter)
+      : RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+            savedPrefs.writingEdited as RpTrackingWritingEditedFilter
+          )
+        ? (savedPrefs.writingEdited as RpTrackingWritingEditedFilter)
+        : DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
+
   const { players, counts } = await getRpTrackingStates();
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
@@ -130,6 +146,19 @@ export default async function RpTrackingStaffListPage(props: {
     filteredPlayers = filteredPlayers.filter((player) => !player.hasWriting);
   }
 
+  // Filtrage par date de dernière modification de la trame
+  if (writingEditedFilter === "never") {
+    filteredPlayers = filteredPlayers.filter((player) => !player.hasWriting);
+  } else if (writingEditedFilter !== "all") {
+    const windowMs = RP_TRACKING_WRITING_EDITED_WINDOWS_MS[writingEditedFilter] ?? 0;
+    const threshold = Date.now() - windowMs;
+    filteredPlayers = filteredPlayers.filter((player) => {
+      if (!player.writingUpdatedAt) return false;
+      const updatedAt = player.writingUpdatedAt.getTime();
+      return writingEditedFilter === "stale" ? updatedAt < threshold : updatedAt >= threshold;
+    });
+  }
+
   const totalCount = filteredPlayers.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const pagePlayers = filteredPlayers.slice((page - 1) * pageSize, page * pageSize);
@@ -155,6 +184,7 @@ export default async function RpTrackingStaffListPage(props: {
         query={query}
         status={statusFilter}
         writing={writingFilter}
+        writingEdited={writingEditedFilter}
         counts={counts}
       />
 
@@ -181,7 +211,8 @@ export default async function RpTrackingStaffListPage(props: {
                 >
                   {query ||
                   statusFilter !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
-                  writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER
+                  writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER ||
+                  writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER
                     ? "Aucun joueur ne correspond aux filtres sélectionnés."
                     : "Aucun suivi en cours actuellement."}
                 </TableCell>
