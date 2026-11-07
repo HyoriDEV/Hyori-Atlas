@@ -73,6 +73,19 @@ export const rpTrackingWritingEditedFilterLabels: Record<RpTrackingWritingEdited
 
 export const DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER: RpTrackingWritingEditedFilter = "all";
 
+/** Tri de la liste : par défaut (statut) ou par date de dernière modification de la trame */
+export const RP_TRACKING_SORTS = ["default", "writing_recent", "writing_oldest"] as const;
+
+export type RpTrackingSort = (typeof RP_TRACKING_SORTS)[number];
+
+export const rpTrackingSortLabels: Record<RpTrackingSort, string> = {
+  default: "Tri : par statut",
+  writing_recent: "Tri : trame modifiée récemment",
+  writing_oldest: "Tri : trame modifiée il y a longtemps",
+};
+
+export const DEFAULT_RP_TRACKING_SORT: RpTrackingSort = "default";
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /** Fenêtre (en ms) des filtres « modifiée depuis moins de … ». */

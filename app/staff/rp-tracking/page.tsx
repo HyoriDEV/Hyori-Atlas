@@ -12,14 +12,17 @@ export const metadata: Metadata = {
 import { rpTrackingStaffRoles } from "@/lib/navigation";
 import {
   DEFAULT_RP_TRACKING_FILTER_STATUS,
+  DEFAULT_RP_TRACKING_SORT,
   DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
   DEFAULT_RP_TRACKING_WRITING_FILTER,
   RP_TRACKING_FILTER_STATUSES,
+  RP_TRACKING_SORTS,
   RP_TRACKING_WRITING_EDITED_FILTERS,
   RP_TRACKING_WRITING_EDITED_WINDOWS_MS,
   RP_TRACKING_WRITING_FILTERS,
   rpTrackingStateLabels,
   type RpTrackingFilterStatus,
+  type RpTrackingSort,
   type RpTrackingState,
   type RpTrackingWritingEditedFilter,
   type RpTrackingWritingFilter,
@@ -72,6 +75,7 @@ export default async function RpTrackingStaffListPage(props: {
     status?: string;
     writing?: string;
     writingEdited?: string;
+    sort?: string;
     page?: string;
     pageSize?: string;
   }>;
@@ -116,6 +120,12 @@ export default async function RpTrackingStaffListPage(props: {
         ? (savedPrefs.writingEdited as RpTrackingWritingEditedFilter)
         : DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
 
+  const sortOption: RpTrackingSort = RP_TRACKING_SORTS.includes(searchParams.sort as RpTrackingSort)
+    ? (searchParams.sort as RpTrackingSort)
+    : RP_TRACKING_SORTS.includes(savedPrefs.sort as RpTrackingSort)
+      ? (savedPrefs.sort as RpTrackingSort)
+      : DEFAULT_RP_TRACKING_SORT;
+
   const { players, counts } = await getRpTrackingStates();
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
@@ -159,6 +169,19 @@ export default async function RpTrackingStaffListPage(props: {
     });
   }
 
+  // Tri par date de dernière modification de la trame (sans trame = en bas, ordre d'origine conservé)
+  if (sortOption !== "default") {
+    const direction = sortOption === "writing_recent" ? -1 : 1;
+    filteredPlayers = [...filteredPlayers].sort((a, b) => {
+      const aTime = a.writingUpdatedAt?.getTime() ?? null;
+      const bTime = b.writingUpdatedAt?.getTime() ?? null;
+      if (aTime === null && bTime === null) return 0;
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+      return (aTime - bTime) * direction;
+    });
+  }
+
   const totalCount = filteredPlayers.length;
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
   const pagePlayers = filteredPlayers.slice((page - 1) * pageSize, page * pageSize);
@@ -185,6 +208,7 @@ export default async function RpTrackingStaffListPage(props: {
         status={statusFilter}
         writing={writingFilter}
         writingEdited={writingEditedFilter}
+        sort={sortOption}
         counts={counts}
       />
 
@@ -212,7 +236,8 @@ export default async function RpTrackingStaffListPage(props: {
                   {query ||
                   statusFilter !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
                   writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER ||
-                  writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER
+                  writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
+                  sortOption !== DEFAULT_RP_TRACKING_SORT
                     ? "Aucun joueur ne correspond aux filtres sélectionnés."
                     : "Aucun suivi en cours actuellement."}
                 </TableCell>
