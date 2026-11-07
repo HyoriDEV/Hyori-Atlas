@@ -799,7 +799,7 @@ export function ConversationChat({
                           )}
                         >
                           {isEditing ? (
-                            <div className="bg-card flex max-w-full min-w-[280px] flex-col overflow-hidden rounded-xl border shadow-xs">
+                            <div className="bg-card flex w-[34rem] max-w-[calc(100vw-5rem)] flex-col overflow-hidden rounded-xl border shadow-xs">
                               <div className="p-3 pb-2">
                                 <textarea
                                   value={editBody}
@@ -811,8 +811,15 @@ export function ConversationChat({
                                       handleSaveEdit(message.id);
                                     }
                                   }}
-                                  rows={2}
-                                  className="placeholder:text-muted-foreground/60 w-full resize-none border-0 bg-transparent p-0 text-sm outline-none focus:outline-none"
+                                  rows={3}
+                                  ref={(el) => {
+                                    // Auto-grow : hauteur = contenu, plafonnée à 50vh
+                                    if (!el) return;
+                                    el.style.height = "auto";
+                                    const max = Math.round(window.innerHeight * 0.5);
+                                    el.style.height = `${Math.min(el.scrollHeight, max)}px`;
+                                  }}
+                                  className="placeholder:text-muted-foreground/60 max-h-[50vh] min-h-[4.5rem] w-full resize-none border-0 bg-transparent p-0 text-sm outline-none focus:outline-none"
                                   autoFocus
                                 />
                               </div>
