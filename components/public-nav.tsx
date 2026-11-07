@@ -1,13 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
 
-import { auth } from "@/auth";
+import { getCurrentUser } from "@/lib/dal";
 import { PlayerSpaceCta } from "@/components/player-space-cta";
 import { PublicNavMobileMenu } from "@/components/public-nav-mobile-menu";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export async function PublicNav() {
-  const session = await auth();
+  const currentUser = await getCurrentUser();
   const settings = await getGlobalSettings();
 
   const navLinks = [
@@ -17,12 +17,12 @@ export async function PublicNav() {
     { label: "Règlement", href: "/rules", enabled: settings.publicRulesEnabled },
   ].filter((item) => item.enabled !== false);
 
-  const user = session?.user
+  const user = currentUser
     ? {
-        id: session.user.id,
-        name: session.user.discordUsername ?? session.user.name ?? "Joueur",
-        role: session.user.role,
-        avatarUrl: session.user.discordAvatarUrl,
+        id: currentUser.id,
+        name: currentUser.discordUsername ?? currentUser.name ?? "Joueur",
+        role: currentUser.role,
+        avatarUrl: currentUser.discordAvatarUrl,
       }
     : null;
 
