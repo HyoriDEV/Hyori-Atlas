@@ -15,15 +15,19 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   DEFAULT_RP_TRACKING_FILTER_STATUS,
+  DEFAULT_RP_TRACKING_SORT,
   DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
   DEFAULT_RP_TRACKING_WRITING_FILTER,
   RP_TRACKING_FILTER_STATUSES,
+  RP_TRACKING_SORTS,
   RP_TRACKING_WRITING_EDITED_FILTERS,
   RP_TRACKING_WRITING_FILTERS,
   rpTrackingFilterStatusLabels,
+  rpTrackingSortLabels,
   rpTrackingWritingEditedFilterLabels,
   rpTrackingWritingFilterLabels,
   type RpTrackingFilterStatus,
+  type RpTrackingSort,
   type RpTrackingWritingEditedFilter,
   type RpTrackingWritingFilter,
 } from "@/lib/rp-tracking";
@@ -37,6 +41,7 @@ export interface RpTrackingFiltersProps {
   status: RpTrackingFilterStatus;
   writing: RpTrackingWritingFilter;
   writingEdited: RpTrackingWritingEditedFilter;
+  sort: RpTrackingSort;
   counts?: {
     pending: number;
     recent: number;
@@ -52,6 +57,7 @@ export function RpTrackingFilters({
   status,
   writing,
   writingEdited,
+  sort,
   counts,
 }: RpTrackingFiltersProps) {
   const router = useRouter();
@@ -80,7 +86,8 @@ export function RpTrackingFilters({
         value &&
         !(key === "status" && value === DEFAULT_RP_TRACKING_FILTER_STATUS) &&
         !(key === "writing" && value === DEFAULT_RP_TRACKING_WRITING_FILTER) &&
-        !(key === "writingEdited" && value === DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER)
+        !(key === "writingEdited" && value === DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER) &&
+        !(key === "sort" && value === DEFAULT_RP_TRACKING_SORT)
       ) {
         params.set(key, value);
         if (!TRANSIENT_PARAMS.has(key)) {
@@ -137,6 +144,7 @@ export function RpTrackingFilters({
       status: DEFAULT_RP_TRACKING_FILTER_STATUS,
       writing: DEFAULT_RP_TRACKING_WRITING_FILTER,
       writingEdited: DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
+      sort: DEFAULT_RP_TRACKING_SORT,
     });
   }
 
@@ -144,7 +152,8 @@ export function RpTrackingFilters({
     Boolean(query) ||
     status !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
     writing !== DEFAULT_RP_TRACKING_WRITING_FILTER ||
-    writingEdited !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
+    writingEdited !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
+    sort !== DEFAULT_RP_TRACKING_SORT;
 
   useEffect(() => {
     return () => {
@@ -167,6 +176,11 @@ export function RpTrackingFilters({
   const writingEditedFilterItems = RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => ({
     value: editedFilter,
     label: rpTrackingWritingEditedFilterLabels[editedFilter],
+  }));
+
+  const sortItems = RP_TRACKING_SORTS.map((sortOption) => ({
+    value: sortOption,
+    label: rpTrackingSortLabels[sortOption],
   }));
 
   return (
@@ -254,6 +268,24 @@ export function RpTrackingFilters({
             {RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => (
               <SelectItem key={editedFilter} value={editedFilter}>
                 {rpTrackingWritingEditedFilterLabels[editedFilter]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Tri de la liste */}
+        <Select
+          items={sortItems}
+          value={sort}
+          onValueChange={(val) => updateParams({ sort: val as RpTrackingSort })}
+        >
+          <SelectTrigger className="w-full sm:w-72">
+            <SelectValue placeholder="Trier par">{rpTrackingSortLabels[sort]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_SORTS.map((sortOption) => (
+              <SelectItem key={sortOption} value={sortOption}>
+                {rpTrackingSortLabels[sortOption]}
               </SelectItem>
             ))}
           </SelectContent>
