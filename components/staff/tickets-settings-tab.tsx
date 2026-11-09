@@ -25,6 +25,7 @@ import {
   deleteTicketCategoryAction,
   saveTicketSubcategoryAction,
   deleteTicketSubcategoryAction,
+  setCategorySpoilerAction,
   type TicketCategoryConfigData,
   type TicketSubcategoryConfigData,
 } from "@/lib/actions/ticket-config-actions";
@@ -121,6 +122,35 @@ export function TicketsSettingsTab({
   const [editingSubcategory, setEditingSubcategory] =
     useState<Partial<TicketSubcategoryConfigData> | null>(null);
   const [isSavingSubcategory, startSaveSubcategoryTransition] = useTransition();
+
+  // Spoiler Option Quick Control
+  const rpCategory =
+    categories.find((c) => c.slug === "rp") || categories.find((c) => c.allowSpoiler);
+  const isSpoilerOptionActive = rpCategory?.allowSpoiler ?? false;
+  const [isTogglingSpoiler, startToggleSpoilerTransition] = useTransition();
+
+  const handleToggleSpoilerOption = (nextChecked: boolean) => {
+    if (!rpCategory) {
+      toast.error("Catégorie Roleplay introuvable.");
+      return;
+    }
+
+    startToggleSpoilerTransition(async () => {
+      const res = await setCategorySpoilerAction(rpCategory.id, nextChecked);
+      if (res.success) {
+        setCategories((prev) =>
+          prev.map((c) => (c.id === rpCategory.id ? { ...c, allowSpoiler: nextChecked } : c))
+        );
+        toast.success(
+          nextChecked
+            ? "Option spoiler activée : les joueurs peuvent désormais ouvrir des tickets confidentiels."
+            : "Option spoiler désactivée : la case est masquée dans le formulaire d'ouverture joueur."
+        );
+      } else {
+        toast.error(res.error || "Impossible de modifier l'option spoiler.");
+      }
+    });
+  };
 
   // Handle Discord Channels Save
   const handleSaveDiscordChannels = () => {
@@ -400,6 +430,51 @@ export function TicketsSettingsTab({
             </Button>
           </div>
         </CardContent>
+      </Card>
+
+      {/* SECTION : Contrôle direct de l'Option Spoiler joueur */}
+      <Card className="border-amber-500/30 bg-amber-500/5">
+        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-4">
+          <div className="flex items-start gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-500">
+              <EyeSlash className="size-5" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base">
+                  Option Spoiler (Demandes Confidentielles RP)
+                </CardTitle>
+                <Badge
+                  className={cn(
+                    "border text-[11px]",
+                    isSpoilerOptionActive
+                      ? "border-amber-500/30 bg-amber-500/15 text-amber-500"
+                      : "border-muted bg-muted text-muted-foreground"
+                  )}
+                >
+                  {isSpoilerOptionActive ? "Active dans le formulaire" : "Désactivée (Masquée)"}
+                </Badge>
+              </div>
+              <CardDescription className="max-w-2xl text-xs leading-relaxed">
+                Permet aux joueurs d&apos;activer la mention spoiler lors de l&apos;ouverture
+                d&apos;un ticket (réservant l&apos;accès uniquement aux Administrateurs et au Suivi
+                RP). Vous pouvez désactiver cette option dès la mise en production et la réactiver à
+                tout moment.
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-muted-foreground text-xs font-medium">
+              {isSpoilerOptionActive ? "Autoriser les spoilers" : "Bloquer les spoilers"}
+            </span>
+            <Switch
+              checked={isSpoilerOptionActive}
+              onCheckedChange={handleToggleSpoilerOption}
+              disabled={isTogglingSpoiler || !rpCategory}
+              className="data-[state=checked]:bg-amber-500"
+            />
+          </div>
+        </CardHeader>
       </Card>
 
       {/* SECTION 2 : Catégories & Sous-catégories modulables */}

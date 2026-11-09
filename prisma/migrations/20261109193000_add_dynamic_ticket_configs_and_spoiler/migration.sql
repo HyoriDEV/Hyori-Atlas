@@ -83,17 +83,56 @@ INSERT INTO "ticket_subcategory_configs" ("id", "categoryId", "slug", "name", "d
 VALUES
   ('subcat_rp_tracking', 'cat_rp', 'rp_tracking', 'Demande suivi RP', 'Projets de personnage, lore, validations d''actions RP (assassinats, captures, mort définitive).', 0, true, 'Ex: Demande de validation pour un projet de commerce...', 'Détaillez votre projet, vos motivations RP et les personnages impliqués...', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('subcat_whitelist', 'cat_rp', 'whitelist', 'Question liée à la whitelist', 'Interrogations sur la candidature, l''entretien vocal ou l''intégration.', 1, true, 'Ex: Question concernant mon entretien vocal...', 'Posez votre question concernant votre intégration sur le serveur...', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+  ('subcat_complaint', 'cat_rp', 'plainte', 'Plainte contre un joueur', 'Signalement d''un manquement au règlement, litige RP ou comportement inapproprié.', 2, true, 'Ex: Signalement d''un comportement anti-RP...', 'Expliquez la situation en détail, les personnes impliquées et joignez les preuves éventuelles...', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('subcat_bug', 'cat_tech', 'bug', 'Report de bug', 'Dysfonctionnements en jeu (items, quêtes, plugins) ou sur le site web.', 0, true, 'Ex: Problème d''affichage sur la page de profil...', 'Décrivez les étapes précises pour reproduire le bug observé...', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
   ('subcat_suggestion', 'cat_tech', 'suggestion', 'Suggestion', 'Idées d''amélioration du gameplay, ajouts de fonctionnalités ou équilibrage.', 1, true, 'Ex: Suggestion d''amélioration du système de métier...', 'Décrivez votre proposition et ce qu''elle apporterait à la communauté...', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT ("categoryId", "slug") DO NOTHING;
 
--- 6. Migrate existing tickets safely to default RP category
-UPDATE "tickets"
-SET
-  "categoryId" = 'cat_rp',
-  "subcategoryId" = 'subcat_rp_tracking',
-  "categoryName" = 'Roleplay',
-  "subcategoryName" = 'Demande suivi RP',
-  "isSpoiler" = CASE WHEN "category" = 'SECRET' THEN true ELSE false END
-WHERE "categoryId" IS NULL;
+-- 6. Migrate existing tickets safely using old_category
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'tickets' AND column_name = 'old_category'
+  ) THEN
+    -- Migration rétroactive intelligente selon l'ancienne catégorie
+    UPDATE "tickets"
+    SET
+      "categoryId" = CASE
+        WHEN "old_category" = 'BUG_REPORT' THEN 'cat_tech'
+        ELSE 'cat_rp'
+      END,
+      "subcategoryId" = CASE
+        WHEN "old_category" = 'BUG_REPORT' THEN 'subcat_bug'
+        WHEN "old_category" = 'WHITELIST' THEN 'subcat_whitelist'
+        WHEN "old_category" = 'PLAYER_COMPLAINT' THEN 'subcat_complaint'
+        ELSE 'subcat_rp_tracking'
+      END,
+      "categoryName" = CASE
+        WHEN "old_category" = 'BUG_REPORT' THEN 'Technique'
+        ELSE 'Roleplay'
+      END,
+      "subcategoryName" = CASE
+        WHEN "old_category" = 'BUG_REPORT' THEN 'Report de bug'
+        WHEN "old_category" = 'WHITELIST' THEN 'Question liée à la whitelist'
+        WHEN "old_category" = 'PLAYER_COMPLAINT' THEN 'Plainte contre un joueur'
+        ELSE 'Demande suivi RP'
+      END,
+      "isSpoiler" = false
+    WHERE "categoryId" IS NULL;
+
+    -- Nettoyage de la colonne temporaire
+    ALTER TABLE "tickets" DROP COLUMN IF EXISTS "old_category";
+  ELSE
+    -- Repli si old_category n'existe pas
+    UPDATE "tickets"
+    SET
+      "categoryId" = 'cat_rp',
+      "subcategoryId" = 'subcat_rp_tracking',
+      "categoryName" = 'Roleplay',
+      "subcategoryName" = 'Demande suivi RP',
+      "isSpoiler" = false
+    WHERE "categoryId" IS NULL;
+  END IF;
+END $$;
 

@@ -313,3 +313,25 @@ export async function deleteTicketSubcategoryAction(id: string) {
     return { success: false, error: "Impossible de supprimer cette sous-catégorie." };
   }
 }
+
+export async function setCategorySpoilerAction(
+  categoryId: string,
+  allowSpoiler: boolean
+): Promise<{ success: boolean; allowSpoiler?: boolean; error?: string }> {
+  await requireRole([Role.ADMIN]);
+
+  try {
+    const updated = await prisma.ticketCategoryConfig.update({
+      where: { id: categoryId },
+      data: { allowSpoiler },
+    });
+
+    revalidatePath("/staff/settings");
+    revalidatePath("/player/tickets");
+    revalidatePath("/staff/tickets");
+    return { success: true, allowSpoiler: updated.allowSpoiler };
+  } catch (error: unknown) {
+    console.error("[setCategorySpoilerAction] Error:", error);
+    return { success: false, error: "Impossible de modifier l'option spoiler de la catégorie." };
+  }
+}
