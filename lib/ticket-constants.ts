@@ -1,0 +1,1 @@
+export const TICKET_SUBJECT_MAX_LENGTH = 52;

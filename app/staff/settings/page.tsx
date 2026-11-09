@@ -4,6 +4,7 @@ import { Role } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import { getGalleryCategoriesConfig } from "@/lib/gallery-category-config";
+import { getTicketConfigData } from "@/lib/actions/ticket-config-actions";
 import { SettingsForm } from "@/components/staff/settings-form";
 
 export const metadata: Metadata = {
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
 
 export default async function SettingsPage() {
   await requireRole([Role.ADMIN]);
-  const [settings, discordTemplates, galleryCategories] = await Promise.all([
+  const [settings, discordTemplates, galleryCategories, ticketCategories] = await Promise.all([
     getGlobalSettings(),
     prisma.discordNotificationTemplate.findMany({
       select: {
@@ -27,6 +28,7 @@ export default async function SettingsPage() {
       },
     }),
     getGalleryCategoriesConfig(),
+    getTicketConfigData(),
   ]);
 
   return (
@@ -39,6 +41,7 @@ export default async function SettingsPage() {
         defaultValues={settings}
         initialDiscordTemplates={discordTemplates}
         initialGalleryCategories={galleryCategories}
+        initialTicketCategories={ticketCategories}
       />
     </div>
   );

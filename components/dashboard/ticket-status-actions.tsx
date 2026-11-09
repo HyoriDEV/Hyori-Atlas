@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Trash } from "@phosphor-icons/react";
+import { Archive, ArrowCounterClockwise, Trash } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { archiveTicket, deleteTicket, reopenTicket } from "@/lib/actions/ticket-actions";
@@ -69,22 +69,25 @@ export function TicketStatusActions({
       <Button
         type="button"
         variant={isArchived ? "destructive" : "outline"}
-        size="sm"
+        size="icon"
         onClick={() => setOpen(true)}
         disabled={isPending}
+        title={isArchived ? "Désarchiver le ticket" : "Archiver le ticket"}
+        aria-label={isArchived ? "Désarchiver le ticket" : "Archiver le ticket"}
       >
-        {isArchived ? "Désarchiver" : "Archiver"}
+        {isArchived ? <ArrowCounterClockwise className="size-4" /> : <Archive className="size-4" />}
       </Button>
       {isAdmin && (
         <Button
           type="button"
           variant="destructive"
-          size="sm"
+          size="icon"
           onClick={() => setDeleteOpen(true)}
           disabled={isPending}
+          title="Supprimer définitivement"
+          aria-label="Supprimer définitivement le ticket"
         >
           <Trash className="size-4" />
-          Supprimer
         </Button>
       )}
       <AlertDialog open={open} onOpenChange={setOpen}>

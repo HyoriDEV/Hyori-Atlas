@@ -15,6 +15,8 @@ import { GlobalSettings } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { DiscordSettingsTab, type DiscordTemplateData } from "./discord-settings-tab";
 import { GallerySettingsTab } from "./gallery-settings-tab";
+import { TicketsSettingsTab } from "./tickets-settings-tab";
+import type { TicketCategoryConfigData } from "@/lib/actions/ticket-config-actions";
 import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
 
 interface SettingsFormProps {
@@ -42,12 +44,14 @@ interface SettingsFormProps {
   };
   initialDiscordTemplates?: DiscordTemplateData[];
   initialGalleryCategories?: GalleryCategoryItemConfig[];
+  initialTicketCategories?: TicketCategoryConfigData[];
 }
 
 export function SettingsForm({
   defaultValues,
   initialDiscordTemplates = [],
   initialGalleryCategories = [],
+  initialTicketCategories = [],
 }: SettingsFormProps) {
   const { initialDate, initialTime } = useMemo(() => {
     if (!defaultValues.countdownTargetDate) return { initialDate: "", initialTime: "18:00" };
@@ -193,6 +197,7 @@ export function SettingsForm({
           <TabsTrigger value="gallery">Galerie</TabsTrigger>
           <TabsTrigger value="countdown">Accueil</TabsTrigger>
           <TabsTrigger value="minecraft">Minecraft</TabsTrigger>
+          <TabsTrigger value="tickets">Tickets</TabsTrigger>
           <TabsTrigger value="discord">Discord</TabsTrigger>
         </TabsList>
 
@@ -654,6 +659,14 @@ export function SettingsForm({
         {/* 5. DISCORD */}
         <TabsContent value="discord" keepMounted={true}>
           <DiscordSettingsTab initialTemplates={initialDiscordTemplates} />
+        </TabsContent>
+
+        {/* 6. TICKETS */}
+        <TabsContent value="tickets" keepMounted={true}>
+          <TicketsSettingsTab
+            initialTemplates={initialDiscordTemplates}
+            initialCategories={initialTicketCategories}
+          />
         </TabsContent>
       </Tabs>
 

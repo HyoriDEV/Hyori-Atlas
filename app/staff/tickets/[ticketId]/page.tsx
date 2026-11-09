@@ -5,20 +5,14 @@ import Link from "next/link";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
-import {
-  backlogManagerRoles,
-  backlogRoles,
-  ticketCategoryLabels,
-  ticketStatusLabels,
-  ticketSummonableTeams,
-} from "@/lib/navigation";
+import { backlogManagerRoles, backlogRoles, ticketSummonableTeams } from "@/lib/navigation";
 import { backlogStatusDotClasses, backlogStatusLabels } from "@/lib/backlog";
 import { serializeBacklogUser } from "@/lib/services/backlog-service";
 import { hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
-import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
+import { Lock } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
@@ -26,7 +20,8 @@ import { TicketStatusActions } from "@/components/dashboard/ticket-status-action
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 import { TicketStaffAccessPanel } from "@/components/dashboard/ticket-staff-access-panel";
-import { CreateTaskFromTicketDialog } from "@/components/staff/backlog/create-task-from-ticket-dialog";
+import { TicketSecrecyButton } from "@/components/dashboard/ticket-secrecy-button";
+import { TicketActionsMenu } from "@/components/staff/tickets/ticket-actions-menu";
 
 export async function generateMetadata({
   params,
@@ -51,7 +46,7 @@ export async function generateMetadata({
 
   if (ticket?.subject) {
     const cleanSubject =
-      ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
+      ticket.subject.length > 52 ? `${ticket.subject.slice(0, 49)}...` : ticket.subject;
     return { title: `Ticket : ${cleanSubject}` };
   }
 
@@ -99,6 +94,15 @@ export default async function TicketStaffDetailPage({
         where: { archivedAt: null },
         select: { id: true, title: true, status: true },
         orderBy: { createdAt: "asc" },
+      },
+      staffTopics: {
+        select: {
+          id: true,
+          slug: true,
+          channelUrl: true,
+          isArchived: true,
+        },
+        orderBy: { createdAt: "desc" },
       },
     },
   });
@@ -187,6 +191,7 @@ export default async function TicketStaffDetailPage({
   const staffAccessPanel = canManageAccess ? (
     <TicketStaffAccessPanel
       ticketId={ticket.id}
+      isSecret={ticket.category === TicketCategory.SECRET}
       teams={ticketSummonableTeams.map((team) => {
         const summon = ticket.teamSummons.find((s) => s.team === team);
         return {
@@ -213,7 +218,7 @@ export default async function TicketStaffDetailPage({
       <div className="flex shrink-0 flex-wrap items-center gap-3">
         <AtlasBackButton href="/staff/tickets" />
         <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
-          <span className="text-muted-foreground text-xs">
+          <span className="text-muted-foreground flex items-center gap-1 text-xs">
             <Link
               href={`/staff/atlas/${ticket.playerId}`}
               className="hover:text-foreground font-medium underline-offset-4 hover:underline"
@@ -221,8 +226,21 @@ export default async function TicketStaffDetailPage({
             >
               {playerName}
             </Link>{" "}
-            · {ticketCategoryLabels[ticket.category]} ·{" "}
-            {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+            ·{" "}
+            {ticket.isSpoiler ? (
+              <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+                <Lock className="size-2.5" />
+                Spoiler RP
+              </span>
+            ) : (
+              <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                {ticket.categoryName || "Ticket"}
+              </Badge>
+            )}
+            {ticket.subcategoryName && (
+              <span className="text-foreground/85 font-medium"> · {ticket.subcategoryName}</span>
+            )}{" "}
+            · {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
           <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
           {canUseBacklog && ticket.backlogTasks.length > 0 && (
@@ -246,10 +264,11 @@ export default async function TicketStaffDetailPage({
             </div>
           )}
         </div>
-        {ticket.status !== TicketStatus.ARCHIVED && (
-          <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
-            {ticketStatusLabels[ticket.status]}
-          </Badge>
+        {canManageAccess && (
+          <TicketSecrecyButton
+            ticketId={ticket.id}
+            isSecret={ticket.category === TicketCategory.SECRET}
+          />
         )}
         <TicketMembersSheet
           ticketId={ticket.id}
@@ -258,17 +277,17 @@ export default async function TicketStaffDetailPage({
           staffAccessPanel={staffAccessPanel}
           className="lg:hidden"
         />
-        {canUseBacklog && (
-          <CreateTaskFromTicketDialog
-            ticketId={ticket.id}
-            ticketSubject={ticket.subject}
-            assignees={backlogAssignees.map(serializeBacklogUser)}
-            canSummonDevelopers={
-              canManageAccess && !ticket.teamSummons.some((s) => s.team === Role.DEVELOPER)
-            }
-            defaultSummonDevelopers={ticket.category === TicketCategory.BUG_REPORT}
-          />
-        )}
+        <TicketActionsMenu
+          ticketId={ticket.id}
+          ticketSubject={ticket.subject}
+          canUseBacklog={canUseBacklog}
+          backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
+          canSummonDevelopers={
+            canManageAccess && !ticket.teamSummons.some((s) => s.team === Role.DEVELOPER)
+          }
+          defaultSummonDevelopers={false}
+          topics={ticket.staffTopics}
+        />
         <TicketStatusActions
           ticketId={ticket.id}
           status={ticket.status}

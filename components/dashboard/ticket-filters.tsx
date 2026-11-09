@@ -12,40 +12,36 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TicketCategory } from "@/lib/generated/prisma/enums";
-import { staffRoleLabels, ticketCategoryLabels, ticketSummonableTeams } from "@/lib/navigation";
 import { ResetSortButton } from "@/components/dashboard/waitlist-sort-controls";
 import { setClientPagePref } from "@/lib/table-preferences";
-import { TICKET_TEAM_FILTER_NONE } from "@/lib/ticket-list";
 
 const ALL_VALUE = "ALL";
 const QUERY_DEBOUNCE_MS = 400;
 // Filtres ponctuels : jamais enregistrés dans les préférences de la page.
 const TRANSIENT_PARAMS = new Set(["q"]);
 
-const categoryItems = [
-  { value: ALL_VALUE, label: "Toutes les catégories" },
-  ...Object.values(TicketCategory).map((value) => ({ value, label: ticketCategoryLabels[value] })),
-];
+export interface TicketFilterCategoryOption {
+  value: string;
+  label: string;
+}
 
-const teamItems = [
-  { value: ALL_VALUE, label: "Tous les accès" },
-  ...ticketSummonableTeams.map((team) => ({ value: team, label: staffRoleLabels[team] })),
-  { value: TICKET_TEAM_FILTER_NONE, label: "Aucun accès accordé" },
+const DEFAULT_CATEGORY_ITEMS: TicketFilterCategoryOption[] = [
+  { value: ALL_VALUE, label: "Toutes les catégories" },
+  { value: "rp", label: "Roleplay" },
+  { value: "technique", label: "Technique" },
+  { value: "spoiler", label: "⚠️ Spoilers uniquement" },
 ];
 
 export function TicketFilters({
   query,
   category,
-  team,
-  showTeamFilter = false,
   hasActiveSort = false,
+  availableCategories,
 }: {
   query: string;
   category?: string;
-  team?: string;
-  showTeamFilter?: boolean;
   hasActiveSort?: boolean;
+  availableCategories?: { slug: string; name: string }[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -55,6 +51,15 @@ export function TicketFilters({
   const [lastDispatchedQuery, setLastDispatchedQuery] = useState(query);
   const [, startTransition] = useTransition();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const categoryItems: TicketFilterCategoryOption[] =
+    availableCategories && availableCategories.length > 0
+      ? [
+          { value: ALL_VALUE, label: "Toutes les catégories" },
+          ...availableCategories.map((c) => ({ value: c.slug, label: c.name })),
+          { value: "spoiler", label: "⚠️ Spoilers uniquement" },
+        ]
+      : DEFAULT_CATEGORY_ITEMS;
 
   if (prevQuery !== query) {
     setPrevQuery(query);
@@ -133,7 +138,7 @@ export function TicketFilters({
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher par intitulé ou joueur..."
-          className="w-full sm:w-80 pr-8 pl-8"
+          className="w-full pr-8 pl-8 sm:w-80"
         />
         {queryInput ? (
           <button
@@ -153,9 +158,9 @@ export function TicketFilters({
         onValueChange={(value) => updateParams({ category: value ?? ALL_VALUE })}
       >
         <SelectTrigger className="w-full sm:w-52">
-          <SelectValue placeholder="Catégorie">
+          <SelectValue placeholder="Type de ticket">
             {categoryItems.find((item) => item.value === (category ?? ALL_VALUE))?.label ??
-              "Catégorie"}
+              "Type de ticket"}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
@@ -166,27 +171,6 @@ export function TicketFilters({
           ))}
         </SelectContent>
       </Select>
-
-      {showTeamFilter ? (
-        <Select
-          items={teamItems}
-          value={team ?? ALL_VALUE}
-          onValueChange={(value) => updateParams({ team: value ?? ALL_VALUE })}
-        >
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue placeholder="Accès staff">
-              {teamItems.find((item) => item.value === (team ?? ALL_VALUE))?.label ?? "Accès staff"}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {teamItems.map((item) => (
-              <SelectItem key={item.value} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : null}
     </div>
   );
 }

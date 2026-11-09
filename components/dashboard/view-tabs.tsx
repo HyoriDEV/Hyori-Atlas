@@ -63,7 +63,11 @@ export function ViewTabs<T extends string>({
     tab.count === undefined ? tab.label : `${tab.label} (${tab.count})`;
 
   const tabsBar = (
-    <Tabs value={activeView} onValueChange={handleValueChange} className={cn("max-w-full min-w-0 overflow-x-auto", className)}>
+    <Tabs
+      value={activeView}
+      onValueChange={handleValueChange}
+      className={cn("max-w-full min-w-0 overflow-x-auto", className)}
+    >
       <TabsList variant="line">
         {tabs.map((tab) => (
           <TabsTrigger key={tab.value} value={tab.value}>

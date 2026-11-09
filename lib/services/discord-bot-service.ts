@@ -852,3 +852,64 @@ export async function notifyWaitlistRegistrationForUser(user: {
     override: config.override,
   });
 }
+
+export interface CreateDiscordTopicParams {
+  title: string;
+  slug?: string;
+  context: string;
+  actions: string;
+  ticketId?: string | null;
+  ticketSubject?: string | null;
+  ticketUrl?: string | null;
+}
+
+export interface CreateDiscordTopicResult {
+  success: boolean;
+  channelId?: string;
+  slug?: string;
+  channelUrl?: string;
+  error?: string;
+}
+
+/**
+ * Crée un salon textuel pour un sujet staff sur Discord dans la catégorie Sujets.
+ */
+export async function createDiscordTopic(
+  params: CreateDiscordTopicParams
+): Promise<CreateDiscordTopicResult> {
+  const result = await callDiscordBot<CreateDiscordTopicResult>("/topics", "POST", params);
+
+  if (!result.success || !result.data) {
+    return {
+      success: false,
+      error: result.error || "Impossible de créer le sujet sur Discord via le bot.",
+    };
+  }
+
+  return result.data;
+}
+
+export interface ArchiveDiscordTopicResult {
+  success: boolean;
+  channelId?: string;
+  isArchived?: boolean;
+  error?: string;
+}
+
+/**
+ * Déplace un salon textuel de sujet vers la catégorie des sujets archivés sur Discord.
+ */
+export async function archiveDiscordTopic(channelId: string): Promise<ArchiveDiscordTopicResult> {
+  const result = await callDiscordBot<ArchiveDiscordTopicResult>("/topics/archive", "POST", {
+    channelId,
+  });
+
+  if (!result.success || !result.data) {
+    return {
+      success: false,
+      error: result.error || "Impossible d'archiver le sujet sur Discord via le bot.",
+    };
+  }
+
+  return result.data;
+}

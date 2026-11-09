@@ -342,8 +342,8 @@ export const staffStaffTeamItem: StaffNavItem = {
 
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
-  staffAtlasItem,
   staffTicketsItem,
+  staffAtlasItem,
   staffBdaReportsItem,
   staffSanctionsItem,
   staffBacklogItem,
@@ -363,7 +363,7 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: [staffDashboardItem, staffAtlasItem],
+    items: [staffDashboardItem, staffTicketsItem, staffAtlasItem],
   };
 
   const backlogStandaloneGroup: StaffNavGroup = {
@@ -376,7 +376,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Modération",
         iconKey: "shield",
-        items: [staffTicketsItem, staffBdaReportsItem, staffSanctionsItem],
+        items: [staffBdaReportsItem, staffSanctionsItem],
       },
       backlogStandaloneGroup,
       {
@@ -408,31 +408,18 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Modération",
         iconKey: "shield",
-        items: [staffTicketsItem, staffBdaReportsItem],
+        items: [staffBdaReportsItem],
       },
     ];
   }
 
   if (role === Role.HELPER) {
-    return [
-      overviewGroup,
-      {
-        title: "Modération",
-        iconKey: "shield",
-        items: [staffTicketsItem],
-      },
-      backlogStandaloneGroup,
-    ];
+    return [overviewGroup, backlogStandaloneGroup];
   }
 
   if (role === Role.RP_TRACKING || role === Role.EVENT) {
     return [
       overviewGroup,
-      {
-        title: "Support",
-        iconKey: "chat",
-        items: [staffTicketsItem],
-      },
       {
         title: "Gestion RP",
         iconKey: "users",
@@ -447,15 +434,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   }
 
   if (role === Role.DEVELOPER) {
-    return [
-      overviewGroup,
-      {
-        title: "Modération",
-        iconKey: "shield",
-        items: [staffTicketsItem],
-      },
-      backlogStandaloneGroup,
-    ];
+    return [overviewGroup, backlogStandaloneGroup];
   }
 
   return [overviewGroup];
@@ -468,7 +447,8 @@ export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
 export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
 export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
 export const rpManagementRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
-export const ticketStaffRoles: Role[] = [Role.ADMIN, Role.HELPER];
+export const secretTicketStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const ticketStaffRoles: Role[] = allStaffRoles;
 export const ticketSummonableTeams: Role[] = [
   Role.RP_TRACKING,
   Role.CONFLICT_MANAGEMENT,
@@ -504,11 +484,8 @@ export const registrationStatusLabels: Record<RegistrationStatus, string> = {
 };
 
 export const ticketCategoryLabels: Record<TicketCategory, string> = {
-  [TicketCategory.GENERAL_QUESTION]: "Question générale",
-  [TicketCategory.WHITELIST]: "Whitelist",
-  [TicketCategory.RP_REQUEST]: "Demande RP",
-  [TicketCategory.PLAYER_COMPLAINT]: "Plainte contre un joueur",
-  [TicketCategory.BUG_REPORT]: "Report de bug",
+  [TicketCategory.OPEN]: "Ticket ouvert",
+  [TicketCategory.SECRET]: "Ticket secret",
 };
 
 export const ticketStatusLabels: Record<TicketStatus, string> = {
