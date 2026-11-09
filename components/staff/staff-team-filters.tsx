@@ -141,7 +141,7 @@ export function StaffTeamFilters({ query, roleFilter }: StaffTeamFiltersProps) {
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher..."
-          className="w-full sm:w-72 pr-8 pl-8"
+          className="w-full pr-8 pl-8 sm:w-72"
         />
         {queryInput ? (
           <button

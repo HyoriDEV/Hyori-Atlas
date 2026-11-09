@@ -35,7 +35,11 @@ export async function getGalleryCategoriesConfig(): Promise<GalleryCategoryItemC
         return DEFAULT_GALLERY_CATEGORIES.map((def) => {
           const found = parsed.find((p) => p.id === def.id);
           return found
-            ? { id: def.id, label: found.label?.trim() || def.label, enabled: found.enabled ?? true }
+            ? {
+                id: def.id,
+                label: found.label?.trim() || def.label,
+                enabled: found.enabled ?? true,
+              }
             : def;
         });
       }

@@ -1412,7 +1412,7 @@ export function ConversationChat({
           role="dialog"
           aria-modal="true"
           aria-label="Aperçu de l'image"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 backdrop-blur-xs p-4 sm:p-6 select-none animate-in fade-in duration-150"
+          className="animate-in fade-in fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-4 backdrop-blur-xs duration-150 select-none sm:p-6"
           onClick={() => setPreviewImageUrl(null)}
         >
           <button
@@ -1427,7 +1427,7 @@ export function ConversationChat({
 
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex flex-col items-center justify-center max-h-full max-w-full"
+            className="relative flex max-h-full max-w-full flex-col items-center justify-center"
           >
             <img
               src={previewImageUrl}
@@ -1439,9 +1439,9 @@ export function ConversationChat({
                 href={previewImageUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-white/75 transition-colors hover:text-white hover:underline cursor-pointer"
+                className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-white/75 transition-colors hover:text-white hover:underline"
               >
-                <span>Ouvrir l'original</span>
+                <span>Ouvrir l&apos;original</span>
                 <ArrowSquareOut className="size-3.5" />
               </a>
             </div>

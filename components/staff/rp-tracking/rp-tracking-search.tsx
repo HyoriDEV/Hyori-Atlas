@@ -77,7 +77,7 @@ export function RpTrackingSearch({ query }: { query: string }) {
         value={queryInput}
         onChange={(event) => handleQueryChange(event.target.value)}
         placeholder="Rechercher un joueur..."
-        className="w-full sm:w-72 pr-8 pl-8"
+        className="w-full pr-8 pl-8 sm:w-72"
       />
       {queryInput ? (
         <button

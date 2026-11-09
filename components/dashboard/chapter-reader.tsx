@@ -267,10 +267,7 @@ export function ChapterReader({
                 </div>
               )}
 
-              <article
-                id={`chapter-${chapter.id}`}
-                className="flex scroll-mt-14 flex-col"
-              >
+              <article id={`chapter-${chapter.id}`} className="flex scroll-mt-14 flex-col">
                 <header className="mb-6 flex flex-col gap-1.5">
                   <div
                     className={cn(
@@ -291,8 +288,7 @@ export function ChapterReader({
                   </h2>
                   {chapter.updatedAt && (
                     <span className="text-muted-foreground text-xs">
-                      Modifié :{" "}
-                      <FormattedDate date={chapter.updatedAt} style="compact" withTime />
+                      Modifié : <FormattedDate date={chapter.updatedAt} style="compact" withTime />
                     </span>
                   )}
                 </header>

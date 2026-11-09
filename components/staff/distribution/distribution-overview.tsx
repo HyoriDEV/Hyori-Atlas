@@ -427,7 +427,7 @@ export function DistributionOverview({
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-full sm:w-48 text-sm">
+            <SelectTrigger className="w-full text-sm sm:w-48">
               <SelectValue placeholder="Statut de traitement">
                 {PROCESSED_FILTER_OPTIONS.find((item) => item.value === processedFilter)?.label ??
                   "Statut de traitement"}
@@ -494,7 +494,7 @@ export function DistributionOverview({
                   </div>
                 </TableHead>
                 <TableHead
-                  className="hidden md:table-cell cursor-pointer select-none"
+                  className="hidden cursor-pointer select-none md:table-cell"
                   onClick={() => handleSort("choice1")}
                 >
                   <div className="hover:text-foreground flex items-center gap-1.5">
@@ -503,7 +503,7 @@ export function DistributionOverview({
                   </div>
                 </TableHead>
                 <TableHead
-                  className="hidden md:table-cell cursor-pointer select-none"
+                  className="hidden cursor-pointer select-none md:table-cell"
                   onClick={() => handleSort("choice2")}
                 >
                   <div className="hover:text-foreground flex items-center gap-1.5">
@@ -553,7 +553,7 @@ export function DistributionOverview({
                         <span className="font-medium hover:underline">{row.playerName}</span>
                       </Link>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                    <TableCell className="text-muted-foreground hidden text-sm md:table-cell">
                       {row.primaryClassName ? (
                         <span>
                           {row.primaryClassName} — {row.primaryRoleName}
@@ -562,7 +562,7 @@ export function DistributionOverview({
                         "—"
                       )}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-sm">
+                    <TableCell className="text-muted-foreground hidden text-sm md:table-cell">
                       {row.secondaryClassName ? (
                         <span>
                           {row.secondaryClassName} — {row.secondaryRoleName}

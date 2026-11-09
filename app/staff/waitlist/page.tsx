@@ -195,7 +195,7 @@ export default async function WaitlistPage(props: PageProps) {
                           </span>
                         </Link>
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell text-muted-foreground">
+                      <TableCell className="text-muted-foreground hidden sm:table-cell">
                         {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}
                       </TableCell>
                       <TableCell>
@@ -291,7 +291,7 @@ export default async function WaitlistPage(props: PageProps) {
                               </span>
                             </Link>
                           </TableCell>
-                          <TableCell className="hidden sm:table-cell text-muted-foreground">
+                          <TableCell className="text-muted-foreground hidden sm:table-cell">
                             {formatDate(waitlistedDate, { style: "prefix-short", withTime: true })}
                           </TableCell>
                           <TableCell>

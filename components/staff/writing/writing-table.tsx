@@ -107,7 +107,7 @@ export function WritingTable({ stories, query }: { stories: StaffWritingStory[];
                 </TableCell>
 
                 {/* Dernier chapitre */}
-                <TableCell className="hidden md:table-cell max-w-xs">
+                <TableCell className="hidden max-w-xs md:table-cell">
                   <div className="flex items-center gap-2 truncate">
                     <BookOpen className="text-muted-foreground size-4 shrink-0" />
                     <span className="truncate text-sm font-medium">
@@ -117,7 +117,7 @@ export function WritingTable({ stories, query }: { stories: StaffWritingStory[];
                 </TableCell>
 
                 {/* Date */}
-                <TableCell className="hidden lg:table-cell text-muted-foreground text-sm whitespace-nowrap">
+                <TableCell className="text-muted-foreground hidden text-sm whitespace-nowrap lg:table-cell">
                   {formatDate(story.lastUpdatedAt, { style: "chat", fallback: "—" })}
                 </TableCell>
 
