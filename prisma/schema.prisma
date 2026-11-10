@@ -64,11 +64,8 @@ enum NewsType {
 }
 
 enum TicketCategory {
-  GENERAL_QUESTION
-  WHITELIST
-  RP_REQUEST
-  PLAYER_COMPLAINT
-  BUG_REPORT
+  OPEN
+  SECRET
 }
 
 enum TicketStatus {
@@ -196,6 +193,7 @@ model User {
   galleryLikes            GalleryLike[]                 @relation("UserGalleryLikes")
   galleryTags             GalleryTaggedUser[]           @relation("UserGalleryTags")
   handledConversations    Conversation[]                @relation("ConversationHandledBy")
+  createdStaffTopics      StaffTopic[]                  @relation("StaffTopicCreator")
 
   @@index([rpGroupId])
   @@map("users")
@@ -272,10 +270,61 @@ model News {
   @@map("news")
 }
 
+model TicketCategoryConfig {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  name         String   @db.VarChar(100)
+  description  String?  @db.VarChar(300)
+  icon         String?  @db.VarChar(50)
+  order        Int      @default(0)
+  enabled      Boolean  @default(true)
+  allowSpoiler Boolean  @default(false)
+  allowedRoles Role[]   @default([])
+
+  subcategories TicketSubcategoryConfig[]
+  tickets       Ticket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("ticket_category_configs")
+}
+
+model TicketSubcategoryConfig {
+  id                     String  @id @default(cuid())
+  categoryId             String
+  slug                   String
+  name                   String  @db.VarChar(100)
+  description            String? @db.VarChar(300)
+  order                  Int     @default(0)
+  enabled                Boolean @default(true)
+  placeholderSubject     String? @db.VarChar(200)
+  placeholderDescription String? @db.VarChar(500)
+
+  category TicketCategoryConfig @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tickets  Ticket[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([categoryId, slug])
+  @@map("ticket_subcategory_configs")
+}
+
 model Ticket {
   id             String         @id @default(cuid())
   playerId       String
-  category       TicketCategory
+  category       TicketCategory @default(OPEN)
+
+  categoryId     String?
+  subcategoryId  String?
+  categoryRef    TicketCategoryConfig?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  subcategoryRef TicketSubcategoryConfig? @relation(fields: [subcategoryId], references: [id], onDelete: SetNull)
+
+  categoryName   String   @default("Roleplay") @db.VarChar(100)
+  subcategoryName String? @db.VarChar(100)
+  isSpoiler      Boolean  @default(false)
+
   subject        String
   status         TicketStatus   @default(PENDING_STAFF)
   conversationId String         @unique
@@ -289,7 +338,10 @@ model Ticket {
   teamSummons   TicketTeamSummon[]
   staffAccesses TicketStaffAccess[]
   backlogTasks  BacklogTask[]
+  staffTopics   StaffTopic[]
 
+  @@index([categoryId, status, lastMessageAt])
+  @@index([isSpoiler, status, lastMessageAt])
   @@index([status, lastMessageAt])
   @@map("tickets")
 }
@@ -323,6 +375,31 @@ model TicketStaffAccess {
   @@unique([ticketId, userId])
   @@index([userId])
   @@map("ticket_staff_accesses")
+}
+
+model StaffTopic {
+  id          String    @id @default(cuid())
+  title       String    @db.VarChar(120)
+  slug        String    @db.VarChar(100)
+  context     String    @db.Text
+  actions     String    @db.Text
+  channelId   String    @db.VarChar(64)
+  channelUrl  String?   @db.VarChar(255)
+  isArchived  Boolean   @default(false)
+  archivedAt  DateTime?
+
+  ticketId    String?
+  ticket      Ticket?   @relation(fields: [ticketId], references: [id], onDelete: SetNull)
+
+  createdById String?
+  createdBy   User?     @relation("StaffTopicCreator", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([ticketId])
+  @@index([isArchived])
+  @@map("staff_topics")
 }
 
 model CharacterSheet {

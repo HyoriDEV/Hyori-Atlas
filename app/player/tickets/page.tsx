@@ -15,6 +15,7 @@ import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { truncate } from "@/lib/utils";
+import { Lock } from "@phosphor-icons/react/dist/ssr";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -24,10 +25,14 @@ import { NewTicketDialog } from "@/components/player/new-ticket-dialog";
 import { StatusTabs } from "@/components/dashboard/status-tabs";
 import { UnreadDot } from "@/components/ui/unread-dot";
 import { getGlobalSettings } from "@/lib/services/settings-service";
+import { getActiveTicketConfigForPlayer } from "@/lib/actions/ticket-config-actions";
 
 type TicketListItem = {
   id: string;
   category: keyof typeof ticketCategoryLabels;
+  categoryName?: string;
+  subcategoryName?: string | null;
+  isSpoiler?: boolean;
   subject: string;
   status: TicketStatus;
   createdAt: Date;
@@ -81,8 +86,23 @@ function TicketList({
               <CardContent className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
+                    {ticket.isSpoiler ? (
+                      <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+                        <Lock className="size-3" />
+                        Spoiler RP
+                      </span>
+                    ) : (
+                      <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                        {ticket.categoryName || "Ticket"}
+                      </Badge>
+                    )}
+                    {ticket.subcategoryName && (
+                      <span className="text-foreground/85 font-medium">
+                        {ticket.subcategoryName}
+                      </span>
+                    )}
+                    <span>·</span>
                     <span>
-                      {ticketCategoryLabels[ticket.category]} ·{" "}
                       {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
                     </span>
                     {ticket.conversation?.members && ticket.conversation.members.length > 0 && (
@@ -116,7 +136,7 @@ function TicketList({
                     )}
                   </div>
                   <span className="text-sm font-medium" title={ticket.subject}>
-                    {truncate(ticket.subject, 50)}
+                    {truncate(ticket.subject, 52)}
                   </span>
                 </div>
                 <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
@@ -160,7 +180,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
     ],
   };
 
-  const [activeTickets, archivedTickets] = await Promise.all([
+  const [activeTickets, archivedTickets, ticketCategories] = await Promise.all([
     prisma.ticket.findMany({
       where: { ...userFilter, status: { not: TicketStatus.ARCHIVED } },
       include: {
@@ -227,6 +247,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
       },
       orderBy: { createdAt: "desc" },
     }),
+    getActiveTicketConfigForPlayer(),
   ]);
 
   const formatTickets = (list: typeof activeTickets) =>
@@ -255,7 +276,10 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-heading text-2xl font-semibold">Tes tickets</h1>
-        <NewTicketDialog ticketCreationEnabled={settings.ticketCreationEnabled} />
+        <NewTicketDialog
+          ticketCreationEnabled={settings.ticketCreationEnabled}
+          categories={ticketCategories}
+        />
       </div>
 
       <StatusTabs

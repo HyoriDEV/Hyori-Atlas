@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowCounterClockwise,
+  ArrowSquareOut,
   CaretDown,
   CircleNotch,
   Copy,
@@ -105,6 +106,7 @@ export function ConversationChat({
   const [isChatDisabled, setIsChatDisabled] = useState(disabled);
   const [body, setBody] = useState("");
   const [pendingImageUrl, setPendingImageUrl] = useState<string | null>(null);
+  const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -137,6 +139,25 @@ export function ConversationChat({
       return next;
     });
   }
+
+  useEffect(() => {
+    if (!previewImageUrl) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setPreviewImageUrl(null);
+      }
+    };
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [previewImageUrl]);
 
   const [isPending, startTransition] = useTransition();
 
@@ -862,7 +883,7 @@ export function ConversationChat({
                                       onClick={() => toggleDeleted(message.id)}
                                       aria-expanded={false}
                                       className={cn(
-                                        "group/del flex items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-xs transition-colors cursor-pointer select-none",
+                                        "group/del flex cursor-pointer items-center gap-2 rounded-xl border border-dashed px-3 py-1.5 text-xs transition-colors select-none",
                                         "border-destructive/35 bg-destructive/5 hover:bg-destructive/10 dark:bg-destructive/15 dark:hover:bg-destructive/25 text-destructive",
                                         group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
                                       )}
@@ -870,7 +891,7 @@ export function ConversationChat({
                                     >
                                       <Trash className="size-3.5 shrink-0 opacity-80 group-hover/del:opacity-100" />
                                       <span className="font-medium">Message supprimé</span>
-                                      <span className="text-muted-foreground/80 font-normal text-[11px]">
+                                      <span className="text-muted-foreground/80 text-[11px] font-normal">
                                         {message.deletedAt
                                           ? `(${formatShortTime(message.deletedAt)})`
                                           : `(${formatShortTime(message.createdAt)})`}
@@ -883,15 +904,15 @@ export function ConversationChat({
                                   ) : (
                                     <div
                                       className={cn(
-                                        "border-destructive/40 bg-destructive/5 dark:bg-destructive/15 text-muted-foreground rounded-2xl border border-dashed p-3 text-sm leading-relaxed shadow-2xs transition-all animate-in fade-in-50 duration-150",
+                                        "border-destructive/40 bg-destructive/5 dark:bg-destructive/15 text-muted-foreground animate-in fade-in-50 rounded-2xl border border-dashed p-3 text-sm leading-relaxed shadow-2xs transition-all duration-150",
                                         group.isOwn ? "rounded-tr-xs" : "rounded-tl-xs"
                                       )}
                                     >
-                                      <div className="flex items-center justify-between gap-3 border-b border-destructive/20 pb-2 mb-2 select-none">
-                                        <div className="flex items-center gap-1.5 text-destructive text-xs font-medium">
+                                      <div className="border-destructive/20 mb-2 flex items-center justify-between gap-3 border-b pb-2 select-none">
+                                        <div className="text-destructive flex items-center gap-1.5 text-xs font-medium">
                                           <Trash className="size-3.5 shrink-0" />
                                           <span>Message supprimé</span>
-                                          <span className="text-muted-foreground font-normal text-[11px]">
+                                          <span className="text-muted-foreground text-[11px] font-normal">
                                             {message.deletedAt
                                               ? `le ${formatDate(message.deletedAt, { style: "chat" })}`
                                               : `(envoyé à ${formatShortTime(message.createdAt)})`}
@@ -901,7 +922,7 @@ export function ConversationChat({
                                           type="button"
                                           onClick={() => toggleDeleted(message.id)}
                                           aria-expanded={true}
-                                          className="text-destructive/80 hover:text-destructive bg-destructive/10 hover:bg-destructive/20 dark:bg-destructive/25 dark:hover:bg-destructive/35 flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors cursor-pointer"
+                                          className="text-destructive/80 hover:text-destructive bg-destructive/10 hover:bg-destructive/20 dark:bg-destructive/25 dark:hover:bg-destructive/35 flex cursor-pointer items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-medium transition-colors"
                                           title="Masquer le contenu supprimé"
                                         >
                                           <EyeSlash className="size-3" />
@@ -910,7 +931,7 @@ export function ConversationChat({
                                       </div>
 
                                       {message.body && (
-                                        <p className="italic text-foreground/90 break-words whitespace-pre-wrap">
+                                        <p className="text-foreground/90 break-words whitespace-pre-wrap italic">
                                           {message.body}
                                         </p>
                                       )}
@@ -918,20 +939,29 @@ export function ConversationChat({
                                         <img
                                           src={message.imageUrl}
                                           alt="Image supprimée"
+                                          role="button"
+                                          tabIndex={0}
+                                          onClick={() => setPreviewImageUrl(message.imageUrl!)}
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                              e.preventDefault();
+                                              setPreviewImageUrl(message.imageUrl!);
+                                            }
+                                          }}
                                           className={cn(
-                                            "border-destructive/30 max-h-64 max-w-full rounded-lg border border-dashed object-contain opacity-85",
+                                            "border-destructive/30 max-h-64 max-w-full cursor-pointer rounded-lg border border-dashed object-contain opacity-85 transition-opacity hover:opacity-100",
                                             message.body && "mt-2"
                                           )}
                                         />
                                       )}
 
                                       {message.versions && message.versions.length > 0 && (
-                                        <div className="mt-2.5 border-t border-destructive/20 pt-2">
+                                        <div className="border-destructive/20 mt-2.5 border-t pt-2">
                                           <button
                                             type="button"
                                             onClick={() => toggleHistory(message.id)}
                                             aria-expanded={isHistoryExpanded}
-                                            className="text-destructive/80 hover:text-destructive flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer"
+                                            className="text-destructive/80 hover:text-destructive flex cursor-pointer items-center gap-1 text-[11px] font-medium transition-colors"
                                           >
                                             <ArrowCounterClockwise className="size-3" />
                                             <span>
@@ -948,21 +978,27 @@ export function ConversationChat({
                                           </button>
 
                                           {isHistoryExpanded && (
-                                            <div className="mt-2 flex flex-col gap-1.5 pl-2 border-l-2 border-destructive/30">
+                                            <div className="border-destructive/30 mt-2 flex flex-col gap-1.5 border-l-2 pl-2">
                                               {message.versions.map((version, vIdx) => (
                                                 <div
                                                   key={version.id}
-                                                  className="rounded-lg bg-background/60 p-2 text-xs border border-destructive/20"
+                                                  className="bg-background/60 border-destructive/20 rounded-lg border p-2 text-xs"
                                                 >
-                                                  <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono mb-1">
-                                                    <span className="font-semibold text-foreground/80 font-sans">
-                                                      {vIdx === 0 ? "Version initiale" : `Version ${vIdx + 1}`}
+                                                  <div className="text-muted-foreground mb-1 flex items-center justify-between font-mono text-[10px]">
+                                                    <span className="text-foreground/80 font-sans font-semibold">
+                                                      {vIdx === 0
+                                                        ? "Version initiale"
+                                                        : `Version ${vIdx + 1}`}
                                                     </span>
                                                     <span>
-                                                      {version.createdAt ? formatDate(version.createdAt, { style: "chat" }) : ""}
+                                                      {version.createdAt
+                                                        ? formatDate(version.createdAt, {
+                                                            style: "chat",
+                                                          })
+                                                        : ""}
                                                     </span>
                                                   </div>
-                                                  <p className="text-xs break-words whitespace-pre-wrap leading-relaxed text-foreground/85 italic">
+                                                  <p className="text-foreground/85 text-xs leading-relaxed break-words whitespace-pre-wrap italic">
                                                     {version.body}
                                                   </p>
                                                 </div>
@@ -986,9 +1022,18 @@ export function ConversationChat({
                                     {message.imageUrl && (
                                       <img
                                         src={message.imageUrl}
-                                        alt=""
+                                        alt="Image jointe"
+                                        role="button"
+                                        tabIndex={0}
+                                        onClick={() => setPreviewImageUrl(message.imageUrl!)}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            setPreviewImageUrl(message.imageUrl!);
+                                          }
+                                        }}
                                         className={cn(
-                                          "max-h-64 max-w-full rounded-lg border object-contain",
+                                          "max-h-64 max-w-full cursor-pointer rounded-lg border object-contain transition-opacity hover:opacity-90",
                                           message.body && "mt-1.5"
                                         )}
                                       />
@@ -1012,44 +1057,46 @@ export function ConversationChat({
                                           </span>
                                         </div>
 
-                                        {viewerIsStaff && message.versions && message.versions.length > 0 && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleHistory(message.id);
-                                            }}
-                                            aria-expanded={isHistoryExpanded}
-                                            className={cn(
-                                              "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-medium transition-colors cursor-pointer",
-                                              group.isOwn
-                                                ? isHistoryExpanded
-                                                  ? "bg-primary-foreground/25 text-primary-foreground underline"
-                                                  : "bg-primary-foreground/15 text-primary-foreground/90 hover:bg-primary-foreground/25"
-                                                : isHistoryExpanded
-                                                  ? "bg-foreground/15 text-foreground underline"
-                                                  : "bg-background/80 text-foreground/80 hover:bg-background hover:text-foreground border border-border/50"
-                                            )}
-                                            title={
-                                              isHistoryExpanded
-                                                ? "Masquer l'historique des modifications"
-                                                : "Afficher l'historique des modifications"
-                                            }
-                                          >
-                                            <ArrowCounterClockwise className="size-3 shrink-0" />
-                                            <span>
-                                              {isHistoryExpanded
-                                                ? "Masquer l'historique"
-                                                : `Historique (${message.versions.length})`}
-                                            </span>
-                                            <CaretDown
+                                        {viewerIsStaff &&
+                                          message.versions &&
+                                          message.versions.length > 0 && (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                toggleHistory(message.id);
+                                              }}
+                                              aria-expanded={isHistoryExpanded}
                                               className={cn(
-                                                "size-2.5 transition-transform duration-200",
-                                                isHistoryExpanded && "rotate-180"
+                                                "inline-flex cursor-pointer items-center gap-1 rounded-md px-1.5 py-0.5 text-[10.5px] font-medium transition-colors",
+                                                group.isOwn
+                                                  ? isHistoryExpanded
+                                                    ? "bg-primary-foreground/25 text-primary-foreground underline"
+                                                    : "bg-primary-foreground/15 text-primary-foreground/90 hover:bg-primary-foreground/25"
+                                                  : isHistoryExpanded
+                                                    ? "bg-foreground/15 text-foreground underline"
+                                                    : "bg-background/80 text-foreground/80 hover:bg-background hover:text-foreground border-border/50 border"
                                               )}
-                                            />
-                                          </button>
-                                        )}
+                                              title={
+                                                isHistoryExpanded
+                                                  ? "Masquer l'historique des modifications"
+                                                  : "Afficher l'historique des modifications"
+                                              }
+                                            >
+                                              <ArrowCounterClockwise className="size-3 shrink-0" />
+                                              <span>
+                                                {isHistoryExpanded
+                                                  ? "Masquer l'historique"
+                                                  : `Historique (${message.versions.length})`}
+                                              </span>
+                                              <CaretDown
+                                                className={cn(
+                                                  "size-2.5 transition-transform duration-200",
+                                                  isHistoryExpanded && "rotate-180"
+                                                )}
+                                              />
+                                            </button>
+                                          )}
                                       </div>
                                     )}
                                   </div>
@@ -1062,23 +1109,25 @@ export function ConversationChat({
                                   message.versions.length > 0 && (
                                     <div
                                       className={cn(
-                                        "my-1 flex w-full flex-col gap-2 rounded-xl border border-dashed p-3 text-xs shadow-2xs animate-in fade-in-50 duration-150",
+                                        "animate-in fade-in-50 my-1 flex w-full flex-col gap-2 rounded-xl border border-dashed p-3 text-xs shadow-2xs duration-150",
                                         group.isOwn
                                           ? "border-primary/40 bg-primary/10 text-foreground"
                                           : "border-border/70 bg-muted/60 text-foreground"
                                       )}
                                     >
-                                      <div className="flex items-center justify-between gap-2 border-b border-border/40 pb-1.5 text-[11px] font-medium text-muted-foreground">
+                                      <div className="border-border/40 text-muted-foreground flex items-center justify-between gap-2 border-b pb-1.5 text-[11px] font-medium">
                                         <div className="flex items-center gap-1.5">
-                                          <ArrowCounterClockwise className="size-3.5 text-primary shrink-0" />
-                                          <span className="font-semibold text-foreground/90">
-                                            Historique des modifications ({message.versions.length} version{message.versions.length > 1 ? "s" : ""} antérieure{message.versions.length > 1 ? "s" : ""})
+                                          <ArrowCounterClockwise className="text-primary size-3.5 shrink-0" />
+                                          <span className="text-foreground/90 font-semibold">
+                                            Historique des modifications ({message.versions.length}{" "}
+                                            version{message.versions.length > 1 ? "s" : ""}{" "}
+                                            antérieure{message.versions.length > 1 ? "s" : ""})
                                           </span>
                                         </div>
                                         <button
                                           type="button"
                                           onClick={() => toggleHistory(message.id)}
-                                          className="text-muted-foreground hover:text-foreground flex items-center gap-1 text-[11px] hover:underline cursor-pointer"
+                                          className="text-muted-foreground hover:text-foreground flex cursor-pointer items-center gap-1 text-[11px] hover:underline"
                                           title="Fermer l'historique"
                                         >
                                           <EyeSlash className="size-3" />
@@ -1090,18 +1139,22 @@ export function ConversationChat({
                                         {message.versions.map((version, vIdx) => (
                                           <div
                                             key={version.id}
-                                            className="flex flex-col gap-1 rounded-lg bg-background/80 p-2.5 border border-border/40 shadow-2xs"
+                                            className="bg-background/80 border-border/40 flex flex-col gap-1 rounded-lg border p-2.5 shadow-2xs"
                                           >
-                                            <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                                              <span className="font-medium text-foreground/80 flex items-center gap-1.5">
-                                                <span className="size-1.5 rounded-full bg-primary/70 shrink-0" />
-                                                {vIdx === 0 ? "Version initiale" : `Version ${vIdx + 1}`}
+                                            <div className="text-muted-foreground flex items-center justify-between text-[11px]">
+                                              <span className="text-foreground/80 flex items-center gap-1.5 font-medium">
+                                                <span className="bg-primary/70 size-1.5 shrink-0 rounded-full" />
+                                                {vIdx === 0
+                                                  ? "Version initiale"
+                                                  : `Version ${vIdx + 1}`}
                                               </span>
                                               <span className="font-mono text-[10px]">
-                                                {version.createdAt ? formatDate(version.createdAt, { style: "chat" }) : ""}
+                                                {version.createdAt
+                                                  ? formatDate(version.createdAt, { style: "chat" })
+                                                  : ""}
                                               </span>
                                             </div>
-                                            <p className="text-sm break-words whitespace-pre-wrap leading-relaxed text-foreground/90 pl-3 border-l-2 border-primary/30">
+                                            <p className="text-foreground/90 border-primary/30 border-l-2 pl-3 text-sm leading-relaxed break-words whitespace-pre-wrap">
                                               {version.body}
                                             </p>
                                           </div>
@@ -1241,7 +1294,16 @@ export function ConversationChat({
                 <img
                   src={pendingImageUrl}
                   alt="Aperçu"
-                  className="max-h-28 rounded-lg border object-cover shadow-xs"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setPreviewImageUrl(pendingImageUrl)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setPreviewImageUrl(pendingImageUrl);
+                    }
+                  }}
+                  className="max-h-28 cursor-pointer rounded-lg border object-cover shadow-xs transition-opacity hover:opacity-90"
                 />
                 <button
                   type="button"
@@ -1344,6 +1406,48 @@ export function ConversationChat({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {previewImageUrl && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Aperçu de l'image"
+          className="animate-in fade-in fixed inset-0 z-50 flex flex-col items-center justify-center bg-black/80 p-4 backdrop-blur-xs duration-150 select-none sm:p-6"
+          onClick={() => setPreviewImageUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewImageUrl(null)}
+            className="absolute top-4 right-4 flex size-9 cursor-pointer items-center justify-center rounded-full border border-white/20 bg-white/10 text-white shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-white hover:text-black"
+            aria-label="Fermer l'aperçu"
+            title="Fermer (Échap)"
+          >
+            <X className="size-5" />
+          </button>
+
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative flex max-h-full max-w-full flex-col items-center justify-center"
+          >
+            <img
+              src={previewImageUrl}
+              alt="Image agrandie"
+              className="max-h-[82vh] max-w-[90vw] rounded-lg object-contain shadow-2xl"
+            />
+            <div className="mt-3 flex items-center justify-center">
+              <a
+                href={previewImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex cursor-pointer items-center gap-1.5 text-xs font-medium text-white/75 transition-colors hover:text-white hover:underline"
+              >
+                <span>Ouvrir l&apos;original</span>
+                <ArrowSquareOut className="size-3.5" />
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

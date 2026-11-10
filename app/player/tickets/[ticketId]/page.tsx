@@ -20,14 +20,13 @@ export async function generateMetadata({
   }
 
   const cleanSubject =
-    ticket.subject.length > 50 ? `${ticket.subject.slice(0, 47)}...` : ticket.subject;
+    ticket.subject.length > 52 ? `${ticket.subject.slice(0, 49)}...` : ticket.subject;
   return {
     title: `Ticket : ${cleanSubject}`,
   };
 }
+import { Lock } from "@phosphor-icons/react/dist/ssr";
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
-import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
-import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendTicketMessage } from "@/lib/actions/ticket-actions";
@@ -106,15 +105,25 @@ export default async function TicketDetailPage({
       <div className="flex shrink-0 flex-wrap items-center gap-3">
         <TicketBackLink />
         <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
-          <span className="text-muted-foreground text-xs">
-            {ticketCategoryLabels[ticket.category]} ·{" "}
-            {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+          <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+            {ticket.isSpoiler ? (
+              <span className="inline-flex items-center gap-1 font-medium text-amber-500">
+                <Lock className="size-3" />
+                Spoiler RP
+              </span>
+            ) : (
+              <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                {ticket.categoryName || "Ticket"}
+              </Badge>
+            )}
+            {ticket.subcategoryName && (
+              <span className="text-foreground/80 font-medium">{ticket.subcategoryName}</span>
+            )}
+            <span>·</span>
+            <span>{formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}</span>
           </span>
           <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
         </div>
-        <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="shrink-0">
-          {ticketStatusLabels[ticket.status]}
-        </Badge>
         <TicketMembersSheet
           ticketId={ticket.id}
           members={membersData}

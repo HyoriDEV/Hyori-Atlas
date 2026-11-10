@@ -8,6 +8,10 @@ export type TicketSummonTemplateId =
 
 export type DiscordTemplateId =
   | "TICKET_CREATED"
+  | "TICKET_SECRET_CREATED"
+  | "TICKET_RP_CREATED"
+  | "TICKET_RP_SPOILER_CREATED"
+  | "TICKET_TECH_CREATED"
   | TicketSummonTemplateId
   | "TICKET_MESSAGE"
   | "RP_TRACKING_MESSAGE"
@@ -31,55 +35,116 @@ export interface DefaultTemplateConfig {
   isChannelNotification?: boolean;
 }
 
-const TICKET_OPENING_TEMPLATE = {
+const TICKET_VARIABLES = [
+  { key: "{author}", description: "Pseudo du joueur créateur" },
+  { key: "{subject}", description: "Sujet du ticket" },
+  { key: "{description}", description: "Contenu du premier message" },
+  { key: "{ticketId}", description: "Identifiant du ticket" },
+  { key: "{url}", description: "Lien vers le ticket sur l'espace staff" },
+];
+
+export const TICKET_OPENING_TEMPLATE: Omit<DefaultTemplateConfig, "id" | "label"> = {
   category: "ticket",
   isChannelNotification: true,
-  defaultTitle: "Nouveau Ticket — {category}",
+  defaultTitle: "🎫 Nouveau Ticket Ouvert",
   defaultDescription:
-    "Un nouveau ticket a été ouvert par **{author}**.\n\n**Catégorie :** {category}\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+    "Un nouveau ticket ouvert a été créé par **{author}**.\n\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
   defaultButtonLabel: "Consulter le ticket",
-  availableVariables: [
-    { key: "{author}", description: "Pseudo du joueur créateur" },
-    { key: "{subject}", description: "Sujet du ticket" },
-    { key: "{category}", description: "Catégorie du ticket" },
-    { key: "{description}", description: "Contenu du premier message" },
-    { key: "{ticketId}", description: "Identifiant du ticket" },
-    { key: "{url}", description: "Lien vers le ticket sur l'espace staff" },
-  ],
-} satisfies Omit<DefaultTemplateConfig, "id" | "label">;
-
-// Même présentation que l'ouverture d'un ticket : la notification ne mentionne pas la convocation.
-function ticketSummonTemplate(
-  id: TicketSummonTemplateId,
-  teamLabel: string
-): DefaultTemplateConfig {
-  return {
-    ...TICKET_OPENING_TEMPLATE,
-    id,
-    label: `Ticket transmis à l'équipe ${teamLabel} (Salon de l'équipe)`,
-  };
-}
-
-export const TICKET_SUMMON_TEMPLATE_IDS: Partial<Record<Role, TicketSummonTemplateId>> = {
-  [Role.RP_TRACKING]: "TICKET_SUMMONED_RP_TRACKING",
-  [Role.CONFLICT_MANAGEMENT]: "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
-  [Role.EVENT]: "TICKET_SUMMONED_EVENT",
-  [Role.DEVELOPER]: "TICKET_SUMMONED_DEVELOPER",
+  availableVariables: TICKET_VARIABLES,
 };
+
+export const TICKET_SECRET_TEMPLATE: Omit<DefaultTemplateConfig, "id" | "label"> = {
+  category: "ticket",
+  isChannelNotification: true,
+  defaultTitle: "🔒 Nouveau Ticket Secret",
+  defaultDescription:
+    "Un nouveau ticket secret a été créé par **{author}**.\n\n⚠️ **Ce ticket contient des spoils ou des informations confidentielles (capture, RPK...).**\n\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+  defaultButtonLabel: "Consulter le ticket secret",
+  availableVariables: TICKET_VARIABLES,
+};
+
+export const TICKET_RP_TEMPLATE: Omit<DefaultTemplateConfig, "id" | "label"> = {
+  category: "ticket",
+  isChannelNotification: true,
+  defaultTitle: "🎫 Nouveau Ticket RP",
+  defaultDescription:
+    "Un nouveau ticket RP a été créé par **{author}**.\n\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+  defaultButtonLabel: "Consulter le ticket",
+  availableVariables: TICKET_VARIABLES,
+};
+
+export const TICKET_RP_SPOILER_TEMPLATE: Omit<DefaultTemplateConfig, "id" | "label"> = {
+  category: "ticket",
+  isChannelNotification: true,
+  defaultTitle: "🔒 Nouveau Ticket RP (Spoiler)",
+  defaultDescription:
+    "Un nouveau ticket RP confidentiel a été créé par **{author}**.\n\n⚠️ **Ce ticket contient des spoils ou des informations sensibles (projets, captures, mort de personnage...).**\n\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+  defaultButtonLabel: "Consulter le ticket confidentiel",
+  availableVariables: TICKET_VARIABLES,
+};
+
+export const TICKET_TECH_TEMPLATE: Omit<DefaultTemplateConfig, "id" | "label"> = {
+  category: "ticket",
+  isChannelNotification: true,
+  defaultTitle: "🛠️ Nouveau Ticket Technique",
+  defaultDescription:
+    "Un nouveau ticket technique a été créé par **{author}**.\n\n**Sujet :** {subject}\n\n> {description}\n\nConsultez et prenez en charge le ticket depuis l'espace staff.",
+  defaultButtonLabel: "Consulter le ticket technique",
+  availableVariables: TICKET_VARIABLES,
+};
+
+export const TICKET_SUMMON_TEMPLATE_IDS: Partial<Record<Role, TicketSummonTemplateId>> = {};
 
 export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplateConfig> = {
   TICKET_CREATED: {
     ...TICKET_OPENING_TEMPLATE,
     id: "TICKET_CREATED",
-    label: "Ouverture de ticket (Salon externe Staff)",
+    label: "Ouverture de ticket ouvert (Salon tickets Staff)",
   },
-  TICKET_SUMMONED_RP_TRACKING: ticketSummonTemplate("TICKET_SUMMONED_RP_TRACKING", "Suivi RP"),
-  TICKET_SUMMONED_CONFLICT_MANAGEMENT: ticketSummonTemplate(
-    "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
-    "Gestion des conflits"
-  ),
-  TICKET_SUMMONED_EVENT: ticketSummonTemplate("TICKET_SUMMONED_EVENT", "Événementiel"),
-  TICKET_SUMMONED_DEVELOPER: ticketSummonTemplate("TICKET_SUMMONED_DEVELOPER", "Développement"),
+  TICKET_SECRET_CREATED: {
+    ...TICKET_SECRET_TEMPLATE,
+    id: "TICKET_SECRET_CREATED",
+    label: "Ouverture de ticket secret (Salon confidentiel Staff)",
+  },
+  TICKET_RP_CREATED: {
+    ...TICKET_RP_TEMPLATE,
+    id: "TICKET_RP_CREATED",
+    label: "Ouverture de ticket Roleplay (Salon Tickets RP)",
+  },
+  TICKET_RP_SPOILER_CREATED: {
+    ...TICKET_RP_SPOILER_TEMPLATE,
+    id: "TICKET_RP_SPOILER_CREATED",
+    label: "Ouverture de ticket RP Spoiler (Salon Confidentiel RP)",
+  },
+  TICKET_TECH_CREATED: {
+    ...TICKET_TECH_TEMPLATE,
+    id: "TICKET_TECH_CREATED",
+    label: "Ouverture de ticket Technique (Salon Développement)",
+  },
+  TICKET_SUMMONED_RP_TRACKING: {
+    ...TICKET_OPENING_TEMPLATE,
+    isChannelNotification: false,
+    id: "TICKET_SUMMONED_RP_TRACKING",
+    label: "Ticket transmis à l'équipe Suivi RP (Obsolète)",
+  },
+  TICKET_SUMMONED_CONFLICT_MANAGEMENT: {
+    ...TICKET_OPENING_TEMPLATE,
+    isChannelNotification: false,
+    id: "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
+    label: "Ticket transmis à l'équipe Gestion des conflits (Obsolète)",
+  },
+  TICKET_SUMMONED_EVENT: {
+    ...TICKET_OPENING_TEMPLATE,
+    isChannelNotification: false,
+    id: "TICKET_SUMMONED_EVENT",
+    label: "Ticket transmis à l'équipe Événementiel (Obsolète)",
+  },
+  TICKET_SUMMONED_DEVELOPER: {
+    ...TICKET_OPENING_TEMPLATE,
+    isChannelNotification: false,
+    id: "TICKET_SUMMONED_DEVELOPER",
+    label: "Ticket transmis à l'équipe Développement (Obsolète)",
+  },
   TICKET_MESSAGE: {
     id: "TICKET_MESSAGE",
     label: "Nouveau message de ticket (MP Joueur)",

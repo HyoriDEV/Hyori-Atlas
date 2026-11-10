@@ -334,7 +334,7 @@ export default async function RpTrackingStaffListPage(props: {
                         </Badge>
                       )}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell max-w-md">
+                    <TableCell className="hidden max-w-md md:table-cell">
                       {lastMessage ? (
                         <span
                           className={cn(
@@ -352,13 +352,13 @@ export default async function RpTrackingStaffListPage(props: {
                         <span className="text-muted-foreground">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden lg:table-cell">
                       <span className="inline-flex items-center gap-1.5">
                         <ChatCircle className="size-3.5" />
                         {player.messageCount}
                       </span>
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden whitespace-nowrap lg:table-cell">
                       {writing && writing.chapterCount > 0 ? (
                         <div className="flex flex-col items-start gap-1">
                           <Badge variant="outline" className="text-xs font-normal">
@@ -377,10 +377,10 @@ export default async function RpTrackingStaffListPage(props: {
                         <span className="text-muted-foreground/60 text-xs">Aucune trame</span>
                       )}
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden whitespace-nowrap xl:table-cell">
                       {formatDate(context?.lastConnectedAt, { style: "chat", fallback: "Jamais" })}
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden whitespace-nowrap md:table-cell">
                       {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
                     </TableCell>
                     <TableCell className="pr-6 text-right">

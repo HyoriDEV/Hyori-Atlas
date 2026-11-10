@@ -13,14 +13,9 @@ import {
   resolvePageSize,
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
-import { staffNavItems, ticketCategoryLabels, ticketSummonableTeams } from "@/lib/navigation";
+import { staffNavItems, ticketSummonableTeams } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
-import {
-  DEFAULT_TICKET_VIEW,
-  TICKET_TEAM_FILTER_NONE,
-  TICKET_VIEWS,
-  type TicketView,
-} from "@/lib/ticket-list";
+import { DEFAULT_TICKET_VIEW, TICKET_VIEWS, type TicketView } from "@/lib/ticket-list";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { cn, truncate } from "@/lib/utils";
@@ -32,6 +27,7 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { DiscordLogo, Lock } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,7 +48,7 @@ import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { TicketRowActions } from "@/components/dashboard/ticket-row-actions";
 import { TicketListRefresher } from "@/components/dashboard/ticket-list-refresher";
 import { UnreadDot } from "@/components/ui/unread-dot";
-import { NewStaffTicketDialog } from "@/components/staff/tickets/new-staff-ticket-dialog";
+import { TicketListCreateMenu } from "@/components/staff/tickets/ticket-list-create-menu";
 import type { PlayerOption } from "@/components/player-select";
 
 const DEFAULT_PAGE_SIZE = 10;
@@ -63,14 +59,10 @@ type SortDirection = "asc" | "desc";
 
 const VALID_SORT_KEYS: SortKey[] = ["player", "category", "status", "activity", "created"];
 
-function getViewFilter(view: TicketView, unreadTicketIds: Set<string>): Prisma.TicketWhereInput {
+function getViewFilter(view: TicketView): Prisma.TicketWhereInput {
   switch (view) {
     case "active":
       return { status: { not: TicketStatus.ARCHIVED } };
-    case "staff":
-      return { status: TicketStatus.PENDING_STAFF };
-    case "unread":
-      return { id: { in: [...unreadTicketIds] } };
     case "archived":
       return { status: TicketStatus.ARCHIVED };
   }
@@ -81,7 +73,6 @@ type PageProps = {
     q?: string;
     tab?: string;
     category?: string;
-    team?: string;
     sort?: string;
     dir?: string;
     page?: string;
@@ -138,17 +129,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
   const view: TicketView = TICKET_VIEWS.includes(searchParams.tab as TicketView)
     ? (searchParams.tab as TicketView)
     : DEFAULT_TICKET_VIEW;
-  const category = Object.values(TicketCategory).includes(searchParams.category as TicketCategory)
-    ? (searchParams.category as TicketCategory)
-    : undefined;
-
-  // Le filtre par accès n'existe que pour les rôles à accès complet : les autres équipes
-  // ne doivent rien pouvoir déduire des convocations.
-  const teamParam = canManageAccess ? searchParams.team : undefined;
-  const teamFilter = ticketSummonableTeams.includes(teamParam as Role)
-    ? (teamParam as Role)
-    : undefined;
-  const noAccessGrantedOnly = teamParam === TICKET_TEAM_FILTER_NONE;
+  const categoryParam = searchParams.category?.trim() || undefined;
 
   const rawSortKey = searchParams.sort as SortKey | undefined;
   const sortKey: SortKey | null =
@@ -168,14 +149,19 @@ export default async function TicketsStaffListPage(props: PageProps) {
   };
 
   const filters: Prisma.TicketWhereInput[] = [ticketAccessWhere(staffUser)];
-  if (category) {
-    filters.push({ category });
-  }
-  if (teamFilter) {
-    filters.push({ teamSummons: { some: { team: teamFilter } } });
-  }
-  if (noAccessGrantedOnly) {
-    filters.push({ teamSummons: { none: {} }, staffAccesses: { none: {} } });
+  if (categoryParam) {
+    if (categoryParam === "spoiler" || categoryParam === TicketCategory.SECRET) {
+      filters.push({ isSpoiler: true });
+    } else if (categoryParam === TicketCategory.OPEN) {
+      filters.push({ isSpoiler: false });
+    } else {
+      filters.push({
+        OR: [
+          { categoryRef: { slug: categoryParam } },
+          { categoryName: { equals: categoryParam, mode: "insensitive" } },
+        ],
+      });
+    }
   }
   if (query) {
     filters.push({
@@ -187,24 +173,24 @@ export default async function TicketsStaffListPage(props: PageProps) {
     });
   }
 
-  const hasActiveFilters = Boolean(query || category || teamFilter || noAccessGrantedOnly);
+  const hasActiveFilters = Boolean(query || categoryParam);
 
-  const [statusCounts, unreadCount, tickets, contactablePlayers] = await Promise.all([
+  const [statusCounts, tickets, contactablePlayers, categoryConfigs] = await Promise.all([
     prisma.ticket.groupBy({
       by: ["status"],
       where: { AND: filters },
       _count: { _all: true },
     }),
-    unreadTicketIds.size > 0
-      ? prisma.ticket.count({
-          where: { AND: [...filters, { id: { in: [...unreadTicketIds] } }] },
-        })
-      : 0,
     prisma.ticket.findMany({
-      where: { AND: [...filters, getViewFilter(view, unreadTicketIds)] },
+      where: { AND: [...filters, getViewFilter(view)] },
       include: {
         player: true,
         teamSummons: { select: { team: true } },
+        staffTopics: {
+          where: { isArchived: false },
+          select: { id: true, slug: true, channelUrl: true },
+          take: 1,
+        },
         _count: { select: { staffAccesses: true } },
         conversation: {
           select: {
@@ -249,6 +235,11 @@ export default async function TicketsStaffListPage(props: PageProps) {
           orderBy: { discordDisplayName: "asc" },
         })
       : Promise.resolve([]),
+    prisma.ticketCategoryConfig.findMany({
+      where: { enabled: true },
+      select: { slug: true, name: true },
+      orderBy: { order: "asc" },
+    }),
   ]);
 
   const countByStatus = (status: TicketStatus) =>
@@ -259,8 +250,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const viewCounts: Record<TicketView, number> = {
     active: pendingStaffCount + pendingPlayerCount,
-    staff: pendingStaffCount,
-    unread: unreadCount,
     archived: archivedCount,
   };
 
@@ -286,14 +275,14 @@ export default async function TicketsStaffListPage(props: PageProps) {
         <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
           <TicketFilters
             query={query}
-            category={category}
-            team={teamFilter ?? (noAccessGrantedOnly ? TICKET_TEAM_FILTER_NONE : undefined)}
-            showTeamFilter={canManageAccess}
+            category={categoryParam}
             hasActiveSort={Boolean(sortKey)}
+            availableCategories={categoryConfigs}
           />
-          {canOpenTicket && (
-            <NewStaffTicketDialog availablePlayers={contactablePlayers as PlayerOption[]} />
-          )}
+          <TicketListCreateMenu
+            availablePlayers={contactablePlayers as PlayerOption[]}
+            canOpenTicket={canOpenTicket}
+          />
         </div>
       </div>
 
@@ -302,9 +291,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
         activeView={view}
         defaultView={DEFAULT_TICKET_VIEW}
         tabs={[
-          { value: "active", label: "Tous les actifs", count: viewCounts.active },
-          { value: "staff", label: "À traiter", count: viewCounts.staff },
-          { value: "unread", label: "Non lus", count: viewCounts.unread },
+          { value: "active", label: "Actifs", count: viewCounts.active },
           { value: "archived", label: "Archivés", count: viewCounts.archived },
         ]}
       />
@@ -387,7 +374,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                   <TicketTableRow key={ticket.id} href={`/staff/tickets/${ticket.id}`}>
                     <TableCell className="relative max-w-md pl-6">
                       {isUnread && <UnreadDot placement="table" title="Non lu" />}
-                      <div className="flex min-w-0 max-w-[55vw] flex-col gap-0.5 sm:max-w-md">
+                      <div className="flex max-w-[55vw] min-w-0 flex-col gap-0.5 sm:max-w-md">
                         <div className="flex min-w-0 items-center gap-1.5">
                           <span
                             className={cn("truncate", isUnread ? "font-semibold" : "font-medium")}
@@ -395,8 +382,28 @@ export default async function TicketsStaffListPage(props: PageProps) {
                           >
                             {ticket.subject}
                           </span>
+                          {ticket.isSpoiler && (
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 gap-1 border-amber-500/50 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-500"
+                            >
+                              <Lock className="size-2.5" />
+                              <span>Spoiler</span>
+                            </Badge>
+                          )}
+                          {ticket.staffTopics?.[0] && (
+                            <Badge
+                              variant="outline"
+                              className="shrink-0 gap-1 border-[#5865F2]/40 bg-[#5865F2]/10 px-1.5 py-0 text-[10px] font-medium text-[#5865F2]"
+                              title={`Sujet Discord actif : #${ticket.staffTopics[0].slug}`}
+                            >
+                              <DiscordLogo className="size-2.5" />
+                              <span>#{ticket.staffTopics[0].slug}</span>
+                            </Badge>
+                          )}
                           <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">
-                            {ticketCategoryLabels[ticket.category]}
+                            {ticket.categoryName || "Ticket"}
+                            {ticket.subcategoryName ? ` · ${ticket.subcategoryName}` : ""}
                           </Badge>
                         </div>
                         {lastMessage && (
@@ -448,10 +455,10 @@ export default async function TicketsStaffListPage(props: PageProps) {
                             : "Archivé"}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden whitespace-nowrap md:table-cell">
                       {formatDate(ticket.lastMessageAt, { style: "compact" })}
                     </TableCell>
-                    <TableCell className="hidden xl:table-cell text-muted-foreground whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden whitespace-nowrap xl:table-cell">
                       {formatDate(ticket.createdAt, { style: "compact" })}
                     </TableCell>
                     <TableCell className="w-10 pr-4">

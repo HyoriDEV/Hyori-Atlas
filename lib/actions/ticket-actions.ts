@@ -4,14 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import {
-  allStaffRoles,
-  ticketCategoryLabels,
-  ticketStaffRoles,
-  ticketSummonableTeams,
-} from "@/lib/navigation";
+import { allStaffRoles, secretTicketStaffRoles, ticketSummonableTeams } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
-import { TICKET_SUMMON_TEMPLATE_IDS } from "@/lib/discord-template-constants";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
@@ -24,14 +18,15 @@ import {
 } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import {
+  archiveDiscordTopic,
   notifyPlayerTicketMessage,
   notifyTicketCreated,
-  notifyTicketTeamSummoned,
 } from "@/lib/services/discord-bot-service";
 import {
   getEffectiveDiscordOverride,
   getTicketChannelNotificationConfig,
 } from "@/lib/services/discord-template-service";
+import type { DiscordTemplateId } from "@/lib/discord-template-constants";
 
 const BOT_TICKET_DESCRIPTION_MAX_LENGTH = 2000;
 
@@ -47,12 +42,46 @@ async function findAccessibleTicket(ticketId: string) {
   return { staffUser, ticket };
 }
 
-export async function createTicket(category: TicketCategory, subject: string, description: string) {
+import { TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
+
+export interface CreatePlayerTicketInput {
+  categoryId?: string;
+  subcategoryId?: string;
+  isSpoiler?: boolean;
+  subject: string;
+  description: string;
+}
+
+export async function createTicket(
+  categoryOrInput: TicketCategory | string | CreatePlayerTicketInput,
+  maybeSubject?: string,
+  maybeDescription?: string
+) {
   const user = await requireActivePlayer();
   const settings = await getGlobalSettings();
 
   if (!settings.ticketCreationEnabled) {
     throw new Error("Un administrateur a désactivé l'ouverture de tickets.");
+  }
+
+  let categoryId: string | undefined;
+  let subcategoryId: string | undefined;
+  let isSpoiler = false;
+  let subject = "";
+  let description = "";
+
+  if (typeof categoryOrInput === "object" && categoryOrInput !== null) {
+    categoryId = categoryOrInput.categoryId;
+    subcategoryId = categoryOrInput.subcategoryId;
+    isSpoiler = Boolean(categoryOrInput.isSpoiler);
+    subject = categoryOrInput.subject;
+    description = categoryOrInput.description;
+  } else {
+    subject = maybeSubject ?? "";
+    description = maybeDescription ?? "";
+    if (categoryOrInput === TicketCategory.SECRET) {
+      isSpoiler = true;
+    }
   }
 
   const trimmedSubject = subject.trim();
@@ -62,23 +91,53 @@ export async function createTicket(category: TicketCategory, subject: string, de
     throw new Error("Le sujet et la description sont requis.");
   }
 
-  const isRpRequest = category === TicketCategory.RP_REQUEST;
+  if (trimmedSubject.length > TICKET_SUBJECT_MAX_LENGTH) {
+    throw new Error(
+      `L'intitulé du ticket ne peut pas dépasser ${TICKET_SUBJECT_MAX_LENGTH} caractères.`
+    );
+  }
+
+  let categoryConfig = null;
+  let subcategoryConfig = null;
+
+  if (categoryId) {
+    categoryConfig = await prisma.ticketCategoryConfig.findUnique({
+      where: { id: categoryId },
+    });
+  } else {
+    categoryConfig = await prisma.ticketCategoryConfig.findFirst({
+      where: { slug: "rp" },
+    });
+  }
+
+  if (subcategoryId) {
+    subcategoryConfig = await prisma.ticketSubcategoryConfig.findUnique({
+      where: { id: subcategoryId },
+    });
+  }
+
+  if (categoryConfig && !categoryConfig.allowSpoiler) {
+    isSpoiler = false;
+  }
+
+  const categoryName = categoryConfig?.name ?? "Roleplay";
+  const subcategoryName =
+    subcategoryConfig?.name ??
+    (categoryConfig?.slug === "technique" ? "Report de bug" : "Demande suivi RP");
+  const isTechnique = categoryConfig?.slug === "technique";
+  const legacyCategory = isSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
 
   // Create the conversation, the conversation members, the messages, and the ticket all at once
   const ticket = await prisma.ticket.create({
     data: {
       player: { connect: { id: user.id } },
-      category,
+      category: legacyCategory,
+      categoryRef: categoryConfig?.id ? { connect: { id: categoryConfig.id } } : undefined,
+      subcategoryRef: subcategoryConfig?.id ? { connect: { id: subcategoryConfig.id } } : undefined,
+      categoryName,
+      subcategoryName,
+      isSpoiler,
       subject: trimmedSubject,
-      teamSummons: isRpRequest
-        ? {
-            create: [
-              {
-                team: Role.RP_TRACKING,
-              },
-            ],
-          }
-        : undefined,
       conversation: {
         create: {
           type: ConversationType.TICKET,
@@ -89,7 +148,9 @@ export async function createTicket(category: TicketCategory, subject: string, de
             create: [
               {
                 authorType: MessageAuthorType.SYSTEM,
-                body: `Ticket créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"}.`,
+                body: isSpoiler
+                  ? `🔒 Ticket spoiler créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"} (réservé aux intrigues sensibles, RPK/captures, et accessible uniquement aux Administrateurs et au Suivi RP).`
+                  : `Ticket créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"} (${categoryName}${subcategoryName ? ` · ${subcategoryName}` : ""}).`,
               },
               {
                 authorType: MessageAuthorType.PLAYER,
@@ -104,51 +165,26 @@ export async function createTicket(category: TicketCategory, subject: string, de
     include: { conversation: true },
   });
 
-  // If RP request, also post to the user's RP tracking conversation
-  if (isRpRequest) {
-    // Check if the user has an RP tracking conversation
-    let rpConversation = await prisma.conversation.findFirst({
-      where: {
-        type: ConversationType.RP_TRACKING,
-        members: { some: { userId: user.id } },
-      },
-    });
-
-    if (!rpConversation) {
-      rpConversation = await prisma.conversation.create({
-        data: {
-          type: ConversationType.RP_TRACKING,
-          members: {
-            create: [{ userId: user.id }],
-          },
-        },
-      });
-    }
-
-    const rpTrackingMessage = await prisma.conversationMessage.create({
-      data: {
-        conversationId: rpConversation.id,
-        authorType: MessageAuthorType.SYSTEM,
-        body: `${user.minecraftUsername ?? user.discordUsername ?? "Le joueur"} a créé une demande RP.`,
-        linkHref: `/staff/tickets/${ticket.id}`,
-        linkLabel: trimmedSubject,
-      },
-      include: { author: true },
-    });
-    publish(rpConversation.id, serializeConversationMessage(rpTrackingMessage));
+  // Déclencher la notification Discord d'ouverture de ticket (salon RP, salon RP spoiler ou salon Technique)
+  let templateId: DiscordTemplateId;
+  if (isTechnique) {
+    templateId = "TICKET_TECH_CREATED";
+  } else if (isSpoiler) {
+    templateId = "TICKET_RP_SPOILER_CREATED";
+  } else {
+    templateId = "TICKET_RP_CREATED";
   }
 
-  // Déclencher la notification Discord d'ouverture de ticket (salon externe Staff)
-  const categoryLabel = ticketCategoryLabels[category] ?? category;
+  const categoryLabel = subcategoryName ? `${categoryName} · ${subcategoryName}` : categoryName;
   const authorName =
     user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Un joueur";
   const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
 
-  getTicketChannelNotificationConfig("TICKET_CREATED", {
+  getTicketChannelNotificationConfig(templateId, {
     author: authorName,
     subject: trimmedSubject,
     category: categoryLabel,
-    description: trimmedDescription,
+    description: trimmedDescription.slice(0, BOT_TICKET_DESCRIPTION_MAX_LENGTH),
     ticketId: ticket.id,
     url: ticketStaffUrl,
   })
@@ -159,9 +195,9 @@ export async function createTicket(category: TicketCategory, subject: string, de
           mentionRoleId: config.mentionRoleId,
           ticketId: ticket.id,
           ticketSubject: trimmedSubject,
-          ticketCategory: categoryLabel,
+          ticketCategory: isSpoiler ? `${categoryLabel} (Spoiler)` : categoryLabel,
           authorName,
-          ticketDescription: trimmedDescription,
+          ticketDescription: trimmedDescription.slice(0, BOT_TICKET_DESCRIPTION_MAX_LENGTH),
           customTicketStaffUrl: ticketStaffUrl,
           override: config.override,
         });
@@ -169,56 +205,19 @@ export async function createTicket(category: TicketCategory, subject: string, de
     })
     .catch((err) => {
       console.warn(
-        "[TicketNotification] Échec lors de la notification d'ouverture de ticket:",
+        `[TicketNotification] Échec lors de la notification d'ouverture de ticket (${templateId}):`,
         err
       );
     });
-
-  // Si demande RP, notifier également l'équipe RP sur son salon Discord dédié
-  if (isRpRequest) {
-    const rpSummonTemplateId = TICKET_SUMMON_TEMPLATE_IDS[Role.RP_TRACKING];
-    if (rpSummonTemplateId) {
-      getTicketChannelNotificationConfig(rpSummonTemplateId, {
-        author: authorName,
-        subject: trimmedSubject,
-        category: categoryLabel,
-        description: trimmedDescription,
-        ticketId: ticket.id,
-        url: ticketStaffUrl,
-      })
-        .then((config) => {
-          if (config.enabled) {
-            return notifyTicketTeamSummoned({
-              team: Role.RP_TRACKING,
-              channelId: config.channelId,
-              mentionRoleId: config.mentionRoleId,
-              ticketId: ticket.id,
-              ticketSubject: trimmedSubject,
-              ticketCategory: categoryLabel,
-              authorName,
-              ticketDescription: trimmedDescription,
-              customTicketStaffUrl: ticketStaffUrl,
-              override: config.override,
-            });
-          }
-        })
-        .catch((err) => {
-          console.warn(
-            "[TicketNotification] Échec lors de la convocation automatique Discord de l'équipe RP:",
-            err
-          );
-        });
-    }
-  }
 
   revalidatePath("/player/tickets");
   revalidatePath("/staff/tickets");
   return { id: ticket.id };
 }
 
-/** Le staff peut-il ouvrir un ticket lui-même ? Il doit pouvoir le voir ensuite. */
+/** Le staff peut-il ouvrir un ticket lui-même ? Tous les membres du staff peuvent ouvrir un ticket. */
 function canStaffOpenTicket(role: Role): boolean {
-  return hasFullTicketAccess(role) || ticketSummonableTeams.includes(role);
+  return allStaffRoles.includes(role);
 }
 
 /**
@@ -228,7 +227,10 @@ function canStaffOpenTicket(role: Role): boolean {
  */
 export async function createStaffTicket(input: {
   playerId: string;
-  category: TicketCategory;
+  category?: TicketCategory;
+  categoryId?: string;
+  subcategoryId?: string;
+  isSpoiler?: boolean;
   subject: string;
   message: string;
 }): Promise<{ id: string }> {
@@ -242,8 +244,11 @@ export async function createStaffTicket(input: {
   if (!subject || !message) {
     throw new Error("Le sujet et le message sont requis.");
   }
-  if (!Object.values(TicketCategory).includes(input.category)) {
-    throw new Error("Catégorie invalide.");
+
+  if (subject.length > TICKET_SUBJECT_MAX_LENGTH) {
+    throw new Error(
+      `L'intitulé du ticket ne peut pas dépasser ${TICKET_SUBJECT_MAX_LENGTH} caractères.`
+    );
   }
 
   const player = await prisma.user.findUnique({
@@ -258,11 +263,40 @@ export async function createStaffTicket(input: {
     throw new Error("Ce joueur a été refusé : il n'a plus accès aux tickets.");
   }
 
+  let categoryConfig = null;
+  let subcategoryConfig = null;
+
+  if (input.categoryId) {
+    categoryConfig = await prisma.ticketCategoryConfig.findUnique({
+      where: { id: input.categoryId },
+    });
+  } else {
+    categoryConfig = await prisma.ticketCategoryConfig.findFirst({
+      where: { slug: "rp" },
+    });
+  }
+
+  if (input.subcategoryId) {
+    subcategoryConfig = await prisma.ticketSubcategoryConfig.findUnique({
+      where: { id: input.subcategoryId },
+    });
+  }
+
+  const isSpoiler = Boolean(input.isSpoiler || input.category === TicketCategory.SECRET);
+  const categoryName = categoryConfig?.name ?? "Roleplay";
+  const subcategoryName = subcategoryConfig?.name ?? null;
+  const legacyCategory = isSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
+
   const now = new Date();
   const ticket = await prisma.ticket.create({
     data: {
       player: { connect: { id: player.id } },
-      category: input.category,
+      category: legacyCategory,
+      categoryRef: categoryConfig?.id ? { connect: { id: categoryConfig.id } } : undefined,
+      subcategoryRef: subcategoryConfig?.id ? { connect: { id: subcategoryConfig.id } } : undefined,
+      categoryName,
+      subcategoryName,
+      isSpoiler,
       subject,
       status: TicketStatus.PENDING_PLAYER,
       lastMessageAt: now,
@@ -497,16 +531,15 @@ export async function setTicketTeamSummon(
   error?: string;
   discord?: "sent" | "failed" | "disabled";
 }> {
-  const staffUser = await requireRole(ticketStaffRoles);
+  const staffUser = await requireRole(allStaffRoles);
 
-  const templateId = TICKET_SUMMON_TEMPLATE_IDS[team];
-  if (!ticketSummonableTeams.includes(team) || !templateId) {
+  if (!ticketSummonableTeams.includes(team)) {
     return { success: false, error: "Cette équipe ne peut pas être convoquée." };
   }
 
   const ticket = await prisma.ticket.findUnique({
     where: { id: ticketId },
-    include: { player: true },
+    select: { id: true },
   });
 
   if (!ticket) {
@@ -534,77 +567,14 @@ export async function setTicketTeamSummon(
   revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath("/staff/tickets");
 
-  // La notification reprend la présentation d'une ouverture de ticket, description comprise.
-  const firstPlayerMessage = await prisma.conversationMessage.findFirst({
-    where: {
-      conversationId: ticket.conversationId,
-      authorType: MessageAuthorType.PLAYER,
-      deletedAt: null,
-      body: { not: null },
-    },
-    orderBy: { createdAt: "asc" },
-    select: { body: true },
-  });
-
-  const categoryLabel = ticketCategoryLabels[ticket.category] ?? ticket.category;
-  const authorName =
-    ticket.player.minecraftUsername ??
-    ticket.player.discordDisplayName ??
-    ticket.player.discordUsername ??
-    "Un joueur";
-  const description = (firstPlayerMessage?.body ?? ticket.subject).slice(
-    0,
-    BOT_TICKET_DESCRIPTION_MAX_LENGTH
-  );
-  const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
-
-  try {
-    const config = await getTicketChannelNotificationConfig(templateId, {
-      author: authorName,
-      subject: ticket.subject,
-      category: categoryLabel,
-      description,
-      ticketId: ticket.id,
-      url: ticketStaffUrl,
-    });
-
-    if (!config.enabled) {
-      return { success: true, discord: "disabled" };
-    }
-
-    const result = await notifyTicketTeamSummoned({
-      team,
-      channelId: config.channelId,
-      mentionRoleId: config.mentionRoleId,
-      ticketId: ticket.id,
-      ticketSubject: ticket.subject,
-      ticketCategory: categoryLabel,
-      authorName,
-      ticketDescription: description,
-      customTicketStaffUrl: ticketStaffUrl,
-      override: config.override,
-    });
-
-    if (!result.success || result.notified === false) {
-      console.warn(
-        `[TicketNotification] Notification de convocation non envoyée (${team}):`,
-        result.error
-      );
-      return { success: true, discord: "failed" };
-    }
-
-    return { success: true, discord: "sent" };
-  } catch (err) {
-    console.warn("[TicketNotification] Échec lors de la notification de convocation:", err);
-    return { success: true, discord: "failed" };
-  }
+  return { success: true };
 }
 
 export async function addTicketStaffAccess(
   ticketId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const staffUser = await requireRole(ticketStaffRoles);
+  const staffUser = await requireRole(allStaffRoles);
 
   const [ticket, target] = await Promise.all([
     prisma.ticket.findUnique({ where: { id: ticketId }, select: { id: true } }),
@@ -634,7 +604,7 @@ export async function removeTicketStaffAccess(
   ticketId: string,
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
-  await requireRole(ticketStaffRoles);
+  await requireRole(allStaffRoles);
 
   await prisma.ticketStaffAccess.deleteMany({ where: { ticketId, userId } });
 
@@ -642,6 +612,56 @@ export async function removeTicketStaffAccess(
   revalidatePath("/staff/tickets");
 
   return { success: true };
+}
+
+export async function toggleTicketSecrecy(ticketId: string): Promise<{
+  success: boolean;
+  isSecret: boolean;
+  isSpoiler?: boolean;
+  error?: string;
+}> {
+  await requireRole(secretTicketStaffRoles);
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    select: { id: true, category: true, isSpoiler: true, conversationId: true },
+  });
+
+  if (!ticket) {
+    return { success: false, isSecret: false, error: "Ticket introuvable." };
+  }
+
+  const nextIsSpoiler = !ticket.isSpoiler;
+  const nextCategory = nextIsSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
+
+  await prisma.$transaction(async (tx) => {
+    await tx.ticket.update({
+      where: { id: ticketId },
+      data: {
+        isSpoiler: nextIsSpoiler,
+        category: nextCategory,
+      },
+    });
+
+    const systemMessage = await tx.conversationMessage.create({
+      data: {
+        conversationId: ticket.conversationId,
+        authorType: MessageAuthorType.SYSTEM,
+        body: nextIsSpoiler
+          ? `🔒 Ce ticket a été requalifié en ticket spoiler/confidentiel (réservé aux Administrateurs et au Suivi RP).`
+          : `🔓 Ce ticket a été retiré des tickets spoiler (accessible selon les permissions normales de la catégorie).`,
+      },
+      include: { author: true },
+    });
+
+    publish(ticket.conversationId, serializeConversationMessage(systemMessage, true));
+  });
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+  revalidatePath(`/player/tickets/${ticketId}`);
+  revalidatePath("/player/tickets");
+
+  return { success: true, isSecret: nextIsSpoiler, isSpoiler: nextIsSpoiler };
 }
 
 export async function archiveTicket(ticketId: string) {
@@ -652,6 +672,25 @@ export async function archiveTicket(ticketId: string) {
     where: { id: ticketId },
     data: { status: TicketStatus.ARCHIVED },
   });
+
+  // Archiver automatiquement les éventuels sujets staff Discord actifs liés
+  try {
+    const activeTopics = await prisma.staffTopic.findMany({
+      where: { ticketId, isArchived: false },
+      select: { id: true, channelId: true, slug: true },
+    });
+    for (const topic of activeTopics) {
+      await archiveDiscordTopic(topic.channelId).catch((err) =>
+        console.warn(`[StaffTopic] Échec archivage Discord #${topic.slug}:`, err)
+      );
+      await prisma.staffTopic.update({
+        where: { id: topic.id },
+        data: { isArchived: true, archivedAt: new Date() },
+      });
+    }
+  } catch (err) {
+    console.warn("[StaffTopic] Erreur lors de l'archivage automatique des sujets du ticket:", err);
+  }
 
   publish(ticket.conversationId, {
     type: "STATUS_CHANGE",

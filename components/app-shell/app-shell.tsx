@@ -450,7 +450,7 @@ export function AppShell({
             >
               <MagnifyingGlass className="size-3.5 shrink-0 opacity-70" />
               <span className="hidden font-normal sm:inline">Recherche</span>
-              <kbd className="border-border/70 bg-background/80 text-muted-foreground hidden items-center sm:inline-flex rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-2xs">
+              <kbd className="border-border/70 bg-background/80 text-muted-foreground hidden items-center rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium shadow-2xs sm:inline-flex">
                 Ctrl K
               </kbd>
             </button>

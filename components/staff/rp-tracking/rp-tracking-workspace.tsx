@@ -424,9 +424,7 @@ export function RpTrackingWorkspace({
           className={cn(
             "flex min-h-0 min-w-0 flex-col overflow-hidden max-lg:flex-1",
             mobilePanel !== "suivi" && (isTabsLayout ? "hidden" : "max-lg:hidden"),
-            isTabsLayout || chatExpanded
-              ? "lg:flex-1"
-              : "lg:w-[var(--rp-chat-width)] lg:shrink-0"
+            isTabsLayout || chatExpanded ? "lg:flex-1" : "lg:w-[var(--rp-chat-width)] lg:shrink-0"
           )}
         >
           <ConversationChat

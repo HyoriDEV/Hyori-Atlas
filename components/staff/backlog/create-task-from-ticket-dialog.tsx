@@ -43,6 +43,9 @@ interface CreateTaskFromTicketDialogProps {
   /** Vrai si le staff peut convoquer l'équipe Dév et qu'elle ne l'est pas déjà. */
   canSummonDevelopers: boolean;
   defaultSummonDevelopers: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
 }
 
 export function CreateTaskFromTicketDialog({
@@ -51,9 +54,15 @@ export function CreateTaskFromTicketDialog({
   assignees,
   canSummonDevelopers,
   defaultSummonDevelopers,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
+  hideTrigger = false,
 }: CreateTaskFromTicketDialogProps) {
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+
   const [title, setTitle] = useState(ticketSubject);
   const [priority, setPriority] = useState<string>(BacklogPriority.MEDIUM);
   const [assigneeId, setAssigneeId] = useState(UNASSIGNED);
@@ -62,7 +71,11 @@ export function CreateTaskFromTicketDialog({
 
   function handleOpenChange(nextOpen: boolean) {
     if (isPending) return;
-    setOpen(nextOpen);
+    if (isControlled) {
+      setControlledOpen?.(nextOpen);
+    } else {
+      setInternalOpen(nextOpen);
+    }
     if (nextOpen) {
       setTitle(ticketSubject);
       setPriority(BacklogPriority.MEDIUM);
@@ -100,7 +113,7 @@ export function CreateTaskFromTicketDialog({
           onClick: () => router.push(`/staff/backlog?task=${taskId}`),
         },
       });
-      setOpen(false);
+      handleOpenChange(false);
     });
   }
 
@@ -115,16 +128,18 @@ export function CreateTaskFromTicketDialog({
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => handleOpenChange(true)}
-        title="Créer une tâche dans le backlog à partir de ce ticket"
-      >
-        <Kanban />
-        <span className="hidden sm:inline">Créer une tâche</span>
-      </Button>
+      {!hideTrigger && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => handleOpenChange(true)}
+          title="Créer une tâche dans le backlog à partir de ce ticket"
+        >
+          <Kanban />
+          <span className="hidden sm:inline">Créer une tâche</span>
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-lg">

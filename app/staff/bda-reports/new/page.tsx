@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 export const metadata: Metadata = {
   title: "Nouveau rapport GC",
 };
-import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
+import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { BdaReportForm } from "@/components/dashboard/bda-report-form";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 
@@ -38,7 +38,6 @@ export default async function NewBdaReportPage() {
     }),
     prisma.ticket.findMany({
       where: {
-        category: TicketCategory.PLAYER_COMPLAINT,
         status: { not: TicketStatus.ARCHIVED },
       },
       include: { player: true },

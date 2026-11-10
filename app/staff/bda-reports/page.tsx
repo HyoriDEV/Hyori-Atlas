@@ -139,7 +139,7 @@ export default async function BdaReportsPage(props: {
                         {bdaReportStatusLabels[report.status]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="hidden sm:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden sm:table-cell">
                       {formatDate(report.updatedAt, { style: "prefix-long", withTime: true })}
                     </TableCell>
                   </TicketTableRow>

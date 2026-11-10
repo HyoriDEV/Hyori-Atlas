@@ -51,7 +51,11 @@ export function StatusTabs({
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleValueChange} className={cn("max-w-full min-w-0 overflow-x-auto", className)}>
+    <Tabs
+      value={activeTab}
+      onValueChange={handleValueChange}
+      className={cn("max-w-full min-w-0 overflow-x-auto", className)}
+    >
       <TabsList variant={variant}>
         <TabsTrigger value="active">
           {activeLabel} ({activeCount})

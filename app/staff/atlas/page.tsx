@@ -313,7 +313,7 @@ export default async function AtlasPage(props: PageProps) {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">{sheet?.name || "—"}</TableCell>
-                    <TableCell className="hidden md:table-cell text-muted-foreground">
+                    <TableCell className="text-muted-foreground hidden md:table-cell">
                       {sheet?.updatedAt
                         ? formatDate(sheet.updatedAt, { style: "prefix-long", withTime: true })
                         : "—"}

@@ -158,7 +158,7 @@ export function AtlasFilters({
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher par pseudo ou nom RP..."
-          className="w-full sm:w-80 pr-8 pl-8"
+          className="w-full pr-8 pl-8 sm:w-80"
         />
         {queryInput ? (
           <button

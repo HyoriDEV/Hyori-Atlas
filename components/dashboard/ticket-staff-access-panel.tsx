@@ -45,12 +45,14 @@ export interface TicketStaffAccessMember {
 
 export function TicketStaffAccessPanel({
   ticketId,
+  isSecret = false,
   teams,
   staffMembers,
   availableStaff,
   className,
 }: {
   ticketId: string;
+  isSecret?: boolean;
   teams: TicketTeamSummonState[];
   staffMembers: TicketStaffAccessMember[];
   availableStaff: PlayerOption[];
@@ -77,17 +79,9 @@ export function TicketStaffAccessPanel({
           return;
         }
         if (!summoned) {
-          toast.success(`${staffRoleLabels[team]} : accès au ticket retiré.`);
-        } else if (result.discord === "failed") {
-          toast.warning(
-            `${staffRoleLabels[team]} convoquée, mais la notification Discord n'a pas pu être envoyée. Vérifie le salon configuré pour cette équipe.`
-          );
-        } else if (result.discord === "disabled") {
-          toast.success(
-            `${staffRoleLabels[team]} convoquée (notification Discord désactivée pour cette équipe).`
-          );
+          toast.success(`${staffRoleLabels[team]} : convocation retirée.`);
         } else {
-          toast.success(`${staffRoleLabels[team]} convoquée et notifiée sur Discord.`);
+          toast.success(`${staffRoleLabels[team]} convoquée sur ce ticket.`);
         }
         setTeamToToggle(null);
       } catch (err) {
@@ -129,7 +123,9 @@ export function TicketStaffAccessPanel({
           </span>
         </div>
         <p className="text-muted-foreground text-[11px] leading-snug">
-          Visible uniquement par les administrateurs et helpers.
+          {isSecret
+            ? "Ticket confidentiel / spoiler : accès restreint aux administrateurs, suivi RP et membres convoqués."
+            : "Accessible selon les autorisations normales définies pour sa catégorie."}
         </p>
       </div>
 
@@ -147,7 +143,9 @@ export function TicketStaffAccessPanel({
                 <span className="text-muted-foreground truncate text-[11px]">
                   {isSummoned
                     ? `${formatDate(teamState.summonedAt, { style: "prefix-short" })}${
-                        teamState.summonedByName ? ` par ${teamState.summonedByName}` : " (automatique)"
+                        teamState.summonedByName
+                          ? ` par ${teamState.summonedByName}`
+                          : " (automatique)"
                       }`
                     : "Non convoquée"}
                 </span>

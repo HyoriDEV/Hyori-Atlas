@@ -301,7 +301,7 @@ export default async function SanctionsPage(props: PageProps) {
                   label="Type"
                 />
               </TableHead>
-              <TableHead className="hidden md:table-cell max-w-[260px]">
+              <TableHead className="hidden max-w-[260px] md:table-cell">
                 <SortHeader
                   {...sortHeaderProps}
                   sortKey="reason"
@@ -400,7 +400,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Raison / Motif */}
-                    <TableCell className="hidden md:table-cell max-w-[260px]">
+                    <TableCell className="hidden max-w-[260px] md:table-cell">
                       <span className="block truncate text-sm" title={sanction.reason}>
                         {sanction.reason}
                       </span>
@@ -438,7 +438,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Expiration */}
-                    <TableCell className="hidden lg:table-cell text-muted-foreground text-xs">
+                    <TableCell className="text-muted-foreground hidden text-xs lg:table-cell">
                       {sanction.expiresAt ? (
                         formatDate(sanction.expiresAt, {
                           style: "prefix-short",
@@ -452,7 +452,7 @@ export default async function SanctionsPage(props: PageProps) {
                     </TableCell>
 
                     {/* Date d'émission */}
-                    <TableCell className="hidden md:table-cell text-muted-foreground text-xs whitespace-nowrap">
+                    <TableCell className="text-muted-foreground hidden text-xs whitespace-nowrap md:table-cell">
                       {formatDate(sanction.createdAt, {
                         style: "prefix-short",
                         withTime: true,

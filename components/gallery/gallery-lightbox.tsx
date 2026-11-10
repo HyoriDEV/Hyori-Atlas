@@ -141,9 +141,9 @@ function GalleryLightboxContent({
 
   const hasExtraDetails = Boolean(
     item.description ||
-      item.location ||
-      item.shader ||
-      (item.taggedUsers && item.taggedUsers.length > 0)
+    item.location ||
+    item.shader ||
+    (item.taggedUsers && item.taggedUsers.length > 0)
   );
 
   return (
@@ -202,7 +202,7 @@ function GalleryLightboxContent({
               type="button"
               onClick={handleDelete}
               title="Supprimer la capture"
-              className="flex size-9 cursor-pointer items-center justify-center rounded-full border border-destructive/40 bg-destructive/20 text-destructive shadow-md backdrop-blur-md transition-all hover:scale-105 hover:bg-destructive hover:text-white"
+              className="border-destructive/40 bg-destructive/20 text-destructive hover:bg-destructive flex size-9 cursor-pointer items-center justify-center rounded-full border shadow-md backdrop-blur-md transition-all hover:scale-105 hover:text-white"
             >
               <Trash className="size-4.5" />
             </button>
@@ -271,9 +271,7 @@ function GalleryLightboxContent({
       <div
         className={cn(
           "pointer-events-none absolute inset-x-0 bottom-4 z-40 mx-auto w-full max-w-3xl px-3 transition-all duration-300 sm:bottom-6 sm:px-6",
-          showDock
-            ? "translate-y-0 opacity-100"
-            : "pointer-events-none translate-y-6 opacity-0"
+          showDock ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-6 opacity-0"
         )}
       >
         <div
@@ -351,7 +349,7 @@ function GalleryLightboxContent({
                 onClick={handleLike}
                 disabled={isPending}
                 className={cn(
-                  "cursor-pointer rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-md transition-all gap-1.5",
+                  "cursor-pointer gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-semibold backdrop-blur-md transition-all",
                   liked
                     ? "border-rose-500 bg-rose-500 text-white hover:bg-rose-600 hover:text-white"
                     : "border-white/15 bg-white/10 text-white hover:bg-white/20 hover:text-rose-400"
@@ -410,9 +408,8 @@ function GalleryLightboxContent({
 export function GalleryLightbox(props: GalleryLightboxProps) {
   if (!props.item) return null;
   return (
-    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/95 duration-200 select-none backdrop-blur-md">
+    <div className="animate-in fade-in fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/95 backdrop-blur-md duration-200 select-none">
       <GalleryLightboxContent key={props.item.id} {...props} item={props.item} />
     </div>
   );
 }
-
