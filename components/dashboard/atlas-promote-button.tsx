@@ -75,7 +75,7 @@ export function AtlasPromoteButton({
 
   function handleConfirm() {
     if (!selectedClass) {
-      toast.error("Veuillez sélectionner une classe RP pour le joueur.");
+      toast.error("Sélectionne une classe RP pour le joueur.");
       return;
     }
 

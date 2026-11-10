@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/dal";
 import { Role } from "@/lib/generated/prisma/enums";
+import { formatTicketCategoryName } from "@/lib/navigation";
 
 export interface TicketCategoryConfigData {
   id: string;
@@ -13,7 +14,6 @@ export interface TicketCategoryConfigData {
   icon: string | null;
   order: number;
   enabled: boolean;
-  allowSpoiler: boolean;
   allowedRoles: Role[];
   subcategories: TicketSubcategoryConfigData[];
 }
@@ -43,12 +43,11 @@ export async function getTicketConfigData(): Promise<TicketCategoryConfigData[]>
   return categories.map((cat) => ({
     id: cat.id,
     slug: cat.slug,
-    name: cat.name,
+    name: formatTicketCategoryName(cat.name),
     description: cat.description,
     icon: cat.icon,
     order: cat.order,
     enabled: cat.enabled,
-    allowSpoiler: cat.allowSpoiler,
     allowedRoles: cat.allowedRoles,
     subcategories: cat.subcategories.map((sub) => ({
       id: sub.id,
@@ -79,12 +78,11 @@ export async function getActiveTicketConfigForPlayer(): Promise<TicketCategoryCo
   return categories.map((cat) => ({
     id: cat.id,
     slug: cat.slug,
-    name: cat.name,
+    name: formatTicketCategoryName(cat.name),
     description: cat.description,
     icon: cat.icon,
     order: cat.order,
     enabled: cat.enabled,
-    allowSpoiler: cat.allowSpoiler,
     allowedRoles: cat.allowedRoles,
     subcategories: cat.subcategories.map((sub) => ({
       id: sub.id,
@@ -106,7 +104,6 @@ export async function saveTicketCategoryAction(data: {
   name: string;
   description?: string | null;
   icon?: string | null;
-  allowSpoiler?: boolean;
   enabled?: boolean;
   allowedRoles?: Role[];
 }) {
@@ -134,7 +131,6 @@ export async function saveTicketCategoryAction(data: {
           name,
           description: data.description?.trim() || null,
           icon: data.icon?.trim() || null,
-          allowSpoiler: data.allowSpoiler ?? false,
           enabled: data.enabled ?? true,
           allowedRoles: data.allowedRoles ?? [],
         },
@@ -151,7 +147,6 @@ export async function saveTicketCategoryAction(data: {
           name,
           description: data.description?.trim() || null,
           icon: data.icon?.trim() || null,
-          allowSpoiler: data.allowSpoiler ?? false,
           enabled: data.enabled ?? true,
           allowedRoles: data.allowedRoles ?? [],
           order: nextOrder,
@@ -311,27 +306,5 @@ export async function deleteTicketSubcategoryAction(id: string) {
   } catch (error: unknown) {
     console.error("[deleteTicketSubcategoryAction] Error:", error);
     return { success: false, error: "Impossible de supprimer cette sous-catégorie." };
-  }
-}
-
-export async function setCategorySpoilerAction(
-  categoryId: string,
-  allowSpoiler: boolean
-): Promise<{ success: boolean; allowSpoiler?: boolean; error?: string }> {
-  await requireRole([Role.ADMIN]);
-
-  try {
-    const updated = await prisma.ticketCategoryConfig.update({
-      where: { id: categoryId },
-      data: { allowSpoiler },
-    });
-
-    revalidatePath("/staff/settings");
-    revalidatePath("/player/tickets");
-    revalidatePath("/staff/tickets");
-    return { success: true, allowSpoiler: updated.allowSpoiler };
-  } catch (error: unknown) {
-    console.error("[setCategorySpoilerAction] Error:", error);
-    return { success: false, error: "Impossible de modifier l'option spoiler de la catégorie." };
   }
 }

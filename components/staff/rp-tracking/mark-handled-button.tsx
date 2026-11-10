@@ -46,40 +46,38 @@ export function MarkHandledButton({
   };
 
   if (variant === "table") {
+    const tooltipText = isHandled ? "Marquer à traiter" : "Marquer comme traité";
+
     return (
-      <TooltipProvider delay={300}>
+      <TooltipProvider delay={200}>
         <Tooltip>
           <TooltipTrigger
             render={
               <Button
-                variant={isHandled ? "ghost" : "outline"}
+                variant="ghost"
                 size="sm"
                 onClick={handleToggle}
                 disabled={isPending}
                 className={cn(
                   "size-8 p-0 transition-colors",
                   isHandled
-                    ? "text-muted-foreground hover:text-foreground"
-                    : "border-primary/40 bg-primary/10 text-primary hover:bg-primary/20",
+                    ? "text-emerald-600 hover:bg-emerald-500/10 hover:text-emerald-700 dark:text-emerald-400 dark:hover:text-emerald-300"
+                    : "text-muted-foreground hover:bg-emerald-500/10 hover:text-emerald-600",
                   className
                 )}
-                aria-label={
-                  isHandled ? "Marquer le suivi comme à traiter" : "Marquer le suivi comme traité"
-                }
+                aria-label={tooltipText}
               >
-                {isHandled ? (
-                  <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
+                {isPending ? (
+                  <ArrowsCounterClockwise className="text-muted-foreground size-4 animate-spin" />
+                ) : isHandled ? (
+                  <CheckCircle weight="fill" className="size-4" />
                 ) : (
-                  <CheckCircle className="size-4" />
+                  <Check className="size-4" />
                 )}
               </Button>
             }
           />
-          <TooltipContent side="top">
-            {isHandled
-              ? "Traité — Cliquer pour repasser en attente"
-              : "Marquer comme traité sans répondre"}
-          </TooltipContent>
+          <TooltipContent side="top">{tooltipText}</TooltipContent>
         </Tooltip>
       </TooltipProvider>
     );

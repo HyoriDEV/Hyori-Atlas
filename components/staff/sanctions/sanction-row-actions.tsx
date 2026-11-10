@@ -139,7 +139,7 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
 
       {/* Dialog Détails */}
       <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="flex items-center gap-2">
               <Gavel className="text-primary size-5" />
@@ -272,9 +272,9 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Lever la sanction</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir lever cette sanction pour{" "}
-              <strong>{playerDisplayName}</strong> ? Le joueur pourra de nouveau se connecter au
-              serveur si aucune autre exclusion ou suspension n&apos;est active.
+              Es-tu sûr de vouloir lever cette sanction pour <strong>{playerDisplayName}</strong> ?
+              Le joueur pourra de nouveau se connecter au serveur si aucune autre exclusion ou
+              suspension n&apos;est active.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

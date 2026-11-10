@@ -3,12 +3,6 @@ import {
   CharacterSheetStatus,
   RegistrationStatus,
 } from "@/lib/generated/prisma/enums";
-import {
-  getEffectiveDiscordOverride,
-  type DiscordEmbedOverride,
-  type DiscordTemplateId,
-} from "./discord-template-service";
-import { getVillageConfigByClass } from "@/lib/character-classes";
 
 export interface BotNotificationResult {
   success: boolean;
@@ -121,30 +115,10 @@ export async function notifyPlayerRegistrationStatus(
   discordId: string,
   status: RegistrationStatus,
   customPlayerSpaceUrl?: string,
-  override?: DiscordEmbedOverride | null,
   assignedClass?: string | null
 ): Promise<BotNotificationResult> {
   const defaultPath = status === RegistrationStatus.REJECTED ? "/player/rejection" : "/player";
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl(defaultPath);
-
-  let effectiveOverride = override;
-  if (effectiveOverride === undefined) {
-    let templateId: DiscordTemplateId | null = null;
-    if (status === RegistrationStatus.WHITELIST_IN_PROGRESS) templateId = "REGISTRATION_ACCEPTED";
-    else if (status === RegistrationStatus.WHITELISTED) templateId = "REGISTRATION_WHITELISTED";
-    else if (status === RegistrationStatus.REJECTED) templateId = "REGISTRATION_REJECTED";
-
-    if (templateId) {
-      const village = assignedClass ? getVillageConfigByClass(assignedClass) : null;
-      effectiveOverride = await getEffectiveDiscordOverride(templateId, {
-        playerName: "",
-        url: playerSpaceUrl,
-        className: village?.className || assignedClass || "",
-        villageName: village?.name || "",
-        villageInviteUrl: village?.inviteUrl || "",
-      }).catch(() => null);
-    }
-  }
 
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/registration-status",
@@ -154,7 +128,6 @@ export async function notifyPlayerRegistrationStatus(
       status,
       playerSpaceUrl,
       assignedClass: assignedClass ?? undefined,
-      override: effectiveOverride ?? undefined,
     }
   );
 
@@ -183,26 +156,9 @@ export type CharacterSheetNotificationStatus = CharacterSheetStatus | "REOPENED"
 export async function notifyPlayerCharacterSheetStatus(
   discordId: string,
   status: CharacterSheetNotificationStatus,
-  customPlayerSpaceUrl?: string,
-  override?: DiscordEmbedOverride | null
+  customPlayerSpaceUrl?: string
 ): Promise<BotNotificationResult> {
   const playerSpaceUrl = customPlayerSpaceUrl || getPlayerSpaceUrl("/player/character-sheet");
-
-  let effectiveOverride = override;
-  if (effectiveOverride === undefined) {
-    let templateId: DiscordTemplateId | null = null;
-    if (status === CharacterSheetStatus.VALIDATED) templateId = "SHEET_VALIDATED";
-    else if (status === CharacterSheetStatus.PENDING_PLAYER) templateId = "SHEET_FEEDBACK";
-    else if (status === "REOPENED" || status === CharacterSheetStatus.DRAFT)
-      templateId = "SHEET_REOPENED";
-
-    if (templateId) {
-      effectiveOverride = await getEffectiveDiscordOverride(templateId, {
-        playerName: "",
-        url: playerSpaceUrl,
-      }).catch(() => null);
-    }
-  }
 
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/character-sheet-status",
@@ -211,7 +167,6 @@ export async function notifyPlayerCharacterSheetStatus(
       discordId,
       status,
       playerSpaceUrl,
-      override: effectiveOverride ?? undefined,
     }
   );
 
@@ -315,18 +270,9 @@ export interface InterviewReminderResult {
  */
 export async function sendInterviewReminders(
   discordIds: string[],
-  customInterviewUrl?: string,
-  override?: DiscordEmbedOverride | null
+  customInterviewUrl?: string
 ): Promise<InterviewReminderResult> {
   const interviewUrl = customInterviewUrl || getPlayerSpaceUrl("/player/interview");
-
-  let effectiveOverride = override;
-  if (effectiveOverride === undefined) {
-    effectiveOverride = await getEffectiveDiscordOverride("INTERVIEW_REMINDER", {
-      playerName: "",
-      url: interviewUrl,
-    }).catch(() => null);
-  }
 
   const result = await callDiscordBot<InterviewReminderResult>(
     "/notifications/interview-reminder",
@@ -334,7 +280,6 @@ export async function sendInterviewReminders(
     {
       discordIds,
       interviewUrl,
-      override: effectiveOverride ?? undefined,
     },
     30000 // 30s timeout pour les relances groupées
   );
@@ -360,7 +305,6 @@ export interface TicketMessageNotificationOptions {
   authorName: string;
   messagePreview?: string | null;
   customTicketUrl?: string;
-  override?: DiscordEmbedOverride | null;
 }
 
 /**
@@ -382,7 +326,6 @@ export async function notifyPlayerTicketMessage(
       authorName: options.authorName,
       messagePreview: options.messagePreview ?? undefined,
       ticketUrl,
-      override: options.override ?? undefined,
     }
   );
 
@@ -409,7 +352,6 @@ export interface RpTrackingMessageNotificationOptions {
   characterName?: string | null;
   messagePreview?: string | null;
   customRpTrackingUrl?: string;
-  override?: DiscordEmbedOverride | null;
 }
 
 /**
@@ -420,16 +362,6 @@ export async function notifyPlayerRpTrackingMessage(
 ): Promise<BotNotificationResult> {
   const rpTrackingUrl = options.customRpTrackingUrl || getPlayerSpaceUrl(`/player/rp-tracking`);
 
-  let effectiveOverride = options.override;
-  if (effectiveOverride === undefined) {
-    effectiveOverride = await getEffectiveDiscordOverride("RP_TRACKING_MESSAGE", {
-      author: options.authorName,
-      preview: options.messagePreview ?? "",
-      characterName: options.characterName ?? "",
-      url: rpTrackingUrl,
-    }).catch(() => null);
-  }
-
   const result = await callDiscordBot<BotNotificationResult>(
     "/notifications/rp-tracking-message",
     "POST",
@@ -439,7 +371,6 @@ export async function notifyPlayerRpTrackingMessage(
       characterName: options.characterName ?? undefined,
       messagePreview: options.messagePreview ?? undefined,
       rpTrackingUrl,
-      override: effectiveOverride ?? undefined,
     }
   );
 
@@ -469,7 +400,6 @@ export interface TicketCreatedNotificationOptions {
   authorName: string;
   ticketDescription?: string | null;
   customTicketStaffUrl?: string;
-  override?: DiscordEmbedOverride | null;
 }
 
 /**
@@ -493,7 +423,6 @@ export async function notifyTicketCreated(
       authorName: options.authorName,
       ticketDescription: options.ticketDescription ?? undefined,
       ticketStaffUrl,
-      override: options.override ?? undefined,
     }
   );
 
@@ -541,7 +470,6 @@ export async function notifyTicketTeamSummoned(
       authorName: options.authorName,
       ticketDescription: options.ticketDescription ?? undefined,
       ticketStaffUrl,
-      override: options.override ?? undefined,
     }
   );
 
@@ -762,7 +690,6 @@ export interface WaitlistRegistrationNotificationOptions {
   minecraftUuid?: string | null;
   avatarUrl?: string | null;
   customWaitlistStaffUrl?: string | null;
-  override?: DiscordEmbedOverride | null;
 }
 
 /**
@@ -786,7 +713,6 @@ export async function notifyWaitlistRegistration(
       minecraftUuid: options.minecraftUuid ?? undefined,
       avatarUrl: options.avatarUrl ?? undefined,
       waitlistStaffUrl,
-      override: options.override ?? undefined,
     }
   );
 
@@ -825,12 +751,7 @@ export async function notifyWaitlistRegistrationForUser(user: {
     user.discordDisplayName || user.discordUsername || user.minecraftUsername || "Un joueur";
   const waitlistStaffUrl = `${getAtlasBaseUrl()}/staff/waitlist`;
 
-  const config = await getChannelNotificationConfig("WAITLIST_REGISTRATION", {
-    playerName,
-    minecraftUsername: user.minecraftUsername || "",
-    discordId: user.discordId || "",
-    url: waitlistStaffUrl,
-  });
+  const config = await getChannelNotificationConfig("WAITLIST_REGISTRATION");
 
   if (!config.enabled) {
     return {
@@ -849,7 +770,6 @@ export async function notifyWaitlistRegistrationForUser(user: {
     minecraftUuid: user.minecraftUuid,
     avatarUrl: user.discordAvatarUrl,
     customWaitlistStaffUrl: waitlistStaffUrl,
-    override: config.override,
   });
 }
 

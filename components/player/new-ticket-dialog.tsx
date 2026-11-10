@@ -2,17 +2,17 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Scroll, Wrench, CheckCircle, EyeSlash } from "@phosphor-icons/react";
+import { Scroll, Wrench, CheckCircle } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { createTicket } from "@/lib/actions/ticket-actions";
 import { TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
+import { formatTicketCategoryName } from "@/lib/navigation";
 import type { TicketCategoryConfigData } from "@/lib/actions/ticket-config-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -39,7 +39,6 @@ export function NewTicketDialog({
   // Progressive Disclosure State
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
   const [selectedSubcategoryId, setSelectedSubcategoryId] = useState<string>("");
-  const [isSpoiler, setIsSpoiler] = useState<boolean>(false);
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [isPending, startTransition] = useTransition();
@@ -68,7 +67,6 @@ export function NewTicketDialog({
   function resetForm() {
     setSelectedCategoryId("");
     setSelectedSubcategoryId("");
-    setIsSpoiler(false);
     setSubject("");
     setDescription("");
   }
@@ -76,7 +74,6 @@ export function NewTicketDialog({
   function handleSelectCategory(catId: string) {
     setSelectedCategoryId(catId);
     setSelectedSubcategoryId("");
-    setIsSpoiler(false);
   }
 
   function handleSelectSubcategory(subId: string) {
@@ -98,16 +95,11 @@ export function NewTicketDialog({
         const ticket = await createTicket({
           categoryId: selectedCategoryId,
           subcategoryId: selectedSubcategoryId,
-          isSpoiler,
           subject,
           description,
         });
 
-        toast.success(
-          isSpoiler
-            ? "Ticket confidentiel ouvert avec succès (Admin & Suivi RP)."
-            : "Ticket ouvert avec succès."
-        );
+        toast.success("Ticket ouvert avec succès.");
         resetForm();
         setOpen(false);
         router.push(`/player/tickets/${ticket.id}`);
@@ -126,11 +118,11 @@ export function NewTicketDialog({
       }}
     >
       <DialogTrigger render={<Button />}>Ouvrir un ticket</DialogTrigger>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Ouvrir un ticket</DialogTitle>
-          <DialogDescription>
-            Suivez les étapes ci-dessous pour transmettre votre demande à l&apos;équipe appropriée.
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl sm:p-6">
+        <DialogHeader className="gap-1.5 pb-2">
+          <DialogTitle className="text-xl">Ouvrir un ticket</DialogTitle>
+          <DialogDescription className="text-sm">
+            Suis les étapes ci-dessous pour transmettre ta demande à l&apos;équipe appropriée.
           </DialogDescription>
         </DialogHeader>
 
@@ -141,10 +133,10 @@ export function NewTicketDialog({
               <span className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[11px] font-bold">
                 1
               </span>
-              <Label className="text-sm font-semibold">Choisissez la catégorie principale</Label>
+              <Label className="text-sm font-semibold">Choisis la catégorie principale</Label>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               {categories.map((cat) => {
                 const isSelected = cat.id === selectedCategoryId;
                 const isTech = cat.slug === "technique";
@@ -175,7 +167,7 @@ export function NewTicketDialog({
                           <Icon className="size-4" />
                         </div>
                         <span className="font-heading text-foreground font-semibold">
-                          {cat.name}
+                          {formatTicketCategoryName(cat.name)}
                         </span>
                       </div>
                       {isSelected && <CheckCircle className="text-primary size-5" weight="fill" />}
@@ -192,7 +184,7 @@ export function NewTicketDialog({
             </div>
           </div>
 
-          {/* ÉTAPE 2 : SOUS-CATÉGORIES & SPOILER (Se dévoile si catégorie choisie) */}
+          {/* ÉTAPE 2 : SOUS-CATÉGORIES (Se dévoile si catégorie choisie) */}
           {selectedCategory && (
             <div className="animate-in fade-in slide-in-from-top-2 flex flex-col gap-4 border-t pt-5 duration-200">
               <div className="flex flex-col gap-2">
@@ -200,12 +192,10 @@ export function NewTicketDialog({
                   <span className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[11px] font-bold">
                     2
                   </span>
-                  <Label className="text-sm font-semibold">
-                    Précisez la nature de votre demande
-                  </Label>
+                  <Label className="text-sm font-semibold">Précise la nature de ta demande</Label>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {selectedCategory.subcategories.map((sub) => {
                     const isSubSelected = sub.id === selectedSubcategoryId;
                     return (
@@ -214,7 +204,7 @@ export function NewTicketDialog({
                         type="button"
                         onClick={() => handleSelectSubcategory(sub.id)}
                         className={cn(
-                          "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
+                          "flex flex-col items-start gap-1.5 rounded-lg border p-3.5 text-left transition-all",
                           isSubSelected
                             ? "border-primary bg-primary/5 ring-primary shadow-2xs ring-1"
                             : "border-border/70 bg-card hover:bg-muted/40"
@@ -236,38 +226,6 @@ export function NewTicketDialog({
                   })}
                 </div>
               </div>
-
-              {/* OPTION SPOILER (Seulement si autorisé par la catégorie, ex: Roleplay) */}
-              {selectedCategory.allowSpoiler && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 transition-all">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-amber-500/10 text-amber-500">
-                        <EyeSlash className="size-4" />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <span className="text-foreground text-sm font-semibold">
-                          Contenu spoiler / Demande confidentielle
-                        </span>
-                        <p className="text-muted-foreground text-xs leading-relaxed">
-                          Activez cette option si votre demande concerne des intrigues RP sensibles,
-                          des validations d&apos;assassinat, captures, mort de personnage ou du lore
-                          confidentiel.
-                          <span className="mt-1 block font-medium text-amber-500">
-                            🔒 Ce ticket sera strictement restreint aux Administrateurs et à
-                            l&apos;équipe Suivi RP.
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    <Switch
-                      checked={isSpoiler}
-                      onCheckedChange={setIsSpoiler}
-                      className="data-[state=checked]:bg-amber-500"
-                    />
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -278,7 +236,7 @@ export function NewTicketDialog({
                 <span className="bg-primary text-primary-foreground flex size-5 items-center justify-center rounded-full text-[11px] font-bold">
                   3
                 </span>
-                <Label className="text-sm font-semibold">Détails de votre demande</Label>
+                <Label className="text-sm font-semibold">Détails de ta demande</Label>
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -296,7 +254,7 @@ export function NewTicketDialog({
                   onChange={(e) => setSubject(e.target.value)}
                   maxLength={TICKET_SUBJECT_MAX_LENGTH}
                   placeholder={
-                    selectedSubcategory.placeholderSubject || "Résumez brièvement votre demande..."
+                    selectedSubcategory.placeholderSubject || "Résume brièvement ta demande..."
                   }
                   disabled={isPending}
                 />
@@ -308,12 +266,12 @@ export function NewTicketDialog({
                 </Label>
                 <Textarea
                   id="ticket-description"
-                  rows={4}
+                  rows={5}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder={
                     selectedSubcategory.placeholderDescription ||
-                    "Détaillez votre demande pour permettre à l'équipe de vous répondre au mieux..."
+                    "Détaille ta demande pour permettre à l'équipe de te répondre au mieux..."
                   }
                   disabled={isPending}
                 />
@@ -322,7 +280,7 @@ export function NewTicketDialog({
           )}
         </div>
 
-        <DialogFooter className="border-t pt-3">
+        <DialogFooter className="border-t pt-4">
           <Button
             type="button"
             variant="outline"

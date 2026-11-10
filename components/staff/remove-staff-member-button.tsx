@@ -52,7 +52,7 @@ export function RemoveStaffMemberButton({
         size="sm"
         disabled
         className="text-muted-foreground/40 h-8 gap-1 px-2.5 text-xs"
-        title="Vous ne pouvez pas vous retirer vous-même de l'équipe staff."
+        title="Tu ne peux pas te retirer toi-même de l'équipe staff."
       >
         <UserMinus className="size-3.5" />
         Retirer
@@ -78,8 +78,8 @@ export function RemoveStaffMemberButton({
         <AlertDialogHeader>
           <AlertDialogTitle>Retirer le membre de l&apos;équipe</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir retirer <strong className="text-foreground">{userName}</strong>{" "}
-            de l&apos;équipe du staff ?
+            Es-tu sûr de vouloir retirer <strong className="text-foreground">{userName}</strong> de
+            l&apos;équipe du staff ?
           </AlertDialogDescription>
         </AlertDialogHeader>
 

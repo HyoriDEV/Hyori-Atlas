@@ -104,10 +104,6 @@ export interface DiscordTemplateInput {
   enabled: boolean;
   channelId?: string | null;
   roleId?: string | null;
-  title?: string | null;
-  description?: string | null;
-  buttonLabel?: string | null;
-  buttonUrl?: string | null;
 }
 
 export async function saveDiscordTemplatesAction(
@@ -124,20 +120,12 @@ export async function saveDiscordTemplatesAction(
           enabled: item.enabled,
           channelId: item.channelId?.trim() || null,
           roleId: item.roleId?.trim() || null,
-          title: item.title?.trim() || null,
-          description: item.description?.trim() || null,
-          buttonLabel: item.buttonLabel?.trim() || null,
-          buttonUrl: item.buttonUrl?.trim() || null,
           updatedById: user.id,
         },
         update: {
           enabled: item.enabled,
           channelId: item.channelId?.trim() || null,
           roleId: item.roleId?.trim() || null,
-          title: item.title?.trim() || null,
-          description: item.description?.trim() || null,
-          buttonLabel: item.buttonLabel?.trim() || null,
-          buttonUrl: item.buttonUrl?.trim() || null,
           updatedById: user.id,
         },
       });

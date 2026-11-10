@@ -19,10 +19,6 @@ export default async function SettingsPage() {
       select: {
         id: true,
         enabled: true,
-        title: true,
-        description: true,
-        buttonLabel: true,
-        buttonUrl: true,
         channelId: true,
         roleId: true,
       },

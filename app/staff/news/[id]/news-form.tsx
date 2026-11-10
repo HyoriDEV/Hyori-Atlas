@@ -101,7 +101,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
           <Label htmlFor="type">Type d&apos;actualité</Label>
           <Select name="type" defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}>
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez un type" />
+              <SelectValue placeholder="Sélectionne un type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={NewsType.ANNOUNCEMENT}>Annonce</SelectItem>
@@ -149,7 +149,7 @@ export function NewsForm({ initialData }: NewsFormProps) {
             />
             <AlertDialogContent>
               <AlertDialogHeader>
-                <AlertDialogTitle>Êtes-vous sûr(e) ?</AlertDialogTitle>
+                <AlertDialogTitle>Es-tu sûr(e) ?</AlertDialogTitle>
                 <AlertDialogDescription>
                   Cette action est irréversible. L&apos;actualité sera supprimée définitivement.
                 </AlertDialogDescription>

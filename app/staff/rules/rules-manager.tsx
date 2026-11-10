@@ -100,7 +100,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
 
   async function handleDeleteSection(id: string, isPreface: boolean = false) {
     const label = isPreface ? "cette préface" : "ce volet";
-    if (!confirm(`Voulez-vous vraiment supprimer ${label} et tout son contenu ?`)) return;
+    if (!confirm(`Veux-tu vraiment supprimer ${label} et tout son contenu ?`)) return;
     setIsLoading(true);
     try {
       await deleteRuleSection(id);
@@ -138,7 +138,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
   }
 
   async function handleDeleteArticle(id: string) {
-    if (!confirm("Voulez-vous vraiment supprimer cet article et toutes ses règles ?")) return;
+    if (!confirm("Veux-tu vraiment supprimer cet article et toutes ses règles ?")) return;
     setIsLoading(true);
     try {
       await deleteRuleArticle(id);
@@ -176,7 +176,7 @@ export function RulesManager({ initialSections }: { initialSections: RuleSection
   }
 
   async function handleDeleteRule(id: string) {
-    if (!confirm("Voulez-vous vraiment supprimer cette règle ?")) return;
+    if (!confirm("Veux-tu vraiment supprimer cette règle ?")) return;
     setIsLoading(true);
     try {
       await deleteRuleItem(id);

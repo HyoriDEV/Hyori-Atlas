@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { allStaffRoles, secretTicketStaffRoles, ticketSummonableTeams } from "@/lib/navigation";
+import { allStaffRoles, formatTicketCategoryName, ticketSummonableTeams } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
@@ -22,10 +22,7 @@ import {
   notifyPlayerTicketMessage,
   notifyTicketCreated,
 } from "@/lib/services/discord-bot-service";
-import {
-  getEffectiveDiscordOverride,
-  getTicketChannelNotificationConfig,
-} from "@/lib/services/discord-template-service";
+import { getTicketChannelNotificationConfig } from "@/lib/services/discord-template-service";
 import type { DiscordTemplateId } from "@/lib/discord-template-constants";
 
 const BOT_TICKET_DESCRIPTION_MAX_LENGTH = 2000;
@@ -47,7 +44,6 @@ import { TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
 export interface CreatePlayerTicketInput {
   categoryId?: string;
   subcategoryId?: string;
-  isSpoiler?: boolean;
   subject: string;
   description: string;
 }
@@ -66,22 +62,17 @@ export async function createTicket(
 
   let categoryId: string | undefined;
   let subcategoryId: string | undefined;
-  let isSpoiler = false;
   let subject = "";
   let description = "";
 
   if (typeof categoryOrInput === "object" && categoryOrInput !== null) {
     categoryId = categoryOrInput.categoryId;
     subcategoryId = categoryOrInput.subcategoryId;
-    isSpoiler = Boolean(categoryOrInput.isSpoiler);
     subject = categoryOrInput.subject;
     description = categoryOrInput.description;
   } else {
     subject = maybeSubject ?? "";
     description = maybeDescription ?? "";
-    if (categoryOrInput === TicketCategory.SECRET) {
-      isSpoiler = true;
-    }
   }
 
   const trimmedSubject = subject.trim();
@@ -116,27 +107,25 @@ export async function createTicket(
     });
   }
 
-  if (categoryConfig && !categoryConfig.allowSpoiler) {
-    isSpoiler = false;
-  }
-
-  const categoryName = categoryConfig?.name ?? "Roleplay";
-  const subcategoryName =
-    subcategoryConfig?.name ??
-    (categoryConfig?.slug === "technique" ? "Report de bug" : "Demande suivi RP");
   const isTechnique = categoryConfig?.slug === "technique";
-  const legacyCategory = isSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
+  const categoryName = categoryConfig?.name
+    ? formatTicketCategoryName(categoryConfig.name)
+    : isTechnique
+      ? "Ticket technique"
+      : "Ticket RP";
+  const subcategoryName =
+    subcategoryConfig?.name ?? (isTechnique ? "Report de bug" : "Demande suivi RP");
+  const ticketCategory = isTechnique ? TicketCategory.TECHNIQUE : TicketCategory.RP;
 
   // Create the conversation, the conversation members, the messages, and the ticket all at once
   const ticket = await prisma.ticket.create({
     data: {
       player: { connect: { id: user.id } },
-      category: legacyCategory,
+      category: ticketCategory,
       categoryRef: categoryConfig?.id ? { connect: { id: categoryConfig.id } } : undefined,
       subcategoryRef: subcategoryConfig?.id ? { connect: { id: subcategoryConfig.id } } : undefined,
       categoryName,
       subcategoryName,
-      isSpoiler,
       subject: trimmedSubject,
       conversation: {
         create: {
@@ -148,9 +137,7 @@ export async function createTicket(
             create: [
               {
                 authorType: MessageAuthorType.SYSTEM,
-                body: isSpoiler
-                  ? `🔒 Ticket spoiler créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"} (réservé aux intrigues sensibles, RPK/captures, et accessible uniquement aux Administrateurs et au Suivi RP).`
-                  : `Ticket créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"} (${categoryName}${subcategoryName ? ` · ${subcategoryName}` : ""}).`,
+                body: `Ticket créé par ${user.minecraftUsername ?? user.discordUsername ?? "un joueur"} (${categoryName}${subcategoryName ? ` · ${subcategoryName}` : ""}).`,
               },
               {
                 authorType: MessageAuthorType.PLAYER,
@@ -165,29 +152,15 @@ export async function createTicket(
     include: { conversation: true },
   });
 
-  // Déclencher la notification Discord d'ouverture de ticket (salon RP, salon RP spoiler ou salon Technique)
-  let templateId: DiscordTemplateId;
-  if (isTechnique) {
-    templateId = "TICKET_TECH_CREATED";
-  } else if (isSpoiler) {
-    templateId = "TICKET_RP_SPOILER_CREATED";
-  } else {
-    templateId = "TICKET_RP_CREATED";
-  }
+  // Déclencher la notification Discord d'ouverture de ticket (salon RP ou salon Technique)
+  const templateId: DiscordTemplateId = isTechnique ? "TICKET_TECH_CREATED" : "TICKET_RP_CREATED";
 
   const categoryLabel = subcategoryName ? `${categoryName} · ${subcategoryName}` : categoryName;
   const authorName =
     user.minecraftUsername ?? user.discordDisplayName ?? user.discordUsername ?? "Un joueur";
   const ticketStaffUrl = `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/staff/tickets/${ticket.id}`;
 
-  getTicketChannelNotificationConfig(templateId, {
-    author: authorName,
-    subject: trimmedSubject,
-    category: categoryLabel,
-    description: trimmedDescription.slice(0, BOT_TICKET_DESCRIPTION_MAX_LENGTH),
-    ticketId: ticket.id,
-    url: ticketStaffUrl,
-  })
+  getTicketChannelNotificationConfig(templateId)
     .then((config) => {
       if (config.enabled) {
         return notifyTicketCreated({
@@ -195,11 +168,10 @@ export async function createTicket(
           mentionRoleId: config.mentionRoleId,
           ticketId: ticket.id,
           ticketSubject: trimmedSubject,
-          ticketCategory: isSpoiler ? `${categoryLabel} (Spoiler)` : categoryLabel,
+          ticketCategory: categoryLabel,
           authorName,
           ticketDescription: trimmedDescription.slice(0, BOT_TICKET_DESCRIPTION_MAX_LENGTH),
           customTicketStaffUrl: ticketStaffUrl,
-          override: config.override,
         });
       }
     })
@@ -230,7 +202,6 @@ export async function createStaffTicket(input: {
   category?: TicketCategory;
   categoryId?: string;
   subcategoryId?: string;
-  isSpoiler?: boolean;
   subject: string;
   message: string;
 }): Promise<{ id: string }> {
@@ -272,7 +243,7 @@ export async function createStaffTicket(input: {
     });
   } else {
     categoryConfig = await prisma.ticketCategoryConfig.findFirst({
-      where: { slug: "rp" },
+      where: { slug: input.category === TicketCategory.TECHNIQUE ? "technique" : "rp" },
     });
   }
 
@@ -282,21 +253,25 @@ export async function createStaffTicket(input: {
     });
   }
 
-  const isSpoiler = Boolean(input.isSpoiler || input.category === TicketCategory.SECRET);
-  const categoryName = categoryConfig?.name ?? "Roleplay";
+  const isTechnique =
+    input.category === TicketCategory.TECHNIQUE || categoryConfig?.slug === "technique";
+  const categoryName = categoryConfig?.name
+    ? formatTicketCategoryName(categoryConfig.name)
+    : isTechnique
+      ? "Ticket technique"
+      : "Ticket RP";
   const subcategoryName = subcategoryConfig?.name ?? null;
-  const legacyCategory = isSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
+  const ticketCategory = isTechnique ? TicketCategory.TECHNIQUE : TicketCategory.RP;
 
   const now = new Date();
   const ticket = await prisma.ticket.create({
     data: {
       player: { connect: { id: player.id } },
-      category: legacyCategory,
+      category: ticketCategory,
       categoryRef: categoryConfig?.id ? { connect: { id: categoryConfig.id } } : undefined,
       subcategoryRef: subcategoryConfig?.id ? { connect: { id: subcategoryConfig.id } } : undefined,
       categoryName,
       subcategoryName,
-      isSpoiler,
       subject,
       status: TicketStatus.PENDING_PLAYER,
       lastMessageAt: now,
@@ -338,26 +313,15 @@ export async function createStaffTicket(input: {
   if (player.discordId) {
     const discordId = player.discordId;
     const authorName = "L'équipe staff";
-    getEffectiveDiscordOverride("TICKET_MESSAGE", {
-      author: authorName,
-      subject,
-      preview: message,
-      url: `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/player/tickets/${ticket.id}`,
-    })
-      .catch(() => null)
-      .then((override) =>
-        notifyPlayerTicketMessage({
-          discordId,
-          ticketId: ticket.id,
-          ticketSubject: subject,
-          authorName,
-          messagePreview: message,
-          override: override ?? undefined,
-        })
-      )
-      .catch((err) => {
-        console.warn("[TicketNotification] Échec de la notification d'un ticket staff:", err);
-      });
+    notifyPlayerTicketMessage({
+      discordId,
+      ticketId: ticket.id,
+      ticketSubject: subject,
+      authorName,
+      messagePreview: message,
+    }).catch((err) => {
+      console.warn("[TicketNotification] Échec de la notification d'un ticket staff:", err);
+    });
   }
 
   revalidatePath("/player/tickets");
@@ -614,56 +578,6 @@ export async function removeTicketStaffAccess(
   return { success: true };
 }
 
-export async function toggleTicketSecrecy(ticketId: string): Promise<{
-  success: boolean;
-  isSecret: boolean;
-  isSpoiler?: boolean;
-  error?: string;
-}> {
-  await requireRole(secretTicketStaffRoles);
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-    select: { id: true, category: true, isSpoiler: true, conversationId: true },
-  });
-
-  if (!ticket) {
-    return { success: false, isSecret: false, error: "Ticket introuvable." };
-  }
-
-  const nextIsSpoiler = !ticket.isSpoiler;
-  const nextCategory = nextIsSpoiler ? TicketCategory.SECRET : TicketCategory.OPEN;
-
-  await prisma.$transaction(async (tx) => {
-    await tx.ticket.update({
-      where: { id: ticketId },
-      data: {
-        isSpoiler: nextIsSpoiler,
-        category: nextCategory,
-      },
-    });
-
-    const systemMessage = await tx.conversationMessage.create({
-      data: {
-        conversationId: ticket.conversationId,
-        authorType: MessageAuthorType.SYSTEM,
-        body: nextIsSpoiler
-          ? `🔒 Ce ticket a été requalifié en ticket spoiler/confidentiel (réservé aux Administrateurs et au Suivi RP).`
-          : `🔓 Ce ticket a été retiré des tickets spoiler (accessible selon les permissions normales de la catégorie).`,
-      },
-      include: { author: true },
-    });
-
-    publish(ticket.conversationId, serializeConversationMessage(systemMessage, true));
-  });
-
-  revalidatePath(`/staff/tickets/${ticketId}`);
-  revalidatePath("/staff/tickets");
-  revalidatePath(`/player/tickets/${ticketId}`);
-  revalidatePath("/player/tickets");
-
-  return { success: true, isSecret: nextIsSpoiler, isSpoiler: nextIsSpoiler };
-}
-
 export async function archiveTicket(ticketId: string) {
   const { ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) throw new Error("Ticket introuvable.");
@@ -841,14 +755,6 @@ async function dispatchTicketMessageNotifications({
 
     const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
 
-    // Récupérer l'override éventuel pour TICKET_MESSAGE
-    const override = await getEffectiveDiscordOverride("TICKET_MESSAGE", {
-      author: authorName,
-      subject: ticketSubject,
-      preview: previewText ?? "",
-      url: `${process.env.NEXTAUTH_URL ?? "https://hyori-rp.fr"}/player/tickets/${ticketId}`,
-    }).catch(() => null);
-
     // Pour chaque membre éligible, vérifier s'il avait des messages non lus antérieurs à ce nouveau message
     for (const member of candidateMembers) {
       if (!member.user.discordId) continue;
@@ -875,7 +781,6 @@ async function dispatchTicketMessageNotifications({
           ticketSubject,
           authorName,
           messagePreview: previewText,
-          override: override ?? undefined,
         }).catch((err) => {
           console.warn(
             `[TicketNotification] Échec lors de la notification Discord pour ${member.userId}:`,
@@ -954,6 +859,110 @@ export async function setStaffTicketRead(
   }
 
   revalidatePath("/staff/tickets");
+
+  return { success: true };
+}
+
+/**
+ * Permet au staff de modifier les catégories d'un ticket depuis sa page,
+ * qu'il soit archivé ou non.
+ */
+export async function updateTicketCategories(input: {
+  ticketId: string;
+  categoryId?: string | null;
+  subcategoryId?: string | null;
+}): Promise<{ success: boolean; error?: string }> {
+  const staffUser = await requireUser();
+  if (!allStaffRoles.includes(staffUser.role)) {
+    throw new Error("Action réservée au staff.");
+  }
+
+  const ticket = await prisma.ticket.findFirst({
+    where: { AND: [{ id: input.ticketId }, ticketAccessWhere(staffUser)] },
+    include: {
+      categoryRef: true,
+      subcategoryRef: true,
+    },
+  });
+
+  if (!ticket) {
+    throw new Error("Ticket introuvable ou accès refusé.");
+  }
+
+  // NOTE: On autorise explicitement la modification qu'il soit archivé ou non.
+
+  let categoryConfig = null;
+  let subcategoryConfig = null;
+
+  if (input.categoryId) {
+    categoryConfig = await prisma.ticketCategoryConfig.findUnique({
+      where: { id: input.categoryId },
+    });
+  }
+
+  if (input.subcategoryId) {
+    subcategoryConfig = await prisma.ticketSubcategoryConfig.findUnique({
+      where: { id: input.subcategoryId },
+    });
+  }
+
+  if (
+    subcategoryConfig &&
+    (!categoryConfig || categoryConfig.id !== subcategoryConfig.categoryId)
+  ) {
+    categoryConfig = await prisma.ticketCategoryConfig.findUnique({
+      where: { id: subcategoryConfig.categoryId },
+    });
+  }
+
+  const isTechnique = categoryConfig?.slug === "technique";
+  const categoryName = categoryConfig?.name
+    ? formatTicketCategoryName(categoryConfig.name)
+    : isTechnique
+      ? "Ticket technique"
+      : "Ticket RP";
+  const subcategoryName = subcategoryConfig?.name ?? null;
+  const ticketCategory = isTechnique ? TicketCategory.TECHNIQUE : TicketCategory.RP;
+
+  const previousCategoryLabel = ticket.subcategoryName
+    ? `${formatTicketCategoryName(ticket.categoryName)} · ${ticket.subcategoryName}`
+    : formatTicketCategoryName(ticket.categoryName);
+  const newCategoryLabel = subcategoryName ? `${categoryName} · ${subcategoryName}` : categoryName;
+
+  await prisma.ticket.update({
+    where: { id: input.ticketId },
+    data: {
+      category: ticketCategory,
+      categoryId: categoryConfig?.id ?? null,
+      subcategoryId: subcategoryConfig?.id ?? null,
+      categoryName,
+      subcategoryName,
+    },
+  });
+
+  if (previousCategoryLabel !== newCategoryLabel) {
+    const staffName =
+      staffUser.minecraftUsername ?? staffUser.discordDisplayName ?? "Un membre du staff";
+    try {
+      const systemMessage = await prisma.conversationMessage.create({
+        data: {
+          conversationId: ticket.conversationId,
+          authorId: staffUser.id,
+          authorType: MessageAuthorType.SYSTEM,
+          body: `Catégorie du ticket mise à jour par ${staffName} : ${newCategoryLabel} (auparavant ${previousCategoryLabel}).`,
+        },
+        include: { author: true },
+      });
+      publish(ticket.conversationId, serializeConversationMessage(systemMessage, true));
+    } catch (msgErr) {
+      console.warn("[updateTicketCategories] Erreur lors de l'envoi du message système:", msgErr);
+    }
+  }
+
+  revalidatePath(`/staff/tickets/${input.ticketId}`);
+  revalidatePath("/staff/tickets");
+  revalidatePath(`/player/tickets/${input.ticketId}`);
+  revalidatePath("/player/tickets");
 
   return { success: true };
 }

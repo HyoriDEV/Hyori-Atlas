@@ -13,7 +13,7 @@ import {
   resolvePageSize,
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
-import { staffNavItems, ticketSummonableTeams } from "@/lib/navigation";
+import { formatTicketCategoryName, staffNavItems, ticketSummonableTeams } from "@/lib/navigation";
 import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { DEFAULT_TICKET_VIEW, TICKET_VIEWS, type TicketView } from "@/lib/ticket-list";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
@@ -27,7 +27,7 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { DiscordLogo, Lock } from "@phosphor-icons/react/dist/ssr";
+import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -150,10 +150,22 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const filters: Prisma.TicketWhereInput[] = [ticketAccessWhere(staffUser)];
   if (categoryParam) {
-    if (categoryParam === "spoiler" || categoryParam === TicketCategory.SECRET) {
-      filters.push({ isSpoiler: true });
-    } else if (categoryParam === TicketCategory.OPEN) {
-      filters.push({ isSpoiler: false });
+    if (categoryParam.toLowerCase() === "rp") {
+      filters.push({
+        OR: [
+          { category: TicketCategory.RP },
+          { categoryRef: { slug: "rp" } },
+          { categoryName: { in: ["Roleplay", "Ticket RP"], mode: "insensitive" } },
+        ],
+      });
+    } else if (categoryParam.toLowerCase() === "technique") {
+      filters.push({
+        OR: [
+          { category: TicketCategory.TECHNIQUE },
+          { categoryRef: { slug: "technique" } },
+          { categoryName: { in: ["Technique", "Ticket technique"], mode: "insensitive" } },
+        ],
+      });
     } else {
       filters.push({
         OR: [
@@ -382,15 +394,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
                           >
                             {ticket.subject}
                           </span>
-                          {ticket.isSpoiler && (
-                            <Badge
-                              variant="outline"
-                              className="shrink-0 gap-1 border-amber-500/50 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-500"
-                            >
-                              <Lock className="size-2.5" />
-                              <span>Spoiler</span>
-                            </Badge>
-                          )}
                           {ticket.staffTopics?.[0] && (
                             <Badge
                               variant="outline"
@@ -402,7 +405,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                             </Badge>
                           )}
                           <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">
-                            {ticket.categoryName || "Ticket"}
+                            {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
                             {ticket.subcategoryName ? ` · ${ticket.subcategoryName}` : ""}
                           </Badge>
                         </div>

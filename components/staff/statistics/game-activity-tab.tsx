@@ -3,7 +3,7 @@ import Link from "next/link";
 import { formatDate } from "@/lib/date";
 import { getGameActivityStats } from "@/lib/services/statistics/game-activity-stats";
 import { describeGranularity, type StatisticsRange } from "@/lib/services/statistics/timeline";
-import { formatNumber, formatPercent } from "@/lib/statistics-format";
+import { formatNumber } from "@/lib/statistics-format";
 import { formatDuration } from "@/lib/text-stats";
 import { SkinHead } from "@/components/ui/skin-head";
 import {

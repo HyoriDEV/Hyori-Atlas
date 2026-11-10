@@ -349,7 +349,7 @@ export default async function SanctionsPage(props: PageProps) {
               <TableRow>
                 <TableCell colSpan={8} className="text-muted-foreground py-12 text-center text-sm">
                   {hasActiveFilters
-                    ? "Aucune sanction ne correspond à vos critères de recherche."
+                    ? "Aucune sanction ne correspond à tes critères de recherche."
                     : "Aucune sanction enregistrée pour le moment."}
                 </TableCell>
               </TableRow>

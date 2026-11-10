@@ -142,7 +142,7 @@ export function CreateInterviewSlotDialog() {
 
   function handleCreateSingle() {
     if (!singleDate || !singleTime) {
-      toast.error("Veuillez sélectionner une date et une heure.");
+      toast.error("Sélectionne une date et une heure.");
       return;
     }
 
@@ -200,7 +200,7 @@ export function CreateInterviewSlotDialog() {
         Nouveau créneau
       </DialogTrigger>
 
-      <DialogContent className="max-w-xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <CalendarBlank className="text-primary size-5" />
@@ -320,7 +320,7 @@ export function CreateInterviewSlotDialog() {
                       style: "prefix-long",
                       withTime: true,
                     })
-                  : "Sélectionnez date et heure"}
+                  : "Sélectionne date et heure"}
               </span>
             </div>
           </TabsContent>
@@ -457,7 +457,7 @@ export function CreateInterviewSlotDialog() {
 
               {generatedBatchSlots.length === 0 ? (
                 <p className="text-muted-foreground rounded-lg border border-dashed p-4 text-center text-xs">
-                  Ajustez les heures pour générer des créneaux.
+                  Ajuste les heures pour générer des créneaux.
                 </p>
               ) : (
                 <div className="bg-muted/20 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border p-2.5">

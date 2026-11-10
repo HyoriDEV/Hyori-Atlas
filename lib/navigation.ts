@@ -341,7 +341,6 @@ export const staffStaffTeamItem: StaffNavItem = {
 };
 
 export const staffNavItems: StaffNavItem[] = [
-  staffDashboardItem,
   staffTicketsItem,
   staffAtlasItem,
   staffBdaReportsItem,
@@ -363,7 +362,7 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: [staffDashboardItem, staffTicketsItem, staffAtlasItem],
+    items: [staffTicketsItem, staffAtlasItem],
   };
 
   const backlogStandaloneGroup: StaffNavGroup = {
@@ -447,7 +446,7 @@ export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
 export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
 export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
 export const rpManagementRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
-export const secretTicketStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const secretTicketStaffRoles: Role[] = [Role.ADMIN];
 export const ticketStaffRoles: Role[] = allStaffRoles;
 export const ticketSummonableTeams: Role[] = [
   Role.RP_TRACKING,
@@ -484,9 +483,32 @@ export const registrationStatusLabels: Record<RegistrationStatus, string> = {
 };
 
 export const ticketCategoryLabels: Record<TicketCategory, string> = {
-  [TicketCategory.OPEN]: "Ticket ouvert",
-  [TicketCategory.SECRET]: "Ticket secret",
+  [TicketCategory.RP]: "Ticket RP",
+  [TicketCategory.TECHNIQUE]: "Ticket technique",
 };
+
+export const ticketCategoryPluralLabels: Record<TicketCategory, string> = {
+  [TicketCategory.RP]: "Tickets RP",
+  [TicketCategory.TECHNIQUE]: "Tickets techniques",
+};
+
+export function formatTicketCategoryName(name?: string | null): string {
+  if (!name) return "";
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase() === "roleplay") return "Ticket RP";
+  if (trimmed.toLowerCase() === "technique") return "Ticket technique";
+  return trimmed;
+}
+
+export function formatTicketCategoryPluralName(name?: string | null): string {
+  if (!name) return "";
+  const trimmed = name.trim();
+  if (trimmed.toLowerCase() === "roleplay" || trimmed.toLowerCase() === "ticket rp")
+    return "Tickets RP";
+  if (trimmed.toLowerCase() === "technique" || trimmed.toLowerCase() === "ticket technique")
+    return "Tickets techniques";
+  return trimmed;
+}
 
 export const ticketStatusLabels: Record<TicketStatus, string> = {
   [TicketStatus.PENDING_STAFF]: "En attente du staff",

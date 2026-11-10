@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, LockOpen } from "@phosphor-icons/react";
+import { Scroll, Wrench } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import { TicketCategory } from "@/lib/generated/prisma/enums";
@@ -45,14 +45,14 @@ export function NewStaffTicketDialog({
   const open = isControlled ? controlledOpen : internalOpen;
 
   const [playerId, setPlayerId] = useState<string | null>(null);
-  const [category, setCategory] = useState<TicketCategory>(TicketCategory.OPEN);
+  const [category, setCategory] = useState<TicketCategory>(TicketCategory.RP);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function resetForm() {
     setPlayerId(null);
-    setCategory(TicketCategory.OPEN);
+    setCategory(TicketCategory.RP);
     setSubject("");
     setMessage("");
   }
@@ -86,11 +86,7 @@ export function NewStaffTicketDialog({
     startTransition(async () => {
       try {
         const ticket = await createStaffTicket({ playerId, category, subject, message });
-        toast.success(
-          category === TicketCategory.SECRET
-            ? "Ticket confidentiel ouvert avec succès (Admin & Suivi RP)."
-            : "Ticket ouvert avec succès."
-        );
+        toast.success("Ticket ouvert avec succès.");
         resetForm();
         handleOpenChange(false);
         router.push(`/staff/tickets/${ticket.id}`);
@@ -103,15 +99,15 @@ export function NewStaffTicketDialog({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       {!hideTrigger && <DialogTrigger render={<Button />}>Ouvrir un ticket</DialogTrigger>}
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Nouveau ticket</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl sm:p-6">
+        <DialogHeader className="gap-1.5 pb-1">
+          <DialogTitle className="text-xl">Nouveau ticket</DialogTitle>
+          <DialogDescription className="text-sm">
             Contacte un joueur. Il recevra le message signé « Staff » et une notification Discord.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-4 py-2">
           <div className="flex flex-col gap-1.5">
             <Label>Joueur</Label>
             <PlayerSelect
@@ -124,44 +120,44 @@ export function NewStaffTicketDialog({
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setCategory(TicketCategory.OPEN)}
+              onClick={() => setCategory(TicketCategory.RP)}
               disabled={isPending}
               className={cn(
-                "flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all",
-                category === TicketCategory.OPEN
+                "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
+                category === TicketCategory.RP
                   ? "border-primary bg-primary/5 text-foreground ring-primary ring-1"
                   : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground"
               )}
             >
               <div className="text-foreground flex items-center gap-1.5 text-sm font-medium">
-                <LockOpen className="size-3.5 text-emerald-500" />
-                <span>Ticket standard</span>
+                <Scroll className="size-4 text-blue-500" />
+                <span>Ticket RP</span>
               </div>
-              <p className="text-muted-foreground text-[11px] leading-tight">
-                Accessible à toute l&apos;équipe staff.
+              <p className="text-muted-foreground text-xs leading-normal">
+                Projets, intrigues, suivi RP et lore.
               </p>
             </button>
 
             <button
               type="button"
-              onClick={() => setCategory(TicketCategory.SECRET)}
+              onClick={() => setCategory(TicketCategory.TECHNIQUE)}
               disabled={isPending}
               className={cn(
-                "flex flex-col items-start gap-1 rounded-lg border p-2.5 text-left transition-all",
-                category === TicketCategory.SECRET
-                  ? "text-foreground border-amber-500 bg-amber-500/10 ring-1 ring-amber-500"
+                "flex flex-col items-start gap-1 rounded-lg border p-3 text-left transition-all",
+                category === TicketCategory.TECHNIQUE
+                  ? "border-primary bg-primary/5 text-foreground ring-primary ring-1"
                   : "border-border/60 hover:border-border text-muted-foreground hover:text-foreground"
               )}
             >
               <div className="text-foreground flex items-center gap-1.5 text-sm font-medium">
-                <Lock className="size-3.5 text-amber-500" />
-                <span>Spoiler RP / Confidentiel</span>
+                <Wrench className="size-4 text-purple-500" />
+                <span>Ticket technique</span>
               </div>
-              <p className="text-muted-foreground text-[11px] leading-tight">
-                Restreint aux référents (Admin + Suivi RP).
+              <p className="text-muted-foreground text-xs leading-normal">
+                Bugs, signalements et support technique.
               </p>
             </button>
           </div>
@@ -182,16 +178,20 @@ export function NewStaffTicketDialog({
               disabled={isPending}
             />
           </div>
-          <Textarea
-            value={message}
-            onChange={(event) => setMessage(event.target.value)}
-            placeholder="Premier message au joueur"
-            rows={4}
-            disabled={isPending}
-          />
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="staff-ticket-message">Premier message</Label>
+            <Textarea
+              id="staff-ticket-message"
+              value={message}
+              onChange={(event) => setMessage(event.target.value)}
+              placeholder="Premier message au joueur..."
+              rows={5}
+              disabled={isPending}
+            />
+          </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="border-t pt-3">
           <DialogClose render={<Button variant="outline" disabled={isPending} />}>
             Annuler
           </DialogClose>

@@ -167,8 +167,8 @@ export function InterviewCalendarView({ slots }: InterviewCalendarViewProps) {
             </h3>
             <p className="text-muted-foreground mt-1 max-w-sm text-xs">
               {selectedDate
-                ? "Il n'y a aucun créneau programmé à cette date. Utilisez le bouton 'Nouveau créneau' pour en planifier."
-                : "Créez de nouveaux créneaux pour ouvrir les entretiens whitelist."}
+                ? "Il n'y a aucun créneau programmé à cette date. Utilise le bouton 'Nouveau créneau' pour en planifier."
+                : "Crée de nouveaux créneaux pour ouvrir les entretiens whitelist."}
             </p>
             {selectedDate && (
               <Button

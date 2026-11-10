@@ -7,25 +7,22 @@ import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 import { requireRole } from "@/lib/dal";
 
 export const metadata: Metadata = {
-  title: "Suivi RP Staff",
+  title: "Suivi RP et Narration",
 };
 import { rpTrackingStaffRoles } from "@/lib/navigation";
 import {
-  DEFAULT_RP_TRACKING_FILTER_STATUS,
   DEFAULT_RP_TRACKING_SORT,
+  DEFAULT_RP_TRACKING_TAB,
   DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
-  DEFAULT_RP_TRACKING_WRITING_FILTER,
-  RP_TRACKING_FILTER_STATUSES,
   RP_TRACKING_SORTS,
+  RP_TRACKING_TABS,
   RP_TRACKING_WRITING_EDITED_FILTERS,
   RP_TRACKING_WRITING_EDITED_WINDOWS_MS,
-  RP_TRACKING_WRITING_FILTERS,
   rpTrackingStateLabels,
-  type RpTrackingFilterStatus,
   type RpTrackingSort,
   type RpTrackingState,
+  type RpTrackingTab,
   type RpTrackingWritingEditedFilter,
-  type RpTrackingWritingFilter,
 } from "@/lib/rp-tracking";
 import {
   getRpTrackingLastMessages,
@@ -39,6 +36,7 @@ import {
   checkRedirectWithSavedPrefs,
   resolvePageSize,
   DEFAULT_PAGE_SIZE_OPTIONS,
+  type PagePreferences,
 } from "@/lib/table-preferences";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -55,11 +53,12 @@ import {
 import { TablePagination } from "@/components/dashboard/table-pagination";
 import { TicketTableRow } from "@/components/dashboard/ticket-table-row";
 import { UnreadDot } from "@/components/ui/unread-dot";
+import { ViewTabs } from "@/components/dashboard/view-tabs";
 import { RpTrackingFilters } from "@/components/staff/rp-tracking/rp-tracking-filters";
 import { MarkHandledButton } from "@/components/staff/rp-tracking/mark-handled-button";
 
 const DEFAULT_PAGE_SIZE = 10;
-const LAST_MESSAGE_PREVIEW_LENGTH = 90;
+const LAST_MESSAGE_PREVIEW_LENGTH = 52;
 const COLUMN_COUNT = 8;
 
 const stateBadgeVariant: Record<RpTrackingState, "default" | "secondary" | "outline"> = {
@@ -72,8 +71,7 @@ const stateBadgeVariant: Record<RpTrackingState, "default" | "secondary" | "outl
 export default async function RpTrackingStaffListPage(props: {
   searchParams: Promise<{
     q?: string;
-    status?: string;
-    writing?: string;
+    tab?: string;
     writingEdited?: string;
     sort?: string;
     page?: string;
@@ -83,7 +81,27 @@ export default async function RpTrackingStaffListPage(props: {
   const staffUser = await requireRole(rpTrackingStaffRoles);
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
-  const savedPrefs = getServerPagePrefs(cookieStore, "/staff/rp-tracking");
+
+  const rawSavedPrefs = getServerPagePrefs(cookieStore, "/staff/rp-tracking");
+  const savedPrefs: PagePreferences = {};
+  if (rawSavedPrefs.tab && RP_TRACKING_TABS.includes(rawSavedPrefs.tab as RpTrackingTab)) {
+    savedPrefs.tab = rawSavedPrefs.tab;
+  }
+  if (
+    rawSavedPrefs.writingEdited &&
+    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+      rawSavedPrefs.writingEdited as RpTrackingWritingEditedFilter
+    )
+  ) {
+    savedPrefs.writingEdited = rawSavedPrefs.writingEdited;
+  }
+  if (rawSavedPrefs.sort && RP_TRACKING_SORTS.includes(rawSavedPrefs.sort as RpTrackingSort)) {
+    savedPrefs.sort = rawSavedPrefs.sort;
+  }
+  if (rawSavedPrefs.pageSize) {
+    savedPrefs.pageSize = rawSavedPrefs.pageSize;
+  }
+
   const redirectUrl = checkRedirectWithSavedPrefs("/staff/rp-tracking", searchParams, savedPrefs);
   if (redirectUrl) {
     redirect(redirectUrl);
@@ -93,21 +111,11 @@ export default async function RpTrackingStaffListPage(props: {
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
 
-  const statusFilter: RpTrackingFilterStatus = RP_TRACKING_FILTER_STATUSES.includes(
-    searchParams.status as RpTrackingFilterStatus
-  )
-    ? (searchParams.status as RpTrackingFilterStatus)
-    : RP_TRACKING_FILTER_STATUSES.includes(savedPrefs.status as RpTrackingFilterStatus)
-      ? (savedPrefs.status as RpTrackingFilterStatus)
-      : DEFAULT_RP_TRACKING_FILTER_STATUS;
-
-  const writingFilter: RpTrackingWritingFilter = RP_TRACKING_WRITING_FILTERS.includes(
-    searchParams.writing as RpTrackingWritingFilter
-  )
-    ? (searchParams.writing as RpTrackingWritingFilter)
-    : RP_TRACKING_WRITING_FILTERS.includes(savedPrefs.writing as RpTrackingWritingFilter)
-      ? (savedPrefs.writing as RpTrackingWritingFilter)
-      : DEFAULT_RP_TRACKING_WRITING_FILTER;
+  const tab: RpTrackingTab = RP_TRACKING_TABS.includes(searchParams.tab as RpTrackingTab)
+    ? (searchParams.tab as RpTrackingTab)
+    : RP_TRACKING_TABS.includes(savedPrefs.tab as RpTrackingTab)
+      ? (savedPrefs.tab as RpTrackingTab)
+      : DEFAULT_RP_TRACKING_TAB;
 
   const writingEditedFilter: RpTrackingWritingEditedFilter =
     RP_TRACKING_WRITING_EDITED_FILTERS.includes(
@@ -140,20 +148,15 @@ export default async function RpTrackingStaffListPage(props: {
     );
   }
 
-  // Filtrage par état
-  if (statusFilter === "ongoing") {
+  // Filtrage par onglet (À traiter, Traités, Sans suivi)
+  if (tab === "pending") {
+    filteredPlayers = filteredPlayers.filter((player) => player.state === "pending");
+  } else if (tab === "handled") {
     filteredPlayers = filteredPlayers.filter(
-      (player) => player.state === "pending" || player.state === "recent"
+      (player) => player.state === "recent" || player.state === "dormant"
     );
-  } else if (statusFilter !== "all") {
-    filteredPlayers = filteredPlayers.filter((player) => player.state === statusFilter);
-  }
-
-  // Filtrage par présence de trame
-  if (writingFilter === "has_writing") {
-    filteredPlayers = filteredPlayers.filter((player) => player.hasWriting);
-  } else if (writingFilter === "no_writing") {
-    filteredPlayers = filteredPlayers.filter((player) => !player.hasWriting);
+  } else if (tab === "none") {
+    filteredPlayers = filteredPlayers.filter((player) => player.state === "none");
   }
 
   // Filtrage par date de dernière modification de la trame
@@ -161,6 +164,7 @@ export default async function RpTrackingStaffListPage(props: {
     filteredPlayers = filteredPlayers.filter((player) => !player.hasWriting);
   } else if (writingEditedFilter !== "all") {
     const windowMs = RP_TRACKING_WRITING_EDITED_WINDOWS_MS[writingEditedFilter] ?? 0;
+    // eslint-disable-next-line react-hooks/purity
     const threshold = Date.now() - windowMs;
     filteredPlayers = filteredPlayers.filter((player) => {
       if (!player.writingUpdatedAt) return false;
@@ -194,22 +198,19 @@ export default async function RpTrackingStaffListPage(props: {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-heading text-2xl font-semibold">Suivi & Narration RP</h1>
-          <p className="text-muted-foreground text-sm">
-            Espace centralisé pour le suivi des échanges en direct et des trames écrites des
-            joueurs.
-          </p>
-        </div>
+        <h1 className="font-heading text-2xl font-semibold">Suivi RP et Narration</h1>
+        <RpTrackingFilters query={query} writingEdited={writingEditedFilter} sort={sortOption} />
       </div>
 
-      <RpTrackingFilters
-        query={query}
-        status={statusFilter}
-        writing={writingFilter}
-        writingEdited={writingEditedFilter}
-        sort={sortOption}
-        counts={counts}
+      <ViewTabs
+        mobileSelect
+        activeView={tab}
+        defaultView={DEFAULT_RP_TRACKING_TAB}
+        tabs={[
+          { value: "pending", label: "À traiter", count: counts.pending },
+          { value: "handled", label: "Traités", count: counts.recent + counts.dormant },
+          { value: "none", label: "Sans suivi", count: counts.none },
+        ]}
       />
 
       <Card className="gap-0 overflow-hidden py-0">
@@ -223,7 +224,7 @@ export default async function RpTrackingStaffListPage(props: {
               <TableHead className="hidden lg:table-cell">Trame écrite</TableHead>
               <TableHead className="hidden xl:table-cell">Dernière connexion</TableHead>
               <TableHead className="hidden md:table-cell">Dernière activité</TableHead>
-              <TableHead className="w-12 pr-6 text-right">Traité</TableHead>
+              <TableHead className="w-12 pr-6 text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -234,12 +235,14 @@ export default async function RpTrackingStaffListPage(props: {
                   className="text-muted-foreground py-10 text-center text-sm"
                 >
                   {query ||
-                  statusFilter !== DEFAULT_RP_TRACKING_FILTER_STATUS ||
-                  writingFilter !== DEFAULT_RP_TRACKING_WRITING_FILTER ||
                   writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
                   sortOption !== DEFAULT_RP_TRACKING_SORT
                     ? "Aucun joueur ne correspond aux filtres sélectionnés."
-                    : "Aucun suivi en cours actuellement."}
+                    : tab === "pending"
+                      ? "Aucun suivi à traiter actuellement."
+                      : tab === "handled"
+                        ? "Aucun suivi traité."
+                        : "Aucun joueur sans suivi."}
                 </TableCell>
               </TableRow>
             ) : (
@@ -256,7 +259,11 @@ export default async function RpTrackingStaffListPage(props: {
                   : null;
                 const lastMessageText = lastMessage
                   ? lastMessage.body
-                    ? truncate(lastMessage.body.replace(/\s+/g, " "), LAST_MESSAGE_PREVIEW_LENGTH)
+                    ? truncate(
+                        lastMessage.body.replace(/\s+/g, " "),
+                        LAST_MESSAGE_PREVIEW_LENGTH,
+                        "..."
+                      )
                     : lastMessage.hasImage
                       ? "Image"
                       : ""
@@ -384,7 +391,8 @@ export default async function RpTrackingStaffListPage(props: {
                       {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
                     </TableCell>
                     <TableCell className="pr-6 text-right">
-                      {player.conversationId ? (
+                      {player.conversationId &&
+                      (player.state === "pending" || player.isHandledWithoutReply) ? (
                         <MarkHandledButton
                           conversationId={player.conversationId}
                           isHandled={player.isHandledWithoutReply}

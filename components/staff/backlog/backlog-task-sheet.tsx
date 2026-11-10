@@ -456,7 +456,7 @@ function TaskSheetBody({
               ) : (
                 <span
                   className="text-muted-foreground flex min-h-7 items-center gap-1.5 px-2 py-1 text-xs"
-                  title="Vous n'avez pas accès à ce ticket. Demandez à un Helper de convoquer votre équipe."
+                  title="Tu n'as pas accès à ce ticket. Demande à un Helper de convoquer ton équipe."
                 >
                   <Ticket className="size-3.5 shrink-0" />
                   <span className="min-w-0 flex-1 truncate">{detail.ticket.subject}</span>

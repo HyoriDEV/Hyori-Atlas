@@ -49,7 +49,7 @@ export function StaffGalleryRejectDialog({
       selectedReason === "Autre motif personnalisé..." ? customReason.trim() : selectedReason;
 
     if (!finalReason) {
-      toast.error("Veuillez indiquer un motif de refus.");
+      toast.error("Indique un motif de refus.");
       return;
     }
 
@@ -71,7 +71,7 @@ export function StaffGalleryRejectDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md p-6">
+      <DialogContent className="p-6 sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-heading text-destructive text-lg font-semibold">
             Refuser la capture
@@ -105,12 +105,12 @@ export function StaffGalleryRejectDialog({
 
           {selectedReason === "Autre motif personnalisé..." && (
             <div className="mt-2 flex flex-col gap-1.5">
-              <span className="text-xs font-semibold">Précisez le motif :</span>
+              <span className="text-xs font-semibold">Précise le motif :</span>
               <Textarea
                 rows={3}
                 value={customReason}
                 onChange={(e) => setCustomReason(e.target.value)}
-                placeholder="Indiquez clairement ce qui doit être corrigé..."
+                placeholder="Indique clairement ce qui doit être corrigé..."
                 className="resize-none text-xs"
               />
             </div>

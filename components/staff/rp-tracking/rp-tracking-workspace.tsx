@@ -106,12 +106,14 @@ function useChatLayout() {
 
   // Lu après le montage : le rendu serveur ne connaît pas le stockage du navigateur.
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     const savedWidth = Number(readStorage(CHAT_WIDTH_STORAGE_KEY));
     if (Number.isFinite(savedWidth) && savedWidth > 0) {
       setChatWidth(clampChatWidth(savedWidth));
     }
     setChatExpanded(readStorage(CHAT_EXPANDED_STORAGE_KEY) === "1");
     setLayout(readStorage(LAYOUT_STORAGE_KEY) === "tabs" ? "tabs" : "split");
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, []);
 
   const updateChatWidth = useCallback((value: number) => {

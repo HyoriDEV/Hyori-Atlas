@@ -105,7 +105,7 @@ export function GalleryUploadDialog({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!selectedFile) {
-      toast.error("Veuillez sélectionner une image.");
+      toast.error("Sélectionne une image.");
       return;
     }
 
@@ -162,7 +162,7 @@ export function GalleryUploadDialog({
             Partager une capture d&apos;écran
           </DialogTitle>
           <DialogDescription>
-            Partagez vos scènes et vos paysages avec la communauté de Hyori RP (format 16:9
+            Partage tes scènes et tes paysages avec la communauté de Hyori RP (format 16:9
             recommandé).
           </DialogDescription>
         </DialogHeader>
@@ -186,7 +186,7 @@ export function GalleryUploadDialog({
                   </div>
                   <div className="flex flex-col gap-1">
                     <span className="text-sm font-medium">
-                      Cliquez pour importer ou glissez un fichier ici
+                      Clique pour importer ou glisse un fichier ici
                     </span>
                     <span className="text-muted-foreground text-xs">
                       JPEG, PNG ou WebP — Jusqu&apos;à 15 Mo
@@ -272,7 +272,7 @@ export function GalleryUploadDialog({
                   name="description"
                   rows={3}
                   maxLength={1000}
-                  placeholder="Racontez le moment rôleplay ou l'atmosphère de cette capture..."
+                  placeholder="Raconte le moment rôleplay ou l'atmosphère de cette capture..."
                   className="resize-none text-xs"
                 />
               </div>

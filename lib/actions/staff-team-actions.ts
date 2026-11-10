@@ -24,7 +24,7 @@ export async function updateUserRoleAction(targetUserId: string, newRole: Role) 
 
   // Protection contre l'auto-rétrogradation de l'administrateur
   if (currentUser.id === targetUserId && newRole !== Role.ADMIN) {
-    throw new Error("Vous ne pouvez pas retirer votre propre rôle d'administrateur.");
+    throw new Error("Tu ne peux pas retirer ton propre rôle d'administrateur.");
   }
 
   if (targetUser.role === newRole) {
