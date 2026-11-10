@@ -33,5 +33,8 @@ jobs:
             # S'assurer que deploy.sh est exécutable
             chmod +x ./deploy.sh
 
+            # Résoudre la migration en échec si présente dans _prisma_migrations
+            docker compose -f docker-compose.prod.yml run --rm atlas npx prisma migrate resolve --rolled-back 20261110180000_remove_ticket_spoiler_and_notification_overrides 2>/dev/null || true
+
             # Déployer Hyori-Atlas (Pull, Build, Prisma Migrate, Restart)
             ./deploy.sh atlas
