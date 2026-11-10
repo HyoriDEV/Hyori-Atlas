@@ -331,7 +331,7 @@ export function WhitelistRoleVerificationDialog({
               </p>
               <p className="text-muted-foreground mt-1 text-xs">
                 {searchQuery
-                  ? "Essayez de modifier votre recherche."
+                  ? "Essaie de modifier ta recherche."
                   : filterMode === "anomalies"
                     ? "Excellente nouvelle ! Tous les joueurs whitelistés ont bien leurs rôles Discord attribués."
                     : "Aucun joueur whitelisté trouvé."}
@@ -572,7 +572,7 @@ export function WhitelistRoleVerificationDialog({
                               )}
                               title={
                                 !player.assignedClass
-                                  ? "Définissez d'abord une classe RP sur sa fiche"
+                                  ? "Définis d'abord une classe RP sur sa fiche"
                                   : !player.inGuild
                                     ? "Le membre n'a pas été trouvé sur le serveur Discord"
                                     : "Relancer l'attribution des rôles Whitelist et Classe via HyoriBot"

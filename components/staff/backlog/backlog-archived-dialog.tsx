@@ -57,7 +57,7 @@ export function BacklogArchivedDialog({
           <DialogHeader>
             <DialogTitle>Tâches archivées</DialogTitle>
             <DialogDescription>
-              Ouvrez une tâche pour la consulter ou la restaurer dans le tableau.
+              Ouvre une tâche pour la consulter ou la restaurer dans le tableau.
             </DialogDescription>
           </DialogHeader>
 

@@ -265,7 +265,6 @@ export async function promoteToWhitelisted(
       user.discordId,
       RegistrationStatus.WHITELISTED,
       undefined,
-      undefined,
       assignedClass
     );
     discordNotified = notifyResult.success && Boolean(notifyResult.notified);

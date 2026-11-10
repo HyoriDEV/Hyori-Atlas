@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { formatTicketCategoryName } from "@/lib/navigation";
 
 export async function generateMetadata({
   params,
@@ -25,7 +26,6 @@ export async function generateMetadata({
     title: `Ticket : ${cleanSubject}`,
   };
 }
-import { Lock } from "@phosphor-icons/react/dist/ssr";
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
@@ -106,16 +106,9 @@ export default async function TicketDetailPage({
         <TicketBackLink />
         <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
           <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
-            {ticket.isSpoiler ? (
-              <span className="inline-flex items-center gap-1 font-medium text-amber-500">
-                <Lock className="size-3" />
-                Spoiler RP
-              </span>
-            ) : (
-              <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
-                {ticket.categoryName || "Ticket"}
-              </Badge>
-            )}
+            <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+              {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
+            </Badge>
             {ticket.subcategoryName && (
               <span className="text-foreground/80 font-medium">{ticket.subcategoryName}</span>
             )}

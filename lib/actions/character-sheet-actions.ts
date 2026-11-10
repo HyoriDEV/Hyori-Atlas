@@ -143,10 +143,10 @@ function parseAndValidateSheetData(input: CharacterSheetInput, strict: boolean) 
       );
     }
     if (!primaryClassId || (!primaryRoleId && !primaryRoleIsOther)) {
-      throw new Error("Veuillez sélectionner votre premier choix de classe et son rôle.");
+      throw new Error("Sélectionne ton premier choix de classe et son rôle.");
     }
     if (!secondaryClassId || (!secondaryRoleId && !secondaryRoleIsOther)) {
-      throw new Error("Veuillez sélectionner votre deuxième choix de classe et son rôle.");
+      throw new Error("Sélectionne ton deuxième choix de classe et son rôle.");
     }
     if (primaryClassId === secondaryClassId) {
       throw new Error("Le deuxième choix doit être une classe différente du premier choix.");

@@ -156,12 +156,12 @@ export function RpGroupsDashboard({
           <h3 className="font-heading text-foreground text-base font-semibold">
             {groups.length === 0
               ? "Aucun groupe RP créé pour le moment"
-              : "Aucun groupe ne correspond à vos critères"}
+              : "Aucun groupe ne correspond à tes critères"}
           </h3>
           <p className="text-muted-foreground mt-1 max-w-sm text-xs">
             {groups.length === 0
-              ? "Créez votre premier groupe RP pour rassembler les joueurs et coordonner leur passage en whitelist."
-              : "Essayez de modifier votre recherche ou de réinitialiser vos filtres."}
+              ? "Crée ton premier groupe RP pour rassembler les joueurs et coordonner leur passage en whitelist."
+              : "Essaie de modifier ta recherche ou de réinitialiser tes filtres."}
           </p>
           {groups.length === 0 ? (
             canManageGroups && (

@@ -62,7 +62,7 @@ export function EditRpGroupDialog({ open, onOpenChange, group }: EditRpGroupDial
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>Modifier le groupe RP</DialogTitle>
-            <DialogDescription>Modifiez le nom et la description du groupe.</DialogDescription>
+            <DialogDescription>Modifie le nom et la description du groupe.</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 py-2">

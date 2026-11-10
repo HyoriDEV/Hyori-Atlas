@@ -45,14 +45,12 @@ export interface TicketStaffAccessMember {
 
 export function TicketStaffAccessPanel({
   ticketId,
-  isSecret = false,
   teams,
   staffMembers,
   availableStaff,
   className,
 }: {
   ticketId: string;
-  isSecret?: boolean;
   teams: TicketTeamSummonState[];
   staffMembers: TicketStaffAccessMember[];
   availableStaff: PlayerOption[];
@@ -123,9 +121,7 @@ export function TicketStaffAccessPanel({
           </span>
         </div>
         <p className="text-muted-foreground text-[11px] leading-snug">
-          {isSecret
-            ? "Ticket confidentiel / spoiler : accès restreint aux administrateurs, suivi RP et membres convoqués."
-            : "Accessible selon les autorisations normales définies pour sa catégorie."}
+          Gère les équipes et membres du staff ayant accès à ce ticket.
         </p>
       </div>
 

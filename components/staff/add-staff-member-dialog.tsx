@@ -80,7 +80,7 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
 
   function handleAddMember() {
     if (!selectedPlayerId || !selectedPlayer) {
-      toast.error("Veuillez sélectionner un joueur.");
+      toast.error("Sélectionne un joueur.");
       return;
     }
 
@@ -119,7 +119,7 @@ export function AddStaffMemberDialog({ availablePlayers }: AddStaffMemberDialogP
         <DialogHeader>
           <DialogTitle>Ajouter un membre au staff</DialogTitle>
           <DialogDescription>
-            Recherchez un joueur inscrit sur la plateforme et choisissez le rôle à lui assigner.
+            Recherche un joueur inscrit sur la plateforme et choisis le rôle à lui assigner.
           </DialogDescription>
         </DialogHeader>
 

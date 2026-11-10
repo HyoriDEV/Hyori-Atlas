@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Plus, ShieldWarning, WarningCircle } from "@phosphor-icons/react";
+import { Plus } from "@phosphor-icons/react";
 
 import {
   excludePlayer,
@@ -77,7 +77,7 @@ export function NewSanctionDialog({ availablePlayers }: NewSanctionDialogProps) 
 
   function handleSubmit() {
     if (!selectedPlayerId || !selectedPlayer) {
-      toast.error("Veuillez sélectionner un joueur.");
+      toast.error("Sélectionne un joueur.");
       return;
     }
 
@@ -121,7 +121,7 @@ export function NewSanctionDialog({ availablePlayers }: NewSanctionDialogProps) 
         <Plus className="size-4" />
         <span>Nouvelle sanction</span>
       </DialogTrigger>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Appliquer une sanction</DialogTitle>
           <DialogDescription>
@@ -213,7 +213,7 @@ export function NewSanctionDialog({ availablePlayers }: NewSanctionDialogProps) 
             </div>
             <Textarea
               id="sanction-reason"
-              placeholder="Expliquez la raison de la sanction..."
+              placeholder="Explique la raison de la sanction..."
               value={reason}
               maxLength={REASON_MAX_LENGTH}
               onChange={(e) => setReason(e.target.value)}

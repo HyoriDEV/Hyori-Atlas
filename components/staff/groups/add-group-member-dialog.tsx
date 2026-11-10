@@ -35,7 +35,7 @@ export function AddGroupMemberDialog({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedPlayerId) {
-      toast.error("Veuillez sélectionner un joueur.");
+      toast.error("Sélectionne un joueur.");
       return;
     }
 

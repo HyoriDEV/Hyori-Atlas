@@ -536,7 +536,7 @@ export function DistributionOverview({
                 <TableRow>
                   <TableCell colSpan={5} className="text-muted-foreground py-8 text-center text-sm">
                     {search || processedFilter !== "ALL"
-                      ? "Aucun joueur ne correspond à votre recherche."
+                      ? "Aucun joueur ne correspond à ta recherche."
                       : "Aucun joueur trouvé."}
                   </TableCell>
                 </TableRow>

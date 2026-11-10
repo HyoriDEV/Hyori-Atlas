@@ -11,11 +11,14 @@ export const metadata: Metadata = {
 };
 import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
-import { ticketCategoryLabels, ticketStatusLabels } from "@/lib/navigation";
+import {
+  formatTicketCategoryName,
+  ticketCategoryLabels,
+  ticketStatusLabels,
+} from "@/lib/navigation";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
 import { truncate } from "@/lib/utils";
-import { Lock } from "@phosphor-icons/react/dist/ssr";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +35,6 @@ type TicketListItem = {
   category: keyof typeof ticketCategoryLabels;
   categoryName?: string;
   subcategoryName?: string | null;
-  isSpoiler?: boolean;
   subject: string;
   status: TicketStatus;
   createdAt: Date;
@@ -86,16 +88,9 @@ function TicketList({
               <CardContent className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 flex-col gap-1">
                   <div className="text-muted-foreground flex flex-wrap items-center gap-1.5 text-xs">
-                    {ticket.isSpoiler ? (
-                      <span className="inline-flex items-center gap-1 font-medium text-amber-500">
-                        <Lock className="size-3" />
-                        Spoiler RP
-                      </span>
-                    ) : (
-                      <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
-                        {ticket.categoryName || "Ticket"}
-                      </Badge>
-                    )}
+                    <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                      {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
+                    </Badge>
                     {ticket.subcategoryName && (
                       <span className="text-foreground/85 font-medium">
                         {ticket.subcategoryName}

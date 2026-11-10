@@ -9,7 +9,6 @@ import {
   Trash,
   Check,
   ShieldCheck,
-  EyeSlash,
   Wrench,
   Scroll,
 } from "@phosphor-icons/react";
@@ -25,7 +24,6 @@ import {
   deleteTicketCategoryAction,
   saveTicketSubcategoryAction,
   deleteTicketSubcategoryAction,
-  setCategorySpoilerAction,
   type TicketCategoryConfigData,
   type TicketSubcategoryConfigData,
 } from "@/lib/actions/ticket-config-actions";
@@ -54,24 +52,15 @@ interface TicketsSettingsTabProps {
 const TICKET_CHANNEL_TEMPLATES = [
   {
     id: "TICKET_RP_CREATED",
-    title: "Tickets Roleplay (Standard)",
-    description: "Notifications pour les demandes de suivi RP et questions whitelist.",
+    title: "Tickets RP",
+    description: "Notifications pour les demandes d'intrigue, projets et questions RP.",
     icon: Scroll,
     badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
   },
   {
-    id: "TICKET_RP_SPOILER_CREATED",
-    title: "Tickets Roleplay (Spoiler / Confidentiel)",
-    description:
-      "Salon réservé aux administrateurs et à l'équipe Suivi RP pour les projets et intrigues sensibles.",
-    icon: EyeSlash,
-    badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-  },
-  {
     id: "TICKET_TECH_CREATED",
-    title: "Tickets Technique",
-    description:
-      "Salon dédié aux reports de bug et suggestions, réservé aux administrateurs et développeurs.",
+    title: "Tickets techniques",
+    description: "Salon dédié aux reports de bugs et demandes d'assistance technique.",
     icon: Wrench,
     badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
   },
@@ -123,35 +112,6 @@ export function TicketsSettingsTab({
     useState<Partial<TicketSubcategoryConfigData> | null>(null);
   const [isSavingSubcategory, startSaveSubcategoryTransition] = useTransition();
 
-  // Spoiler Option Quick Control
-  const rpCategory =
-    categories.find((c) => c.slug === "rp") || categories.find((c) => c.allowSpoiler);
-  const isSpoilerOptionActive = rpCategory?.allowSpoiler ?? false;
-  const [isTogglingSpoiler, startToggleSpoilerTransition] = useTransition();
-
-  const handleToggleSpoilerOption = (nextChecked: boolean) => {
-    if (!rpCategory) {
-      toast.error("Catégorie Roleplay introuvable.");
-      return;
-    }
-
-    startToggleSpoilerTransition(async () => {
-      const res = await setCategorySpoilerAction(rpCategory.id, nextChecked);
-      if (res.success) {
-        setCategories((prev) =>
-          prev.map((c) => (c.id === rpCategory.id ? { ...c, allowSpoiler: nextChecked } : c))
-        );
-        toast.success(
-          nextChecked
-            ? "Option spoiler activée : les joueurs peuvent désormais ouvrir des tickets confidentiels."
-            : "Option spoiler désactivée : la case est masquée dans le formulaire d'ouverture joueur."
-        );
-      } else {
-        toast.error(res.error || "Impossible de modifier l'option spoiler.");
-      }
-    });
-  };
-
   // Handle Discord Channels Save
   const handleSaveDiscordChannels = () => {
     startSaveDiscordTransition(async () => {
@@ -190,7 +150,6 @@ export function TicketsSettingsTab({
           name: editingCategory.name || "",
           description: editingCategory.description,
           icon: editingCategory.icon,
-          allowSpoiler: editingCategory.allowSpoiler ?? false,
           enabled: editingCategory.enabled ?? true,
           allowedRoles: editingCategory.allowedRoles ?? [],
         });
@@ -217,7 +176,6 @@ export function TicketsSettingsTab({
                 icon: editingCategory.icon || null,
                 order: prev.length,
                 enabled: editingCategory.enabled ?? true,
-                allowSpoiler: editingCategory.allowSpoiler ?? false,
                 allowedRoles: editingCategory.allowedRoles ?? [],
                 subcategories: [],
               },
@@ -349,12 +307,12 @@ export function TicketsSettingsTab({
             <CardTitle className="text-lg">Salons Discord de réception des tickets</CardTitle>
           </div>
           <CardDescription>
-            Configurez les salons Discord vers lesquels le bot HyoriBot transmet automatiquement les
-            3 types de tickets.
+            Configure les salons Discord vers lesquels le bot HyoriBot transmet automatiquement les
+            2 types de tickets (Tickets RP et Tickets techniques).
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             {TICKET_CHANNEL_TEMPLATES.map((tmpl) => {
               const current = templates[tmpl.id] || { channelId: "", roleId: "", enabled: true };
               const Icon = tmpl.icon;
@@ -432,60 +390,15 @@ export function TicketsSettingsTab({
         </CardContent>
       </Card>
 
-      {/* SECTION : Contrôle direct de l'Option Spoiler joueur */}
-      <Card className="border-amber-500/30 bg-amber-500/5">
-        <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4 pb-4">
-          <div className="flex items-start gap-3">
-            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-500">
-              <EyeSlash className="size-5" />
-            </div>
-            <div className="flex flex-col gap-1">
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-base">
-                  Option Spoiler (Demandes Confidentielles RP)
-                </CardTitle>
-                <Badge
-                  className={cn(
-                    "border text-[11px]",
-                    isSpoilerOptionActive
-                      ? "border-amber-500/30 bg-amber-500/15 text-amber-500"
-                      : "border-muted bg-muted text-muted-foreground"
-                  )}
-                >
-                  {isSpoilerOptionActive ? "Active dans le formulaire" : "Désactivée (Masquée)"}
-                </Badge>
-              </div>
-              <CardDescription className="max-w-2xl text-xs leading-relaxed">
-                Permet aux joueurs d&apos;activer la mention spoiler lors de l&apos;ouverture
-                d&apos;un ticket (réservant l&apos;accès uniquement aux Administrateurs et au Suivi
-                RP). Vous pouvez désactiver cette option dès la mise en production et la réactiver à
-                tout moment.
-              </CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-muted-foreground text-xs font-medium">
-              {isSpoilerOptionActive ? "Autoriser les spoilers" : "Bloquer les spoilers"}
-            </span>
-            <Switch
-              checked={isSpoilerOptionActive}
-              onCheckedChange={handleToggleSpoilerOption}
-              disabled={isTogglingSpoiler || !rpCategory}
-              className="data-[state=checked]:bg-amber-500"
-            />
-          </div>
-        </CardHeader>
-      </Card>
-
       {/* SECTION 2 : Catégories & Sous-catégories modulables */}
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h2 className="font-heading text-lg font-semibold">
-              Catégories & Sous-catégories dynamiques
+              Catégories &amp; Sous-catégories dynamiques
             </h2>
             <p className="text-muted-foreground text-sm">
-              Personnalisez les parcours d&apos;ouverture, les placeholders et les rôles staff ayant
+              Personnalise les parcours d&apos;ouverture, les placeholders et les rôles staff ayant
               accès à chaque type de ticket.
             </p>
           </div>
@@ -498,7 +411,6 @@ export function TicketsSettingsTab({
                 name: "",
                 slug: "",
                 description: "",
-                allowSpoiler: false,
                 enabled: true,
                 allowedRoles: [Role.ADMIN],
               });
@@ -520,16 +432,6 @@ export function TicketsSettingsTab({
                     <Badge variant="outline" className="font-mono text-xs">
                       slug: {cat.slug}
                     </Badge>
-                    {cat.allowSpoiler ? (
-                      <Badge className="gap-1 border-amber-500/20 bg-amber-500/10 text-xs text-amber-500">
-                        <EyeSlash className="size-3" />
-                        Option Spoiler autorisée
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">
-                        Spoiler désactivé
-                      </Badge>
-                    )}
                     {!cat.enabled && (
                       <Badge variant="destructive" className="text-xs">
                         Désactivée
@@ -690,7 +592,7 @@ export function TicketsSettingsTab({
                   id="cat-name"
                   value={editingCategory?.name || ""}
                   onChange={(e) => setEditingCategory((p) => ({ ...p, name: e.target.value }))}
-                  placeholder="Ex: Roleplay, Technique..."
+                  placeholder="Ex: Ticket RP, Ticket technique..."
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -713,22 +615,6 @@ export function TicketsSettingsTab({
                 value={editingCategory?.description || ""}
                 onChange={(e) => setEditingCategory((p) => ({ ...p, description: e.target.value }))}
                 placeholder="Explication claire du but de cette catégorie..."
-              />
-            </div>
-
-            <div className="flex items-center justify-between rounded-lg border p-3">
-              <div className="flex flex-col gap-0.5">
-                <Label className="text-sm font-semibold">Autoriser l&apos;option Spoiler</Label>
-                <span className="text-muted-foreground text-xs">
-                  Permet au joueur de marquer son ticket comme spoil/confidentiel (réservé Admin +
-                  Suivi RP).
-                </span>
-              </div>
-              <Switch
-                checked={editingCategory?.allowSpoiler ?? false}
-                onCheckedChange={(checked) =>
-                  setEditingCategory((p) => ({ ...p, allowSpoiler: checked }))
-                }
               />
             </div>
 
@@ -837,7 +723,7 @@ export function TicketsSettingsTab({
                 onChange={(e) =>
                   setEditingSubcategory((p) => ({ ...p, description: e.target.value }))
                 }
-                placeholder="Précisez ce que cette sous-catégorie couvre (projets, lore, assassinats, etc.)..."
+                placeholder="Précisez ce que cette sous-catégorie couvre (projets, lore, etc.)..."
               />
             </div>
 
@@ -860,8 +746,8 @@ export function TicketsSettingsTab({
                 Placeholder du message (guidage pour le joueur)
               </Label>
               <Textarea
-                id="sub-placeholder-desc"
                 rows={3}
+                id="sub-placeholder-desc"
                 value={editingSubcategory?.placeholderDescription || ""}
                 onChange={(e) =>
                   setEditingSubcategory((p) => ({ ...p, placeholderDescription: e.target.value }))

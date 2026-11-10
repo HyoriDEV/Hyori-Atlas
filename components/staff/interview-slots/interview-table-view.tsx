@@ -117,8 +117,8 @@ export function InterviewTableView({
                     Aucun créneau d&apos;entretien trouvé
                   </p>
                   <p className="text-muted-foreground text-xs">
-                    Modifiez vos filtres ou créez de nouveaux créneaux d&apos;entretien pour
-                    alimenter le planning.
+                    Modifie tes filtres ou crée de nouveaux créneaux d&apos;entretien pour alimenter
+                    le planning.
                   </p>
                 </div>
               </TableCell>

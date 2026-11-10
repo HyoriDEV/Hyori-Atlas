@@ -4,7 +4,7 @@ import Link from "next/link";
 
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
+import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { backlogManagerRoles, backlogRoles, ticketSummonableTeams } from "@/lib/navigation";
 import { backlogStatusDotClasses, backlogStatusLabels } from "@/lib/backlog";
 import { serializeBacklogUser } from "@/lib/services/backlog-service";
@@ -12,16 +12,15 @@ import { hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
-import { Lock } from "@phosphor-icons/react/dist/ssr";
-import { Badge } from "@/components/ui/badge";
+import { getTicketConfigData } from "@/lib/actions/ticket-config-actions";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
 import { TicketStaffAccessPanel } from "@/components/dashboard/ticket-staff-access-panel";
-import { TicketSecrecyButton } from "@/components/dashboard/ticket-secrecy-button";
 import { TicketActionsMenu } from "@/components/staff/tickets/ticket-actions-menu";
+import { TicketCategoryBadgeEditor } from "@/components/staff/tickets/ticket-category-badge-editor";
 
 export async function generateMetadata({
   params,
@@ -125,7 +124,7 @@ export default async function TicketStaffDetailPage({
     update: { lastReadAt: readAt },
   });
 
-  const [allPlayers, summonableStaff, backlogAssignees] = await Promise.all([
+  const [allPlayers, summonableStaff, backlogAssignees, availableCategories] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -171,6 +170,7 @@ export default async function TicketStaffDetailPage({
           orderBy: { discordDisplayName: "asc" },
         })
       : [],
+    getTicketConfigData(),
   ]);
 
   const messages = ticket.conversation.messages || [];
@@ -191,7 +191,6 @@ export default async function TicketStaffDetailPage({
   const staffAccessPanel = canManageAccess ? (
     <TicketStaffAccessPanel
       ticketId={ticket.id}
-      isSecret={ticket.category === TicketCategory.SECRET}
       teams={ticketSummonableTeams.map((team) => {
         const summon = ticket.teamSummons.find((s) => s.team === team);
         return {
@@ -227,19 +226,15 @@ export default async function TicketStaffDetailPage({
               {playerName}
             </Link>{" "}
             ·{" "}
-            {ticket.isSpoiler ? (
-              <span className="inline-flex items-center gap-1 font-medium text-amber-500">
-                <Lock className="size-2.5" />
-                Spoiler RP
-              </span>
-            ) : (
-              <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
-                {ticket.categoryName || "Ticket"}
-              </Badge>
-            )}
-            {ticket.subcategoryName && (
-              <span className="text-foreground/85 font-medium"> · {ticket.subcategoryName}</span>
-            )}{" "}
+            <TicketCategoryBadgeEditor
+              ticketId={ticket.id}
+              categoryId={ticket.categoryId}
+              subcategoryId={ticket.subcategoryId}
+              categoryName={ticket.categoryName}
+              subcategoryName={ticket.subcategoryName}
+              category={ticket.category}
+              availableCategories={availableCategories}
+            />{" "}
             · {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
           </span>
           <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
@@ -264,12 +259,6 @@ export default async function TicketStaffDetailPage({
             </div>
           )}
         </div>
-        {canManageAccess && (
-          <TicketSecrecyButton
-            ticketId={ticket.id}
-            isSecret={ticket.category === TicketCategory.SECRET}
-          />
-        )}
         <TicketMembersSheet
           ticketId={ticket.id}
           members={membersData}

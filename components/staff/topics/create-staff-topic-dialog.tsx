@@ -144,7 +144,7 @@ export function CreateStaffTopicDialog({
       )}
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-xl">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl sm:p-6">
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <DialogHeader>
               <div className="flex items-center gap-2">
@@ -221,7 +221,7 @@ export function CreateStaffTopicDialog({
                   id="topic-context"
                   value={context}
                   onChange={(e) => setContext(e.target.value)}
-                  placeholder="Expliquez la problématique, son origine et la situation actuelle..."
+                  placeholder="Explique la problématique, son origine et la situation actuelle..."
                   rows={4}
                   required
                   disabled={isPending}

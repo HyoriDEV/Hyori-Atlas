@@ -3,7 +3,6 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { XCircle } from "@phosphor-icons/react";
 
 import { rejectWhitelistPlayer } from "@/lib/actions/staff-review-actions";
 import { Button } from "@/components/ui/button";

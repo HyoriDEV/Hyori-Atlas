@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Check, Tag, FloppyDisk } from "@phosphor-icons/react";
+import { Tag, FloppyDisk } from "@phosphor-icons/react";
 
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -100,7 +100,7 @@ export function GallerySettingsTab({ defaultValues, initialCategories }: Gallery
             <CardTitle className="text-base font-semibold">Catégories de la galerie</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Activez ou désactivez les catégories disponibles pour les joueurs et personnalisez leurs
+            Active ou désactive les catégories disponibles pour les joueurs et personnalise leurs
             libellés affichés sur le site.
           </CardDescription>
         </CardHeader>

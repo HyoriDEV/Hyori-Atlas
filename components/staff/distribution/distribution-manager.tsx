@@ -62,7 +62,7 @@ export function DistributionManager({
               Aucune classe de joueurs
             </h2>
             <p className="text-muted-foreground mt-1 max-w-md text-sm">
-              Commencez par créer une première classe de joueur. Vous pourrez ensuite y associer les
+              Commence par créer une première classe de joueur. Tu pourras ensuite y associer les
               rôles correspondants et configurer leur équilibre via des ratios.
             </p>
           </div>
@@ -70,7 +70,7 @@ export function DistributionManager({
       ) : filteredClasses.length === 0 ? (
         <Card className="flex flex-col items-center justify-center p-10 text-center">
           <p className="text-muted-foreground text-sm">
-            Aucun résultat ne correspond à votre recherche &quot;{search}&quot;.
+            Aucun résultat ne correspond à ta recherche &quot;{search}&quot;.
           </p>
           <Button
             variant="ghost"

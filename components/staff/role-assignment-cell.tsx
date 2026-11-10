@@ -78,7 +78,7 @@ export function RoleAssignmentCell({
     }
 
     if (isCurrentAdmin && newRole !== Role.ADMIN) {
-      toast.error("Vous ne pouvez pas retirer votre propre rôle d'administrateur.");
+      toast.error("Tu ne peux pas retirer ton propre rôle d'administrateur.");
       setSelectedRole(currentRole);
       return;
     }
@@ -150,7 +150,7 @@ export function RoleAssignmentCell({
           <AlertDialogHeader>
             <AlertDialogTitle>Modifier le rôle de l&apos;utilisateur</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir modifier le rôle de{" "}
+              Es-tu sûr de vouloir modifier le rôle de{" "}
               <strong className="text-foreground">{userName}</strong> ?
             </AlertDialogDescription>
           </AlertDialogHeader>

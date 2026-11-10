@@ -117,7 +117,7 @@ export default async function WritingPage(props: {
                 : "Trame archivée d'un personnage désactivé."}
             </p>
             <p className="text-muted-foreground text-xs">
-              Ces chapitres sont conservés pour votre historique et restent consultables en lecture
+              Ces chapitres sont conservés pour ton historique et restent consultables en lecture
               seule.
             </p>
           </Card>

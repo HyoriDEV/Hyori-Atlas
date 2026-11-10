@@ -330,8 +330,8 @@ export function GalleryFeed({
             <h3 className="font-heading text-lg font-semibold">Aucune capture trouvée</h3>
             <p className="text-muted-foreground text-sm">
               {search || selectedCategory !== "ALL"
-                ? "Aucune capture ne correspond à vos filtres actuels."
-                : "La galerie n'a pas encore de captures publiées. Soyez le premier à partager votre cliché !"}
+                ? "Aucune capture ne correspond à tes filtres actuels."
+                : "La galerie n'a pas encore de captures publiées. Sois le premier à partager ton cliché !"}
             </p>
           </div>
           {isFiltered && (

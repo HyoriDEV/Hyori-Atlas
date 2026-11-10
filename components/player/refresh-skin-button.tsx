@@ -34,7 +34,7 @@ export function RefreshSkinButton() {
       onClick={handleRefresh}
       disabled={isPending}
       className="text-muted-foreground hover:text-foreground text-xs"
-      title="Synchroniser votre skin actuel depuis Mojang"
+      title="Synchroniser ton skin actuel depuis Mojang"
     >
       <ArrowsClockwise className={`size-3.5 ${isPending ? "animate-spin" : ""}`} />
       <span>{isPending ? "Synchronisation..." : "Actualiser le skin"}</span>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ResetSortButton } from "@/components/dashboard/waitlist-sort-controls";
 import { setClientPagePref } from "@/lib/table-preferences";
+import { formatTicketCategoryName } from "@/lib/navigation";
 
 const ALL_VALUE = "ALL";
 const QUERY_DEBOUNCE_MS = 400;
@@ -27,9 +28,8 @@ export interface TicketFilterCategoryOption {
 
 const DEFAULT_CATEGORY_ITEMS: TicketFilterCategoryOption[] = [
   { value: ALL_VALUE, label: "Toutes les catégories" },
-  { value: "rp", label: "Roleplay" },
-  { value: "technique", label: "Technique" },
-  { value: "spoiler", label: "⚠️ Spoilers uniquement" },
+  { value: "rp", label: "Ticket RP" },
+  { value: "technique", label: "Ticket technique" },
 ];
 
 export function TicketFilters({
@@ -56,8 +56,10 @@ export function TicketFilters({
     availableCategories && availableCategories.length > 0
       ? [
           { value: ALL_VALUE, label: "Toutes les catégories" },
-          ...availableCategories.map((c) => ({ value: c.slug, label: c.name })),
-          { value: "spoiler", label: "⚠️ Spoilers uniquement" },
+          ...availableCategories.map((c) => ({
+            value: c.slug,
+            label: formatTicketCategoryName(c.name),
+          })),
         ]
       : DEFAULT_CATEGORY_ITEMS;
 

@@ -3,7 +3,7 @@ import "server-only";
 import { prisma } from "@/lib/prisma";
 import { ConversationType, Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { allStaffRoles, rpTrackingStaffRoles, secretTicketStaffRoles } from "@/lib/navigation";
+import { allStaffRoles, rpTrackingStaffRoles } from "@/lib/navigation";
 
 export interface TicketAccessUser {
   id: string;
@@ -13,39 +13,33 @@ export interface TicketAccessUser {
 const NO_TICKET: Prisma.TicketWhereInput = { id: { in: [] } };
 
 /**
- * Rôles ayant accès aux spoilers RP et aux tickets sensibles : ADMIN et RP_TRACKING.
+ * Seuls les administrateurs ont un accès global à tous les tickets sans restriction de catégorie.
  */
 export function hasFullTicketAccess(role: Role): boolean {
-  return secretTicketStaffRoles.includes(role);
+  return role === Role.ADMIN;
 }
 
 /**
  * Vérifie si un ticket est considéré comme spoiler/confidentiel.
+ * Obsolète : le concept de spoiler a été supprimé.
  */
-export function isTicketSpoiler(ticket: {
-  isSpoiler?: boolean;
-  category?: TicketCategory;
-}): boolean {
-  return Boolean(ticket.isSpoiler || ticket.category === TicketCategory.SECRET);
+export function isTicketSpoiler(): boolean {
+  return false;
 }
 
 /**
  * Alias de compatibilité pour l'ancien nom de fonction.
  */
-export function isTicketSecret(category: TicketCategory): boolean {
-  return category === TicketCategory.SECRET;
+export function isTicketSecret(): boolean {
+  return false;
 }
 
 /**
  * Filtre Prisma des tickets visibles par un membre du staff :
  * - Non-staff : aucun ticket.
  * - ADMIN : tous les tickets.
- * - RP_TRACKING : tickets dont la catégorie autorise le Suivi RP (y compris spoilers),
- *   plus les tickets où ils sont convoqués ou invités.
- * - DEVELOPER : tickets non-spoiler dont la catégorie autorise DEVELOPER (Technique + RP standard),
- *   plus les tickets où ils sont convoqués ou invités.
- * - Autres rôles (HELPER, CONFLICT_MANAGEMENT, EVENT) : tickets non-spoiler dont la catégorie autorise leur rôle,
- *   plus les tickets où ils sont convoqués ou invités.
+ * - Autres rôles du staff : tickets de leur catégorie autorisée (Ticket RP ou Ticket technique),
+ *   plus les tickets où ils sont convoqués ou invités individuellement.
  */
 export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInput {
   if (!allStaffRoles.includes(user.role)) {
@@ -69,27 +63,21 @@ export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInp
         AND: [
           { categoryRef: null },
           // Repli sur categoryName pour les tickets sans référence
-          user.role === Role.DEVELOPER ? {} : { categoryName: { not: "Technique" } },
+          user.role === Role.DEVELOPER
+            ? {}
+            : {
+                AND: [
+                  { category: { not: TicketCategory.TECHNIQUE } },
+                  { categoryName: { notIn: ["Technique", "Ticket technique"] } },
+                ],
+              },
         ],
       },
     ],
   };
 
-  // L'équipe Suivi RP a accès aux spoilers des catégories qui l'autorisent (notamment RP)
-  if (user.role === Role.RP_TRACKING) {
-    return {
-      OR: [isSummonedOrExplicit, categoryMatchesRole],
-    };
-  }
-
-  // Les autres rôles du staff n'ont JAMAIS accès aux tickets spoilers (sauf convocation/invitation explicite)
   return {
-    OR: [
-      isSummonedOrExplicit,
-      {
-        AND: [{ isSpoiler: false }, categoryMatchesRole],
-      },
-    ],
+    OR: [isSummonedOrExplicit, categoryMatchesRole],
   };
 }
 

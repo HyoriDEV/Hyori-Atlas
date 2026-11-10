@@ -61,7 +61,7 @@ export function PlayerGalleryView({
         <div className="flex flex-col gap-1">
           <h1 className="font-heading text-2xl font-semibold">Mes captures</h1>
           <p className="text-muted-foreground text-xs">
-            Gérez vos clichés et suivez leur statut de modération.
+            Gère tes clichés et suis leur statut de modération.
           </p>
         </div>
 
@@ -187,15 +187,15 @@ export function PlayerGalleryView({
           <div className="flex max-w-sm flex-col gap-1">
             <h3 className="font-heading text-lg font-semibold">Aucune capture partagée</h3>
             <p className="text-muted-foreground text-sm">
-              Vous n&apos;avez pas encore envoyé de captures d&apos;écran. Partagez dès maintenant
-              vos plus beaux moments sur Hyori RP !
+              Tu n&apos;as pas encore envoyé de captures d&apos;écran. Partage dès maintenant tes
+              plus beaux moments sur Hyori RP !
             </p>
             <p className="text-muted-foreground/75 pt-1 text-xs">
-              Astuce : activez la touche{" "}
+              Astuce : active la touche{" "}
               <kbd className="border-border bg-muted rounded border px-1 py-0.5 font-mono text-[10px]">
                 F1
               </kbd>{" "}
-              en jeu pour masquer votre interface avant de prendre un cliché.
+              en jeu pour masquer ton interface avant de prendre un cliché.
             </p>
           </div>
         </div>
