@@ -74,6 +74,7 @@ export default async function RpTrackingStaffDetailPage(props: {
   let conversation = await prisma.conversation.findFirst({
     where: {
       type: ConversationType.RP_TRACKING,
+      rpTrackingGroup: null,
       members: { some: { userId: playerId } },
     },
     include: {
@@ -141,6 +142,7 @@ export default async function RpTrackingStaffDetailPage(props: {
   const chapters = await prisma.chapter.findMany({
     where: {
       playerId,
+      rpTrackingGroupId: null,
       ...(selectedCharacter ? { characterSheetId: selectedCharacter.id } : {}),
     },
     orderBy: { order: "asc" },

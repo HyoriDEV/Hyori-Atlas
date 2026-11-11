@@ -2,9 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircle, User, Users } from "@phosphor-icons/react/dist/ssr";
 
 import { requireRole } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
+import {
+  CharacterStatus,
+  RegistrationStatus,
+  SanctionType,
+} from "@/lib/generated/prisma/enums";
+import { getAllRpTrackingGroups } from "@/lib/services/group-rp-tracking-service";
+import { GroupTrackingTable } from "@/components/staff/rp-tracking/group-tracking-table";
+import type { PlayerOption } from "@/components/player-select";
 
 export const metadata: Metadata = {
   title: "Suivi RP et Narration",
@@ -76,6 +85,7 @@ export default async function RpTrackingStaffListPage(props: {
     sort?: string;
     page?: string;
     pageSize?: string;
+    view?: string;
   }>;
 }) {
   const staffUser = await requireRole(rpTrackingStaffRoles);
@@ -134,7 +144,52 @@ export default async function RpTrackingStaffListPage(props: {
       ? (savedPrefs.sort as RpTrackingSort)
       : DEFAULT_RP_TRACKING_SORT;
 
-  const { players, counts } = await getRpTrackingStates();
+  const view = searchParams.view === "groups" ? "groups" : "players";
+
+  const [{ players, counts }, allGroups, rawUsers] = await Promise.all([
+    getRpTrackingStates(),
+    getAllRpTrackingGroups(),
+    prisma.user.findMany({
+      where: {
+        registrationStatus: RegistrationStatus.WHITELISTED,
+        sanctions: {
+          none: {
+            type: SanctionType.EXCLUSION,
+            revokedAt: null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        minecraftUsername: true,
+        discordDisplayName: true,
+        discordUsername: true,
+        discordAvatarUrl: true,
+        role: true,
+        registrationStatus: true,
+        characterSheets: {
+          where: { status: CharacterStatus.ACTIVE },
+          take: 1,
+          select: { name: true, status: true },
+        },
+      },
+      orderBy: { discordDisplayName: "asc" },
+    }),
+  ]);
+
+  const availablePlayers: PlayerOption[] = rawUsers.map((u) => ({
+    id: u.id,
+    minecraftUsername: u.minecraftUsername,
+    discordDisplayName: u.discordDisplayName,
+    discordUsername: u.discordUsername,
+    discordAvatarUrl: u.discordAvatarUrl,
+    role: u.role,
+    registrationStatus: u.registrationStatus,
+    characterName: u.characterSheets[0]?.name ?? null,
+    characterSheets: u.characterSheets,
+  }));
+
+  const pendingGroupsCount = allGroups.filter((g) => g.isPending).length;
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
   let filteredPlayers = players;
@@ -198,22 +253,84 @@ export default async function RpTrackingStaffListPage(props: {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-heading text-2xl font-semibold">Suivi RP et Narration</h1>
-        <RpTrackingFilters query={query} writingEdited={writingEditedFilter} sort={sortOption} />
+        <div className="space-y-1">
+          <h1 className="font-heading text-2xl font-semibold">Suivi RP et Narration</h1>
+          <p className="text-muted-foreground text-xs">
+            Gérez les échanges narratifs et l&apos;évolution du lore des joueurs et des groupes RP.
+          </p>
+        </div>
+
+        {/* Sélecteur de vue : Individuels vs Groupes */}
+        <div className="bg-muted inline-flex items-center rounded-lg p-1 text-xs">
+          <Link
+            href="/staff/rp-tracking?view=players"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              view === "players"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <User className="size-3.5" />
+            <span>Suivis individuels</span>
+            <Badge
+              variant={view === "players" ? "secondary" : "outline"}
+              className="h-4.5 px-1.5 text-[10px]"
+            >
+              {counts.all}
+            </Badge>
+            {counts.pending > 0 && (
+              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
+                {counts.pending}
+              </Badge>
+            )}
+          </Link>
+          <Link
+            href="/staff/rp-tracking?view=groups"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              view === "groups"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="size-3.5" />
+            <span>Suivis de groupe</span>
+            <Badge
+              variant={view === "groups" ? "secondary" : "outline"}
+              className="h-4.5 px-1.5 text-[10px]"
+            >
+              {allGroups.length}
+            </Badge>
+            {pendingGroupsCount > 0 && (
+              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
+                {pendingGroupsCount}
+              </Badge>
+            )}
+          </Link>
+        </div>
       </div>
 
-      <ViewTabs
-        mobileSelect
-        activeView={tab}
-        defaultView={DEFAULT_RP_TRACKING_TAB}
-        tabs={[
-          { value: "pending", label: "À traiter", count: counts.pending },
-          { value: "handled", label: "Traités", count: counts.recent + counts.dormant },
-          { value: "none", label: "Sans suivi", count: counts.none },
-        ]}
-      />
+      {view === "groups" ? (
+        <GroupTrackingTable groups={allGroups} availablePlayers={availablePlayers} />
+      ) : (
+        <>
+          <div className="flex justify-end">
+            <RpTrackingFilters query={query} writingEdited={writingEditedFilter} sort={sortOption} />
+          </div>
 
-      <Card className="gap-0 overflow-hidden py-0">
+          <ViewTabs
+            mobileSelect
+            activeView={tab}
+            defaultView={DEFAULT_RP_TRACKING_TAB}
+            tabs={[
+              { value: "pending", label: "À traiter", count: counts.pending },
+              { value: "handled", label: "Traités", count: counts.recent + counts.dormant },
+              { value: "none", label: "Sans suivi", count: counts.none },
+            ]}
+          />
+
+          <Card className="gap-0 overflow-hidden py-0">
         <Table>
           <TableHeader>
             <TableRow>
@@ -416,6 +533,8 @@ export default async function RpTrackingStaffListPage(props: {
           pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
         />
       </Card>
+      </>
+      )}
     </div>
   );
 }

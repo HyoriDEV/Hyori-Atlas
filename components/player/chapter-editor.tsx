@@ -116,6 +116,8 @@ interface ChapterEditorProps {
   isSidebarOpen?: boolean;
   onToggleSidebar?: () => void;
   readOnly?: boolean;
+  saveContentAction?: (chapterId: string, content: string) => Promise<void>;
+  saveTitleAction?: (chapterId: string, title: string) => Promise<void>;
 }
 
 export function ChapterEditor({
@@ -127,6 +129,8 @@ export function ChapterEditor({
   isSidebarOpen = true,
   onToggleSidebar,
   readOnly = false,
+  saveContentAction,
+  saveTitleAction,
 }: ChapterEditorProps) {
   const [title, setTitle] = useState(initialTitle);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
@@ -211,9 +215,10 @@ export function ChapterEditor({
       onContentChange?.(html, count);
 
       setSaveState("saving");
+      const saveContentFn = saveContentAction ?? updateChapterContent;
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
       saveTimeoutRef.current = setTimeout(() => {
-        updateChapterContent(chapterId, html).then(() => {
+        saveContentFn(chapterId, html).then(() => {
           setSaveState("saved");
           const now = new Date();
           setLastSavedAt(
@@ -255,12 +260,13 @@ export function ChapterEditor({
     onTitleChange?.(newTitle);
 
     setSaveState("saving");
+    const saveTitleFn = saveTitleAction ?? updateChapterTitle;
     if (titleTimeoutRef.current) clearTimeout(titleTimeoutRef.current);
     titleTimeoutRef.current = setTimeout(async () => {
       const trimmed = newTitle.trim();
       if (!trimmed) return;
       try {
-        await updateChapterTitle(chapterId, trimmed);
+        await saveTitleFn(chapterId, trimmed);
         setSaveState("saved");
         const now = new Date();
         setLastSavedAt(

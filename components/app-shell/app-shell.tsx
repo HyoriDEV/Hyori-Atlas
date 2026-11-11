@@ -199,17 +199,19 @@ export function AppShell({
     .filter((group) => group.items.length > 0);
 
   const allNavItems = groups.flatMap((group) => group.items);
-  const isFullWidth = allNavItems.some((item) => {
-    if (!item.fullWidth) return false;
-    const isExactRoot =
-      item.href === "/player" ||
-      item.href === "/staff" ||
-      item.href === "/staff/tickets" ||
-      item.href === "/staff/backlog";
-    return isExactRoot
-      ? pathname === item.href
-      : pathname === item.href || pathname?.startsWith(`${item.href}/`);
-  });
+  const isFullWidth =
+    pathname === "/staff" ||
+    allNavItems.some((item) => {
+      if (!item.fullWidth) return false;
+      const isExactRoot =
+        item.href === "/player" ||
+        item.href === "/staff" ||
+        item.href === "/staff/tickets" ||
+        item.href === "/staff/backlog";
+      return isExactRoot
+        ? pathname === item.href
+        : pathname === item.href || pathname?.startsWith(`${item.href}/`);
+    });
 
   const isConversationPage = Boolean(
     (pathname?.startsWith("/staff/tickets/") && pathname !== "/staff/tickets") ||

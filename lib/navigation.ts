@@ -341,6 +341,7 @@ export const staffStaffTeamItem: StaffNavItem = {
 };
 
 export const staffNavItems: StaffNavItem[] = [
+  staffDashboardItem,
   staffTicketsItem,
   staffAtlasItem,
   staffBdaReportsItem,

@@ -191,6 +191,8 @@ model User {
   galleryTags             GalleryTaggedUser[]           @relation("UserGalleryTags")
   handledConversations    Conversation[]                @relation("ConversationHandledBy")
   createdStaffTopics      StaffTopic[]                  @relation("StaffTopicCreator")
+  rpTrackingGroupMemberships RpTrackingGroupMember[]    @relation("RpTrackingGroupMemberships")
+  createdRpTrackingGroups RpTrackingGroup[]             @relation("RpTrackingGroupCreator")
 
   @@index([rpGroupId])
   @@map("users")
@@ -415,6 +417,7 @@ model CharacterSheet {
   comments      CharacterSheetComment[]
   reviewHistory CharacterSheetReviewHistory[]
   chapters      Chapter[]
+  rpTrackingGroupMemberships RpTrackingGroupMember[]
 
   @@index([playerId])
   @@index([primaryClassId])
@@ -507,20 +510,23 @@ model StaffNote {
 }
 
 model Chapter {
-  id               String   @id @default(cuid())
-  playerId         String
-  characterSheetId String?
-  title            String   @db.VarChar(120)
-  content          String
-  order            Int      @default(0)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  id                String   @id @default(cuid())
+  playerId          String?
+  characterSheetId  String?
+  rpTrackingGroupId String?
+  title             String   @db.VarChar(120)
+  content           String
+  order             Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
-  player         User            @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  characterSheet CharacterSheet? @relation(fields: [characterSheetId], references: [id], onDelete: Cascade)
+  player          User?            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  characterSheet  CharacterSheet?  @relation(fields: [characterSheetId], references: [id], onDelete: Cascade)
+  rpTrackingGroup RpTrackingGroup? @relation(fields: [rpTrackingGroupId], references: [id], onDelete: Cascade)
 
   @@index([playerId])
   @@index([characterSheetId])
+  @@index([rpTrackingGroupId])
   @@map("chapters")
 }
 
@@ -528,7 +534,8 @@ model Conversation {
   id   String           @id @default(cuid())
   type ConversationType
 
-  ticket Ticket?
+  ticket          Ticket?
+  rpTrackingGroup RpTrackingGroup?
 
   lastHandledAt   DateTime?
   lastHandledById String?
@@ -542,6 +549,40 @@ model Conversation {
   messages ConversationMessage[]
 
   @@map("conversations")
+}
+
+model RpTrackingGroup {
+  id             String   @id @default(cuid())
+  name           String   @db.VarChar(120)
+  description    String?  @db.Text
+  conversationId String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  createdById    String?
+
+  conversation   Conversation            @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  createdBy      User?                   @relation("RpTrackingGroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  members        RpTrackingGroupMember[]
+  chapters       Chapter[]
+
+  @@map("rp_tracking_groups")
+}
+
+model RpTrackingGroupMember {
+  id               String          @id @default(cuid())
+  groupId          String
+  userId           String
+  characterSheetId String?
+  joinedAt         DateTime        @default(now())
+
+  group            RpTrackingGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user             User            @relation("RpTrackingGroupMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  characterSheet   CharacterSheet? @relation(fields: [characterSheetId], references: [id], onDelete: SetNull)
+
+  @@unique([groupId, userId])
+  @@index([userId])
+  @@index([characterSheetId])
+  @@map("rp_tracking_group_members")
 }
 
 model ConversationMember {

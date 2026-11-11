@@ -171,8 +171,8 @@ async function dispatchRpTrackingMessageNotifications({
   hasImage?: boolean;
 }): Promise<void> {
   try {
-    // Récupérer le membre joueur de ce suivi RP
-    const playerMember = await prisma.conversationMember.findFirst({
+    // Récupérer les membres joueurs de ce suivi RP (individuel ou groupe)
+    const playerMembers = await prisma.conversationMember.findMany({
       where: {
         conversationId,
         user: { role: Role.PLAYER },
@@ -192,35 +192,39 @@ async function dispatchRpTrackingMessageNotifications({
       },
     });
 
-    if (!playerMember?.user.discordId) {
-      return;
-    }
+    for (const playerMember of playerMembers) {
+      if (!playerMember.user.discordId) {
+        continue;
+      }
 
-    const lastReadThreshold = playerMember.lastReadAt ?? playerMember.joinedAt;
+      const lastReadThreshold = playerMember.lastReadAt ?? playerMember.joinedAt;
 
-    // Vérifier si le joueur avait déjà des messages non lus antérieurs à ce nouveau message
-    const priorUnreadMessage = await prisma.conversationMessage.findFirst({
-      where: {
-        conversationId,
-        id: { not: newMessageId },
-        deletedAt: null,
-        authorId: { not: playerMember.userId },
-        createdAt: { gt: lastReadThreshold },
-      },
-      select: { id: true },
-    });
-
-    // S'il n'avait aucun message non lu en attente, ce message est le premier de la salve : on notifie !
-    if (!priorUnreadMessage) {
-      const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
-      const characterName = playerMember.user.characterSheets[0]?.name ?? null;
-
-      await notifyPlayerRpTrackingMessage({
-        discordId: playerMember.user.discordId,
-        authorName,
-        characterName,
-        messagePreview: previewText,
+      // Vérifier si ce joueur avait déjà des messages non lus antérieurs à ce nouveau message
+      const priorUnreadMessage = await prisma.conversationMessage.findFirst({
+        where: {
+          conversationId,
+          id: { not: newMessageId },
+          deletedAt: null,
+          authorId: { not: playerMember.userId },
+          createdAt: { gt: lastReadThreshold },
+        },
+        select: { id: true },
       });
+
+      // S'il n'avait aucun message non lu en attente, ce message est le premier de la salve : on notifie !
+      if (!priorUnreadMessage) {
+        const previewText = messageBody ? messageBody : hasImage ? "[Image partagée]" : null;
+        const characterName = playerMember.user.characterSheets[0]?.name ?? null;
+
+        await notifyPlayerRpTrackingMessage({
+          discordId: playerMember.user.discordId,
+          authorName,
+          characterName,
+          messagePreview: previewText,
+        }).catch((err) => {
+          console.warn("[RpTrackingNotification] Échec pour", playerMember.userId, err);
+        });
+      }
     }
   } catch (error) {
     console.warn(

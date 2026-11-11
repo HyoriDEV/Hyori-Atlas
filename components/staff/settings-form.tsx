@@ -6,7 +6,7 @@ import { Check, UploadSimple, Trash, ArrowsClockwise } from "@phosphor-icons/rea
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { saveGlobalSettingsAction } from "@/lib/actions/settings-actions";
 import { uploadCountdownVideoAction } from "@/lib/actions/countdown-video-actions";
@@ -14,7 +14,7 @@ import { refreshAllSkinsStaffAction } from "@/lib/actions/minecraft-actions";
 import { GlobalSettings } from "@/lib/generated/prisma/client";
 import { cn } from "@/lib/utils";
 import { DiscordSettingsTab, type DiscordTemplateData } from "./discord-settings-tab";
-import { GallerySettingsTab } from "./gallery-settings-tab";
+import { GalleryCategoryManager } from "./gallery-category-manager";
 import { TicketsSettingsTab } from "./tickets-settings-tab";
 import type { TicketCategoryConfigData } from "@/lib/actions/ticket-config-actions";
 import type { GalleryCategoryItemConfig } from "@/lib/gallery-category-config";
@@ -193,8 +193,7 @@ export function SettingsForm({
       <Tabs defaultValue="modules" className="w-full gap-6">
         <TabsList className="bg-muted/50 p-1">
           <TabsTrigger value="modules">Modules</TabsTrigger>
-          <TabsTrigger value="public">Pages publiques</TabsTrigger>
-          <TabsTrigger value="gallery">Galerie</TabsTrigger>
+          <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="countdown">Accueil</TabsTrigger>
           <TabsTrigger value="minecraft">Minecraft</TabsTrigger>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
@@ -237,64 +236,200 @@ export function SettingsForm({
           </div>
         </TabsContent>
 
-        {/* 2. PAGES PUBLIQUES */}
-        <TabsContent value="public" keepMounted={true}>
-          <div className="bg-card divide-y rounded-lg border">
-            <SettingRow
-              name="publicNewsEnabled"
-              label="Page Actualités (/news)"
-              defaultChecked={defaultValues.publicNewsEnabled ?? true}
-            />
-            <SettingRow
-              name="publicRulesEnabled"
-              label="Page Règlement (/rules)"
-              defaultChecked={defaultValues.publicRulesEnabled ?? true}
-            />
-            <SettingRow
-              name="publicLoreEnabled"
-              label="Page Univers & Lore (/lore)"
-              defaultChecked={defaultValues.publicLoreEnabled ?? true}
-            />
+        {/* 2. PAGES (Fusion Pages publiques & Galerie) */}
+        <TabsContent value="pages" keepMounted={true} className="flex flex-col gap-6">
+          <div className="flex flex-col gap-2">
+            <span className="text-muted-foreground px-1 text-xs font-semibold tracking-wider uppercase">
+              Pages publiques
+            </span>
+            <div className="bg-card divide-y rounded-lg border">
+              <SettingRow
+                name="publicNewsEnabled"
+                label="Page Actualités (/news)"
+                defaultChecked={defaultValues.publicNewsEnabled ?? true}
+              />
+              <SettingRow
+                name="publicRulesEnabled"
+                label="Page Règlement (/rules)"
+                defaultChecked={defaultValues.publicRulesEnabled ?? true}
+              />
+              <SettingRow
+                name="publicLoreEnabled"
+                label="Page Univers & Lore (/lore)"
+                defaultChecked={defaultValues.publicLoreEnabled ?? true}
+              />
+              <SettingRow
+                name="publicGalleryEnabled"
+                label="Page Galerie (/gallery)"
+                defaultChecked={defaultValues.publicGalleryEnabled ?? true}
+              />
+            </div>
           </div>
-        </TabsContent>
 
-        {/* 3. GALERIE */}
-        <TabsContent value="gallery" keepMounted={true}>
-          <GallerySettingsTab
-            defaultValues={{
-              publicGalleryEnabled: defaultValues.publicGalleryEnabled,
-              gallerySubmissionsEnabled: defaultValues.gallerySubmissionsEnabled,
-              galleryAutoApprove: defaultValues.galleryAutoApprove,
-              galleryMaxDailyUploads: defaultValues.galleryMaxDailyUploads,
-            }}
-            initialCategories={initialGalleryCategories}
-          />
-        </TabsContent>
-
-        {/* 3. ACCUEIL & COMPTE À REBOURS */}
-        <TabsContent value="countdown" keepMounted={true} className="flex flex-col gap-6">
-          <div className="bg-card divide-y rounded-lg border">
-            <div
-              onClick={() => setCountdownEnabled(!countdownEnabled)}
-              className="hover:bg-muted/40 flex cursor-pointer items-center justify-between p-4 transition-colors select-none"
-            >
-              <span className="text-sm font-medium">
-                Activer le compte à rebours sur l&apos;accueil
-              </span>
-              <div onClick={(e) => e.stopPropagation()} className="flex items-center">
-                <Switch
-                  id="countdownEnabled"
-                  name="countdownEnabled"
-                  value="true"
-                  checked={countdownEnabled}
-                  onCheckedChange={setCountdownEnabled}
+          <div className="flex flex-col gap-2">
+            <span className="text-muted-foreground px-1 text-xs font-semibold tracking-wider uppercase">
+              Paramètres de la galerie
+            </span>
+            <div className="bg-card divide-y rounded-lg border">
+              <SettingRow
+                name="gallerySubmissionsEnabled"
+                label="Autoriser les soumissions de captures"
+                defaultChecked={defaultValues.gallerySubmissionsEnabled ?? true}
+              />
+              <SettingRow
+                name="galleryAutoApprove"
+                label="Publication automatique (sans modération préalable)"
+                defaultChecked={defaultValues.galleryAutoApprove ?? false}
+              />
+              <div className="flex items-center justify-between p-4">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium">Limite quotidienne par joueur</span>
+                  <span className="text-muted-foreground text-xs">
+                    Nombre maximum de captures qu&apos;un joueur peut soumettre par jour
+                  </span>
+                </div>
+                <input
+                  type="number"
+                  name="galleryMaxDailyUploads"
+                  min="1"
+                  max="50"
+                  defaultValue={defaultValues.galleryMaxDailyUploads ?? 5}
+                  className="border-input bg-background w-20 rounded-md border px-3 py-1.5 text-right text-sm font-medium"
                 />
               </div>
             </div>
           </div>
 
-          <Card>
-            <CardContent className="space-y-4 pt-6">
+          {/* Interface compacte pour les catégories d'images */}
+          <GalleryCategoryManager initialCategories={initialGalleryCategories} />
+        </TabsContent>
+
+        {/* 3. ACCUEIL & COMPTE À REBOURS */}
+        <TabsContent value="countdown" keepMounted={true} className="flex flex-col gap-6">
+          {/* Section Compte à rebours */}
+          <Card className="border-border/60">
+            <CardHeader className="p-4 pb-3 sm:p-5 sm:pb-4">
+              <div
+                onClick={() => setCountdownEnabled(!countdownEnabled)}
+                className="flex cursor-pointer items-center justify-between select-none"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <CardTitle className="text-sm font-semibold">
+                    Activer le compte à rebours sur l&apos;accueil
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    Affiche un minuteur décomptant le temps restant jusqu&apos;à la date d&apos;échéance sur la page d&apos;accueil.
+                  </CardDescription>
+                </div>
+                <div onClick={(e) => e.stopPropagation()} className="flex items-center">
+                  <Switch
+                    id="countdownEnabled"
+                    name="countdownEnabled"
+                    value="true"
+                    checked={countdownEnabled}
+                    onCheckedChange={setCountdownEnabled}
+                  />
+                </div>
+              </div>
+            </CardHeader>
+
+            <input
+              type="hidden"
+              id="countdownTargetDate"
+              name="countdownTargetDate"
+              value={combinedTargetDate}
+            />
+
+            {countdownEnabled ? (
+              <CardContent className="border-t p-4 pt-4 sm:p-5 sm:pt-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground text-xs font-medium">
+                      Date &amp; heure d&apos;échéance
+                    </span>
+                    {datePart && (
+                      <button
+                        type="button"
+                        onClick={clearDate}
+                        className="text-muted-foreground hover:text-destructive text-xs transition-colors hover:underline"
+                      >
+                        Effacer la date
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setPreset("tonight")}
+                      className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                    >
+                      Ce soir (20h)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreset("tomorrow")}
+                      className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                    >
+                      Demain (18h)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreset("weekend")}
+                      className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                    >
+                      Ce samedi (18h)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreset("in3days")}
+                      className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                    >
+                      +3 jours
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPreset("in1week")}
+                      className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
+                    >
+                      +1 semaine
+                    </button>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <input
+                      type="date"
+                      value={datePart}
+                      onChange={(e) => setDatePart(e.target.value)}
+                      className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <input
+                      type="time"
+                      value={timePart}
+                      onChange={(e) => setTimePart(e.target.value)}
+                      className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            ) : (
+              <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
+                <p className="text-muted-foreground text-xs italic">
+                  Le compte à rebours est actuellement désactivé. La page d&apos;accueil affichera le contenu ci-dessous sans minuteur.
+                </p>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Section Contenu & Médias */}
+          <Card className="border-border/60">
+            <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-3">
+              <CardTitle className="text-sm font-semibold">Contenu &amp; Médias de l&apos;accueil</CardTitle>
+              <CardDescription className="text-xs">
+                Personnalisez les textes de présentation et la vidéo d&apos;arrière-plan de la page d&apos;accueil.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-4 pt-2 sm:p-5 sm:pt-3">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <label
@@ -368,84 +503,6 @@ export function SettingsForm({
                     defaultValue={defaultValues.countdownDiscordUrl || "https://discord.gg/hyori"}
                     placeholder="https://discord.gg/hyori"
                     className="border-input bg-background focus:ring-ring w-full rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              {/* Date & Heure */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground text-xs font-medium">
-                    Date &amp; heure d&apos;échéance
-                  </span>
-                  {datePart && (
-                    <button
-                      type="button"
-                      onClick={clearDate}
-                      className="text-muted-foreground hover:text-destructive text-xs transition-colors hover:underline"
-                    >
-                      Effacer la date
-                    </button>
-                  )}
-                </div>
-
-                <input
-                  type="hidden"
-                  id="countdownTargetDate"
-                  name="countdownTargetDate"
-                  value={combinedTargetDate}
-                />
-
-                <div className="flex flex-wrap gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setPreset("tonight")}
-                    className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    Ce soir (20h)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreset("tomorrow")}
-                    className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    Demain (18h)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreset("weekend")}
-                    className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    Ce samedi (18h)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreset("in3days")}
-                    className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    +3 jours
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setPreset("in1week")}
-                    className="border-border bg-muted/30 hover:bg-muted text-foreground/80 rounded-md border px-2.5 py-1 text-xs transition-colors"
-                  >
-                    +1 semaine
-                  </button>
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <input
-                    type="date"
-                    value={datePart}
-                    onChange={(e) => setDatePart(e.target.value)}
-                    className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-                  />
-                  <input
-                    type="time"
-                    value={timePart}
-                    onChange={(e) => setTimePart(e.target.value)}
-                    className="border-input bg-background focus:ring-ring w-full cursor-pointer rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
                   />
                 </div>
               </div>
@@ -663,10 +720,7 @@ export function SettingsForm({
 
         {/* 6. TICKETS */}
         <TabsContent value="tickets" keepMounted={true}>
-          <TicketsSettingsTab
-            initialTemplates={initialDiscordTemplates}
-            initialCategories={initialTicketCategories}
-          />
+          <TicketsSettingsTab initialCategories={initialTicketCategories} />
         </TabsContent>
       </Tabs>
 

@@ -132,6 +132,7 @@ export async function getCharacterStats(range: StatisticsRange): Promise<Charact
   for (const chapter of chapters) {
     const words = countWords(chapter.content);
     totalWords += words;
+    if (!chapter.playerId || !chapter.player) continue;
     const author = authors.get(chapter.playerId) ?? {
       playerId: chapter.playerId,
       name: chapter.player.minecraftUsername ?? chapter.player.discordDisplayName,
