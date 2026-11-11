@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { ConversationType, Role, TicketStatus } from "@/lib/generated/prisma/enums";
+import { ConversationType, Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { allStaffRoles, rpTrackingStaffRoles } from "@/lib/navigation";
 
@@ -13,10 +13,10 @@ export interface TicketAccessUser {
 const NO_TICKET: Prisma.TicketWhereInput = { id: { in: [] } };
 
 /**
- * Tous les membres du staff ont un accès complet à l'ensemble des tickets.
+ * Seuls les administrateurs ont un accès global à tous les tickets sans restriction de catégorie.
  */
 export function hasFullTicketAccess(role: Role): boolean {
-  return allStaffRoles.includes(role);
+  return role === Role.ADMIN;
 }
 
 /**
@@ -37,13 +37,38 @@ export function isTicketSecret(): boolean {
 /**
  * Filtre Prisma des tickets visibles par un membre du staff :
  * - Non-staff : aucun ticket.
- * - Tout rôle staff : l'ensemble des tickets.
+ * - ADMIN : tous les tickets.
+ * - Autres rôles du staff : tickets des catégories autorisant leur rôle.
  */
 export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInput {
   if (!allStaffRoles.includes(user.role)) {
     return NO_TICKET;
   }
-  return {};
+  if (user.role === Role.ADMIN) {
+    return {};
+  }
+
+  const categoryMatchesRole: Prisma.TicketWhereInput = {
+    OR: [
+      { categoryRef: { allowedRoles: { has: user.role } } },
+      {
+        AND: [
+          { categoryRef: null },
+          // Repli sur categoryName pour les tickets sans référence
+          user.role === Role.DEVELOPER
+            ? {}
+            : {
+                AND: [
+                  { category: { not: TicketCategory.TECHNIQUE } },
+                  { categoryName: { notIn: ["Technique", "Ticket technique"] } },
+                ],
+              },
+        ],
+      },
+    ],
+  };
+
+  return categoryMatchesRole;
 }
 
 export async function canAccessTicket(user: TicketAccessUser, ticketId: string): Promise<boolean> {

@@ -30,8 +30,26 @@ export async function getChannelNotificationConfig(templateId: DiscordTemplateId
   const record = templatesMap.get(templateId);
 
   const enabled = record ? record.enabled : true;
-  const channelId = record?.channelId?.trim() || null;
+  let channelId = record?.channelId?.trim() || null;
   const mentionRoleId = record?.roleId?.trim() || null;
+
+  // Si c'est une alerte du salon unique #admissions et que le channelId n'est pas renseigné individuellement,
+  // on hérite du channelId configuré sur le salon #admissions (ex: WAITLIST_REGISTRATION ou autre)
+  if (
+    !channelId &&
+    (templateId === "WAITLIST_REGISTRATION" ||
+      templateId === "CHARACTER_SHEET_SUBMITTED" ||
+      templateId === "INTERVIEW_SLOT_BOOKED")
+  ) {
+    const admissionsChannel =
+      templatesMap.get("WAITLIST_REGISTRATION")?.channelId?.trim() ||
+      templatesMap.get("CHARACTER_SHEET_SUBMITTED")?.channelId?.trim() ||
+      templatesMap.get("INTERVIEW_SLOT_BOOKED")?.channelId?.trim() ||
+      null;
+    if (admissionsChannel) {
+      channelId = admissionsChannel;
+    }
+  }
 
   return {
     enabled,

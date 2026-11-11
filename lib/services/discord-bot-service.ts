@@ -394,6 +394,8 @@ export async function notifyPlayerRpTrackingMessage(
 export interface TicketCreatedNotificationOptions {
   channelId?: string | null;
   mentionRoleId?: string | null;
+  discordId?: string | null;
+  avatarUrl?: string | null;
   ticketId: string;
   ticketSubject: string;
   ticketCategory: string;
@@ -417,6 +419,8 @@ export async function notifyTicketCreated(
     {
       channelId: options.channelId ?? undefined,
       mentionRoleId: options.mentionRoleId ?? undefined,
+      discordId: options.discordId ?? undefined,
+      avatarUrl: options.avatarUrl ?? undefined,
       ticketId: options.ticketId,
       ticketSubject: options.ticketSubject,
       ticketCategory: options.ticketCategory,
@@ -723,6 +727,203 @@ export async function notifyWaitlistRegistrationForUser(user: {
     minecraftUuid: user.minecraftUuid,
     avatarUrl: user.discordAvatarUrl,
     customWaitlistStaffUrl: waitlistStaffUrl,
+  });
+}
+
+export interface CharacterSheetSubmittedNotificationOptions {
+  channelId?: string | null;
+  mentionRoleId?: string | null;
+  discordId?: string | null;
+  playerName: string;
+  minecraftUsername?: string | null;
+  characterName: string;
+  characterClass?: string | null;
+  avatarUrl?: string | null;
+  customEvaluationStaffUrl?: string | null;
+}
+
+/**
+ * Notifie le staff sur le salon #admissions
+ * lorsqu'un joueur soumet sa fiche de personnage RP pour relecture et évaluation.
+ */
+export async function notifyCharacterSheetSubmitted(
+  options: CharacterSheetSubmittedNotificationOptions
+): Promise<BotNotificationResult> {
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/character-sheet-submitted",
+    "POST",
+    {
+      channelId: options.channelId ?? undefined,
+      mentionRoleId: options.mentionRoleId ?? undefined,
+      discordId: options.discordId ?? undefined,
+      playerName: options.playerName,
+      minecraftUsername: options.minecraftUsername ?? undefined,
+      characterName: options.characterName,
+      characterClass: options.characterClass ?? undefined,
+      avatarUrl: options.avatarUrl ?? undefined,
+      evaluationStaffUrl: options.customEvaluationStaffUrl ?? undefined,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "Character sheet submitted notification sent successfully",
+    }
+  );
+}
+
+/**
+ * Déclenche la notification d'envoi de fiche RP en évaluation sur #admissions pour un joueur,
+ * en vérifiant les paramètres dynamiques configurés.
+ */
+export async function notifyCharacterSheetSubmittedForUser(params: {
+  user: {
+    id: string;
+    discordId?: string | null;
+    discordDisplayName?: string | null;
+    discordUsername?: string | null;
+    discordAvatarUrl?: string | null;
+    minecraftUsername?: string | null;
+  };
+  characterName: string;
+  characterClass?: string | null;
+}): Promise<BotNotificationResult> {
+  const { getChannelNotificationConfig } = await import("./discord-template-service");
+
+  const playerName =
+    params.user.discordDisplayName ||
+    params.user.discordUsername ||
+    params.user.minecraftUsername ||
+    "Un joueur";
+  const evaluationStaffUrl = `${getAtlasBaseUrl()}/staff/atlas/${params.user.id}/evaluation`;
+
+  const config = await getChannelNotificationConfig("CHARACTER_SHEET_SUBMITTED");
+
+  if (!config.enabled) {
+    return {
+      success: true,
+      notified: false,
+      message: "Notification de soumission de fiche RP désactivée par configuration",
+    };
+  }
+
+  return notifyCharacterSheetSubmitted({
+    channelId: config.channelId,
+    mentionRoleId: config.mentionRoleId,
+    discordId: params.user.discordId,
+    playerName,
+    minecraftUsername: params.user.minecraftUsername,
+    characterName: params.characterName,
+    characterClass: params.characterClass,
+    avatarUrl: params.user.discordAvatarUrl,
+    customEvaluationStaffUrl: evaluationStaffUrl,
+  });
+}
+
+export interface InterviewSlotBookedNotificationOptions {
+  channelId?: string | null;
+  mentionRoleId?: string | null;
+  discordId?: string | null;
+  playerName: string;
+  minecraftUsername?: string | null;
+  slotDate: string;
+  avatarUrl?: string | null;
+  customInterviewStaffUrl?: string | null;
+}
+
+/**
+ * Notifie le staff sur le salon #admissions
+ * lorsqu'un joueur réserve son créneau d'entretien oral.
+ */
+export async function notifyInterviewSlotBooked(
+  options: InterviewSlotBookedNotificationOptions
+): Promise<BotNotificationResult> {
+  const result = await callDiscordBot<BotNotificationResult>(
+    "/notifications/interview-slot-booked",
+    "POST",
+    {
+      channelId: options.channelId ?? undefined,
+      mentionRoleId: options.mentionRoleId ?? undefined,
+      discordId: options.discordId ?? undefined,
+      playerName: options.playerName,
+      minecraftUsername: options.minecraftUsername ?? undefined,
+      slotDate: options.slotDate,
+      avatarUrl: options.avatarUrl ?? undefined,
+      interviewStaffUrl: options.customInterviewStaffUrl ?? undefined,
+    }
+  );
+
+  if (!result.success) {
+    return {
+      success: false,
+      notified: false,
+      error: result.error,
+    };
+  }
+
+  return (
+    result.data ?? {
+      success: true,
+      notified: true,
+      message: "Interview slot booked notification sent successfully",
+    }
+  );
+}
+
+/**
+ * Déclenche la notification de réservation de créneau d'entretien sur #admissions pour un joueur,
+ * en vérifiant les paramètres dynamiques configurés.
+ */
+export async function notifyInterviewSlotBookedForUser(params: {
+  user: {
+    discordId?: string | null;
+    discordDisplayName?: string | null;
+    discordUsername?: string | null;
+    discordAvatarUrl?: string | null;
+    minecraftUsername?: string | null;
+  };
+  slotDate: Date | string;
+}): Promise<BotNotificationResult> {
+  const { getChannelNotificationConfig } = await import("./discord-template-service");
+
+  const playerName =
+    params.user.discordDisplayName ||
+    params.user.discordUsername ||
+    params.user.minecraftUsername ||
+    "Un joueur";
+  const interviewStaffUrl = `${getAtlasBaseUrl()}/staff/interview-slots`;
+  const slotDateIso =
+    params.slotDate instanceof Date ? params.slotDate.toISOString() : String(params.slotDate);
+
+  const config = await getChannelNotificationConfig("INTERVIEW_SLOT_BOOKED");
+
+  if (!config.enabled) {
+    return {
+      success: true,
+      notified: false,
+      message: "Notification de réservation d'entretien désactivée par configuration",
+    };
+  }
+
+  return notifyInterviewSlotBooked({
+    channelId: config.channelId,
+    mentionRoleId: config.mentionRoleId,
+    discordId: params.user.discordId,
+    playerName,
+    minecraftUsername: params.user.minecraftUsername,
+    slotDate: slotDateIso,
+    avatarUrl: params.user.discordAvatarUrl,
+    customInterviewStaffUrl: interviewStaffUrl,
   });
 }
 

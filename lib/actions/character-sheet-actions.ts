@@ -294,6 +294,25 @@ export async function submitCharacterSheet(input: CharacterSheetInput, sheetId?:
   });
 
   revalidateSheetSurfaces(user.id);
+
+  // Notifie le staff dans le salon #admissions
+  import("@/lib/services/discord-bot-service")
+    .then((mod) =>
+      mod.notifyCharacterSheetSubmittedForUser({
+        user: {
+          id: user.id,
+          discordId: user.discordId,
+          discordDisplayName: user.discordDisplayName,
+          discordUsername: user.discordUsername,
+          discordAvatarUrl: user.discordAvatarUrl,
+          minecraftUsername: user.minecraftUsername,
+        },
+        characterName: data.name,
+      })
+    )
+    .catch((err) => {
+      console.warn("[CharacterSheetNotification] Échec lors de la notification staff:", err);
+    });
 }
 
 export async function upsertCharacterSheet(input: CharacterSheetInput, sheetId?: string) {
