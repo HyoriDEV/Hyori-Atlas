@@ -16,9 +16,7 @@ interface GalleryCategoryManagerProps {
   initialCategories?: GalleryCategoryItemConfig[];
 }
 
-export function GalleryCategoryManager({
-  initialCategories = [],
-}: GalleryCategoryManagerProps) {
+export function GalleryCategoryManager({ initialCategories = [] }: GalleryCategoryManagerProps) {
   const [categories, setCategories] = useState<GalleryCategoryItemConfig[]>(initialCategories);
   const [isPending, startTransition] = useTransition();
 
@@ -54,11 +52,12 @@ export function GalleryCategoryManager({
       <CardHeader className="flex flex-row items-center justify-between gap-3 p-4 pb-3">
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <Tag className="size-4 text-primary" />
+            <Tag className="text-primary size-4" />
             <CardTitle className="text-sm font-semibold">Catégories d&apos;images</CardTitle>
           </div>
           <CardDescription className="text-xs">
-            Activez les catégories disponibles pour les joueurs et personnalisez leurs libellés sur le site.
+            Activez les catégories disponibles pour les joueurs et personnalisez leurs libellés sur
+            le site.
           </CardDescription>
         </div>
         <Button
@@ -75,11 +74,11 @@ export function GalleryCategoryManager({
       </CardHeader>
 
       <CardContent className="p-4 pt-0">
-        <div className="divide-y rounded-md border bg-muted/10">
+        <div className="bg-muted/10 divide-y rounded-md border">
           {categories.map((cat) => (
             <div
               key={cat.id}
-              className="flex items-center justify-between gap-3 p-2.5 text-xs transition-colors hover:bg-muted/20"
+              className="hover:bg-muted/20 flex items-center justify-between gap-3 p-2.5 text-xs transition-colors"
             >
               <div className="flex items-center gap-2.5">
                 <Switch
@@ -88,15 +87,13 @@ export function GalleryCategoryManager({
                   id={`cat-switch-${cat.id}`}
                   className="scale-90"
                 />
-                <span className="font-mono text-[11px] uppercase text-muted-foreground">
+                <span className="text-muted-foreground font-mono text-[11px] uppercase">
                   {cat.id}
                 </span>
                 <span
                   className={cn(
                     "text-[10px] font-medium",
-                    cat.enabled
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-muted-foreground"
+                    cat.enabled ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"
                   )}
                 >
                   {cat.enabled ? "Active" : "Désactivée"}

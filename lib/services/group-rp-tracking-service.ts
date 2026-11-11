@@ -1,14 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import {
-  CharacterStatus,
-  ConversationType,
-  MessageAuthorType,
-  RegistrationStatus,
-  SanctionType,
-} from "@/lib/generated/prisma/enums";
-import type { Prisma } from "@/lib/generated/prisma/client";
+import { CharacterStatus, MessageAuthorType } from "@/lib/generated/prisma/enums";
 import { serializeConversationMessage } from "@/lib/conversation";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
 import type { ChapterItem } from "@/components/dashboard/chapter-reader";
@@ -177,8 +170,7 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
       createdAt: g.createdAt,
       updatedAt: g.updatedAt,
       createdById: g.createdById,
-      createdByName:
-        g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
+      createdByName: g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
       members,
       memberCount: members.length,
       chapterCount: g._count.chapters,
@@ -329,9 +321,7 @@ export async function getRpTrackingGroupDetail(
   if (viewerId && group.conversation.members && group.conversation.members[0]) {
     const membership = group.conversation.members[0];
     const threshold = membership.lastReadAt ?? membership.joinedAt;
-    unreadCount = messages.filter(
-      (m) => m.authorId !== viewerId && m.createdAt > threshold
-    ).length;
+    unreadCount = messages.filter((m) => m.authorId !== viewerId && m.createdAt > threshold).length;
   }
 
   const serializedMessages = [...messages]
@@ -463,7 +453,8 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
     const member = g.conversation.members[0];
     const lastMsg = g.conversation.messages[0];
     const threshold = member?.lastReadAt ?? member?.joinedAt ?? new Date(0);
-    const unreadCount = lastMsg && lastMsg.authorId !== userId && lastMsg.createdAt > threshold ? 1 : 0;
+    const unreadCount =
+      lastMsg && lastMsg.authorId !== userId && lastMsg.createdAt > threshold ? 1 : 0;
 
     const members: RpTrackingGroupMemberInfo[] = g.members.map((m) => {
       const activeSheet = m.characterSheet ?? m.user.characterSheets[0];
@@ -493,8 +484,7 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
       createdAt: g.createdAt,
       updatedAt: g.updatedAt,
       createdById: g.createdById,
-      createdByName:
-        g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
+      createdByName: g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
       members,
       memberCount: members.length,
       chapterCount: g._count.chapters,
@@ -518,4 +508,3 @@ export async function getPendingGroupRpTrackingCount(): Promise<number> {
   const groups = await getAllRpTrackingGroups();
   return groups.filter((g) => g.isPending).length;
 }
-

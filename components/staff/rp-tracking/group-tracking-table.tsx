@@ -6,10 +6,8 @@ import { useRouter } from "next/navigation";
 import {
   ChatCircle,
   BookOpen,
-  Users,
   MagnifyingGlass,
   ArrowSquareOut,
-  PencilSimple,
   Trash,
   CircleNotch,
 } from "@phosphor-icons/react";
@@ -19,7 +17,6 @@ import { cn } from "@/lib/utils";
 import { formatDate } from "@/lib/date";
 import type { RpTrackingGroupSummary } from "@/lib/services/group-rp-tracking-service";
 import type { PlayerOption } from "@/components/player-select";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { SkinHead } from "@/components/ui/skin-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -170,7 +167,9 @@ export function GroupTrackingTable({
           <TableHeader>
             <TableRow>
               <TableHead className="w-[30%]">Groupe RP</TableHead>
-              <TableHead className="w-[30%]">Membres ({groups.reduce((acc, g) => acc + g.memberCount, 0)} au total)</TableHead>
+              <TableHead className="w-[30%]">
+                Membres ({groups.reduce((acc, g) => acc + g.memberCount, 0)} au total)
+              </TableHead>
               <TableHead className="text-center">Narration</TableHead>
               <TableHead className="text-center">Échanges</TableHead>
               <TableHead>Statut</TableHead>
@@ -267,7 +266,10 @@ export function GroupTrackingTable({
                         À traiter
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-muted-foreground text-xs font-normal">
+                      <Badge
+                        variant="secondary"
+                        className="text-muted-foreground text-xs font-normal"
+                      >
                         Traité
                       </Badge>
                     )}
@@ -313,7 +315,8 @@ export function GroupTrackingTable({
               Êtes-vous sûr de vouloir supprimer définitivement le groupe{" "}
               <strong>« {deletingGroup?.name} »</strong> ?
               <br />
-              Cette action supprimera également tous les échanges et chapitres associés pour l&apos;ensemble des membres.
+              Cette action supprimera également tous les échanges et chapitres associés pour
+              l&apos;ensemble des membres.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

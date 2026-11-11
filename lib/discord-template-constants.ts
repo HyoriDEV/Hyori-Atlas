@@ -1,7 +1,5 @@
 export type DiscordTemplateId =
-  | "TICKET_RP_CREATED"
-  | "TICKET_TECH_CREATED"
-  | "WAITLIST_REGISTRATION";
+  "TICKET_RP_CREATED" | "TICKET_TECH_CREATED" | "WAITLIST_REGISTRATION";
 
 export interface DefaultTemplateConfig {
   id: DiscordTemplateId;

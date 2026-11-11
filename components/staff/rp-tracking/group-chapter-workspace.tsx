@@ -67,9 +67,7 @@ export function GroupChapterWorkspace({
   initialChapters: ChapterItem[];
 }) {
   const [chapters, setChapters] = useState<ChapterItem[]>(initialChapters);
-  const [selectedId, setSelectedId] = useState<string>(
-    initialChapters[0]?.id ?? ""
-  );
+  const [selectedId, setSelectedId] = useState<string>(initialChapters[0]?.id ?? "");
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -86,9 +84,7 @@ export function GroupChapterWorkspace({
     if (!searchQuery.trim()) return chapters;
     const q = searchQuery.toLowerCase();
     return chapters.filter(
-      (c) =>
-        c.title.toLowerCase().includes(q) ||
-        c.content.toLowerCase().includes(q)
+      (c) => c.title.toLowerCase().includes(q) || c.content.toLowerCase().includes(q)
     );
   }, [chapters, searchQuery]);
 
@@ -96,10 +92,7 @@ export function GroupChapterWorkspace({
     startTransition(async () => {
       try {
         const nextNum = chapters.length + 1;
-        const newChapter = await createGroupChapterAction(
-          groupId,
-          `Chapitre ${nextNum}`
-        );
+        const newChapter = await createGroupChapterAction(groupId, `Chapitre ${nextNum}`);
         const item: ChapterItem = {
           id: newChapter.id,
           title: newChapter.title,
@@ -111,9 +104,7 @@ export function GroupChapterWorkspace({
         setSelectedId(item.id);
         toast.success("Nouveau chapitre créé.");
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Erreur lors de la création."
-        );
+        toast.error(err instanceof Error ? err.message : "Erreur lors de la création.");
       }
     });
   }
@@ -135,9 +126,7 @@ export function GroupChapterWorkspace({
         });
         toast.success("Chapitre supprimé.");
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Erreur lors de la suppression."
-        );
+        toast.error(err instanceof Error ? err.message : "Erreur lors de la suppression.");
       }
     });
   }
@@ -157,9 +146,7 @@ export function GroupChapterWorkspace({
         setSelectedId(item.id);
         toast.success("Chapitre dupliqué.");
       } catch (err) {
-        toast.error(
-          err instanceof Error ? err.message : "Erreur lors de la duplication."
-        );
+        toast.error(err instanceof Error ? err.message : "Erreur lors de la duplication.");
       }
     });
   }
@@ -186,17 +173,13 @@ export function GroupChapterWorkspace({
   }
 
   function handleTitleChange(newTitle: string) {
-    setChapters((prev) =>
-      prev.map((c) => (c.id === selectedId ? { ...c, title: newTitle } : c))
-    );
+    setChapters((prev) => prev.map((c) => (c.id === selectedId ? { ...c, title: newTitle } : c)));
   }
 
   function handleContentChange(newContent: string) {
     setChapters((prev) =>
       prev.map((c) =>
-        c.id === selectedId
-          ? { ...c, content: newContent, updatedAt: new Date() }
-          : c
+        c.id === selectedId ? { ...c, content: newContent, updatedAt: new Date() } : c
       )
     );
   }
@@ -232,9 +215,7 @@ export function GroupChapterWorkspace({
           <div className="border-border flex shrink-0 items-center justify-between border-b p-3">
             <div className="flex items-center gap-2">
               <BookBookmark className="text-primary size-4" />
-              <h4 className="font-heading text-sm font-semibold">
-                Narration ({chapters.length})
-              </h4>
+              <h4 className="font-heading text-sm font-semibold">Narration ({chapters.length})</h4>
             </div>
             <div className="flex items-center gap-1">
               {chapters.length > 0 && (
@@ -371,7 +352,7 @@ export function GroupChapterWorkspace({
       )}
 
       {/* Éditeur de chapitre */}
-      <main className="min-h-0 flex-1 overflow-hidden bg-background">
+      <main className="bg-background min-h-0 flex-1 overflow-hidden">
         {selectedChapter ? (
           <ChapterEditor
             key={selectedChapter.id}
@@ -398,10 +379,7 @@ export function GroupChapterWorkspace({
       </main>
 
       {/* Modal de suppression de chapitre */}
-      <AlertDialog
-        open={!!deletingId}
-        onOpenChange={(open) => !open && setDeletingId(null)}
-      >
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce chapitre ?</AlertDialogTitle>

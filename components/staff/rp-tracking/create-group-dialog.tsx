@@ -97,7 +97,8 @@ export function CreateGroupDialog({
               <span>Créer un groupe de suivi RP</span>
             </DialogTitle>
             <DialogDescription>
-              Créez un espace de suivi RP partagé (narration et conversation) pour plusieurs joueurs.
+              Créez un espace de suivi RP partagé (narration et conversation) pour plusieurs
+              joueurs.
             </DialogDescription>
           </DialogHeader>
 

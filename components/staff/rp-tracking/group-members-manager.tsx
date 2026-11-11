@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { UserPlus, UserMinus, Users, CircleNotch, X } from "@phosphor-icons/react";
+import { UserPlus, Users, CircleNotch, X } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
 import type { RpTrackingGroupMemberInfo } from "@/lib/services/group-rp-tracking-service";
 import type { PlayerOption } from "@/components/player-select";
 import { PlayerSelect } from "@/components/player-select";
 import { SkinHead } from "@/components/ui/skin-head";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -123,17 +122,10 @@ export function GroupMembersManager({
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button
-                variant="outline"
-                onClick={() => setAddDialogOpen(false)}
-                disabled={isAdding}
-              >
+              <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={isAdding}>
                 Annuler
               </Button>
-              <Button
-                onClick={handleAddMember}
-                disabled={!selectedPlayerId || isAdding}
-              >
+              <Button onClick={handleAddMember} disabled={!selectedPlayerId || isAdding}>
                 {isAdding ? (
                   <>
                     <CircleNotch className="size-4 animate-spin" />
@@ -166,14 +158,14 @@ export function GroupMembersManager({
                 size="sm"
               />
               <div className="flex flex-col">
-                <span className="text-xs font-medium leading-tight">{member.playerName}</span>
+                <span className="text-xs leading-tight font-medium">{member.playerName}</span>
                 {member.character ? (
                   <span className="text-muted-foreground text-[10px] leading-tight">
                     {member.character.name}
                     {member.character.className && ` (${member.character.className})`}
                   </span>
                 ) : (
-                  <span className="text-muted-foreground text-[10px] italic leading-tight">
+                  <span className="text-muted-foreground text-[10px] leading-tight italic">
                     Sans fiche active
                   </span>
                 )}
@@ -203,7 +195,8 @@ export function GroupMembersManager({
             <AlertDialogTitle>Retirer ce membre du groupe ?</AlertDialogTitle>
             <AlertDialogDescription>
               Êtes-vous sûr de vouloir retirer <strong>{memberToRemove?.playerName}</strong> de ce
-              groupe de suivi RP ? Ce joueur n&apos;aura plus accès aux échanges ni à la narration de ce groupe.
+              groupe de suivi RP ? Ce joueur n&apos;aura plus accès aux échanges ni à la narration
+              de ce groupe.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

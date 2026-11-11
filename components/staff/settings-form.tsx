@@ -318,7 +318,8 @@ export function SettingsForm({
                     Activer le compte à rebours sur l&apos;accueil
                   </CardTitle>
                   <CardDescription className="text-xs">
-                    Affiche un minuteur décomptant le temps restant jusqu&apos;à la date d&apos;échéance sur la page d&apos;accueil.
+                    Affiche un minuteur décomptant le temps restant jusqu&apos;à la date
+                    d&apos;échéance sur la page d&apos;accueil.
                   </CardDescription>
                 </div>
                 <div onClick={(e) => e.stopPropagation()} className="flex items-center">
@@ -415,7 +416,8 @@ export function SettingsForm({
             ) : (
               <CardContent className="p-4 pt-0 sm:p-5 sm:pt-0">
                 <p className="text-muted-foreground text-xs italic">
-                  Le compte à rebours est actuellement désactivé. La page d&apos;accueil affichera le contenu ci-dessous sans minuteur.
+                  Le compte à rebours est actuellement désactivé. La page d&apos;accueil affichera
+                  le contenu ci-dessous sans minuteur.
                 </p>
               </CardContent>
             )}
@@ -424,9 +426,12 @@ export function SettingsForm({
           {/* Section Contenu & Médias */}
           <Card className="border-border/60">
             <CardHeader className="p-4 pb-2 sm:p-5 sm:pb-3">
-              <CardTitle className="text-sm font-semibold">Contenu &amp; Médias de l&apos;accueil</CardTitle>
+              <CardTitle className="text-sm font-semibold">
+                Contenu &amp; Médias de l&apos;accueil
+              </CardTitle>
               <CardDescription className="text-xs">
-                Personnalisez les textes de présentation et la vidéo d&apos;arrière-plan de la page d&apos;accueil.
+                Personnalisez les textes de présentation et la vidéo d&apos;arrière-plan de la page
+                d&apos;accueil.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 p-4 pt-2 sm:p-5 sm:pt-3">

@@ -25,7 +25,7 @@ export function PlayerGroupView({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {/* En-tête et membres du groupe */}
-      <div className="flex flex-col gap-2 rounded-lg border bg-card/60 p-3.5">
+      <div className="bg-card/60 flex flex-col gap-2 rounded-lg border p-3.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
@@ -85,9 +85,7 @@ export function PlayerGroupView({
               />
               <span className="font-medium">{member.playerName}</span>
               {member.character && (
-                <span className="text-muted-foreground text-[10px]">
-                  · {member.character.name}
-                </span>
+                <span className="text-muted-foreground text-[10px]">· {member.character.name}</span>
               )}
             </div>
           ))}
@@ -95,7 +93,7 @@ export function PlayerGroupView({
       </div>
 
       {/* Contenu : Conversation ou Narration */}
-      <div className="min-h-0 flex-1 overflow-hidden rounded-lg border bg-card">
+      <div className="bg-card min-h-0 flex-1 overflow-hidden rounded-lg border">
         {activeTab === "chat" ? (
           <ConversationChat
             conversationId={group.conversationId}
@@ -112,7 +110,9 @@ export function PlayerGroupView({
               <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 p-8 text-center text-sm">
                 <BookOpen className="size-10 opacity-40" />
                 <p>Aucun chapitre de narration n&apos;a encore été publié pour ce groupe.</p>
-                <p className="text-xs">Le staff publiera ici les récits et trames de votre groupe.</p>
+                <p className="text-xs">
+                  Le staff publiera ici les récits et trames de votre groupe.
+                </p>
               </div>
             ) : (
               <ChapterReader chapters={group.chapters} className="min-h-0 flex-1" />

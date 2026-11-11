@@ -114,8 +114,8 @@ export default async function WritingPage(props: {
       )}
 
       {userGroups.length > 0 && (
-        <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/40 p-2.5 text-xs">
-          <span className="font-medium text-muted-foreground">Vos trames de groupe :</span>
+        <div className="bg-muted/40 flex flex-wrap items-center gap-2 rounded-lg border p-2.5 text-xs">
+          <span className="text-muted-foreground font-medium">Vos trames de groupe :</span>
           {userGroups.map((group) => (
             <Button
               key={group.id}
@@ -124,12 +124,12 @@ export default async function WritingPage(props: {
               className="h-7 gap-1.5 text-xs"
               render={<Link href={`/player/rp-tracking?groupId=${group.id}&tab=narration`} />}
             >
-              <Users className="size-3.5 text-primary" />
+              <Users className="text-primary size-3.5" />
               <span>{group.name}</span>
               <Badge variant="secondary" className="px-1 py-0 text-[10px]">
                 {group.chapterCount} chap.
               </Badge>
-              <ArrowSquareOut className="size-3 text-muted-foreground" />
+              <ArrowSquareOut className="text-muted-foreground size-3" />
             </Button>
           ))}
         </div>

@@ -24,7 +24,7 @@ export function PlayerRpSwitcher({
   const isPersonalActive = !currentGroupId;
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border bg-card p-3 shadow-xs">
+    <div className="bg-card flex flex-col gap-3 rounded-lg border p-3 shadow-xs">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {/* Navigation entre les suivis */}
         <div className="flex flex-wrap items-center gap-1.5">
@@ -99,4 +99,3 @@ export function PlayerRpSwitcher({
     </div>
   );
 }
-

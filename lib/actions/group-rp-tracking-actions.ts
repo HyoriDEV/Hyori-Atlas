@@ -196,7 +196,7 @@ export async function addRpTrackingGroupMemberAction(
   userId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const staffUser = await requireRole(rpTrackingStaffRoles);
+    await requireRole(rpTrackingStaffRoles);
 
     const group = await prisma.rpTrackingGroup.findUnique({
       where: { id: groupId },
@@ -538,4 +538,3 @@ export async function reorderGroupChaptersAction(
   revalidatePath(`/staff/rp-tracking/groups/${groupId}`);
   revalidatePath("/player/rp-tracking");
 }
-

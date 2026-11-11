@@ -1,20 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import {
-  BookOpen,
-  ChatCircle,
-  Columns,
-  Tabs as TabsIcon,
-  Users,
-} from "@phosphor-icons/react";
+import { BookOpen, ChatCircle, Columns, Users } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import type { RpTrackingGroupDetail } from "@/lib/services/group-rp-tracking-service";
 import type { PlayerOption } from "@/components/player-select";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { sendStaffConversationMessage } from "@/lib/actions/rp-tracking-actions";
@@ -130,19 +122,14 @@ export function GroupWorkspace({
           <div className="grid h-full min-h-0 grid-cols-1 md:grid-cols-12">
             {/* Colonne Narration (7 cols) */}
             <div className="border-border col-span-12 flex min-h-0 flex-col border-b md:col-span-7 md:border-r md:border-b-0">
-              <GroupChapterWorkspace
-                groupId={group.id}
-                initialChapters={group.chapters}
-              />
+              <GroupChapterWorkspace groupId={group.id} initialChapters={group.chapters} />
             </div>
 
             {/* Colonne Conversation (5 cols) */}
             <div className="col-span-12 flex min-h-0 flex-col md:col-span-5">
               <div className="border-border bg-card/60 flex shrink-0 items-center gap-2 border-b px-4 py-2.5">
                 <ChatCircle className="text-primary size-4" />
-                <h3 className="font-heading text-sm font-semibold">
-                  Échanges du groupe
-                </h3>
+                <h3 className="font-heading text-sm font-semibold">Échanges du groupe</h3>
               </div>
               <ConversationChat
                 conversationId={group.conversationId}
@@ -156,17 +143,12 @@ export function GroupWorkspace({
             </div>
           </div>
         ) : activeTab === "narration" ? (
-          <GroupChapterWorkspace
-            groupId={group.id}
-            initialChapters={group.chapters}
-          />
+          <GroupChapterWorkspace groupId={group.id} initialChapters={group.chapters} />
         ) : (
           <div className="flex h-full min-h-0 flex-col">
             <div className="border-border bg-card/60 flex shrink-0 items-center gap-2 border-b px-4 py-2.5">
               <ChatCircle className="text-primary size-4" />
-              <h3 className="font-heading text-sm font-semibold">
-                Échanges du groupe
-              </h3>
+              <h3 className="font-heading text-sm font-semibold">Échanges du groupe</h3>
             </div>
             <ConversationChat
               conversationId={group.conversationId}

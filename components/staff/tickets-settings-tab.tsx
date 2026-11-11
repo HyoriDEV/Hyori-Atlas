@@ -2,14 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import {
-  Plus,
-  PencilSimple,
-  Trash,
-  ShieldCheck,
-  Tag,
-  ArrowSquareOut,
-} from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, ShieldCheck, Tag, ArrowSquareOut } from "@phosphor-icons/react";
 
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
@@ -50,9 +43,7 @@ const STAFF_ROLES: Role[] = [
   Role.DEVELOPER,
 ];
 
-export function TicketsSettingsTab({
-  initialCategories = [],
-}: TicketsSettingsTabProps) {
+export function TicketsSettingsTab({ initialCategories = [] }: TicketsSettingsTabProps) {
   const [categories, setCategories] = useState<TicketCategoryConfigData[]>(initialCategories);
 
   // Category Edit Modal State
@@ -237,14 +228,15 @@ export function TicketsSettingsTab({
             Catégories &amp; Sous-catégories de tickets
           </h2>
           <p className="text-muted-foreground text-xs">
-            Personnalisez les formulaires d&apos;ouverture de tickets, les guides de saisie et les rôles staff assignés.
+            Personnalisez les formulaires d&apos;ouverture de tickets, les guides de saisie et les
+            rôles staff assignés.
           </p>
         </div>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="gap-1.5 self-start sm:self-auto text-xs"
+          className="gap-1.5 self-start text-xs sm:self-auto"
           onClick={() => {
             setEditingCategory({
               name: "",
@@ -262,22 +254,26 @@ export function TicketsSettingsTab({
       </div>
 
       {/* Rappel d'intégration Discord */}
-      <div className="flex items-center gap-2 rounded-md border border-border/60 bg-muted/30 px-3 py-2 text-xs text-muted-foreground">
-        <ArrowSquareOut className="size-4 shrink-0 text-primary" />
+      <div className="border-border/60 bg-muted/30 text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
+        <ArrowSquareOut className="text-primary size-4 shrink-0" />
         <span>
-          Les salons Discord et les rôles notifiés pour la création de tickets se configurent dans l&apos;onglet <strong>Discord</strong>.
+          Les salons Discord et les rôles notifiés pour la création de tickets se configurent dans
+          l&apos;onglet <strong>Discord</strong>.
         </span>
       </div>
 
       {/* Liste compacte des catégories */}
       <div className="flex flex-col gap-4">
         {categories.map((cat) => (
-          <Card key={cat.id} className={cn("border-border/60 overflow-hidden", !cat.enabled && "opacity-60")}>
+          <Card
+            key={cat.id}
+            className={cn("border-border/60 overflow-hidden", !cat.enabled && "opacity-60")}
+          >
             <CardHeader className="bg-muted/20 p-3.5 sm:p-4">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Tag className="size-4 text-primary shrink-0" />
-                  <span className="font-semibold text-sm">{cat.name}</span>
+                  <Tag className="text-primary size-4 shrink-0" />
+                  <span className="text-sm font-semibold">{cat.name}</span>
                   <Badge variant="outline" className="font-mono text-[10px]">
                     {cat.slug}
                   </Badge>
@@ -287,7 +283,8 @@ export function TicketsSettingsTab({
                     </Badge>
                   )}
                   <span className="text-muted-foreground text-xs">
-                    ({cat.subcategories.length} sous-catégorie{cat.subcategories.length > 1 ? "s" : ""})
+                    ({cat.subcategories.length} sous-catégorie
+                    {cat.subcategories.length > 1 ? "s" : ""})
                   </span>
                 </div>
 
@@ -296,7 +293,7 @@ export function TicketsSettingsTab({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="h-7 text-xs gap-1"
+                    className="h-7 gap-1 text-xs"
                     onClick={() => {
                       setEditingSubcategory({
                         categoryId: cat.id,
@@ -317,7 +314,7 @@ export function TicketsSettingsTab({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs gap-1"
+                    className="h-7 gap-1 text-xs"
                     onClick={() => {
                       setEditingCategory(cat);
                       setCategoryModalOpen(true);
@@ -330,7 +327,7 @@ export function TicketsSettingsTab({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-7 text-xs text-destructive hover:bg-destructive/10"
+                    className="text-destructive hover:bg-destructive/10 h-7 text-xs"
                     onClick={() => handleDeleteCategory(cat)}
                   >
                     <Trash className="size-3" />
@@ -339,60 +336,62 @@ export function TicketsSettingsTab({
               </div>
 
               {cat.description && (
-                <p className="text-muted-foreground text-xs mt-1">{cat.description}</p>
+                <p className="text-muted-foreground mt-1 text-xs">{cat.description}</p>
               )}
             </CardHeader>
 
-            <CardContent className="p-3.5 sm:p-4 flex flex-col gap-3">
+            <CardContent className="flex flex-col gap-3 p-3.5 sm:p-4">
               {/* Rôles staff autorisés */}
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                <span className="text-muted-foreground text-[11px] font-medium flex items-center gap-1">
-                  <ShieldCheck className="size-3.5 text-primary" /> Rôles staff autorisés :
+                <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-medium">
+                  <ShieldCheck className="text-primary size-3.5" /> Rôles staff autorisés :
                 </span>
                 {cat.allowedRoles && cat.allowedRoles.length > 0 ? (
                   cat.allowedRoles.map((r) => (
-                    <Badge key={r} variant="secondary" className="text-[10px] py-0 px-1.5">
+                    <Badge key={r} variant="secondary" className="px-1.5 py-0 text-[10px]">
                       {staffRoleLabels[r] || r}
                     </Badge>
                   ))
                 ) : (
-                  <span className="text-muted-foreground text-[11px] italic">Tous les administrateurs</span>
+                  <span className="text-muted-foreground text-[11px] italic">
+                    Tous les administrateurs
+                  </span>
                 )}
               </div>
 
               {/* Sous-catégories compactes */}
               {cat.subcategories.length > 0 ? (
-                <div className="divide-y rounded-md border bg-muted/10">
+                <div className="bg-muted/10 divide-y rounded-md border">
                   {cat.subcategories.map((sub) => (
                     <div
                       key={sub.id}
-                      className="flex items-center justify-between gap-3 p-2.5 text-xs hover:bg-muted/20 transition-colors"
+                      className="hover:bg-muted/20 flex items-center justify-between gap-3 p-2.5 text-xs transition-colors"
                     >
-                      <div className="flex flex-col gap-0.5 min-w-0">
+                      <div className="flex min-w-0 flex-col gap-0.5">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-foreground">{sub.name}</span>
-                          <Badge variant="outline" className="font-mono text-[9px] py-0">
+                          <span className="text-foreground font-medium">{sub.name}</span>
+                          <Badge variant="outline" className="py-0 font-mono text-[9px]">
                             {sub.slug}
                           </Badge>
                           {!sub.enabled && (
-                            <Badge variant="destructive" className="text-[9px] py-0">
+                            <Badge variant="destructive" className="py-0 text-[9px]">
                               Désactivée
                             </Badge>
                           )}
                         </div>
                         {sub.description && (
-                          <p className="text-muted-foreground text-[11px] truncate max-w-md">
+                          <p className="text-muted-foreground max-w-md truncate text-[11px]">
                             {sub.description}
                           </p>
                         )}
                         {sub.placeholderSubject && (
-                          <p className="text-muted-foreground/80 text-[10px] truncate max-w-md italic">
+                          <p className="text-muted-foreground/80 max-w-md truncate text-[10px] italic">
                             Sujet : {sub.placeholderSubject}
                           </p>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-1 shrink-0">
+                      <div className="flex shrink-0 items-center gap-1">
                         <Button
                           type="button"
                           variant="ghost"
@@ -403,14 +402,14 @@ export function TicketsSettingsTab({
                             setSubcategoryModalOpen(true);
                           }}
                         >
-                          <PencilSimple className="size-3 mr-1" />
+                          <PencilSimple className="mr-1 size-3" />
                           Éditer
                         </Button>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 text-destructive hover:bg-destructive/10"
+                          className="text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
                           onClick={() => handleDeleteSubcategory(sub)}
                         >
                           <Trash className="size-3" />
@@ -420,7 +419,7 @@ export function TicketsSettingsTab({
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-3 text-xs text-muted-foreground border border-dashed rounded-md">
+                <div className="text-muted-foreground rounded-md border border-dashed py-3 text-center text-xs">
                   Aucune sous-catégorie configurée pour le moment.
                 </div>
               )}

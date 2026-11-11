@@ -82,11 +82,6 @@ export default async function StaffGroupRpTrackingDetailPage(props: {
   }));
 
   return (
-    <GroupWorkspace
-      group={group}
-      availablePlayers={availablePlayers}
-      viewerId={staffUser.id}
-    />
+    <GroupWorkspace group={group} availablePlayers={availablePlayers} viewerId={staffUser.id} />
   );
 }
-

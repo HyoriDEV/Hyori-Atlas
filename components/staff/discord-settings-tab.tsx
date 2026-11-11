@@ -2,14 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import {
-  DiscordLogo,
-  Check,
-  Scroll,
-  Wrench,
-  UserCheck,
-  Bell,
-} from "@phosphor-icons/react";
+import { DiscordLogo, Check, Scroll, Wrench, UserCheck, Bell } from "@phosphor-icons/react";
 
 import {
   DEFAULT_DISCORD_TEMPLATES,
@@ -106,7 +99,8 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
                   </Badge>
                 </div>
                 <span className="text-muted-foreground text-xs leading-relaxed">
-                  Configurez les salons de destination et les rôles notifiés pour chaque alerte transmise à l&apos;équipe staff.
+                  Configurez les salons de destination et les rôles notifiés pour chaque alerte
+                  transmise à l&apos;équipe staff.
                 </span>
               </div>
             </div>
