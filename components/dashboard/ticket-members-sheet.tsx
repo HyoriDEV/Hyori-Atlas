@@ -1,6 +1,5 @@
 "use client";
 
-import type { ReactNode } from "react";
 import { UsersThree } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,14 +27,12 @@ export function TicketMembersSheet({
   members,
   availablePlayers = [],
   readOnly = false,
-  staffAccessPanel,
   className,
 }: {
   ticketId?: string;
   members: MemberProps[];
   availablePlayers?: PlayerOption[];
   readOnly?: boolean;
-  staffAccessPanel?: ReactNode;
   className?: string;
 }) {
   return (
@@ -66,7 +63,6 @@ export function TicketMembersSheet({
           </SheetDescription>
         </SheetHeader>
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {staffAccessPanel}
           <TicketMembersManager
             ticketId={ticketId}
             members={members}

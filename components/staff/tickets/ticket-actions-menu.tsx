@@ -37,8 +37,6 @@ interface TicketActionsMenuProps {
   ticketSubject: string;
   canUseBacklog: boolean;
   backlogAssignees: BacklogUserRef[];
-  canSummonDevelopers: boolean;
-  defaultSummonDevelopers?: boolean;
   topics?: SerializedStaffTopic[];
 }
 
@@ -51,8 +49,6 @@ export function TicketActionsMenu({
   ticketSubject,
   canUseBacklog,
   backlogAssignees,
-  canSummonDevelopers,
-  defaultSummonDevelopers = false,
   topics = [],
 }: TicketActionsMenuProps) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -160,8 +156,6 @@ export function TicketActionsMenu({
           ticketId={ticketId}
           ticketSubject={ticketSubject}
           assignees={backlogAssignees}
-          canSummonDevelopers={canSummonDevelopers}
-          defaultSummonDevelopers={defaultSummonDevelopers}
           open={taskDialogOpen}
           onOpenChange={setTaskDialogOpen}
           hideTrigger

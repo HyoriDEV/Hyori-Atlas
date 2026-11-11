@@ -448,19 +448,6 @@ export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.
 export const rpManagementRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
 export const secretTicketStaffRoles: Role[] = [Role.ADMIN];
 export const ticketStaffRoles: Role[] = allStaffRoles;
-export const ticketSummonableTeams: Role[] = [
-  Role.RP_TRACKING,
-  Role.CONFLICT_MANAGEMENT,
-  Role.EVENT,
-  Role.DEVELOPER,
-];
-
-export const ticketTeamShortLabels: Partial<Record<Role, string>> = {
-  [Role.RP_TRACKING]: "Suivi RP",
-  [Role.CONFLICT_MANAGEMENT]: "GC",
-  [Role.EVENT]: "Événementiel",
-  [Role.DEVELOPER]: "Dév",
-};
 
 export const staffRoleLabels: Record<Role, string> = {
   [Role.ADMIN]: "Administrateur",

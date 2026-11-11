@@ -197,21 +197,19 @@ A Kanban board shared by Administrators, Developers and Helpers to follow bug fi
 - Labels are created on the fly by any Backlog role, with a name and one of eight colors; renaming and deleting them is reserved for Administrators and Developers.
 - Archiving removes a task from the board without deleting it; archived tasks are listed under "Archives" and can be restored. Bulk archiving of the Terminé column is reserved for Administrators and Developers. Permanent deletion is reserved for the task's author, Administrators and Developers.
 - The sidebar badge counts the unfinished tasks assigned to the viewer.
-- Link with Player Tickets: a staff member with access to a ticket can create a task from it, optionally summoning the Developer team on the ticket (full ticket access only; pre-checked for a "Report de bug"). The ticket header lists its linked tasks with their status, and the task shows its linked ticket, which is only a link for staff members who can open that ticket.
+- Link with Player Tickets: a staff member can create a task from a ticket. The ticket header lists its linked tasks with their status, and the task shows its linked ticket.
 
 ## 6. Role-Based Access Control (RBAC) Matrix
 
 - Administrator: Full access to all features below. Manages User Accounts and staff roles. Configures Whitelist slots & validations. Publishes News (Annonces & Changelogs). Full access to Player Tickets. Sole access to Statistics. Full access to the Backlog.
 - Helper: Reads Player Atlas. Full access to Player Tickets. Creates and edits Backlog tasks.
-- Gestion des conflits (GC): Reads Player Atlas. Writes/Manages BDA Reports. Player Tickets on summon only.
-- Suivi RP: Reads Player Atlas. Evaluates and edits Character Sheets, manages characters. Manages RP Groups, Distribution, Player RP Tracking chats & Lore Writing validation. Player Tickets on summon only.
-- Événementiel: Same as Suivi RP, but read-only on the Player Atlas and Character Sheets (no evaluation, no edition, no character management). Player Tickets on summon only.
-- Développeur: Reads Player Atlas. Player Tickets on summon only. Full access to the Backlog.
+- Gestion des conflits (GC): Reads Player Atlas. Writes/Manages BDA Reports. Full access to Player Tickets.
+- Suivi RP: Reads Player Atlas. Evaluates and edits Character Sheets, manages characters. Manages RP Groups, Distribution, Player RP Tracking chats & Lore Writing validation. Full access to Player Tickets.
+- Événementiel: Same as Suivi RP, but read-only on the Player Atlas and Character Sheets (no evaluation, no edition, no character management). Full access to Player Tickets.
+- Développeur: Reads Player Atlas. Full access to the Backlog. Full access to Player Tickets.
 - Joueur: Access restricted entirely to the Frontend and the Espace Joueur dashboard.
 
 ### 6.1. Ticket Access
 
-- Full access (Administrator, Helper): sees every ticket, summons teams and adds individual staff members to a ticket.
-- On summon (GC, Suivi RP, Événementiel, Développeur): the Tickets tab is always present, but only lists tickets where the member's team has been summoned or where the member has been added individually. Once granted, the member can reply, archive/reopen and manage the ticket's player members.
-- A summon is never shown to the summoned team or to the player. It sends a Discord notification to the team's channel through HyoriBot, identical to a ticket opening notification. Adding an individual staff member sends no notification.
+- Full access for all staff members: every staff role can view, reply to, and archive/reopen all player tickets, as well as manage the ticket's player participants.
 - Staff read state is personal: a ticket is unread for a staff member when it has activity since they last opened it. It drives the sidebar badge and the unread markers of the ticket list.

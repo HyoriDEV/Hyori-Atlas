@@ -443,53 +443,6 @@ export async function notifyTicketCreated(
   );
 }
 
-export interface TicketTeamSummonedNotificationOptions extends TicketCreatedNotificationOptions {
-  team: string;
-}
-
-/**
- * Notifie une équipe sur son salon Discord dédié lorsqu'elle est convoquée sur un ticket.
- * L'embed est identique à celui d'une ouverture de ticket.
- */
-export async function notifyTicketTeamSummoned(
-  options: TicketTeamSummonedNotificationOptions
-): Promise<BotNotificationResult> {
-  const ticketStaffUrl =
-    options.customTicketStaffUrl || getPlayerSpaceUrl(`/staff/tickets/${options.ticketId}`);
-
-  const result = await callDiscordBot<BotNotificationResult>(
-    "/notifications/ticket-team-summoned",
-    "POST",
-    {
-      team: options.team,
-      channelId: options.channelId ?? undefined,
-      mentionRoleId: options.mentionRoleId ?? undefined,
-      ticketId: options.ticketId,
-      ticketSubject: options.ticketSubject,
-      ticketCategory: options.ticketCategory,
-      authorName: options.authorName,
-      ticketDescription: options.ticketDescription ?? undefined,
-      ticketStaffUrl,
-    }
-  );
-
-  if (!result.success) {
-    return {
-      success: false,
-      notified: false,
-      error: result.error,
-    };
-  }
-
-  return (
-    result.data ?? {
-      success: true,
-      notified: true,
-      message: "Ticket team summoned notification sent successfully",
-    }
-  );
-}
-
 export interface DiscordRoleInfo {
   id: string;
   name: string;

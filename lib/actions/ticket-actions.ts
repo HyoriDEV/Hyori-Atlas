@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { allStaffRoles, formatTicketCategoryName, ticketSummonableTeams } from "@/lib/navigation";
-import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
+import { allStaffRoles, formatTicketCategoryName } from "@/lib/navigation";
+import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
@@ -275,10 +275,6 @@ export async function createStaffTicket(input: {
       subject,
       status: TicketStatus.PENDING_PLAYER,
       lastMessageAt: now,
-      // Un staff sans accès complet garde la main sur le ticket qu'il vient d'ouvrir.
-      staffAccesses: hasFullTicketAccess(staffUser.role)
-        ? undefined
-        : { create: [{ userId: staffUser.id, addedById: staffUser.id }] },
       conversation: {
         create: {
           type: ConversationType.TICKET,
@@ -481,98 +477,6 @@ export async function sendStaffTicketMessage(
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
-  revalidatePath("/staff/tickets");
-
-  return { success: true };
-}
-
-export async function setTicketTeamSummon(
-  ticketId: string,
-  team: Role,
-  summoned: boolean
-): Promise<{
-  success: boolean;
-  error?: string;
-  discord?: "sent" | "failed" | "disabled";
-}> {
-  const staffUser = await requireRole(allStaffRoles);
-
-  if (!ticketSummonableTeams.includes(team)) {
-    return { success: false, error: "Cette équipe ne peut pas être convoquée." };
-  }
-
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-    select: { id: true },
-  });
-
-  if (!ticket) {
-    return { success: false, error: "Ticket introuvable." };
-  }
-
-  if (!summoned) {
-    await prisma.ticketTeamSummon.deleteMany({ where: { ticketId, team } });
-    revalidatePath(`/staff/tickets/${ticketId}`);
-    revalidatePath("/staff/tickets");
-    return { success: true };
-  }
-
-  const existing = await prisma.ticketTeamSummon.findUnique({
-    where: { ticketId_team: { ticketId, team } },
-  });
-  if (existing) {
-    return { success: true };
-  }
-
-  await prisma.ticketTeamSummon.create({
-    data: { ticketId, team, summonedById: staffUser.id },
-  });
-
-  revalidatePath(`/staff/tickets/${ticketId}`);
-  revalidatePath("/staff/tickets");
-
-  return { success: true };
-}
-
-export async function addTicketStaffAccess(
-  ticketId: string,
-  userId: string
-): Promise<{ success: boolean; error?: string }> {
-  const staffUser = await requireRole(allStaffRoles);
-
-  const [ticket, target] = await Promise.all([
-    prisma.ticket.findUnique({ where: { id: ticketId }, select: { id: true } }),
-    prisma.user.findUnique({ where: { id: userId }, select: { id: true, role: true } }),
-  ]);
-
-  if (!ticket) {
-    return { success: false, error: "Ticket introuvable." };
-  }
-  if (!target || !ticketSummonableTeams.includes(target.role)) {
-    return { success: false, error: "Ce membre ne peut pas être ajouté à un ticket." };
-  }
-
-  await prisma.ticketStaffAccess.upsert({
-    where: { ticketId_userId: { ticketId, userId } },
-    update: {},
-    create: { ticketId, userId, addedById: staffUser.id },
-  });
-
-  revalidatePath(`/staff/tickets/${ticketId}`);
-  revalidatePath("/staff/tickets");
-
-  return { success: true };
-}
-
-export async function removeTicketStaffAccess(
-  ticketId: string,
-  userId: string
-): Promise<{ success: boolean; error?: string }> {
-  await requireRole(allStaffRoles);
-
-  await prisma.ticketStaffAccess.deleteMany({ where: { ticketId, userId } });
-
-  revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath("/staff/tickets");
 
   return { success: true };

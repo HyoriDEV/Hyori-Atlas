@@ -36,12 +36,9 @@ export async function updateUserRoleAction(targetUserId: string, newRole: Role) 
     data: { role: newRole },
   });
 
-  // Un joueur ne conserve ni accès individuel aux tickets ni suivi de lecture staff.
+  // Un joueur ne conserve pas de suivi de lecture staff.
   if (newRole === Role.PLAYER) {
-    await prisma.$transaction([
-      prisma.ticketStaffAccess.deleteMany({ where: { userId: targetUserId } }),
-      prisma.conversationRead.deleteMany({ where: { userId: targetUserId } }),
-    ]);
+    await prisma.conversationRead.deleteMany({ where: { userId: targetUserId } });
   }
 
   revalidatePath("/staff/staff-team");

@@ -5,10 +5,10 @@ import Link from "next/link";
 import { requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
-import { backlogManagerRoles, backlogRoles, ticketSummonableTeams } from "@/lib/navigation";
+import { backlogManagerRoles, backlogRoles } from "@/lib/navigation";
 import { backlogStatusDotClasses, backlogStatusLabels } from "@/lib/backlog";
 import { serializeBacklogUser } from "@/lib/services/backlog-service";
-import { hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
+import { ticketAccessWhere } from "@/lib/ticket-access";
 import { formatDate } from "@/lib/date";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
@@ -18,7 +18,6 @@ import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { TicketStatusActions } from "@/components/dashboard/ticket-status-actions";
 import { TicketMembersManager } from "@/components/dashboard/ticket-members-manager";
 import { TicketMembersSheet } from "@/components/dashboard/ticket-members-sheet";
-import { TicketStaffAccessPanel } from "@/components/dashboard/ticket-staff-access-panel";
 import { TicketActionsMenu } from "@/components/staff/tickets/ticket-actions-menu";
 import { TicketCategoryBadgeEditor } from "@/components/staff/tickets/ticket-category-badge-editor";
 
@@ -65,7 +64,6 @@ export default async function TicketStaffDetailPage({
 }) {
   const { ticketId } = await params;
   const staffUser = await requireUser();
-  const canManageAccess = hasFullTicketAccess(staffUser.role);
   const canUseBacklog = backlogRoles.includes(staffUser.role);
 
   const ticket = await prisma.ticket.findFirst({
@@ -87,8 +85,6 @@ export default async function TicketStaffDetailPage({
           reads: { where: { userId: staffUser.id } },
         },
       },
-      teamSummons: { include: { summonedBy: true } },
-      staffAccesses: { include: { user: true }, orderBy: { createdAt: "asc" } },
       backlogTasks: {
         where: { archivedAt: null },
         select: { id: true, title: true, status: true },
@@ -124,7 +120,7 @@ export default async function TicketStaffDetailPage({
     update: { lastReadAt: readAt },
   });
 
-  const [allPlayers, summonableStaff, backlogAssignees, availableCategories] = await Promise.all([
+  const [allPlayers, backlogAssignees, availableCategories] = await Promise.all([
     prisma.user.findMany({
       select: {
         id: true,
@@ -143,20 +139,6 @@ export default async function TicketStaffDetailPage({
       },
       orderBy: { discordDisplayName: "asc" },
     }),
-    canManageAccess
-      ? prisma.user.findMany({
-          where: { role: { in: ticketSummonableTeams } },
-          select: {
-            id: true,
-            minecraftUsername: true,
-            discordDisplayName: true,
-            discordUsername: true,
-            discordAvatarUrl: true,
-            role: true,
-          },
-          orderBy: { discordDisplayName: "asc" },
-        })
-      : [],
     canUseBacklog
       ? prisma.user.findMany({
           where: { role: { in: backlogManagerRoles } },
@@ -185,32 +167,6 @@ export default async function TicketStaffDetailPage({
       discordAvatarUrl: m.user.discordAvatarUrl,
       isCreator: m.userId === ticket.playerId,
     }));
-
-  // Le panneau d'accès n'est jamais rendu pour les équipes convoquées : la convocation
-  // ne doit pas être visible de leur côté.
-  const staffAccessPanel = canManageAccess ? (
-    <TicketStaffAccessPanel
-      ticketId={ticket.id}
-      teams={ticketSummonableTeams.map((team) => {
-        const summon = ticket.teamSummons.find((s) => s.team === team);
-        return {
-          team,
-          summonedAt: summon ? summon.createdAt.toISOString() : null,
-          summonedByName: summon?.summonedBy
-            ? (summon.summonedBy.minecraftUsername ?? summon.summonedBy.discordDisplayName)
-            : null,
-        };
-      })}
-      staffMembers={ticket.staffAccesses.map((access) => ({
-        userId: access.userId,
-        role: access.user.role,
-        minecraftUsername: access.user.minecraftUsername,
-        discordDisplayName: access.user.discordDisplayName,
-        discordAvatarUrl: access.user.discordAvatarUrl,
-      }))}
-      availableStaff={summonableStaff}
-    />
-  ) : null;
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
@@ -263,7 +219,6 @@ export default async function TicketStaffDetailPage({
           ticketId={ticket.id}
           members={membersData}
           availablePlayers={allPlayers}
-          staffAccessPanel={staffAccessPanel}
           className="lg:hidden"
         />
         <TicketActionsMenu
@@ -271,10 +226,6 @@ export default async function TicketStaffDetailPage({
           ticketSubject={ticket.subject}
           canUseBacklog={canUseBacklog}
           backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
-          canSummonDevelopers={
-            canManageAccess && !ticket.teamSummons.some((s) => s.team === Role.DEVELOPER)
-          }
-          defaultSummonDevelopers={false}
           topics={ticket.staffTopics}
         />
         <TicketStatusActions
@@ -302,12 +253,11 @@ export default async function TicketStaffDetailPage({
           />
         </div>
         <div className="hidden min-h-0 gap-4 overflow-y-auto lg:col-span-2 lg:flex lg:flex-col">
-          {staffAccessPanel}
           <TicketMembersManager
             ticketId={ticket.id}
             members={membersData}
             availablePlayers={allPlayers}
-            className={canManageAccess ? "h-auto min-h-48 flex-1" : undefined}
+            className="h-auto min-h-48 flex-1"
           />
         </div>
       </div>
