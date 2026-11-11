@@ -1,7 +1,7 @@
 import "server-only";
 
 import { prisma } from "@/lib/prisma";
-import { ConversationType, Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
+import { ConversationType, Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
 import { allStaffRoles, rpTrackingStaffRoles } from "@/lib/navigation";
 
@@ -13,10 +13,10 @@ export interface TicketAccessUser {
 const NO_TICKET: Prisma.TicketWhereInput = { id: { in: [] } };
 
 /**
- * Seuls les administrateurs ont un accès global à tous les tickets sans restriction de catégorie.
+ * Tous les membres du staff ont un accès complet à l'ensemble des tickets.
  */
 export function hasFullTicketAccess(role: Role): boolean {
-  return role === Role.ADMIN;
+  return allStaffRoles.includes(role);
 }
 
 /**
@@ -37,48 +37,13 @@ export function isTicketSecret(): boolean {
 /**
  * Filtre Prisma des tickets visibles par un membre du staff :
  * - Non-staff : aucun ticket.
- * - ADMIN : tous les tickets.
- * - Autres rôles du staff : tickets de leur catégorie autorisée (Ticket RP ou Ticket technique),
- *   plus les tickets où ils sont convoqués ou invités individuellement.
+ * - Tout rôle staff : l'ensemble des tickets.
  */
 export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInput {
   if (!allStaffRoles.includes(user.role)) {
     return NO_TICKET;
   }
-  if (user.role === Role.ADMIN) {
-    return {};
-  }
-
-  const isSummonedOrExplicit: Prisma.TicketWhereInput = {
-    OR: [
-      { teamSummons: { some: { team: user.role } } },
-      { staffAccesses: { some: { userId: user.id } } },
-    ],
-  };
-
-  const categoryMatchesRole: Prisma.TicketWhereInput = {
-    OR: [
-      { categoryRef: { allowedRoles: { has: user.role } } },
-      {
-        AND: [
-          { categoryRef: null },
-          // Repli sur categoryName pour les tickets sans référence
-          user.role === Role.DEVELOPER
-            ? {}
-            : {
-                AND: [
-                  { category: { not: TicketCategory.TECHNIQUE } },
-                  { categoryName: { notIn: ["Technique", "Ticket technique"] } },
-                ],
-              },
-        ],
-      },
-    ],
-  };
-
-  return {
-    OR: [isSummonedOrExplicit, categoryMatchesRole],
-  };
+  return {};
 }
 
 export async function canAccessTicket(user: TicketAccessUser, ticketId: string): Promise<boolean> {

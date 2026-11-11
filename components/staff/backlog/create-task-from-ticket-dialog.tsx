@@ -14,7 +14,6 @@ import {
 } from "@/lib/backlog";
 import { BacklogPriority } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -40,9 +39,6 @@ interface CreateTaskFromTicketDialogProps {
   ticketId: string;
   ticketSubject: string;
   assignees: BacklogUserRef[];
-  /** Vrai si le staff peut convoquer l'équipe Dév et qu'elle ne l'est pas déjà. */
-  canSummonDevelopers: boolean;
-  defaultSummonDevelopers: boolean;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   hideTrigger?: boolean;
@@ -52,8 +48,6 @@ export function CreateTaskFromTicketDialog({
   ticketId,
   ticketSubject,
   assignees,
-  canSummonDevelopers,
-  defaultSummonDevelopers,
   open: controlledOpen,
   onOpenChange: setControlledOpen,
   hideTrigger = false,
@@ -66,7 +60,6 @@ export function CreateTaskFromTicketDialog({
   const [title, setTitle] = useState(ticketSubject);
   const [priority, setPriority] = useState<string>(BacklogPriority.MEDIUM);
   const [assigneeId, setAssigneeId] = useState(UNASSIGNED);
-  const [summonDevelopers, setSummonDevelopers] = useState(defaultSummonDevelopers);
   const [isPending, startTransition] = useTransition();
 
   function handleOpenChange(nextOpen: boolean) {
@@ -80,7 +73,6 @@ export function CreateTaskFromTicketDialog({
       setTitle(ticketSubject);
       setPriority(BacklogPriority.MEDIUM);
       setAssigneeId(UNASSIGNED);
-      setSummonDevelopers(defaultSummonDevelopers);
     }
   }
 
@@ -98,7 +90,6 @@ export function CreateTaskFromTicketDialog({
         priority,
         assigneeId: assigneeId === UNASSIGNED ? null : assigneeId,
         ticketId,
-        summonDevelopers: canSummonDevelopers && summonDevelopers,
       });
 
       if (!res.success || !res.data) {
@@ -210,23 +201,6 @@ export function CreateTaskFromTicketDialog({
                   </Select>
                 </div>
               </div>
-
-              {canSummonDevelopers && (
-                <label className="flex cursor-pointer items-start gap-2.5 text-sm">
-                  <Checkbox
-                    checked={summonDevelopers}
-                    onCheckedChange={(checked) => setSummonDevelopers(checked === true)}
-                    disabled={isPending}
-                    className="mt-0.5"
-                  />
-                  <span className="flex flex-col gap-0.5">
-                    Convoquer l&apos;équipe Dév sur ce ticket
-                    <span className="text-muted-foreground text-xs">
-                      Les développeurs pourront lire le ticket et y répondre.
-                    </span>
-                  </span>
-                </label>
-              )}
             </div>
 
             <DialogFooter>

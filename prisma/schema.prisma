@@ -158,9 +158,6 @@ model User {
   conversationMemberships ConversationMember[]
   conversationReads       ConversationRead[]
   conversationMessages    ConversationMessage[]
-  ticketStaffAccesses     TicketStaffAccess[]         @relation("TicketStaffAccessUser")
-  grantedTicketAccesses   TicketStaffAccess[]         @relation("TicketStaffAccessAddedBy")
-  ticketTeamSummons       TicketTeamSummon[]
   characterSheets         CharacterSheet[]
   interviewBookings       InterviewBooking[]
   staffNotes              StaffNote[]                 @relation("StaffNotePlayer")
@@ -333,45 +330,12 @@ model Ticket {
   player        User                @relation(fields: [playerId], references: [id], onDelete: Cascade)
   conversation  Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   bdaReport     BdaReport?
-  teamSummons   TicketTeamSummon[]
-  staffAccesses TicketStaffAccess[]
   backlogTasks  BacklogTask[]
   staffTopics   StaffTopic[]
 
   @@index([categoryId, status, lastMessageAt])
   @@index([status, lastMessageAt])
   @@map("tickets")
-}
-
-model TicketTeamSummon {
-  id           String   @id @default(cuid())
-  ticketId     String
-  team         Role
-  summonedById String?
-  createdAt    DateTime @default(now())
-
-  ticket     Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  summonedBy User?  @relation(fields: [summonedById], references: [id], onDelete: SetNull)
-
-  @@unique([ticketId, team])
-  @@index([team])
-  @@map("ticket_team_summons")
-}
-
-model TicketStaffAccess {
-  id        String   @id @default(cuid())
-  ticketId  String
-  userId    String
-  addedById String?
-  createdAt DateTime @default(now())
-
-  ticket  Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  user    User   @relation("TicketStaffAccessUser", fields: [userId], references: [id], onDelete: Cascade)
-  addedBy User?  @relation("TicketStaffAccessAddedBy", fields: [addedById], references: [id], onDelete: SetNull)
-
-  @@unique([ticketId, userId])
-  @@index([userId])
-  @@map("ticket_staff_accesses")
 }
 
 model StaffTopic {

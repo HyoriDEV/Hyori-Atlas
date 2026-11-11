@@ -13,8 +13,8 @@ import {
   resolvePageSize,
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
-import { formatTicketCategoryName, staffNavItems, ticketSummonableTeams } from "@/lib/navigation";
-import { getUnreadTickets, hasFullTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
+import { formatTicketCategoryName, staffNavItems } from "@/lib/navigation";
+import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
 import { DEFAULT_TICKET_VIEW, TICKET_VIEWS, type TicketView } from "@/lib/ticket-list";
 import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
 import { formatDate } from "@/lib/date";
@@ -106,10 +106,8 @@ function buildOrderBy(
 export default async function TicketsStaffListPage(props: PageProps) {
   const item = staffNavItems.find((i) => i.href === "/staff/tickets")!;
   const staffUser = await requireRole(item.roles);
-  const canManageAccess = hasFullTicketAccess(staffUser.role);
   const isAdmin = staffUser.role === Role.ADMIN;
-  // Même règle que createStaffTicket : le staff doit pouvoir voir le ticket qu'il ouvre.
-  const canOpenTicket = canManageAccess || ticketSummonableTeams.includes(staffUser.role);
+  const canOpenTicket = true;
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -197,13 +195,11 @@ export default async function TicketsStaffListPage(props: PageProps) {
       where: { AND: [...filters, getViewFilter(view)] },
       include: {
         player: true,
-        teamSummons: { select: { team: true } },
         staffTopics: {
           where: { isArchived: false },
           select: { id: true, slug: true, channelUrl: true },
           take: 1,
         },
-        _count: { select: { staffAccesses: true } },
         conversation: {
           select: {
             members: {

@@ -7,8 +7,7 @@ import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { formatDate } from "@/lib/date";
 import { backlogManagerRoles, backlogRoles } from "@/lib/navigation";
-import { canAccessTicket, hasFullTicketAccess } from "@/lib/ticket-access";
-import { setTicketTeamSummon } from "@/lib/actions/ticket-actions";
+import { canAccessTicket } from "@/lib/ticket-access";
 import {
   BACKLOG_CHECKLIST_ITEM_MAX_LENGTH,
   BACKLOG_LABEL_NAME_MAX_LENGTH,
@@ -155,7 +154,6 @@ export async function createBacklogTaskAction(input: {
   priority?: string;
   assigneeId?: string | null;
   ticketId?: string | null;
-  summonDevelopers?: boolean;
 }): Promise<BacklogActionResult<BacklogTaskCard>> {
   return runBacklogAction(backlogRoles, async (actor) => {
     const title = parseTitle(input.title);
@@ -204,10 +202,6 @@ export async function createBacklogTaskAction(input: {
       },
       include: backlogTaskCardInclude,
     });
-
-    if (ticket && input.summonDevelopers && hasFullTicketAccess(actor.role)) {
-      await setTicketTeamSummon(ticket.id, Role.DEVELOPER, true);
-    }
 
     revalidateBacklog(ticket?.id);
     const accessibleTicketIds = await getAccessibleTicketIds(actor, ticket ? [ticket.id] : []);

@@ -1,15 +1,6 @@
-import { Role } from "@/lib/generated/prisma/enums";
-
-export type TicketSummonTemplateId =
-  | "TICKET_SUMMONED_RP_TRACKING"
-  | "TICKET_SUMMONED_CONFLICT_MANAGEMENT"
-  | "TICKET_SUMMONED_EVENT"
-  | "TICKET_SUMMONED_DEVELOPER";
-
 export type DiscordTemplateId =
   | "TICKET_RP_CREATED"
   | "TICKET_TECH_CREATED"
-  | TicketSummonTemplateId
   | "TICKET_MESSAGE"
   | "RP_TRACKING_MESSAGE"
   | "REGISTRATION_ACCEPTED"
@@ -28,8 +19,6 @@ export interface DefaultTemplateConfig {
   category: "channel" | "ticket" | "registration" | "character_sheet" | "interview" | "rp_tracking";
   isChannelNotification?: boolean;
 }
-
-export const TICKET_SUMMON_TEMPLATE_IDS: Partial<Record<Role, TicketSummonTemplateId>> = {};
 
 export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplateConfig> = {
   TICKET_RP_CREATED: {
@@ -53,34 +42,6 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
     description: "Notification envoyée au staff lorsqu'un joueur s'inscrit sur la liste d'attente.",
     category: "channel",
     isChannelNotification: true,
-  },
-  TICKET_SUMMONED_RP_TRACKING: {
-    id: "TICKET_SUMMONED_RP_TRACKING",
-    label: "Ticket transmis à l'équipe Suivi RP (Obsolète)",
-    description: "Convocation d'équipe sur un ticket.",
-    category: "ticket",
-    isChannelNotification: false,
-  },
-  TICKET_SUMMONED_CONFLICT_MANAGEMENT: {
-    id: "TICKET_SUMMONED_CONFLICT_MANAGEMENT",
-    label: "Ticket transmis à l'équipe Gestion des conflits (Obsolète)",
-    description: "Convocation d'équipe sur un ticket.",
-    category: "ticket",
-    isChannelNotification: false,
-  },
-  TICKET_SUMMONED_EVENT: {
-    id: "TICKET_SUMMONED_EVENT",
-    label: "Ticket transmis à l'équipe Événementiel (Obsolète)",
-    description: "Convocation d'équipe sur un ticket.",
-    category: "ticket",
-    isChannelNotification: false,
-  },
-  TICKET_SUMMONED_DEVELOPER: {
-    id: "TICKET_SUMMONED_DEVELOPER",
-    label: "Ticket transmis à l'équipe Développement (Obsolète)",
-    description: "Convocation d'équipe sur un ticket.",
-    category: "ticket",
-    isChannelNotification: false,
   },
   TICKET_MESSAGE: {
     id: "TICKET_MESSAGE",
