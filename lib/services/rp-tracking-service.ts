@@ -99,7 +99,12 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
         discordDisplayName: true,
         discordAvatarUrl: true,
         conversationMemberships: {
-          where: { conversation: { type: ConversationType.RP_TRACKING } },
+          where: {
+            conversation: {
+              type: ConversationType.RP_TRACKING,
+              rpTrackingGroup: null,
+            },
+          },
           orderBy: { joinedAt: "asc" },
           take: 1,
           select: {
@@ -130,13 +135,16 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       by: ["playerId"],
       where: {
         player: { registrationStatus: RegistrationStatus.WHITELISTED },
+        rpTrackingGroupId: null,
       },
       _max: { updatedAt: true },
     }),
   ]);
 
   const writingUpdatedByPlayer = new Map<string, Date | null>(
-    writingPlayers.map((w) => [w.playerId, w._max.updatedAt] as const)
+    writingPlayers
+      .filter((w): w is typeof w & { playerId: string } => Boolean(w.playerId))
+      .map((w) => [w.playerId, w._max.updatedAt] as const)
   );
 
   const statsByConversation = new Map<

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getUnreadTickets } from "@/lib/ticket-access";
 import { backlogRoles, galleryRoles, rpTrackingStaffRoles } from "@/lib/navigation";
 import { getRpTrackingStates } from "@/lib/services/rp-tracking-service";
+import { getPendingGroupRpTrackingCount } from "@/lib/services/group-rp-tracking-service";
 import {
   BacklogStatus,
   BdaReportStatus,
@@ -90,7 +91,7 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
     return lastMessage.createdAt > readThreshold;
   }).length;
 
-  const userRpConversation = await prisma.conversation.findFirst({
+  const userRpConversations = await prisma.conversation.findMany({
     where: {
       type: ConversationType.RP_TRACKING,
       members: { some: { userId } },
@@ -112,13 +113,13 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
     },
   });
 
-  const rpMember = userRpConversation?.members[0];
-  const lastRpMessage = userRpConversation?.messages[0];
-  const unreadRpTracking =
-    lastRpMessage &&
-    lastRpMessage.createdAt > (rpMember?.lastReadAt ?? rpMember?.joinedAt ?? new Date(0))
-      ? 1
-      : 0;
+  const unreadRpTracking = userRpConversations.filter((conv) => {
+    const member = conv.members[0];
+    const lastMsg = conv.messages[0];
+    if (!lastMsg) return false;
+    const threshold = member?.lastReadAt ?? member?.joinedAt ?? new Date(0);
+    return lastMsg.createdAt > threshold;
+  }).length;
 
   return {
     "/player/character-sheet": staffCommentsCount,
@@ -169,7 +170,10 @@ export async function getStaffBadgeCounts(
         })
       : 0,
     rpTrackingStaffRoles.includes(role)
-      ? getRpTrackingStates().then((res) => res.counts.pending)
+      ? Promise.all([
+          getRpTrackingStates().then((res) => res.counts.pending),
+          getPendingGroupRpTrackingCount(),
+        ]).then(([playerPending, groupPending]) => playerPending + groupPending)
       : 0,
     galleryRoles.includes(role)
       ? prisma.galleryItem.count({

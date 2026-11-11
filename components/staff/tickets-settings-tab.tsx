@@ -2,23 +2,10 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import {
-  DiscordLogo,
-  Plus,
-  PencilSimple,
-  Trash,
-  Check,
-  ShieldCheck,
-  Wrench,
-  Scroll,
-} from "@phosphor-icons/react";
+import { Plus, PencilSimple, Trash, ShieldCheck, Tag, ArrowSquareOut } from "@phosphor-icons/react";
 
 import { Role } from "@/lib/generated/prisma/enums";
 import { staffRoleLabels } from "@/lib/navigation";
-import {
-  saveDiscordTemplatesAction,
-  type DiscordTemplateInput,
-} from "@/lib/actions/settings-actions";
 import {
   saveTicketCategoryAction,
   deleteTicketCategoryAction,
@@ -27,8 +14,7 @@ import {
   type TicketCategoryConfigData,
   type TicketSubcategoryConfigData,
 } from "@/lib/actions/ticket-config-actions";
-import type { DiscordTemplateData } from "./discord-settings-tab";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -45,26 +31,8 @@ import {
 import { cn } from "@/lib/utils";
 
 interface TicketsSettingsTabProps {
-  initialTemplates?: DiscordTemplateData[];
   initialCategories?: TicketCategoryConfigData[];
 }
-
-const TICKET_CHANNEL_TEMPLATES = [
-  {
-    id: "TICKET_RP_CREATED",
-    title: "Tickets RP",
-    description: "Notifications pour les demandes d'intrigue, projets et questions RP.",
-    icon: Scroll,
-    badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20",
-  },
-  {
-    id: "TICKET_TECH_CREATED",
-    title: "Tickets techniques",
-    description: "Salon dédié aux reports de bugs et demandes d'assistance technique.",
-    icon: Wrench,
-    badgeColor: "bg-purple-500/10 text-purple-500 border-purple-500/20",
-  },
-];
 
 const STAFF_ROLES: Role[] = [
   Role.ADMIN,
@@ -75,28 +43,7 @@ const STAFF_ROLES: Role[] = [
   Role.DEVELOPER,
 ];
 
-export function TicketsSettingsTab({
-  initialTemplates = [],
-  initialCategories = [],
-}: TicketsSettingsTabProps) {
-  // --- Discord Channels State ---
-  const [templates, setTemplates] = useState<
-    Record<string, { channelId: string; roleId: string; enabled: boolean }>
-  >(() => {
-    const map: Record<string, { channelId: string; roleId: string; enabled: boolean }> = {};
-    for (const t of TICKET_CHANNEL_TEMPLATES) {
-      const found = initialTemplates.find((x) => x.id === t.id);
-      map[t.id] = {
-        channelId: found?.channelId || "",
-        roleId: found?.roleId || "",
-        enabled: found?.enabled ?? true,
-      };
-    }
-    return map;
-  });
-  const [isSavingDiscord, startSaveDiscordTransition] = useTransition();
-
-  // --- Categories & Subcategories State ---
+export function TicketsSettingsTab({ initialCategories = [] }: TicketsSettingsTabProps) {
   const [categories, setCategories] = useState<TicketCategoryConfigData[]>(initialCategories);
 
   // Category Edit Modal State
@@ -111,29 +58,6 @@ export function TicketsSettingsTab({
   const [editingSubcategory, setEditingSubcategory] =
     useState<Partial<TicketSubcategoryConfigData> | null>(null);
   const [isSavingSubcategory, startSaveSubcategoryTransition] = useTransition();
-
-  // Handle Discord Channels Save
-  const handleSaveDiscordChannels = () => {
-    startSaveDiscordTransition(async () => {
-      try {
-        const payload: DiscordTemplateInput[] = Object.entries(templates).map(([id, val]) => ({
-          id,
-          enabled: val.enabled,
-          channelId: val.channelId.trim() || null,
-          roleId: val.roleId.trim() || null,
-        }));
-
-        const res = await saveDiscordTemplatesAction(payload);
-        if (res.success) {
-          toast.success("Salons et mentions Discord des tickets enregistrés !");
-        } else {
-          toast.error(res.error || "Erreur lors de la sauvegarde.");
-        }
-      } catch {
-        toast.error("Erreur inattendue.");
-      }
-    });
-  };
 
   // Handle Category Save
   const handleSaveCategory = () => {
@@ -157,7 +81,6 @@ export function TicketsSettingsTab({
         if (res.success) {
           toast.success(editingCategory.id ? "Catégorie modifiée !" : "Nouvelle catégorie créée !");
           setCategoryModalOpen(false);
-          // Update local state
           setCategories((prev) => {
             if (editingCategory.id) {
               return prev.map((c) =>
@@ -233,7 +156,6 @@ export function TicketsSettingsTab({
             editingSubcategory.id ? "Sous-catégorie modifiée !" : "Nouvelle sous-catégorie créée !"
           );
           setSubcategoryModalOpen(false);
-          // Update local state
           setCategories((prev) =>
             prev.map((cat) => {
               if (cat.id !== editingSubcategory.categoryId) return cat;
@@ -298,281 +220,212 @@ export function TicketsSettingsTab({
   };
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* SECTION 1 : Salons Discord (HyoriBot) */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <DiscordLogo className="size-5 text-indigo-400" />
-            <CardTitle className="text-lg">Salons Discord de réception des tickets</CardTitle>
-          </div>
-          <CardDescription>
-            Configure les salons Discord vers lesquels le bot HyoriBot transmet automatiquement les
-            2 types de tickets (Tickets RP et Tickets techniques).
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-5">
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {TICKET_CHANNEL_TEMPLATES.map((tmpl) => {
-              const current = templates[tmpl.id] || { channelId: "", roleId: "", enabled: true };
-              const Icon = tmpl.icon;
-              return (
-                <div
-                  key={tmpl.id}
-                  className="bg-card/60 flex flex-col justify-between rounded-lg border p-4 shadow-sm"
-                >
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2 font-medium">
-                        <Icon className="text-muted-foreground size-4 shrink-0" />
-                        <span className="text-sm font-semibold">{tmpl.title}</span>
-                      </div>
-                      <Switch
-                        checked={current.enabled}
-                        onCheckedChange={(checked) =>
-                          setTemplates((prev) => ({
-                            ...prev,
-                            [tmpl.id]: { ...prev[tmpl.id], enabled: checked },
-                          }))
-                        }
-                      />
-                    </div>
-                    <p className="text-muted-foreground text-xs">{tmpl.description}</p>
-                    <div className="flex flex-col gap-2 pt-2">
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-xs font-medium">ID Salon Discord</Label>
-                        <Input
-                          placeholder="Ex: 123456789012345678"
-                          value={current.channelId}
-                          onChange={(e) =>
-                            setTemplates((prev) => ({
-                              ...prev,
-                              [tmpl.id]: { ...prev[tmpl.id], channelId: e.target.value },
-                            }))
-                          }
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1">
-                        <Label className="text-xs font-medium">
-                          ID Rôle à mentionner (optionnel)
-                        </Label>
-                        <Input
-                          placeholder="Ex: 987654321098765432"
-                          value={current.roleId}
-                          onChange={(e) =>
-                            setTemplates((prev) => ({
-                              ...prev,
-                              [tmpl.id]: { ...prev[tmpl.id], roleId: e.target.value },
-                            }))
-                          }
-                          className="font-mono text-xs"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <Button
-              type="button"
-              onClick={handleSaveDiscordChannels}
-              disabled={isSavingDiscord}
-              className="gap-2"
-            >
-              <Check className="size-4" />
-              {isSavingDiscord ? "Enregistrement..." : "Enregistrer les salons Discord"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* SECTION 2 : Catégories & Sous-catégories modulables */}
-      <div className="flex flex-col gap-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-heading text-lg font-semibold">
-              Catégories &amp; Sous-catégories dynamiques
-            </h2>
-            <p className="text-muted-foreground text-sm">
-              Personnalise les parcours d&apos;ouverture, les placeholders et les rôles staff ayant
-              accès à chaque type de ticket.
-            </p>
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            className="gap-2"
-            onClick={() => {
-              setEditingCategory({
-                name: "",
-                slug: "",
-                description: "",
-                enabled: true,
-                allowedRoles: [Role.ADMIN],
-              });
-              setCategoryModalOpen(true);
-            }}
-          >
-            <Plus className="size-4" />
-            Nouvelle catégorie
-          </Button>
+    <div className="flex flex-col gap-6">
+      {/* En-tête et info */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="font-heading text-lg font-semibold">
+            Catégories &amp; Sous-catégories de tickets
+          </h2>
+          <p className="text-muted-foreground text-xs">
+            Personnalisez les formulaires d&apos;ouverture de tickets, les guides de saisie et les
+            rôles staff assignés.
+          </p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5 self-start text-xs sm:self-auto"
+          onClick={() => {
+            setEditingCategory({
+              name: "",
+              slug: "",
+              description: "",
+              enabled: true,
+              allowedRoles: [Role.ADMIN],
+            });
+            setCategoryModalOpen(true);
+          }}
+        >
+          <Plus className="size-3.5" />
+          <span>Nouvelle catégorie</span>
+        </Button>
+      </div>
 
-        <div className="flex flex-col gap-6">
-          {categories.map((cat) => (
-            <Card key={cat.id} className={cn(!cat.enabled && "opacity-60")}>
-              <CardHeader className="flex flex-row flex-wrap items-start justify-between gap-4 pb-3">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-heading text-base font-semibold">{cat.name}</span>
-                    <Badge variant="outline" className="font-mono text-xs">
-                      slug: {cat.slug}
+      {/* Rappel d'intégration Discord */}
+      <div className="border-border/60 bg-muted/30 text-muted-foreground flex items-center gap-2 rounded-md border px-3 py-2 text-xs">
+        <ArrowSquareOut className="text-primary size-4 shrink-0" />
+        <span>
+          Les salons Discord et les rôles notifiés pour la création de tickets se configurent dans
+          l&apos;onglet <strong>Discord</strong>.
+        </span>
+      </div>
+
+      {/* Liste compacte des catégories */}
+      <div className="flex flex-col gap-4">
+        {categories.map((cat) => (
+          <Card
+            key={cat.id}
+            className={cn("border-border/60 overflow-hidden", !cat.enabled && "opacity-60")}
+          >
+            <CardHeader className="bg-muted/20 p-3.5 sm:p-4">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tag className="text-primary size-4 shrink-0" />
+                  <span className="text-sm font-semibold">{cat.name}</span>
+                  <Badge variant="outline" className="font-mono text-[10px]">
+                    {cat.slug}
+                  </Badge>
+                  {!cat.enabled && (
+                    <Badge variant="destructive" className="text-[10px]">
+                      Désactivée
                     </Badge>
-                    {!cat.enabled && (
-                      <Badge variant="destructive" className="text-xs">
-                        Désactivée
-                      </Badge>
-                    )}
-                  </div>
-                  {cat.description && (
-                    <p className="text-muted-foreground text-xs">{cat.description}</p>
                   )}
+                  <span className="text-muted-foreground text-xs">
+                    ({cat.subcategories.length} sous-catégorie
+                    {cat.subcategories.length > 1 ? "s" : ""})
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() => {
+                      setEditingSubcategory({
+                        categoryId: cat.id,
+                        name: "",
+                        slug: "",
+                        description: "",
+                        placeholderSubject: "",
+                        placeholderDescription: "",
+                        enabled: true,
+                      });
+                      setSubcategoryModalOpen(true);
+                    }}
+                  >
+                    <Plus className="size-3" />
+                    <span className="hidden sm:inline">Sous-catégorie</span>
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="gap-1 text-xs"
+                    className="h-7 gap-1 text-xs"
                     onClick={() => {
                       setEditingCategory(cat);
                       setCategoryModalOpen(true);
                     }}
                   >
-                    <PencilSimple className="size-3.5" />
-                    Modifier
+                    <PencilSimple className="size-3" />
+                    <span>Modifier</span>
                   </Button>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="text-destructive hover:bg-destructive/10 gap-1 text-xs"
+                    className="text-destructive hover:bg-destructive/10 h-7 text-xs"
                     onClick={() => handleDeleteCategory(cat)}
                   >
-                    <Trash className="size-3.5" />
-                    Supprimer
+                    <Trash className="size-3" />
                   </Button>
                 </div>
-              </CardHeader>
+              </div>
 
-              <CardContent className="flex flex-col gap-4">
-                {/* Rôles staff autorisés */}
-                <div className="bg-muted/40 flex flex-wrap items-center gap-2 rounded-md p-2.5 text-xs">
-                  <span className="text-muted-foreground flex items-center gap-1 font-medium">
-                    <ShieldCheck className="size-3.5" />
-                    Rôles staff autorisés :
+              {cat.description && (
+                <p className="text-muted-foreground mt-1 text-xs">{cat.description}</p>
+              )}
+            </CardHeader>
+
+            <CardContent className="flex flex-col gap-3 p-3.5 sm:p-4">
+              {/* Rôles staff autorisés */}
+              <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                <span className="text-muted-foreground flex items-center gap-1 text-[11px] font-medium">
+                  <ShieldCheck className="text-primary size-3.5" /> Rôles staff autorisés :
+                </span>
+                {cat.allowedRoles && cat.allowedRoles.length > 0 ? (
+                  cat.allowedRoles.map((r) => (
+                    <Badge key={r} variant="secondary" className="px-1.5 py-0 text-[10px]">
+                      {staffRoleLabels[r] || r}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-muted-foreground text-[11px] italic">
+                    Tous les administrateurs
                   </span>
-                  {cat.allowedRoles && cat.allowedRoles.length > 0 ? (
-                    cat.allowedRoles.map((r) => (
-                      <Badge key={r} variant="secondary" className="text-[11px]">
-                        {staffRoleLabels[r] || r}
-                      </Badge>
-                    ))
-                  ) : (
-                    <span className="text-muted-foreground italic">Uniquement administrateurs</span>
-                  )}
-                </div>
+                )}
+              </div>
 
-                {/* Sous-catégories */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-xs font-semibold tracking-wider uppercase">
-                      Sous-catégories associées ({cat.subcategories.length})
-                    </span>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-primary h-7 gap-1 text-xs"
-                      onClick={() => {
-                        setEditingSubcategory({
-                          categoryId: cat.id,
-                          name: "",
-                          slug: "",
-                          description: "",
-                          placeholderSubject: "",
-                          placeholderDescription: "",
-                          enabled: true,
-                        });
-                        setSubcategoryModalOpen(true);
-                      }}
+              {/* Sous-catégories compactes */}
+              {cat.subcategories.length > 0 ? (
+                <div className="bg-muted/10 divide-y rounded-md border">
+                  {cat.subcategories.map((sub) => (
+                    <div
+                      key={sub.id}
+                      className="hover:bg-muted/20 flex items-center justify-between gap-3 p-2.5 text-xs transition-colors"
                     >
-                      <Plus className="size-3.5" />
-                      Ajouter une sous-catégorie
-                    </Button>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                    {cat.subcategories.map((sub) => (
-                      <div
-                        key={sub.id}
-                        className="bg-card flex flex-col justify-between rounded border p-3 text-xs shadow-xs"
-                      >
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-foreground font-semibold">{sub.name}</span>
-                            <Badge variant="outline" className="font-mono text-[10px]">
-                              {sub.slug}
+                      <div className="flex min-w-0 flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-foreground font-medium">{sub.name}</span>
+                          <Badge variant="outline" className="py-0 font-mono text-[9px]">
+                            {sub.slug}
+                          </Badge>
+                          {!sub.enabled && (
+                            <Badge variant="destructive" className="py-0 text-[9px]">
+                              Désactivée
                             </Badge>
-                          </div>
-                          {sub.description && (
-                            <p className="text-muted-foreground line-clamp-2">{sub.description}</p>
-                          )}
-                          {sub.placeholderSubject && (
-                            <p className="text-muted-foreground/80 text-[11px] italic">
-                              <span className="font-medium not-italic">Exemple sujet :</span>{" "}
-                              {sub.placeholderSubject}
-                            </p>
                           )}
                         </div>
-
-                        <div className="flex items-center justify-end gap-1 pt-2">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 px-2 text-[11px]"
-                            onClick={() => {
-                              setEditingSubcategory(sub);
-                              setSubcategoryModalOpen(true);
-                            }}
-                          >
-                            <PencilSimple className="mr-1 size-3" />
-                            Éditer
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            className="text-destructive hover:bg-destructive/10 h-6 px-2 text-[11px]"
-                            onClick={() => handleDeleteSubcategory(sub)}
-                          >
-                            <Trash className="size-3" />
-                          </Button>
-                        </div>
+                        {sub.description && (
+                          <p className="text-muted-foreground max-w-md truncate text-[11px]">
+                            {sub.description}
+                          </p>
+                        )}
+                        {sub.placeholderSubject && (
+                          <p className="text-muted-foreground/80 max-w-md truncate text-[10px] italic">
+                            Sujet : {sub.placeholderSubject}
+                          </p>
+                        )}
                       </div>
-                    ))}
-                  </div>
+
+                      <div className="flex shrink-0 items-center gap-1">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-[11px]"
+                          onClick={() => {
+                            setEditingSubcategory(sub);
+                            setSubcategoryModalOpen(true);
+                          }}
+                        >
+                          <PencilSimple className="mr-1 size-3" />
+                          Éditer
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:bg-destructive/10 h-6 w-6 p-0"
+                          onClick={() => handleDeleteSubcategory(sub)}
+                        >
+                          <Trash className="size-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+              ) : (
+                <div className="text-muted-foreground rounded-md border border-dashed py-3 text-center text-xs">
+                  Aucune sous-catégorie configurée pour le moment.
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* MODALE : ÉDITION CATÉGORIE */}
@@ -723,7 +576,7 @@ export function TicketsSettingsTab({
                 onChange={(e) =>
                   setEditingSubcategory((p) => ({ ...p, description: e.target.value }))
                 }
-                placeholder="Précisez ce que cette sous-catégorie couvre (projets, lore, etc.)..."
+                placeholder="Précisez ce que cette sous-catégorie couvre..."
               />
             </div>
 
@@ -752,7 +605,7 @@ export function TicketsSettingsTab({
                 onChange={(e) =>
                   setEditingSubcategory((p) => ({ ...p, placeholderDescription: e.target.value }))
                 }
-                placeholder="Ex: Détaillez votre projet, les personnages impliqués, le lieu et vos objectifs RP..."
+                placeholder="Ex: Détaillez votre projet, les personnages impliqués..."
               />
             </div>
 

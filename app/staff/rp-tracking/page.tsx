@@ -2,9 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircle, User, Users } from "@phosphor-icons/react/dist/ssr";
 
 import { requireRole } from "@/lib/dal";
+import { prisma } from "@/lib/prisma";
+import { CharacterStatus, RegistrationStatus, SanctionType } from "@/lib/generated/prisma/enums";
+import { getAllRpTrackingGroups } from "@/lib/services/group-rp-tracking-service";
+import { GroupTrackingTable } from "@/components/staff/rp-tracking/group-tracking-table";
+import type { PlayerOption } from "@/components/player-select";
 
 export const metadata: Metadata = {
   title: "Suivi RP et Narration",
@@ -76,6 +81,7 @@ export default async function RpTrackingStaffListPage(props: {
     sort?: string;
     page?: string;
     pageSize?: string;
+    view?: string;
   }>;
 }) {
   const staffUser = await requireRole(rpTrackingStaffRoles);
@@ -134,7 +140,52 @@ export default async function RpTrackingStaffListPage(props: {
       ? (savedPrefs.sort as RpTrackingSort)
       : DEFAULT_RP_TRACKING_SORT;
 
-  const { players, counts } = await getRpTrackingStates();
+  const view = searchParams.view === "groups" ? "groups" : "players";
+
+  const [{ players, counts }, allGroups, rawUsers] = await Promise.all([
+    getRpTrackingStates(),
+    getAllRpTrackingGroups(),
+    prisma.user.findMany({
+      where: {
+        registrationStatus: RegistrationStatus.WHITELISTED,
+        sanctions: {
+          none: {
+            type: SanctionType.EXCLUSION,
+            revokedAt: null,
+          },
+        },
+      },
+      select: {
+        id: true,
+        minecraftUsername: true,
+        discordDisplayName: true,
+        discordUsername: true,
+        discordAvatarUrl: true,
+        role: true,
+        registrationStatus: true,
+        characterSheets: {
+          where: { status: CharacterStatus.ACTIVE },
+          take: 1,
+          select: { name: true, status: true },
+        },
+      },
+      orderBy: { discordDisplayName: "asc" },
+    }),
+  ]);
+
+  const availablePlayers: PlayerOption[] = rawUsers.map((u) => ({
+    id: u.id,
+    minecraftUsername: u.minecraftUsername,
+    discordDisplayName: u.discordDisplayName,
+    discordUsername: u.discordUsername,
+    discordAvatarUrl: u.discordAvatarUrl,
+    role: u.role,
+    registrationStatus: u.registrationStatus,
+    characterName: u.characterSheets[0]?.name ?? null,
+    characterSheets: u.characterSheets,
+  }));
+
+  const pendingGroupsCount = allGroups.filter((g) => g.isPending).length;
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
   let filteredPlayers = players;
@@ -198,224 +249,298 @@ export default async function RpTrackingStaffListPage(props: {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-heading text-2xl font-semibold">Suivi RP et Narration</h1>
-        <RpTrackingFilters query={query} writingEdited={writingEditedFilter} sort={sortOption} />
+        <div className="space-y-1">
+          <h1 className="font-heading text-2xl font-semibold">Suivi RP et Narration</h1>
+          <p className="text-muted-foreground text-xs">
+            Gérez les échanges narratifs et l&apos;évolution du lore des joueurs et des groupes RP.
+          </p>
+        </div>
+
+        {/* Sélecteur de vue : Individuels vs Groupes */}
+        <div className="bg-muted inline-flex items-center rounded-lg p-1 text-xs">
+          <Link
+            href="/staff/rp-tracking?view=players"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              view === "players"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <User className="size-3.5" />
+            <span>Suivis individuels</span>
+            <Badge
+              variant={view === "players" ? "secondary" : "outline"}
+              className="h-4.5 px-1.5 text-[10px]"
+            >
+              {counts.all}
+            </Badge>
+            {counts.pending > 0 && (
+              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
+                {counts.pending}
+              </Badge>
+            )}
+          </Link>
+          <Link
+            href="/staff/rp-tracking?view=groups"
+            className={cn(
+              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
+              view === "groups"
+                ? "bg-background text-foreground shadow-xs"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <Users className="size-3.5" />
+            <span>Suivis de groupe</span>
+            <Badge
+              variant={view === "groups" ? "secondary" : "outline"}
+              className="h-4.5 px-1.5 text-[10px]"
+            >
+              {allGroups.length}
+            </Badge>
+            {pendingGroupsCount > 0 && (
+              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
+                {pendingGroupsCount}
+              </Badge>
+            )}
+          </Link>
+        </div>
       </div>
 
-      <ViewTabs
-        mobileSelect
-        activeView={tab}
-        defaultView={DEFAULT_RP_TRACKING_TAB}
-        tabs={[
-          { value: "pending", label: "À traiter", count: counts.pending },
-          { value: "handled", label: "Traités", count: counts.recent + counts.dormant },
-          { value: "none", label: "Sans suivi", count: counts.none },
-        ]}
-      />
+      {view === "groups" ? (
+        <GroupTrackingTable groups={allGroups} availablePlayers={availablePlayers} />
+      ) : (
+        <>
+          <div className="flex justify-end">
+            <RpTrackingFilters
+              query={query}
+              writingEdited={writingEditedFilter}
+              sort={sortOption}
+            />
+          </div>
 
-      <Card className="gap-0 overflow-hidden py-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="pl-6">Joueur</TableHead>
-              <TableHead>État</TableHead>
-              <TableHead className="hidden md:table-cell">Dernier message</TableHead>
-              <TableHead className="hidden lg:table-cell">Messages</TableHead>
-              <TableHead className="hidden lg:table-cell">Trame écrite</TableHead>
-              <TableHead className="hidden xl:table-cell">Dernière connexion</TableHead>
-              <TableHead className="hidden md:table-cell">Dernière activité</TableHead>
-              <TableHead className="w-12 pr-6 text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pagePlayers.length === 0 ? (
-              <TableRow>
-                <TableCell
-                  colSpan={COLUMN_COUNT}
-                  className="text-muted-foreground py-10 text-center text-sm"
-                >
-                  {query ||
-                  writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
-                  sortOption !== DEFAULT_RP_TRACKING_SORT
-                    ? "Aucun joueur ne correspond aux filtres sélectionnés."
-                    : tab === "pending"
-                      ? "Aucun suivi à traiter actuellement."
-                      : tab === "handled"
-                        ? "Aucun suivi traité."
-                        : "Aucun joueur sans suivi."}
-                </TableCell>
-              </TableRow>
-            ) : (
-              pagePlayers.map((player) => {
-                const context = contexts.get(player.playerId);
-                const lastMessage = player.conversationId
-                  ? lastMessages.get(player.conversationId)
-                  : undefined;
-                const isPending = player.state === "pending";
-                const lastMessageAuthor = lastMessage
-                  ? lastMessage.authorId === staffUser.id
-                    ? "Moi"
-                    : (lastMessage.authorName ?? "Inconnu")
-                  : null;
-                const lastMessageText = lastMessage
-                  ? lastMessage.body
-                    ? truncate(
-                        lastMessage.body.replace(/\s+/g, " "),
-                        LAST_MESSAGE_PREVIEW_LENGTH,
-                        "..."
-                      )
-                    : lastMessage.hasImage
-                      ? "Image"
-                      : ""
-                  : null;
-                const writing = context?.writing;
+          <ViewTabs
+            mobileSelect
+            activeView={tab}
+            defaultView={DEFAULT_RP_TRACKING_TAB}
+            tabs={[
+              { value: "pending", label: "À traiter", count: counts.pending },
+              { value: "handled", label: "Traités", count: counts.recent + counts.dormant },
+              { value: "none", label: "Sans suivi", count: counts.none },
+            ]}
+          />
 
-                return (
-                  <TicketTableRow
-                    key={player.playerId}
-                    href={`/staff/rp-tracking/${player.playerId}`}
-                  >
-                    <TableCell className="relative py-3 pl-6">
-                      {isPending && (
-                        <UnreadDot placement="table" title="Réponse du staff attendue" />
-                      )}
-                      <Link
-                        href={`/staff/atlas/${player.playerId}`}
-                        className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
-                        title={`Voir la fiche Atlas de ${player.playerName}`}
+          <Card className="gap-0 overflow-hidden py-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="pl-6">Joueur</TableHead>
+                  <TableHead>État</TableHead>
+                  <TableHead className="hidden md:table-cell">Dernier message</TableHead>
+                  <TableHead className="hidden lg:table-cell">Messages</TableHead>
+                  <TableHead className="hidden lg:table-cell">Trame écrite</TableHead>
+                  <TableHead className="hidden xl:table-cell">Dernière connexion</TableHead>
+                  <TableHead className="hidden md:table-cell">Dernière activité</TableHead>
+                  <TableHead className="w-12 pr-6 text-right">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {pagePlayers.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={COLUMN_COUNT}
+                      className="text-muted-foreground py-10 text-center text-sm"
+                    >
+                      {query ||
+                      writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
+                      sortOption !== DEFAULT_RP_TRACKING_SORT
+                        ? "Aucun joueur ne correspond aux filtres sélectionnés."
+                        : tab === "pending"
+                          ? "Aucun suivi à traiter actuellement."
+                          : tab === "handled"
+                            ? "Aucun suivi traité."
+                            : "Aucun joueur sans suivi."}
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  pagePlayers.map((player) => {
+                    const context = contexts.get(player.playerId);
+                    const lastMessage = player.conversationId
+                      ? lastMessages.get(player.conversationId)
+                      : undefined;
+                    const isPending = player.state === "pending";
+                    const lastMessageAuthor = lastMessage
+                      ? lastMessage.authorId === staffUser.id
+                        ? "Moi"
+                        : (lastMessage.authorName ?? "Inconnu")
+                      : null;
+                    const lastMessageText = lastMessage
+                      ? lastMessage.body
+                        ? truncate(
+                            lastMessage.body.replace(/\s+/g, " "),
+                            LAST_MESSAGE_PREVIEW_LENGTH,
+                            "..."
+                          )
+                        : lastMessage.hasImage
+                          ? "Image"
+                          : ""
+                      : null;
+                    const writing = context?.writing;
+
+                    return (
+                      <TicketTableRow
+                        key={player.playerId}
+                        href={`/staff/rp-tracking/${player.playerId}`}
                       >
-                        {player.minecraftUsername ? (
-                          <SkinHead size="sm" username={player.minecraftUsername} />
-                        ) : (
-                          <Avatar size="sm">
-                            <AvatarImage
-                              src={player.discordAvatarUrl ?? undefined}
-                              alt={player.playerName}
-                            />
-                            <AvatarFallback>
-                              {player.playerName.charAt(0).toUpperCase()}
-                            </AvatarFallback>
-                          </Avatar>
-                        )}
-                        <span className="flex min-w-0 flex-col">
-                          <span
-                            className={cn(
-                              "hover:underline",
-                              isPending ? "font-semibold" : "font-medium"
-                            )}
+                        <TableCell className="relative py-3 pl-6">
+                          {isPending && (
+                            <UnreadDot placement="table" title="Réponse du staff attendue" />
+                          )}
+                          <Link
+                            href={`/staff/atlas/${player.playerId}`}
+                            className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
+                            title={`Voir la fiche Atlas de ${player.playerName}`}
                           >
-                            {player.playerName}
+                            {player.minecraftUsername ? (
+                              <SkinHead size="sm" username={player.minecraftUsername} />
+                            ) : (
+                              <Avatar size="sm">
+                                <AvatarImage
+                                  src={player.discordAvatarUrl ?? undefined}
+                                  alt={player.playerName}
+                                />
+                                <AvatarFallback>
+                                  {player.playerName.charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            <span className="flex min-w-0 flex-col">
+                              <span
+                                className={cn(
+                                  "hover:underline",
+                                  isPending ? "font-semibold" : "font-medium"
+                                )}
+                              >
+                                {player.playerName}
+                              </span>
+                              {context?.character && (
+                                <span className="text-muted-foreground truncate text-xs">
+                                  {context.character.name}
+                                  {context.character.className
+                                    ? ` · ${context.character.className}`
+                                    : ""}
+                                </span>
+                              )}
+                            </span>
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          {player.isHandledWithoutReply ? (
+                            <div className="flex flex-col gap-0.5">
+                              <Badge variant="secondary" className="w-fit text-xs font-medium">
+                                Traité
+                              </Badge>
+                              {player.lastHandledByName && (
+                                <span className="text-muted-foreground text-[10px]">
+                                  par {player.lastHandledByName}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <Badge
+                              variant={stateBadgeVariant[player.state]}
+                              className={cn(
+                                "text-xs",
+                                player.state === "none" && "text-muted-foreground"
+                              )}
+                            >
+                              {rpTrackingStateLabels[player.state]}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="hidden max-w-md md:table-cell">
+                          {lastMessage ? (
+                            <span
+                              className={cn(
+                                "block truncate text-sm",
+                                isPending ? "text-foreground/80" : "text-muted-foreground"
+                              )}
+                            >
+                              {lastMessageAuthor} : {lastMessageText}
+                            </span>
+                          ) : player.state === "none" ? (
+                            <span className="text-muted-foreground/60 text-xs italic">
+                              Suivi non démarré
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden lg:table-cell">
+                          <span className="inline-flex items-center gap-1.5">
+                            <ChatCircle className="size-3.5" />
+                            {player.messageCount}
                           </span>
-                          {context?.character && (
-                            <span className="text-muted-foreground truncate text-xs">
-                              {context.character.name}
-                              {context.character.className
-                                ? ` · ${context.character.className}`
-                                : ""}
-                            </span>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden whitespace-nowrap lg:table-cell">
+                          {writing && writing.chapterCount > 0 ? (
+                            <div className="flex flex-col items-start gap-1">
+                              <Badge variant="outline" className="text-xs font-normal">
+                                {writing.chapterCount} chap. ·{" "}
+                                {writing.wordCount.toLocaleString("fr-FR")} mot
+                                {writing.wordCount > 1 ? "s" : ""}
+                              </Badge>
+                              {writing.lastUpdatedAt && (
+                                <span className="text-muted-foreground text-xs">
+                                  Modifiée :{" "}
+                                  {formatDate(writing.lastUpdatedAt, {
+                                    style: "chat",
+                                    fallback: "—",
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground/60 text-xs">Aucune trame</span>
                           )}
-                        </span>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {player.isHandledWithoutReply ? (
-                        <div className="flex flex-col gap-0.5">
-                          <Badge variant="secondary" className="w-fit text-xs font-medium">
-                            Traité
-                          </Badge>
-                          {player.lastHandledByName && (
-                            <span className="text-muted-foreground text-[10px]">
-                              par {player.lastHandledByName}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <Badge
-                          variant={stateBadgeVariant[player.state]}
-                          className={cn(
-                            "text-xs",
-                            player.state === "none" && "text-muted-foreground"
-                          )}
-                        >
-                          {rpTrackingStateLabels[player.state]}
-                        </Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="hidden max-w-md md:table-cell">
-                      {lastMessage ? (
-                        <span
-                          className={cn(
-                            "block truncate text-sm",
-                            isPending ? "text-foreground/80" : "text-muted-foreground"
-                          )}
-                        >
-                          {lastMessageAuthor} : {lastMessageText}
-                        </span>
-                      ) : player.state === "none" ? (
-                        <span className="text-muted-foreground/60 text-xs italic">
-                          Suivi non démarré
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden lg:table-cell">
-                      <span className="inline-flex items-center gap-1.5">
-                        <ChatCircle className="size-3.5" />
-                        {player.messageCount}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden whitespace-nowrap lg:table-cell">
-                      {writing && writing.chapterCount > 0 ? (
-                        <div className="flex flex-col items-start gap-1">
-                          <Badge variant="outline" className="text-xs font-normal">
-                            {writing.chapterCount} chap. ·{" "}
-                            {writing.wordCount.toLocaleString("fr-FR")} mot
-                            {writing.wordCount > 1 ? "s" : ""}
-                          </Badge>
-                          {writing.lastUpdatedAt && (
-                            <span className="text-muted-foreground text-xs">
-                              Modifiée :{" "}
-                              {formatDate(writing.lastUpdatedAt, { style: "chat", fallback: "—" })}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground/60 text-xs">Aucune trame</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden whitespace-nowrap xl:table-cell">
-                      {formatDate(context?.lastConnectedAt, { style: "chat", fallback: "Jamais" })}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground hidden whitespace-nowrap md:table-cell">
-                      {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
-                    </TableCell>
-                    <TableCell className="pr-6 text-right">
-                      {player.conversationId &&
-                      (player.state === "pending" || player.isHandledWithoutReply) ? (
-                        <MarkHandledButton
-                          conversationId={player.conversationId}
-                          isHandled={player.isHandledWithoutReply}
-                          playerName={player.playerName}
-                        />
-                      ) : null}
-                    </TableCell>
-                  </TicketTableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-        <TablePagination
-          currentPage={page}
-          totalPages={totalPages}
-          totalCount={totalCount}
-          pageSize={pageSize}
-          paramName="page"
-          sizeParamName="pageSize"
-          pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
-        />
-      </Card>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden whitespace-nowrap xl:table-cell">
+                          {formatDate(context?.lastConnectedAt, {
+                            style: "chat",
+                            fallback: "Jamais",
+                          })}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground hidden whitespace-nowrap md:table-cell">
+                          {formatDate(player.lastActivityAt, { style: "chat", fallback: "—" })}
+                        </TableCell>
+                        <TableCell className="pr-6 text-right">
+                          {player.conversationId &&
+                          (player.state === "pending" || player.isHandledWithoutReply) ? (
+                            <MarkHandledButton
+                              conversationId={player.conversationId}
+                              isHandled={player.isHandledWithoutReply}
+                              playerName={player.playerName}
+                            />
+                          ) : null}
+                        </TableCell>
+                      </TicketTableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+            <TablePagination
+              currentPage={page}
+              totalPages={totalPages}
+              totalCount={totalCount}
+              pageSize={pageSize}
+              paramName="page"
+              sizeParamName="pageSize"
+              pageSizeOptions={DEFAULT_PAGE_SIZE_OPTIONS}
+            />
+          </Card>
+        </>
+      )}
     </div>
   );
 }

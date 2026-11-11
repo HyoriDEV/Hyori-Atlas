@@ -146,7 +146,12 @@ export async function getStaffWritingStories(options: {
           discordUsername: true,
           discordAvatarUrl: true,
           conversationMemberships: {
-            where: { conversation: { type: ConversationType.RP_TRACKING } },
+            where: {
+              conversation: {
+                type: ConversationType.RP_TRACKING,
+                rpTrackingGroup: null,
+              },
+            },
             take: 1,
             select: { conversationId: true },
           },
