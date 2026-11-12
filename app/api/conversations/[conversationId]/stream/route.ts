@@ -48,7 +48,7 @@ export async function GET(
   function anonymizeStaffMessage(
     msg: SerializedConversationMessage
   ): SerializedConversationMessage {
-    if (msg.authorType !== MessageAuthorType.STAFF) return msg;
+    if (msg.authorType !== MessageAuthorType.STAFF || (user && msg.authorId === user.id)) return msg;
     return {
       ...msg,
       authorId: null,

@@ -221,8 +221,9 @@ export function ConversationChat({
           const rawMessage: SerializedConversationMessage =
             data.type === "CREATE" ? data.message : data;
           if (!viewerIsStaff && rawMessage.deletedAt) return;
+          const isOwnMsg = Boolean(rawMessage.authorId && rawMessage.authorId === viewerId);
           const message: SerializedConversationMessage =
-            !viewerIsStaff && rawMessage.authorType === MessageAuthorType.STAFF
+            !viewerIsStaff && !isOwnMsg && rawMessage.authorType === MessageAuthorType.STAFF
               ? {
                   ...rawMessage,
                   authorId: null,
@@ -665,9 +666,9 @@ export function ConversationChat({
         continue;
       }
 
-      const isOwn = msg.authorId === viewerId;
+      const isOwn = Boolean(msg.authorId && msg.authorId === viewerId);
       const isStaffMessage = msg.authorType === MessageAuthorType.STAFF;
-      const effectiveAuthorId = isStaffMessage && !viewerIsStaff ? null : msg.authorId;
+      const effectiveAuthorId = isStaffMessage && !viewerIsStaff && !isOwn ? null : msg.authorId;
       const displayName = isOwn
         ? "Moi"
         : isStaffMessage && !viewerIsStaff
@@ -679,9 +680,9 @@ export function ConversationChat({
               : "Joueur";
 
       const minecraftUsername =
-        isStaffMessage && !viewerIsStaff ? null : (msg.authorMinecraftUsername ?? null);
+        isStaffMessage && !viewerIsStaff && !isOwn ? null : (msg.authorMinecraftUsername ?? null);
       const avatarUrl =
-        isStaffMessage && !viewerIsStaff
+        isStaffMessage && !viewerIsStaff && !isOwn
           ? "/HYORI-LOGO-COMPRESSED.jpg"
           : (msg.authorAvatarUrl ?? (isStaffMessage ? "/HYORI-LOGO-COMPRESSED.jpg" : null));
 
@@ -702,7 +703,7 @@ export function ConversationChat({
         const currTime = new Date(msg.createdAt).getTime();
         const timeDiffMs = currTime - prevTime;
         const sameAuthor =
-          !viewerIsStaff && isStaffMessage && currentGroup.authorType === MessageAuthorType.STAFF
+          !viewerIsStaff && isStaffMessage && currentGroup.authorType === MessageAuthorType.STAFF && !isOwn
             ? true
             : currentGroup.authorId === effectiveAuthorId &&
               currentGroup.authorType === msg.authorType;

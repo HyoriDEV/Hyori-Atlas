@@ -221,7 +221,8 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
  */
 export async function getRpTrackingGroupDetail(
   groupId: string,
-  viewerId?: string
+  viewerId?: string,
+  isStaff: boolean = false
 ): Promise<RpTrackingGroupDetail | null> {
   const group = await prisma.rpTrackingGroup.findUnique({
     where: { id: groupId },
@@ -354,7 +355,7 @@ export async function getRpTrackingGroupDetail(
 
   const serializedMessages = [...messages]
     .reverse()
-    .map((m) => serializeConversationMessage(m, false));
+    .map((m) => serializeConversationMessage(m, isStaff, viewerId));
 
   return {
     id: group.id,

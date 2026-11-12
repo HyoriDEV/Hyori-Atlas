@@ -11,10 +11,12 @@ export function serializeConversationMessage(
     author: User | null;
     versions?: ConversationMessageVersion[];
   },
-  isStaff: boolean = false
+  isStaff: boolean = false,
+  viewerId?: string
 ): SerializedConversationMessage {
   const isEdited = (message.versions && message.versions.length > 0) || false;
-  const isAnonymizedStaff = !isStaff && message.authorType === MessageAuthorType.STAFF;
+  const isOwn = Boolean(viewerId && message.authorId === viewerId);
+  const isAnonymizedStaff = !isStaff && !isOwn && message.authorType === MessageAuthorType.STAFF;
 
   return {
     id: message.id,
