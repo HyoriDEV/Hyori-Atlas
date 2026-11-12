@@ -433,6 +433,7 @@ export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING
 export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
 export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
 export const rpTrackingStaffRoles: Role[] = allStaffRoles;
+export const rpTrackingDeleteRoles: Role[] = [Role.ADMIN];
 export const rpManagementRoles: Role[] = allStaffRoles;
 export const secretTicketStaffRoles: Role[] = [Role.ADMIN];
 export const ticketStaffRoles: Role[] = allStaffRoles;

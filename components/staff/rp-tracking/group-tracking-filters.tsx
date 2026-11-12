@@ -5,19 +5,44 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowCounterClockwise, MagnifyingGlass, X } from "@phosphor-icons/react";
 
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { CreateGroupDialog } from "@/components/staff/rp-tracking/create-group-dialog";
 import type { PlayerOption } from "@/components/player-select";
+import {
+  DEFAULT_RP_TRACKING_SORT,
+  DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
+  RP_TRACKING_SORTS,
+  RP_TRACKING_WRITING_EDITED_FILTERS,
+  rpTrackingSortLabels,
+  rpTrackingWritingEditedFilterLabels,
+  type RpTrackingSort,
+  type RpTrackingWritingEditedFilter,
+} from "@/lib/rp-tracking";
+import { setClientPagePref } from "@/lib/table-preferences";
 
 const QUERY_DEBOUNCE_MS = 400;
+const TRANSIENT_PARAMS = new Set(["q", "page", "view"]);
+
+export interface GroupTrackingFiltersProps {
+  query: string;
+  writingEdited: RpTrackingWritingEditedFilter;
+  sort: RpTrackingSort;
+  availablePlayers: PlayerOption[];
+}
 
 export function GroupTrackingFilters({
   query,
+  writingEdited,
+  sort,
   availablePlayers,
-}: {
-  query: string;
-  availablePlayers: PlayerOption[];
-}) {
+}: GroupTrackingFiltersProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -37,13 +62,30 @@ export function GroupTrackingFilters({
 
   function updateParams(next: Record<string, string | undefined>) {
     const params = new URLSearchParams(searchParams.toString());
+    const prefsToUpdate: Record<string, string | undefined> = {};
+
     for (const [key, value] of Object.entries(next)) {
-      if (value) {
+      if (
+        value &&
+        !(key === "writingEdited" && value === DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER) &&
+        !(key === "sort" && value === DEFAULT_RP_TRACKING_SORT)
+      ) {
         params.set(key, value);
+        if (!TRANSIENT_PARAMS.has(key)) {
+          prefsToUpdate[key] = value;
+        }
       } else {
         params.delete(key);
+        if (!TRANSIENT_PARAMS.has(key)) {
+          prefsToUpdate[key] = undefined;
+        }
       }
     }
+
+    if (Object.keys(prefsToUpdate).length > 0) {
+      setClientPagePref(pathname, prefsToUpdate);
+    }
+
     params.delete("page");
     startTransition(() => {
       const queryString = params.toString();
@@ -72,6 +114,24 @@ export function GroupTrackingFilters({
     updateParams({ q: undefined });
   }
 
+  function handleResetAll() {
+    setQueryInput("");
+    setLastDispatchedQuery("");
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    updateParams({
+      q: undefined,
+      writingEdited: DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
+      sort: DEFAULT_RP_TRACKING_SORT,
+    });
+  }
+
+  const isFiltered =
+    Boolean(query) ||
+    writingEdited !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
+    sort !== DEFAULT_RP_TRACKING_SORT;
+
   useEffect(() => {
     return () => {
       if (debounceRef.current) {
@@ -80,11 +140,19 @@ export function GroupTrackingFilters({
     };
   }, []);
 
-  const isFiltered = Boolean(query);
+  const writingEditedFilterItems = RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => ({
+    value: editedFilter,
+    label: rpTrackingWritingEditedFilterLabels[editedFilter],
+  }));
+
+  const sortItems = RP_TRACKING_SORTS.map((sortOption) => ({
+    value: sortOption,
+    label: rpTrackingSortLabels[sortOption],
+  }));
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-      {/* Recherche texte */}
+      {/* Recherche texte à gauche */}
       <div className="relative w-full sm:w-72">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
         <Input
@@ -105,17 +173,59 @@ export function GroupTrackingFilters({
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* Filtres secondaires, tri et action à droite */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Filtre Dernière modification de la trame */}
+        <Select
+          items={writingEditedFilterItems}
+          value={writingEdited}
+          onValueChange={(val) =>
+            updateParams({ writingEdited: val as RpTrackingWritingEditedFilter })
+          }
+        >
+          <SelectTrigger className="w-full sm:w-60">
+            <SelectValue placeholder="Dernière modification de la trame">
+              {rpTrackingWritingEditedFilterLabels[writingEdited]}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => (
+              <SelectItem key={editedFilter} value={editedFilter}>
+                {rpTrackingWritingEditedFilterLabels[editedFilter]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Tri de la liste */}
+        <Select
+          items={sortItems}
+          value={sort}
+          onValueChange={(val) => updateParams({ sort: val as RpTrackingSort })}
+        >
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Trier par">{rpTrackingSortLabels[sort]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_SORTS.map((sortOption) => (
+              <SelectItem key={sortOption} value={sortOption}>
+                {rpTrackingSortLabels[sortOption]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Bouton réinitialiser */}
         {isFiltered && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleClearQuery}
+            onClick={handleResetAll}
             className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
-            title="Réinitialiser la recherche"
+            title="Réinitialiser les filtres"
           >
             <ArrowCounterClockwise className="size-3.5" />
-            <span className="hidden sm:inline">Réinitialiser</span>
+            <span className="hidden md:inline">Réinitialiser</span>
           </Button>
         )}
 

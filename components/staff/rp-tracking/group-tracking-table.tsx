@@ -4,6 +4,10 @@ import { ChatCircle } from "@phosphor-icons/react";
 
 import { cn, truncate } from "@/lib/utils";
 import { formatDate } from "@/lib/date";
+import {
+  DEFAULT_RP_TRACKING_SORT,
+  DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER,
+} from "@/lib/rp-tracking";
 import { DEFAULT_PAGE_SIZE_OPTIONS } from "@/lib/table-preferences";
 import type { RpTrackingGroupSummary } from "@/lib/services/group-rp-tracking-service";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,8 +40,11 @@ export interface GroupTrackingTableProps {
   activeTab?: string;
   tab?: string;
   query?: string;
+  writingEdited?: string;
+  sort?: string;
   currentUserId?: string;
   currentStaffId?: string;
+  isAdmin?: boolean;
 }
 
 export function GroupTrackingTable({
@@ -49,8 +56,11 @@ export function GroupTrackingTable({
   activeTab,
   tab,
   query = "",
+  writingEdited,
+  sort,
   currentUserId,
   currentStaffId,
+  isAdmin = false,
 }: GroupTrackingTableProps) {
   const currentTab = activeTab ?? tab ?? "pending";
   const staffId = currentUserId ?? currentStaffId ?? "";
@@ -75,8 +85,10 @@ export function GroupTrackingTable({
                 colSpan={COLUMN_COUNT}
                 className="text-muted-foreground py-10 text-center text-sm"
               >
-                {query
-                  ? "Aucun groupe ne correspond à votre recherche."
+                {query ||
+                (writingEdited && writingEdited !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER) ||
+                (sort && sort !== DEFAULT_RP_TRACKING_SORT)
+                  ? "Aucun groupe ne correspond aux filtres sélectionnés."
                   : currentTab === "pending"
                     ? "Aucun suivi de groupe à traiter actuellement."
                     : currentTab === "handled"
@@ -229,7 +241,7 @@ export function GroupTrackingTable({
                           playerName={group.name}
                         />
                       ) : null}
-                      <GroupRowActions group={group} />
+                      <GroupRowActions group={group} isAdmin={isAdmin} />
                     </div>
                   </TableCell>
                 </TicketTableRow>

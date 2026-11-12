@@ -27,7 +27,7 @@ import { EditGroupDialog } from "@/components/staff/rp-tracking/edit-group-dialo
 import { deleteRpTrackingGroupAction } from "@/lib/actions/group-rp-tracking-actions";
 import type { RpTrackingGroupSummary } from "@/lib/services/group-rp-tracking-service";
 
-export function GroupRowActions({ group }: { group: RpTrackingGroupSummary }) {
+export function GroupRowActions({ group, isAdmin }: { group: RpTrackingGroupSummary; isAdmin?: boolean }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -69,11 +69,15 @@ export function GroupRowActions({ group }: { group: RpTrackingGroupSummary }) {
             <PencilSimple className="size-3.5" />
             <span>Modifier</span>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
-            <Trash className="size-3.5" />
-            <span>Supprimer définitivement</span>
-          </DropdownMenuItem>
+          {isAdmin && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem variant="destructive" onClick={() => setDeleteOpen(true)}>
+                <Trash className="size-3.5" />
+                <span>Supprimer</span>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -104,7 +108,7 @@ export function GroupRowActions({ group }: { group: RpTrackingGroupSummary }) {
                   <span>Suppression...</span>
                 </>
               ) : (
-                <span>Supprimer définitivement</span>
+                <span>Supprimer</span>
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
