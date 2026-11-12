@@ -218,7 +218,7 @@ export function GroupMembersManager({
             />
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={isAdding}>
               Annuler
             </Button>

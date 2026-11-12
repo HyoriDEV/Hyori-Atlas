@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { allStaffRoles, formatTicketCategoryName } from "@/lib/navigation";
+import { allStaffRoles, formatTicketCategoryName, isTechniqueCategory } from "@/lib/navigation";
 import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
@@ -107,7 +107,7 @@ export async function createTicket(
     });
   }
 
-  const isTechnique = categoryConfig?.slug === "technique";
+  const isTechnique = isTechniqueCategory(categoryConfig);
   const categoryName = categoryConfig?.name
     ? formatTicketCategoryName(categoryConfig.name)
     : isTechnique
@@ -256,7 +256,7 @@ export async function createStaffTicket(input: {
   }
 
   const isTechnique =
-    input.category === TicketCategory.TECHNIQUE || categoryConfig?.slug === "technique";
+    input.category === TicketCategory.TECHNIQUE || isTechniqueCategory(categoryConfig);
   const categoryName = categoryConfig?.name
     ? formatTicketCategoryName(categoryConfig.name)
     : isTechnique
@@ -821,7 +821,7 @@ export async function updateTicketCategories(input: {
     });
   }
 
-  const isTechnique = categoryConfig?.slug === "technique";
+  const isTechnique = isTechniqueCategory(categoryConfig);
   const categoryName = categoryConfig?.name
     ? formatTicketCategoryName(categoryConfig.name)
     : isTechnique

@@ -112,11 +112,14 @@ export function GalleryEditDialog({ item, categories }: GalleryEditDialogProps) 
               Catégorie <span className="text-destructive">*</span>
             </Label>
             <Select
+              items={availableCategories.map((c) => ({ value: c.id, label: c.label }))}
               value={category}
               onValueChange={(val) => val && setCategory(val as GalleryCategory)}
             >
               <SelectTrigger id={`edit-cat-${item.id}`} className="w-full text-sm">
-                <SelectValue placeholder="Choisir une catégorie" />
+                <SelectValue placeholder="Choisir une catégorie">
+                  {availableCategories.find((c) => c.id === category)?.label}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
                 {availableCategories.map((c) => (
@@ -156,7 +159,7 @@ export function GalleryEditDialog({ item, categories }: GalleryEditDialogProps) 
             />
           </div>
 
-          <DialogFooter className="border-border/60 gap-2 border-t pt-2 sm:gap-0">
+          <DialogFooter className="border-border/60 gap-2 border-t pt-2 sm:gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)}>
               Annuler
             </Button>

@@ -34,9 +34,17 @@ export interface RpTrackingGroupSummary {
   messageCount: number;
   lastActivityAt: Date | null;
   isPending: boolean;
+  isHandledWithoutReply: boolean;
   lastHandledAt: Date | null;
   lastHandledByName: string | null;
   unreadCount?: number;
+  lastMessage?: {
+    body: string | null;
+    hasImage: boolean;
+    authorName: string | null;
+    authorId: string | null;
+    createdAt: Date;
+  } | null;
 }
 
 export interface RpTrackingGroupDetail extends RpTrackingGroupSummary {
@@ -70,7 +78,16 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
             take: 10,
             select: {
               id: true,
+              body: true,
+              imageUrl: true,
               authorType: true,
+              authorId: true,
+              author: {
+                select: {
+                  minecraftUsername: true,
+                  discordDisplayName: true,
+                },
+              },
               createdAt: true,
             },
           },
@@ -132,6 +149,26 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
       lastPlayerTime > 0 && lastStaffTime < lastPlayerTime && lastHandledTime < lastPlayerTime
     );
 
+    const isHandledWithoutReply = Boolean(
+      !isPending &&
+      lastHandledTime > 0 &&
+      lastPlayerTime > 0 &&
+      lastHandledTime >= lastPlayerTime &&
+      (!lastStaffTime || lastHandledTime >= lastStaffTime)
+    );
+
+    const lastMsg = messages[0];
+    const lastMessage = lastMsg
+      ? {
+          body: lastMsg.body,
+          hasImage: Boolean(lastMsg.imageUrl),
+          authorId: lastMsg.authorId,
+          authorName:
+            lastMsg.author?.minecraftUsername ?? lastMsg.author?.discordDisplayName ?? "Inconnu",
+          createdAt: lastMsg.createdAt,
+        }
+      : null;
+
     const lastActivityAt = messages[0]?.createdAt ?? g.createdAt;
 
     const members: RpTrackingGroupMemberInfo[] = g.members.map((m) => {
@@ -168,11 +205,13 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
       messageCount: g.conversation._count.messages,
       lastActivityAt,
       isPending,
+      isHandledWithoutReply,
       lastHandledAt: g.conversation.lastHandledAt,
       lastHandledByName:
         g.conversation.lastHandledBy?.minecraftUsername ??
         g.conversation.lastHandledBy?.discordDisplayName ??
         null,
+      lastMessage,
     };
   });
 }
@@ -278,6 +317,14 @@ export async function getRpTrackingGroupDetail(
     lastPlayerTime > 0 && lastStaffTime < lastPlayerTime && lastHandledTime < lastPlayerTime
   );
 
+  const isHandledWithoutReply = Boolean(
+    !isPending &&
+    lastHandledTime > 0 &&
+    lastPlayerTime > 0 &&
+    lastHandledTime >= lastPlayerTime &&
+    (!lastStaffTime || lastHandledTime >= lastStaffTime)
+  );
+
   const members: RpTrackingGroupMemberInfo[] = group.members.map((m) => {
     const activeSheet = m.characterSheet ?? m.user.characterSheets[0];
     return {
@@ -324,6 +371,7 @@ export async function getRpTrackingGroupDetail(
     messageCount: group.conversation._count.messages,
     lastActivityAt: messages[0]?.createdAt ?? group.createdAt,
     isPending,
+    isHandledWithoutReply,
     lastHandledAt: group.conversation.lastHandledAt,
     lastHandledByName:
       group.conversation.lastHandledBy?.minecraftUsername ??
@@ -464,6 +512,7 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
       messageCount: g.conversation._count.messages,
       lastActivityAt: lastMsg?.createdAt ?? g.createdAt,
       isPending: false,
+      isHandledWithoutReply: false,
       lastHandledAt: g.conversation.lastHandledAt,
       lastHandledByName:
         g.conversation.lastHandledBy?.minecraftUsername ??

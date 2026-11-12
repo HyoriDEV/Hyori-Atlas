@@ -295,7 +295,7 @@ export function GalleryUploadDialog({
           </div>
 
           {/* Boutons d'action */}
-          <DialogFooter className="gap-2 border-t pt-3 sm:gap-0">
+          <DialogFooter className="gap-2 border-t pt-3 sm:gap-2">
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Annuler
             </Button>

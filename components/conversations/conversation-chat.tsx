@@ -296,6 +296,114 @@ export function ConversationChat({
     return linkHref;
   }
 
+  function renderFormattedContent(
+    content: string | null | undefined,
+    variant: "system" | "default" | "own" = "default"
+  ): React.ReactNode {
+    if (!content) return null;
+
+    // Découpe le texte sur les liens markdown [label](url), URLs directes, gras (** ou __), code (`...`) et italique (*...*)
+    const pattern =
+      /(\[[^\]]+\]\([^\s)]+\)|https?:\/\/[^\s<]+|\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*]+\*)/g;
+    const parts = content.split(pattern);
+
+    return parts.map((part, index) => {
+      if (!part) return null;
+
+      // 1. Lien markdown: [label](url)
+      const linkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+|[^\s)]+)\)$/);
+      if (linkMatch) {
+        const [, label, rawHref] = linkMatch;
+        const isExternal = /^https?:\/\//i.test(rawHref);
+        const linkClass =
+          variant === "own"
+            ? "text-primary-foreground font-semibold underline underline-offset-2 hover:opacity-85 inline-flex items-center gap-0.5 transition-opacity"
+            : "text-primary font-semibold hover:underline inline-flex items-center gap-0.5 transition-colors";
+
+        if (isExternal) {
+          return (
+            <a
+              key={index}
+              href={rawHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={linkClass}
+            >
+              <span>{label}</span>
+              <ArrowSquareOut className="inline-block size-3 shrink-0 opacity-80" />
+            </a>
+          );
+        }
+
+        return (
+          <Link key={index} href={resolveLinkHref(rawHref)} className={linkClass}>
+            {label}
+          </Link>
+        );
+      }
+
+      // 2. URL directe: https://... ou http://...
+      if (/^https?:\/\/[^\s<]+$/i.test(part)) {
+        const urlClass =
+          variant === "own"
+            ? "text-primary-foreground underline underline-offset-2 hover:opacity-85 font-medium inline-flex items-center gap-0.5 break-all transition-opacity"
+            : "text-primary hover:underline font-medium inline-flex items-center gap-0.5 break-all transition-colors";
+        return (
+          <a key={index} href={part} target="_blank" rel="noopener noreferrer" className={urlClass}>
+            <span>{part}</span>
+            <ArrowSquareOut className="inline-block size-3 shrink-0 opacity-80" />
+          </a>
+        );
+      }
+
+      // 3. Gras: **texte** ou __texte__
+      const boldMatch = part.match(/^(\*\*|__)(.+?)\1$/);
+      if (boldMatch) {
+        return (
+          <strong
+            key={index}
+            className={cn(
+              "font-semibold",
+              variant === "own" ? "text-primary-foreground" : "text-foreground"
+            )}
+          >
+            {boldMatch[2]}
+          </strong>
+        );
+      }
+
+      // 4. Code inline: `code`
+      const codeMatch = part.match(/^`([^`]+)`$/);
+      if (codeMatch) {
+        return (
+          <code
+            key={index}
+            className={cn(
+              "inline-block rounded px-1.5 py-0.5 align-baseline font-mono text-[11px]",
+              variant === "own"
+                ? "bg-primary-foreground/20 border-primary-foreground/25 text-primary-foreground border"
+                : "bg-background/80 border-border/50 text-foreground border"
+            )}
+          >
+            {codeMatch[1]}
+          </code>
+        );
+      }
+
+      // 5. Italique: *texte*
+      const italicMatch = part.match(/^\*([^*]+)\*$/);
+      if (italicMatch) {
+        return (
+          <em key={index} className="italic">
+            {italicMatch[1]}
+          </em>
+        );
+      }
+
+      return <span key={index}>{part}</span>;
+    });
+  }
+
   async function uploadFile(file: File) {
     setError(null);
     const validation = validateImageFile(file);
@@ -631,8 +739,10 @@ export function ConversationChat({
         className="bg-card/30 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border p-4"
       >
         {emptyBadge && (
-          <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1 flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-medium">
-            <span>{emptyBadge}</span>
+          <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1.5 inline-flex max-w-[92%] flex-wrap items-center justify-center gap-1.5 rounded-full border px-3.5 py-1 text-center text-xs leading-relaxed font-medium shadow-2xs">
+            <span className="inline-flex flex-wrap items-center justify-center gap-1">
+              {renderFormattedContent(emptyBadge, "system")}
+            </span>
           </div>
         )}
         {messages.length === 0 && !emptyBadge ? (
@@ -641,20 +751,36 @@ export function ConversationChat({
           groupedItems.map((item) => {
             if (item.type === "system") {
               const message = item.message;
+              const isExternal = Boolean(
+                message.linkHref && /^https?:\/\//i.test(message.linkHref)
+              );
               return (
                 <div
                   key={message.id}
-                  className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1 flex items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-medium"
+                  className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1.5 inline-flex max-w-[92%] flex-wrap items-center justify-center gap-1.5 rounded-full border px-3.5 py-1 text-center text-xs leading-relaxed font-medium shadow-2xs"
                 >
-                  <span>{message.body}</span>
-                  {message.linkHref && (
-                    <Link
-                      href={resolveLinkHref(message.linkHref)}
-                      className="text-primary font-medium hover:underline"
-                    >
-                      {message.linkLabel ?? "Voir"}
-                    </Link>
-                  )}
+                  <span className="inline-flex flex-wrap items-center justify-center gap-1">
+                    {renderFormattedContent(message.body, "system")}
+                  </span>
+                  {message.linkHref &&
+                    (isExternal ? (
+                      <a
+                        href={message.linkHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary inline-flex items-center gap-0.5 font-medium transition-colors hover:underline"
+                      >
+                        <span>{message.linkLabel ?? "Voir"}</span>
+                        <ArrowSquareOut className="inline-block size-3 shrink-0 opacity-80" />
+                      </a>
+                    ) : (
+                      <Link
+                        href={resolveLinkHref(message.linkHref)}
+                        className="text-primary font-medium transition-colors hover:underline"
+                      >
+                        {message.linkLabel ?? "Voir"}
+                      </Link>
+                    ))}
                 </div>
               );
             }
@@ -932,7 +1058,7 @@ export function ConversationChat({
 
                                       {message.body && (
                                         <p className="text-foreground/90 break-words whitespace-pre-wrap italic">
-                                          {message.body}
+                                          {renderFormattedContent(message.body, "default")}
                                         </p>
                                       )}
                                       {message.imageUrl && (
@@ -999,7 +1125,10 @@ export function ConversationChat({
                                                     </span>
                                                   </div>
                                                   <p className="text-foreground/85 text-xs leading-relaxed break-words whitespace-pre-wrap italic">
-                                                    {version.body}
+                                                    {renderFormattedContent(
+                                                      version.body,
+                                                      "default"
+                                                    )}
                                                   </p>
                                                 </div>
                                               ))}
@@ -1018,7 +1147,14 @@ export function ConversationChat({
                                         : "bg-muted/80 border-border/40 rounded-tl-xs border"
                                     )}
                                   >
-                                    {message.body && <p>{message.body}</p>}
+                                    {message.body && (
+                                      <p>
+                                        {renderFormattedContent(
+                                          message.body,
+                                          group.isOwn ? "own" : "default"
+                                        )}
+                                      </p>
+                                    )}
                                     {message.imageUrl && (
                                       <img
                                         src={message.imageUrl}

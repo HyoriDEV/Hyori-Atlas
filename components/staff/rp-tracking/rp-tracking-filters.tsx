@@ -143,15 +143,15 @@ export function RpTrackingFilters({ query, writingEdited, sort }: RpTrackingFilt
   }));
 
   return (
-    <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
-      {/* Recherche texte */}
-      <div className="relative w-full sm:w-auto">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Recherche texte à gauche */}
+      <div className="relative w-full sm:w-72">
         <MagnifyingGlass className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
         <Input
           value={queryInput}
           onChange={(event) => handleQueryChange(event.target.value)}
           placeholder="Rechercher un joueur..."
-          className="w-full pr-8 pl-8 sm:w-64"
+          className="w-full pr-8 pl-8"
         />
         {queryInput ? (
           <button
@@ -165,59 +165,62 @@ export function RpTrackingFilters({ query, writingEdited, sort }: RpTrackingFilt
         ) : null}
       </div>
 
-      {/* Filtre Dernière modification de la trame */}
-      <Select
-        items={writingEditedFilterItems}
-        value={writingEdited}
-        onValueChange={(val) =>
-          updateParams({ writingEdited: val as RpTrackingWritingEditedFilter })
-        }
-      >
-        <SelectTrigger className="w-full sm:w-60">
-          <SelectValue placeholder="Dernière modification de la trame">
-            {rpTrackingWritingEditedFilterLabels[writingEdited]}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => (
-            <SelectItem key={editedFilter} value={editedFilter}>
-              {rpTrackingWritingEditedFilterLabels[editedFilter]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Tri de la liste */}
-      <Select
-        items={sortItems}
-        value={sort}
-        onValueChange={(val) => updateParams({ sort: val as RpTrackingSort })}
-      >
-        <SelectTrigger className="w-full sm:w-56">
-          <SelectValue placeholder="Trier par">{rpTrackingSortLabels[sort]}</SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {RP_TRACKING_SORTS.map((sortOption) => (
-            <SelectItem key={sortOption} value={sortOption}>
-              {rpTrackingSortLabels[sortOption]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Bouton réinitialiser */}
-      {isFiltered && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleResetAll}
-          className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
-          title="Réinitialiser les filtres"
+      {/* Filtres secondaires et tri à droite */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Filtre Dernière modification de la trame */}
+        <Select
+          items={writingEditedFilterItems}
+          value={writingEdited}
+          onValueChange={(val) =>
+            updateParams({ writingEdited: val as RpTrackingWritingEditedFilter })
+          }
         >
-          <ArrowCounterClockwise className="size-3.5" />
-          <span className="hidden md:inline">Réinitialiser</span>
-        </Button>
-      )}
+          <SelectTrigger className="w-full sm:w-60">
+            <SelectValue placeholder="Dernière modification de la trame">
+              {rpTrackingWritingEditedFilterLabels[writingEdited]}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_WRITING_EDITED_FILTERS.map((editedFilter) => (
+              <SelectItem key={editedFilter} value={editedFilter}>
+                {rpTrackingWritingEditedFilterLabels[editedFilter]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Tri de la liste */}
+        <Select
+          items={sortItems}
+          value={sort}
+          onValueChange={(val) => updateParams({ sort: val as RpTrackingSort })}
+        >
+          <SelectTrigger className="w-full sm:w-56">
+            <SelectValue placeholder="Trier par">{rpTrackingSortLabels[sort]}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {RP_TRACKING_SORTS.map((sortOption) => (
+              <SelectItem key={sortOption} value={sortOption}>
+                {rpTrackingSortLabels[sortOption]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Bouton réinitialiser */}
+        {isFiltered && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetAll}
+            className="text-muted-foreground hover:text-foreground flex items-center gap-1.5 text-xs"
+            title="Réinitialiser les filtres"
+          >
+            <ArrowCounterClockwise className="size-3.5" />
+            <span className="hidden md:inline">Réinitialiser</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 }

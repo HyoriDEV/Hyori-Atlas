@@ -244,7 +244,7 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-2">
             {isActive && (
               <Button
                 type="button"

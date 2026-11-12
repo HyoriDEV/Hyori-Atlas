@@ -224,6 +224,7 @@ export function StaffCharacterSheetEditForm({
             values={affiliation}
             interactive={true}
             onChange={setAffiliation}
+            showRoleStatus={true}
           />
         </div>
 

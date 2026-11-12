@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { createTicket } from "@/lib/actions/ticket-actions";
 import { TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
-import { formatTicketCategoryName } from "@/lib/navigation";
+import { formatTicketCategoryName, isTechniqueCategory } from "@/lib/navigation";
 import type { TicketCategoryConfigData } from "@/lib/actions/ticket-config-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -139,7 +139,7 @@ export function NewTicketDialog({
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
               {categories.map((cat) => {
                 const isSelected = cat.id === selectedCategoryId;
-                const isTech = cat.slug === "technique";
+                const isTech = isTechniqueCategory(cat);
                 const Icon = isTech ? Wrench : Scroll;
 
                 return (

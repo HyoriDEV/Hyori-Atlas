@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { updateTicketCategories } from "@/lib/actions/ticket-actions";
 import type { TicketCategoryConfigData } from "@/lib/actions/ticket-config-actions";
-import { formatTicketCategoryName } from "@/lib/navigation";
+import { formatTicketCategoryName, isTechniqueCategory } from "@/lib/navigation";
 import { TicketCategory } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -58,7 +58,8 @@ export function TicketCategoryBadgeEditor({
     availableCategories.find((c) =>
       categoryId
         ? c.id === categoryId
-        : c.slug === (category === TicketCategory.TECHNIQUE ? "technique" : "rp") ||
+        : isTechniqueCategory(c, category) === (category === TicketCategory.TECHNIQUE) ||
+          c.slug === (category === TicketCategory.TECHNIQUE ? "technique" : "rp") ||
           c.name.toLowerCase() === categoryName.toLowerCase()
     ) ?? availableCategories[0];
 
@@ -67,6 +68,7 @@ export function TicketCategoryBadgeEditor({
 
   const selectedCategory = availableCategories.find((c) => c.id === selectedCategoryId);
   const subcategories = selectedCategory?.subcategories ?? [];
+  const selectedSubcategory = subcategories.find((s) => s.id === selectedSubcategoryId);
 
   function handleOpen(nextOpen: boolean) {
     if (nextOpen) {
@@ -75,7 +77,8 @@ export function TicketCategoryBadgeEditor({
         availableCategories.find((c) =>
           categoryId
             ? c.id === categoryId
-            : c.slug === (category === TicketCategory.TECHNIQUE ? "technique" : "rp") ||
+            : isTechniqueCategory(c, category) === (category === TicketCategory.TECHNIQUE) ||
+              c.slug === (category === TicketCategory.TECHNIQUE ? "technique" : "rp") ||
               c.name.toLowerCase() === categoryName.toLowerCase()
         ) ?? availableCategories[0];
       setSelectedCategoryId(currentCat?.id ?? "");
@@ -155,12 +158,18 @@ export function TicketCategoryBadgeEditor({
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ticket-category-select">Catégorie principale</Label>
               <Select
+                items={availableCategories.map((cat) => ({
+                  value: cat.id,
+                  label: formatTicketCategoryName(cat.name),
+                }))}
                 value={selectedCategoryId}
                 onValueChange={handleCategoryChange}
                 disabled={isPending}
               >
                 <SelectTrigger id="ticket-category-select" className="w-full">
-                  <SelectValue placeholder="Choisir une catégorie..." />
+                  <SelectValue placeholder="Choisir une catégorie...">
+                    {selectedCategory ? formatTicketCategoryName(selectedCategory.name) : undefined}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {availableCategories.map((cat) => (
@@ -176,6 +185,13 @@ export function TicketCategoryBadgeEditor({
               <div className="flex flex-col gap-1.5">
                 <Label htmlFor="ticket-subcategory-select">Sous-catégorie</Label>
                 <Select
+                  items={[
+                    { value: "none", label: "Aucune sous-catégorie" },
+                    ...subcategories.map((sub) => ({
+                      value: sub.id,
+                      label: sub.name,
+                    })),
+                  ]}
                   value={selectedSubcategoryId || "none"}
                   onValueChange={(val: string | null) =>
                     setSelectedSubcategoryId(!val || val === "none" ? "" : val)
@@ -183,7 +199,13 @@ export function TicketCategoryBadgeEditor({
                   disabled={isPending}
                 >
                   <SelectTrigger id="ticket-subcategory-select" className="w-full">
-                    <SelectValue placeholder="Choisir une sous-catégorie (optionnelle)..." />
+                    <SelectValue placeholder="Choisir une sous-catégorie (optionnelle)...">
+                      {selectedSubcategory ? (
+                        selectedSubcategory.name
+                      ) : (
+                        <span className="text-muted-foreground italic">Aucune sous-catégorie</span>
+                      )}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">
@@ -204,7 +226,7 @@ export function TicketCategoryBadgeEditor({
             )}
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
