@@ -64,12 +64,11 @@ export async function POST(request: Request) {
 
     if (topic.ticket) {
       try {
-        const staffSuffix = archivedBy ? ` (par ${archivedBy})` : "";
         const systemMsg = await prisma.conversationMessage.create({
           data: {
             conversationId: topic.ticket.conversationId,
             authorType: MessageAuthorType.SYSTEM,
-            body: `🔒 Le sujet staff Discord associé (\`#${topic.slug}\`) a été archivé${staffSuffix}.`,
+            body: `🔒 Sujet fermé · #${topic.slug}`,
           },
           include: { author: true },
         });
