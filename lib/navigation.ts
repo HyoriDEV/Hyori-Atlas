@@ -151,7 +151,6 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         href: "/player/rp-tracking",
         iconKey: "chat",
         requiredStatus: RegistrationStatus.WHITELISTED,
-        fullWidth: true,
       },
       {
         label: "Tickets",
@@ -345,9 +344,9 @@ export const staffNavItems: StaffNavItem[] = [
   staffTicketsItem,
   staffRpTrackingItem,
   staffAtlasItem,
+  staffBacklogItem,
   staffBdaReportsItem,
   staffSanctionsItem,
-  staffBacklogItem,
   staffRpGroupsItem,
   staffDistributionItem,
   staffWaitlistItem,
@@ -373,12 +372,12 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   if (role === Role.ADMIN) {
     return [
       overviewGroup,
+      backlogStandaloneGroup,
       {
         title: "Modération",
         iconKey: "shield",
         items: [staffBdaReportsItem, staffSanctionsItem],
       },
-      backlogStandaloneGroup,
       {
         title: "Gestion RP",
         iconKey: "users",
@@ -496,6 +495,28 @@ export function formatTicketCategoryPluralName(name?: string | null): string {
   if (trimmed.toLowerCase() === "technique" || trimmed.toLowerCase() === "ticket technique")
     return "Tickets techniques";
   return trimmed;
+}
+
+export function isTechniqueCategory(
+  categoryConfig?: { slug?: string | null; name?: string | null } | null,
+  categoryEnum?: TicketCategory | null
+): boolean {
+  if (categoryEnum === TicketCategory.TECHNIQUE) return true;
+  if (!categoryConfig) return false;
+  const slug = (categoryConfig.slug ?? "").toLowerCase();
+  const name = (categoryConfig.name ?? "").toLowerCase();
+  return (
+    slug === "technique" ||
+    slug === "dev" ||
+    slug === "tech" ||
+    slug.includes("tech") ||
+    slug.includes("dev") ||
+    name.includes("technique") ||
+    name.includes("tech") ||
+    name.includes("dev") ||
+    name.includes("développement") ||
+    name.includes("developpement")
+  );
 }
 
 export const ticketStatusLabels: Record<TicketStatus, string> = {

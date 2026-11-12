@@ -1,25 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import {
-  Archive,
-  ArrowSquareOut,
-  CaretDown,
-  DiscordLogo,
-  Hash,
-  Kanban,
-  Plus,
-} from "@phosphor-icons/react";
-import { toast } from "sonner";
+import { useState } from "react";
+import { ArrowSquareOut, CaretDown, DiscordLogo, Hash, Kanban, Plus } from "@phosphor-icons/react";
 
 import type { BacklogUserRef } from "@/lib/backlog";
-import { archiveStaffTopicAction } from "@/lib/actions/topic-actions";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskFromTicketDialog } from "@/components/staff/backlog/create-task-from-ticket-dialog";
@@ -53,20 +42,8 @@ export function TicketActionsMenu({
 }: TicketActionsMenuProps) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
 
   const activeTopic = topics.find((t) => !t.isArchived);
-
-  function handleArchiveTopic(topicId: string) {
-    startTransition(async () => {
-      const res = await archiveStaffTopicAction(topicId);
-      if (res.success) {
-        toast.success("Le sujet Discord a été déplacé dans la catégorie des sujets archivés.");
-      } else {
-        toast.error(res.error || "Impossible d'archiver le sujet Discord.");
-      }
-    });
-  }
 
   return (
     <div className="flex items-center gap-2">
@@ -128,25 +105,6 @@ export function TicketActionsMenu({
               </span>
             </div>
           </DropdownMenuItem>
-
-          {activeTopic && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => handleArchiveTopic(activeTopic.id)}
-                disabled={isPending}
-                className="cursor-pointer gap-2 text-amber-600 focus:text-amber-600"
-              >
-                <Archive className="size-4" />
-                <div className="flex flex-col">
-                  <span className="text-xs font-medium">Archiver le sujet Discord</span>
-                  <span className="text-muted-foreground text-[10px]">
-                    Déplacer dans Sujets archivés
-                  </span>
-                </div>
-              </DropdownMenuItem>
-            </>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

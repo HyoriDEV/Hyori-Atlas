@@ -15,7 +15,7 @@ export const rpTrackingStateLabels: Record<RpTrackingState, string> = {
 };
 
 /** Onglets principaux de la page de suivi RP */
-export const RP_TRACKING_TABS = ["pending", "handled", "none"] as const;
+export const RP_TRACKING_TABS = ["pending", "handled", "none", "all"] as const;
 
 export type RpTrackingTab = (typeof RP_TRACKING_TABS)[number];
 
@@ -25,6 +25,7 @@ export const rpTrackingTabLabels: Record<RpTrackingTab, string> = {
   pending: "À traiter",
   handled: "Traités",
   none: "Sans suivi",
+  all: "Tous",
 };
 
 /** Options de filtrage de statut dans la liste des suivis RP */

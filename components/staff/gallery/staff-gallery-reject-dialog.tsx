@@ -117,7 +117,7 @@ export function StaffGalleryRejectDialog({
           )}
         </div>
 
-        <DialogFooter className="gap-2 border-t pt-2 sm:gap-0">
+        <DialogFooter className="gap-2 border-t pt-2 sm:gap-2">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Annuler
           </Button>

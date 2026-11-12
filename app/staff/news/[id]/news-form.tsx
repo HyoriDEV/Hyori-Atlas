@@ -99,7 +99,14 @@ export function NewsForm({ initialData }: NewsFormProps) {
 
         <div className="flex flex-col gap-2">
           <Label htmlFor="type">Type d&apos;actualité</Label>
-          <Select name="type" defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}>
+          <Select
+            name="type"
+            defaultValue={initialData?.type || NewsType.ANNOUNCEMENT}
+            items={[
+              { value: NewsType.ANNOUNCEMENT, label: "Annonce" },
+              { value: NewsType.CHANGELOG, label: "Changelog" },
+            ]}
+          >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionne un type" />
             </SelectTrigger>

@@ -324,6 +324,7 @@ export function CharacterSheetForm({
             onChange={setAffiliation}
             commentedTargets={comments.map((comment) => comment.target)}
             activeTarget={activeComment?.target ?? null}
+            showRoleStatus={false}
           />
         </div>
 

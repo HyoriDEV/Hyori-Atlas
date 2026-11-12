@@ -185,6 +185,7 @@ export function SheetEvaluationWorkspace({
             commentedTargets={comments.map((comment) => comment.target)}
             activeTarget={activeComment?.target ?? null}
             onTargetClick={canEvaluate ? (target) => openComposer(target, null) : undefined}
+            showRoleStatus={true}
           />
         </div>
 

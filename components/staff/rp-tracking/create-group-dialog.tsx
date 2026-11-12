@@ -97,12 +97,11 @@ export function CreateGroupDialog({
               <span>Créer un groupe de suivi RP</span>
             </DialogTitle>
             <DialogDescription>
-              Créez un espace de suivi RP partagé (narration et conversation) pour plusieurs
-              joueurs.
+              Espace partagé pour le suivi narratif et les échanges entre joueurs.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-4">
+          <div className="space-y-3.5 py-3">
             {error && (
               <div className="bg-destructive/15 text-destructive rounded-md p-3 text-sm">
                 {error}
@@ -110,7 +109,7 @@ export function CreateGroupDialog({
             )}
 
             <div className="space-y-1.5">
-              <Label htmlFor="group-name">Nom du groupe RP *</Label>
+              <Label htmlFor="group-name">Nom du groupe *</Label>
               <Input
                 id="group-name"
                 value={name}
@@ -122,19 +121,20 @@ export function CreateGroupDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="group-description">Description ou contexte (facultatif)</Label>
+              <Label htmlFor="group-description">Description (optionnel)</Label>
               <Textarea
                 id="group-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Contexte narratif, lieu ou objectif du groupe..."
-                rows={3}
+                placeholder="Lieu, objectif, contexte narratif..."
+                rows={2}
                 maxLength={500}
+                className="resize-none"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label>Membres initiaux du groupe</Label>
+              <Label>Membres initiaux</Label>
               <PlayerSelect
                 players={availablePlayers}
                 multiple={true}
@@ -144,12 +144,12 @@ export function CreateGroupDialog({
                 triggerClassName="w-full"
               />
               <p className="text-muted-foreground text-xs">
-                Vous pourrez ajouter ou retirer des membres à tout moment par la suite.
+                Vous pourrez modifier les membres à tout moment par la suite.
               </p>
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"

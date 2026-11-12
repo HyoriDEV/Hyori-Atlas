@@ -35,6 +35,7 @@ export interface AffiliationCardProps {
   commentedTargets?: CharacterSheetCommentTarget[];
   activeTarget?: CharacterSheetCommentTarget | null;
   onTargetClick?: (target: CharacterSheetCommentTarget) => void;
+  showRoleStatus?: boolean;
 }
 
 export function AffiliationCard({
@@ -45,6 +46,7 @@ export function AffiliationCard({
   commentedTargets = [],
   activeTarget = null,
   onTargetClick,
+  showRoleStatus = false,
 }: AffiliationCardProps) {
   const isClickable = !interactive && !!onTargetClick;
   const isActive = activeTarget === CharacterSheetCommentTarget.chosenClasses;
@@ -131,7 +133,9 @@ export function AffiliationCard({
       <CardContent className="flex flex-col gap-5">
         <p className="text-muted-foreground text-xs leading-relaxed">
           Indique deux classes par ordre de préférence ainsi que le rôle souhaité au sein de
-          chacune. Les rôles indiquent leur état d&apos;équilibre selon les choix des joueurs.
+          chacune.
+          {showRoleStatus &&
+            " Les rôles indiquent leur état d'équilibre selon les choix des joueurs."}
         </p>
 
         {/* --- PREMIER CHOIX --- */}
@@ -183,37 +187,45 @@ export function AffiliationCard({
                       {values.primaryRoleId === OTHER_ROLE_ID ? (
                         <span>Autre (préciser dans le métier)</span>
                       ) : selectedPrimaryRole ? (
-                        <div className="flex w-full items-center justify-between gap-2">
-                          <span className="truncate">{selectedPrimaryRole.name}</span>
-                          {(() => {
-                            const meta = getRoleStatusMeta(selectedPrimaryRole.status);
-                            return (
+                        showRoleStatus ? (
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <span className="truncate">{selectedPrimaryRole.name}</span>
+                            {(() => {
+                              const meta = getRoleStatusMeta(selectedPrimaryRole.status);
+                              return (
+                                <Badge
+                                  variant={meta.badgeVariant}
+                                  className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
+                                >
+                                  {meta.label}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <span>{selectedPrimaryRole.name}</span>
+                        )
+                      ) : null}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedPrimaryClass.roles.map((role) => {
+                      const meta = showRoleStatus ? getRoleStatusMeta(role.status) : null;
+                      return (
+                        <SelectItem key={role.id} value={role.id}>
+                          {meta ? (
+                            <div className="flex w-full items-center justify-between gap-3 pr-4">
+                              <span>{role.name}</span>
                               <Badge
                                 variant={meta.badgeVariant}
                                 className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
                               >
                                 {meta.label}
                               </Badge>
-                            );
-                          })()}
-                        </div>
-                      ) : null}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedPrimaryClass.roles.map((role) => {
-                      const meta = getRoleStatusMeta(role.status);
-                      return (
-                        <SelectItem key={role.id} value={role.id}>
-                          <div className="flex w-full items-center justify-between gap-3 pr-4">
-                            <span>{role.name}</span>
-                            <Badge
-                              variant={meta.badgeVariant}
-                              className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
-                            >
-                              {meta.label}
-                            </Badge>
-                          </div>
+                            </div>
+                          ) : (
+                            role.name
+                          )}
                         </SelectItem>
                       );
                     })}
@@ -226,18 +238,19 @@ export function AffiliationCard({
                 <p className="text-sm">Autre</p>
               ) : selectedPrimaryRole ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{selectedPrimaryRole.name}</span>
-                  {(() => {
-                    const meta = getRoleStatusMeta(selectedPrimaryRole.status);
-                    return (
-                      <Badge
-                        variant={meta.badgeVariant}
-                        className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
-                      >
-                        {meta.label}
-                      </Badge>
-                    );
-                  })()}
+                  <span className="text-sm font-medium">{selectedPrimaryRole.name}</span>
+                  {showRoleStatus &&
+                    (() => {
+                      const meta = getRoleStatusMeta(selectedPrimaryRole.status);
+                      return (
+                        <Badge
+                          variant={meta.badgeVariant}
+                          className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
+                        >
+                          {meta.label}
+                        </Badge>
+                      );
+                    })()}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-xs italic">Aucun rôle sélectionné</p>
@@ -304,37 +317,45 @@ export function AffiliationCard({
                       {values.secondaryRoleId === OTHER_ROLE_ID ? (
                         <span>Autre (préciser dans le métier)</span>
                       ) : selectedSecondaryRole ? (
-                        <div className="flex w-full items-center justify-between gap-2">
-                          <span className="truncate">{selectedSecondaryRole.name}</span>
-                          {(() => {
-                            const meta = getRoleStatusMeta(selectedSecondaryRole.status);
-                            return (
+                        showRoleStatus ? (
+                          <div className="flex w-full items-center justify-between gap-2">
+                            <span className="truncate">{selectedSecondaryRole.name}</span>
+                            {(() => {
+                              const meta = getRoleStatusMeta(selectedSecondaryRole.status);
+                              return (
+                                <Badge
+                                  variant={meta.badgeVariant}
+                                  className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
+                                >
+                                  {meta.label}
+                                </Badge>
+                              );
+                            })()}
+                          </div>
+                        ) : (
+                          <span>{selectedSecondaryRole.name}</span>
+                        )
+                      ) : null}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {selectedSecondaryClass.roles.map((role) => {
+                      const meta = showRoleStatus ? getRoleStatusMeta(role.status) : null;
+                      return (
+                        <SelectItem key={role.id} value={role.id}>
+                          {meta ? (
+                            <div className="flex w-full items-center justify-between gap-3 pr-4">
+                              <span>{role.name}</span>
                               <Badge
                                 variant={meta.badgeVariant}
                                 className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
                               >
                                 {meta.label}
                               </Badge>
-                            );
-                          })()}
-                        </div>
-                      ) : null}
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {selectedSecondaryClass.roles.map((role) => {
-                      const meta = getRoleStatusMeta(role.status);
-                      return (
-                        <SelectItem key={role.id} value={role.id}>
-                          <div className="flex w-full items-center justify-between gap-3 pr-4">
-                            <span>{role.name}</span>
-                            <Badge
-                              variant={meta.badgeVariant}
-                              className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
-                            >
-                              {meta.label}
-                            </Badge>
-                          </div>
+                            </div>
+                          ) : (
+                            role.name
+                          )}
                         </SelectItem>
                       );
                     })}
@@ -347,18 +368,19 @@ export function AffiliationCard({
                 <p className="text-sm">Autre</p>
               ) : selectedSecondaryRole ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm">{selectedSecondaryRole.name}</span>
-                  {(() => {
-                    const meta = getRoleStatusMeta(selectedSecondaryRole.status);
-                    return (
-                      <Badge
-                        variant={meta.badgeVariant}
-                        className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
-                      >
-                        {meta.label}
-                      </Badge>
-                    );
-                  })()}
+                  <span className="text-sm font-medium">{selectedSecondaryRole.name}</span>
+                  {showRoleStatus &&
+                    (() => {
+                      const meta = getRoleStatusMeta(selectedSecondaryRole.status);
+                      return (
+                        <Badge
+                          variant={meta.badgeVariant}
+                          className={cn("h-4.5 px-1.5 py-0 text-[10px]", meta.className)}
+                        >
+                          {meta.label}
+                        </Badge>
+                      );
+                    })()}
                 </div>
               ) : (
                 <p className="text-muted-foreground text-xs italic">Aucun rôle sélectionné</p>

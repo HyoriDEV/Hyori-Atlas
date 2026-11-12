@@ -22,16 +22,33 @@ import { updateRpTrackingGroupAction } from "@/lib/actions/group-rp-tracking-act
 export function EditGroupDialog({
   group,
   trigger,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
 }: {
   group: { id: string; name: string; description?: string | null };
   trigger?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }) {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? (controlledOnOpenChange ?? (() => {})) : setUncontrolledOpen;
+
   const [isPending, startTransition] = useTransition();
 
   const [name, setName] = useState(group.name);
   const [description, setDescription] = useState(group.description ?? "");
   const [error, setError] = useState<string | null>(null);
+
+  function handleOpenChange(nextOpen: boolean) {
+    if (nextOpen) {
+      setName(group.name);
+      setDescription(group.description ?? "");
+      setError(null);
+    }
+    setOpen(nextOpen);
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -60,7 +77,7 @@ export function EditGroupDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       {trigger ? (
         <DialogTrigger render={trigger as React.ReactElement} />
       ) : (
@@ -97,18 +114,19 @@ export function EditGroupDialog({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="edit-group-description">Description ou contexte</Label>
+              <Label htmlFor="edit-group-description">Description (optionnel)</Label>
               <Textarea
                 id="edit-group-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                rows={3}
+                rows={2}
                 maxLength={500}
+                className="resize-none"
               />
             </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2 pt-2 sm:gap-2">
             <Button
               type="button"
               variant="outline"
