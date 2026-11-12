@@ -6,7 +6,12 @@ import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { CharacterStatus, RegistrationStatus, SanctionType } from "@/lib/generated/prisma/enums";
+import {
+  CharacterStatus,
+  RegistrationStatus,
+  Role,
+  SanctionType,
+} from "@/lib/generated/prisma/enums";
 import { getAllRpTrackingGroups } from "@/lib/services/group-rp-tracking-service";
 import { GroupTrackingTable } from "@/components/staff/rp-tracking/group-tracking-table";
 import { GroupTrackingFilters } from "@/components/staff/rp-tracking/group-tracking-filters";
@@ -285,6 +290,33 @@ export default async function RpTrackingStaffListPage(props: {
     });
   }
 
+  // Filtrage par date de dernière modification de la trame
+  if (writingEditedFilter === "never") {
+    filteredGroups = filteredGroups.filter((group) => !group.hasWriting);
+  } else if (writingEditedFilter !== "all") {
+    const windowMs = RP_TRACKING_WRITING_EDITED_WINDOWS_MS[writingEditedFilter] ?? 0;
+    // eslint-disable-next-line react-hooks/purity
+    const threshold = Date.now() - windowMs;
+    filteredGroups = filteredGroups.filter((group) => {
+      if (!group.writingUpdatedAt) return false;
+      const updatedAt = group.writingUpdatedAt.getTime();
+      return writingEditedFilter === "stale" ? updatedAt < threshold : updatedAt >= threshold;
+    });
+  }
+
+  // Tri par date de dernière modification de la trame (sans trame = en bas, ordre d'origine conservé)
+  if (sortOption !== "default") {
+    const direction = sortOption === "writing_recent" ? -1 : 1;
+    filteredGroups = [...filteredGroups].sort((a, b) => {
+      const aTime = a.writingUpdatedAt?.getTime() ?? null;
+      const bTime = b.writingUpdatedAt?.getTime() ?? null;
+      if (aTime === null && bTime === null) return 0;
+      if (aTime === null) return 1;
+      if (bTime === null) return -1;
+      return (aTime - bTime) * direction;
+    });
+  }
+
   const totalGroupsCount = filteredGroups.length;
   const totalGroupPages = Math.ceil(totalGroupsCount / pageSize) || 1;
   const pageGroups = filteredGroups.slice((page - 1) * pageSize, page * pageSize);
@@ -339,7 +371,12 @@ export default async function RpTrackingStaffListPage(props: {
 
       {/* Barre d'outils et de filtres */}
       {view === "groups" ? (
-        <GroupTrackingFilters query={query} availablePlayers={availablePlayers} />
+        <GroupTrackingFilters
+          query={query}
+          writingEdited={writingEditedFilter}
+          sort={sortOption}
+          availablePlayers={availablePlayers}
+        />
       ) : (
         <RpTrackingFilters query={query} writingEdited={writingEditedFilter} sort={sortOption} />
       )}
@@ -354,7 +391,10 @@ export default async function RpTrackingStaffListPage(props: {
           pageSize={pageSize}
           query={query}
           tab={activeTab}
+          writingEdited={writingEditedFilter}
+          sort={sortOption}
           currentUserId={staffUser.id}
+          isAdmin={staffUser.role === Role.ADMIN}
         />
       ) : (
         <Card className="gap-0 overflow-hidden py-0">

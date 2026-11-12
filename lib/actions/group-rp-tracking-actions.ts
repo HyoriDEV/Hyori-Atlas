@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { rpTrackingStaffRoles } from "@/lib/navigation";
+import { rpTrackingStaffRoles, rpTrackingDeleteRoles } from "@/lib/navigation";
 import {
   CharacterStatus,
   ConversationType,
@@ -157,7 +157,7 @@ export async function deleteRpTrackingGroupAction(
   groupId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    await requireRole(rpTrackingStaffRoles);
+    await requireRole(rpTrackingDeleteRoles);
 
     const group = await prisma.rpTrackingGroup.findUnique({
       where: { id: groupId },

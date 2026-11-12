@@ -45,6 +45,8 @@ export interface RpTrackingGroupSummary {
     authorId: string | null;
     createdAt: Date;
   } | null;
+  hasWriting: boolean;
+  writingUpdatedAt: Date | null;
 }
 
 export interface RpTrackingGroupDetail extends RpTrackingGroupSummary {
@@ -134,7 +136,26 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
     },
   });
 
-  return groups.map((g) => {
+  const allMemberUserIds = Array.from(
+    new Set(groups.flatMap((g) => g.members.map((m) => m.userId)))
+  );
+
+  const writingChapters =
+    allMemberUserIds.length > 0
+      ? await prisma.chapter.groupBy({
+          by: ["playerId"],
+          where: {
+            playerId: { in: allMemberUserIds },
+          },
+          _max: { updatedAt: true },
+        })
+      : [];
+
+  const writingUpdatedByUser = new Map<string, Date | null>(
+    writingChapters.map((w) => [w.playerId, w._max.updatedAt])
+  );
+
+  const mappedGroups = groups.map((g) => {
     const messages = g.conversation.messages;
     const lastPlayerMsg = messages.find((m) => m.authorType === MessageAuthorType.PLAYER);
     const lastStaffMsg = messages.find((m) => m.authorType === MessageAuthorType.STAFF);
@@ -170,6 +191,15 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
       : null;
 
     const lastActivityAt = messages[0]?.createdAt ?? g.createdAt;
+
+    const memberWritingDates = g.members
+      .map((m) => writingUpdatedByUser.get(m.userId))
+      .filter((d): d is Date => d instanceof Date);
+
+    const hasWriting = memberWritingDates.length > 0;
+    const writingUpdatedAt = hasWriting
+      ? new Date(Math.max(...memberWritingDates.map((d) => d.getTime())))
+      : null;
 
     const members: RpTrackingGroupMemberInfo[] = g.members.map((m) => {
       const activeSheet = m.characterSheet ?? m.user.characterSheets[0];
@@ -212,7 +242,18 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
         g.conversation.lastHandledBy?.discordDisplayName ??
         null,
       lastMessage,
+      hasWriting,
+      writingUpdatedAt,
     };
+  });
+
+  return mappedGroups.sort((a, b) => {
+    if (a.isPending !== b.isPending) {
+      return a.isPending ? -1 : 1;
+    }
+    const aTime = a.lastActivityAt?.getTime() ?? a.updatedAt.getTime();
+    const bTime = b.lastActivityAt?.getTime() ?? b.updatedAt.getTime();
+    return bTime - aTime;
   });
 }
 
@@ -357,6 +398,23 @@ export async function getRpTrackingGroupDetail(
     .reverse()
     .map((m) => serializeConversationMessage(m, isStaff, viewerId));
 
+  const memberUserIds = group.members.map((m) => m.userId);
+  const writingChapters =
+    memberUserIds.length > 0
+      ? await prisma.chapter.groupBy({
+          by: ["playerId"],
+          where: { playerId: { in: memberUserIds } },
+          _max: { updatedAt: true },
+        })
+      : [];
+  const memberWritingDates = writingChapters
+    .map((w) => w._max.updatedAt)
+    .filter((d): d is Date => d instanceof Date);
+  const hasWriting = memberWritingDates.length > 0;
+  const writingUpdatedAt = hasWriting
+    ? new Date(Math.max(...memberWritingDates.map((d) => d.getTime())))
+    : null;
+
   return {
     id: group.id,
     name: group.name,
@@ -380,6 +438,8 @@ export async function getRpTrackingGroupDetail(
       null,
     unreadCount,
     messages: serializedMessages,
+    hasWriting,
+    writingUpdatedAt,
   };
 }
 
@@ -520,6 +580,8 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
         g.conversation.lastHandledBy?.discordDisplayName ??
         null,
       unreadCount,
+      hasWriting: false,
+      writingUpdatedAt: null,
     };
   });
 }
