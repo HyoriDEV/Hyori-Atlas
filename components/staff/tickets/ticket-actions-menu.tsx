@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowSquareOut, CaretDown, DiscordLogo, Hash, Kanban, Plus } from "@phosphor-icons/react";
+import { CaretDown, Hash, Kanban, Plus } from "@phosphor-icons/react";
 
 import type { BacklogUserRef } from "@/lib/backlog";
 import { Button } from "@/components/ui/button";
@@ -14,19 +14,11 @@ import {
 import { CreateTaskFromTicketDialog } from "@/components/staff/backlog/create-task-from-ticket-dialog";
 import { CreateStaffTopicDialog } from "@/components/staff/topics/create-staff-topic-dialog";
 
-export interface SerializedStaffTopic {
-  id: string;
-  slug: string;
-  channelUrl: string | null;
-  isArchived: boolean;
-}
-
 interface TicketActionsMenuProps {
   ticketId: string;
   ticketSubject: string;
   canUseBacklog: boolean;
   backlogAssignees: BacklogUserRef[];
-  topics?: SerializedStaffTopic[];
 }
 
 /**
@@ -38,41 +30,21 @@ export function TicketActionsMenu({
   ticketSubject,
   canUseBacklog,
   backlogAssignees,
-  topics = [],
 }: TicketActionsMenuProps) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
 
-  const activeTopic = topics.find((t) => !t.isArchived);
-
   return (
-    <div className="flex items-center gap-2">
-      {/* Raccourci vers le salon Discord si un sujet actif est associé au ticket */}
-      {activeTopic?.channelUrl && (
-        <Button
-          variant="outline"
-          size="sm"
-          render={
-            <a
-              href={activeTopic.channelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              title="Ouvrir le salon de discussion Discord"
-            />
-          }
-          className="text-muted-foreground hover:text-foreground gap-1.5 border-[#5865F2]/30 text-xs hover:border-[#5865F2]"
-        >
-          <DiscordLogo className="size-3.5 text-[#5865F2]" />
-          <span className="font-mono">#{activeTopic.slug}</span>
-          <ArrowSquareOut className="size-3 opacity-60" />
-        </Button>
-      )}
-
+    <>
       {/* Menu déroulant unifié Créer... */}
       <DropdownMenu>
         <DropdownMenuTrigger
           render={
-            <Button variant="outline" size="sm" className="gap-1.5">
+            <Button
+              variant="outline"
+              size="default"
+              className="h-8 gap-1.5 px-3 text-xs font-medium"
+            >
               <Plus className="size-3.5" />
               <span className="hidden sm:inline">Créer</span>
               <CaretDown className="size-3 opacity-60" />
@@ -127,6 +99,6 @@ export function TicketActionsMenu({
         ticketId={ticketId}
         ticketSubject={ticketSubject}
       />
-    </div>
+    </>
   );
 }

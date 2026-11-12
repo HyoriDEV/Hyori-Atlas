@@ -27,7 +27,6 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
-import { DiscordLogo } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -195,11 +194,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
       where: { AND: [...filters, getViewFilter(view)] },
       include: {
         player: true,
-        staffTopics: {
-          where: { isArchived: false },
-          select: { id: true, slug: true, channelUrl: true },
-          take: 1,
-        },
         conversation: {
           select: {
             members: {
@@ -390,16 +384,6 @@ export default async function TicketsStaffListPage(props: PageProps) {
                           >
                             {ticket.subject}
                           </span>
-                          {ticket.staffTopics?.[0] && (
-                            <Badge
-                              variant="outline"
-                              className="shrink-0 gap-1 border-[#5865F2]/40 bg-[#5865F2]/10 px-1.5 py-0 text-[10px] font-medium text-[#5865F2]"
-                              title={`Sujet Discord actif : #${ticket.staffTopics[0].slug}`}
-                            >
-                              <DiscordLogo className="size-2.5" />
-                              <span>#{ticket.staffTopics[0].slug}</span>
-                            </Badge>
-                          )}
                           <Badge variant="secondary" className="shrink-0 px-1.5 py-0 text-[10px]">
                             {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
                             {ticket.subcategoryName ? ` · ${ticket.subcategoryName}` : ""}

@@ -90,15 +90,6 @@ export default async function TicketStaffDetailPage({
         select: { id: true, title: true, status: true },
         orderBy: { createdAt: "asc" },
       },
-      staffTopics: {
-        select: {
-          id: true,
-          slug: true,
-          channelUrl: true,
-          isArchived: true,
-        },
-        orderBy: { createdAt: "desc" },
-      },
     },
   });
 
@@ -221,18 +212,19 @@ export default async function TicketStaffDetailPage({
           availablePlayers={allPlayers}
           className="lg:hidden"
         />
-        <TicketActionsMenu
-          ticketId={ticket.id}
-          ticketSubject={ticket.subject}
-          canUseBacklog={canUseBacklog}
-          backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
-          topics={ticket.staffTopics}
-        />
-        <TicketStatusActions
-          ticketId={ticket.id}
-          status={ticket.status}
-          isAdmin={staffUser.role === Role.ADMIN}
-        />
+        <div className="flex items-center gap-2">
+          <TicketActionsMenu
+            ticketId={ticket.id}
+            ticketSubject={ticket.subject}
+            canUseBacklog={canUseBacklog}
+            backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
+          />
+          <TicketStatusActions
+            ticketId={ticket.id}
+            status={ticket.status}
+            isAdmin={staffUser.role === Role.ADMIN}
+          />
+        </div>
       </div>
 
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
