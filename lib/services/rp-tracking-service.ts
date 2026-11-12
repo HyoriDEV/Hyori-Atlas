@@ -135,7 +135,6 @@ export async function getRpTrackingStates(): Promise<RpTrackingStates> {
       by: ["playerId"],
       where: {
         player: { registrationStatus: RegistrationStatus.WHITELISTED },
-        rpTrackingGroupId: null,
       },
       _max: { updatedAt: true },
     }),

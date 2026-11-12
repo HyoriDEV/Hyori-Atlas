@@ -166,6 +166,8 @@ export async function createTicket(
         return notifyTicketCreated({
           channelId: config.channelId,
           mentionRoleId: config.mentionRoleId,
+          discordId: user.discordId,
+          avatarUrl: user.discordAvatarUrl,
           ticketId: ticket.id,
           ticketSubject: trimmedSubject,
           ticketCategory: categoryLabel,

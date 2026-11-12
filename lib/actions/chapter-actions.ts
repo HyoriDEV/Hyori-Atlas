@@ -38,7 +38,7 @@ async function requireActiveValidatedCharacter(userId: string) {
 }
 
 function assertOwnsChapter(
-  chapter: { playerId: string | null; characterSheet?: { status: CharacterStatus } | null } | null,
+  chapter: { playerId: string; characterSheet?: { status: CharacterStatus } | null } | null,
   userId: string
 ) {
   if (!chapter || chapter.playerId !== userId) {

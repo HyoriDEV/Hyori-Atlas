@@ -56,4 +56,22 @@ export async function bookInterviewSlot(slotId: string) {
   });
 
   revalidatePath("/player/interview");
+
+  // Notifie le staff dans le salon #admissions
+  import("@/lib/services/discord-bot-service")
+    .then((mod) =>
+      mod.notifyInterviewSlotBookedForUser({
+        user: {
+          discordId: user.discordId,
+          discordDisplayName: user.discordDisplayName,
+          discordUsername: user.discordUsername,
+          discordAvatarUrl: user.discordAvatarUrl,
+          minecraftUsername: user.minecraftUsername,
+        },
+        slotDate: slot.startsAt,
+      })
+    )
+    .catch((err) => {
+      console.warn("[InterviewBookingNotification] Échec lors de la notification staff:", err);
+    });
 }

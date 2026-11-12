@@ -142,7 +142,6 @@ export default async function RpTrackingStaffDetailPage(props: {
   const chapters = await prisma.chapter.findMany({
     where: {
       playerId,
-      rpTrackingGroupId: null,
       ...(selectedCharacter ? { characterSheetId: selectedCharacter.id } : {}),
     },
     orderBy: { order: "asc" },

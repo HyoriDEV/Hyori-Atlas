@@ -483,10 +483,8 @@ export function TicketsSettingsTab({ initialCategories = [] }: TicketsSettingsTa
                     <label
                       key={role}
                       className={cn(
-                        "flex cursor-pointer items-center gap-2 rounded border p-2 text-xs transition-colors",
-                        isChecked
-                          ? "border-primary bg-primary/5 font-medium"
-                          : "border-border text-muted-foreground"
+                        "border-border text-muted-foreground flex cursor-pointer items-center gap-2 rounded border p-2 text-xs transition-colors",
+                        isChecked && "border-primary bg-primary/5 text-foreground font-medium"
                       )}
                     >
                       <input

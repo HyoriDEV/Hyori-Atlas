@@ -343,11 +343,11 @@ export const staffStaffTeamItem: StaffNavItem = {
 export const staffNavItems: StaffNavItem[] = [
   staffDashboardItem,
   staffTicketsItem,
+  staffRpTrackingItem,
   staffAtlasItem,
   staffBdaReportsItem,
   staffSanctionsItem,
   staffBacklogItem,
-  staffRpTrackingItem,
   staffRpGroupsItem,
   staffDistributionItem,
   staffWaitlistItem,
@@ -363,7 +363,7 @@ export const staffNavItems: StaffNavItem[] = [
 
 export function getStaffNavGroups(role: Role): StaffNavGroup[] {
   const overviewGroup: StaffNavGroup = {
-    items: [staffTicketsItem, staffAtlasItem],
+    items: [staffTicketsItem, staffRpTrackingItem, staffAtlasItem],
   };
 
   const backlogStandaloneGroup: StaffNavGroup = {
@@ -382,7 +382,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpTrackingItem, staffRpGroupsItem, staffDistributionItem],
+        items: [staffRpGroupsItem, staffDistributionItem],
       },
       {
         title: "Admission",
@@ -423,7 +423,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpTrackingItem, staffRpGroupsItem, staffDistributionItem],
+        items: [staffRpGroupsItem, staffDistributionItem],
       },
       {
         title: "Contenu",
