@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requireRole } from "@/lib/dal";
-import { Role } from "@/lib/generated/prisma/enums";
+import { allStaffRoles } from "@/lib/navigation";
 import { getInterviewGuides } from "@/lib/services/interview-guide-service";
 import { InterviewGuideView } from "./interview-guide-view";
 
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function StaffInterviewGuidePage() {
-  await requireRole([Role.ADMIN]);
+  await requireRole(allStaffRoles);
 
   const guideData = await getInterviewGuides();
 

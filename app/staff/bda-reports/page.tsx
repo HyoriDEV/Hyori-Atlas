@@ -37,7 +37,7 @@ import { bdaReportStatusLabels } from "@/lib/navigation";
 
 const DEFAULT_PAGE_SIZE = 10;
 
-const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
+const bdaRoles = [Role.ADMIN];
 
 export default async function BdaReportsPage(props: {
   searchParams: Promise<{ tab?: string; page?: string; pageSize?: string }>;

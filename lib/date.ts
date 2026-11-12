@@ -176,3 +176,18 @@ export function formatChatDate(
 ): string {
   return formatDate(dateInput, { ...options, style: "chat" });
 }
+
+export function getDaysSince(dateInput: Date | string | number | null | undefined): number {
+  if (!dateInput) return 0;
+  const target = new Date(dateInput).getTime();
+  const now = Date.now();
+  const diffMs = Math.max(0, now - target);
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
+export function formatDaysSince(dateInput: Date | string | number | null | undefined): string {
+  const days = getDaysSince(dateInput);
+  if (days <= 0) return "Aujourd'hui";
+  if (days === 1) return "1 jour";
+  return `${days} jours`;
+}

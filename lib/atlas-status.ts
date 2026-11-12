@@ -62,6 +62,16 @@ export function ticketStatusBadgeVariant(status: TicketStatus): BadgeVariant {
   }
 }
 
+export function getTicketSuspendedBadgeClasses(days: number): string {
+  if (days < 3) {
+    return "border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium";
+  }
+  if (days < 7) {
+    return "border-amber-500/60 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-semibold";
+  }
+  return "border-red-500/60 bg-red-500/15 text-red-600 dark:text-red-400 font-bold";
+}
+
 export function bdaReportStatusBadgeVariant(status: BdaReportStatus): BadgeVariant {
   switch (status) {
     case BdaReportStatus.UNREAD:

@@ -8,6 +8,8 @@ import {
   DotsThreeVertical,
   Envelope,
   EnvelopeOpen,
+  Pause,
+  Play,
   Trash,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -17,6 +19,8 @@ import {
   deleteTicket,
   reopenTicket,
   setStaffTicketRead,
+  suspendTicket,
+  unsuspendTicket,
 } from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
@@ -41,11 +45,13 @@ import {
 export function TicketRowActions({
   ticketId,
   status,
+  isSuspended = false,
   isUnread,
   isAdmin = false,
 }: {
   ticketId: string;
   status: TicketStatus;
+  isSuspended?: boolean;
   isUnread: boolean;
   isAdmin?: boolean;
 }) {
@@ -67,6 +73,30 @@ export function TicketRowActions({
         router.refresh();
       } catch {
         toast.error("Une erreur est survenue.");
+      }
+    });
+  }
+
+  function handleSuspend() {
+    startTransition(async () => {
+      try {
+        await suspendTicket(ticketId);
+        toast.success("Ticket mis en suspens.");
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
+      }
+    });
+  }
+
+  function handleUnsuspend() {
+    startTransition(async () => {
+      try {
+        await unsuspendTicket(ticketId);
+        toast.success("Ticket rétabli.");
+        router.refresh();
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
       }
     });
   }
@@ -123,6 +153,18 @@ export function TicketRowActions({
               <span>{isUnread ? "Marquer comme lu" : "Marquer comme non lu"}</span>
             </DropdownMenuItem>
           )}
+          {!isArchived &&
+            (isSuspended ? (
+              <DropdownMenuItem onClick={handleUnsuspend}>
+                <Play className="size-3.5 text-emerald-500" />
+                <span>Reprendre le ticket</span>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={handleSuspend}>
+                <Pause className="size-3.5 text-amber-500" />
+                <span>Mettre en suspens</span>
+              </DropdownMenuItem>
+            ))}
           <DropdownMenuItem onClick={() => setConfirmOpen(true)}>
             {isArchived ? (
               <ArrowCounterClockwise className="size-3.5" />

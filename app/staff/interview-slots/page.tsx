@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Créneaux d'entretien",
 };
 import { getServerPagePrefs } from "@/lib/table-preferences";
-import { Role } from "@/lib/generated/prisma/enums";
+import { allStaffRoles } from "@/lib/navigation";
 import { InterviewSlotsManager } from "@/components/staff/interview-slots/interview-slots-manager";
 import type {
   InterviewSlotItem,
@@ -15,7 +15,7 @@ import type {
 } from "@/components/staff/interview-slots/types";
 
 export default async function InterviewSlotsPage() {
-  await requireRole([Role.ADMIN]);
+  await requireRole(allStaffRoles);
 
   const cookieStore = await cookies();
   const savedPrefs = getServerPagePrefs(cookieStore, "/staff/interview-slots");

@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { Role, BdaReportStatus } from "@/lib/generated/prisma/enums";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
-const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
+const bdaRoles = [Role.ADMIN];
 
 export interface CreateBdaReportData {
   title: string;

@@ -14,10 +14,10 @@ import {
   DEFAULT_PAGE_SIZE_OPTIONS,
 } from "@/lib/table-preferences";
 import { formatTicketCategoryName, staffNavItems } from "@/lib/navigation";
-import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
+import { getUnreadTickets, hasTechnicalTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { DEFAULT_TICKET_VIEW, TICKET_VIEWS, type TicketView } from "@/lib/ticket-list";
-import { ticketStatusBadgeVariant } from "@/lib/atlas-status";
-import { formatDate } from "@/lib/date";
+import { getTicketSuspendedBadgeClasses, ticketStatusBadgeVariant } from "@/lib/atlas-status";
+import { formatDate, formatDaysSince, getDaysSince } from "@/lib/date";
 import { cn, truncate } from "@/lib/utils";
 import {
   MessageAuthorType,
@@ -27,6 +27,7 @@ import {
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 import type { Prisma } from "@/lib/generated/prisma/client";
+import { Clock } from "@phosphor-icons/react/dist/ssr";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -53,15 +54,24 @@ import type { PlayerOption } from "@/components/player-select";
 const DEFAULT_PAGE_SIZE = 10;
 const LAST_MESSAGE_PREVIEW_LENGTH = 90;
 
-type SortKey = "player" | "category" | "status" | "activity" | "created";
+type SortKey = "player" | "category" | "status" | "activity" | "created" | "suspended";
 type SortDirection = "asc" | "desc";
 
-const VALID_SORT_KEYS: SortKey[] = ["player", "category", "status", "activity", "created"];
+const VALID_SORT_KEYS: SortKey[] = [
+  "player",
+  "category",
+  "status",
+  "activity",
+  "created",
+  "suspended",
+];
 
 function getViewFilter(view: TicketView): Prisma.TicketWhereInput {
   switch (view) {
     case "active":
-      return { status: { not: TicketStatus.ARCHIVED } };
+      return { status: { not: TicketStatus.ARCHIVED }, suspendedAt: null };
+    case "suspended":
+      return { status: { not: TicketStatus.ARCHIVED }, suspendedAt: { not: null } };
     case "archived":
       return { status: TicketStatus.ARCHIVED };
   }
@@ -81,7 +91,8 @@ type PageProps = {
 
 function buildOrderBy(
   sortKey: SortKey | null,
-  sortDir: SortDirection
+  sortDir: SortDirection,
+  view: TicketView
 ): Prisma.TicketOrderByWithRelationInput[] {
   switch (sortKey) {
     case "player":
@@ -93,11 +104,16 @@ function buildOrderBy(
       return [{ category: sortDir }, { lastMessageAt: "desc" }];
     case "status":
       return [{ status: sortDir }, { lastMessageAt: "desc" }];
+    case "suspended":
+      return [{ suspendedAt: sortDir }, { lastMessageAt: "desc" }];
     case "activity":
       return [{ lastMessageAt: sortDir }];
     case "created":
       return [{ createdAt: sortDir }];
     default:
+      if (view === "suspended") {
+        return [{ suspendedAt: "asc" }, { lastMessageAt: "desc" }];
+      }
       return [{ status: "asc" }, { lastMessageAt: "desc" }];
   }
 }
@@ -184,11 +200,22 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const hasActiveFilters = Boolean(query || categoryParam);
 
-  const [statusCounts, tickets, contactablePlayers, categoryConfigs] = await Promise.all([
-    prisma.ticket.groupBy({
-      by: ["status"],
-      where: { AND: filters },
-      _count: { _all: true },
+  const [
+    activeCount,
+    suspendedCount,
+    archivedCount,
+    tickets,
+    contactablePlayers,
+    categoryConfigs,
+  ] = await Promise.all([
+    prisma.ticket.count({
+      where: { AND: [...filters, getViewFilter("active")] },
+    }),
+    prisma.ticket.count({
+      where: { AND: [...filters, getViewFilter("suspended")] },
+    }),
+    prisma.ticket.count({
+      where: { AND: [...filters, getViewFilter("archived")] },
     }),
     prisma.ticket.findMany({
       where: { AND: [...filters, getViewFilter(view)] },
@@ -214,7 +241,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
           },
         },
       },
-      orderBy: buildOrderBy(sortKey, sortDir),
+      orderBy: buildOrderBy(sortKey, sortDir, view),
       skip: (page - 1) * pageSize,
       take: pageSize,
     }),
@@ -238,20 +265,22 @@ export default async function TicketsStaffListPage(props: PageProps) {
         })
       : Promise.resolve([]),
     prisma.ticketCategoryConfig.findMany({
-      where: { enabled: true },
+      where: {
+        enabled: true,
+        ...(!hasTechnicalTicketAccess(staffUser.role)
+          ? {
+              slug: { notIn: ["technique", "tech", "dev"] },
+            }
+          : {}),
+      },
       select: { slug: true, name: true },
       orderBy: { order: "asc" },
     }),
   ]);
 
-  const countByStatus = (status: TicketStatus) =>
-    statusCounts.find((entry) => entry.status === status)?._count._all ?? 0;
-  const pendingStaffCount = countByStatus(TicketStatus.PENDING_STAFF);
-  const pendingPlayerCount = countByStatus(TicketStatus.PENDING_PLAYER);
-  const archivedCount = countByStatus(TicketStatus.ARCHIVED);
-
   const viewCounts: Record<TicketView, number> = {
-    active: pendingStaffCount + pendingPlayerCount,
+    active: activeCount,
+    suspended: suspendedCount,
     archived: archivedCount,
   };
 
@@ -294,6 +323,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
         defaultView={DEFAULT_TICKET_VIEW}
         tabs={[
           { value: "active", label: "Actifs", count: viewCounts.active },
+          { value: "suspended", label: "En suspens", count: viewCounts.suspended },
           { value: "archived", label: "Archivés", count: viewCounts.archived },
         ]}
       />
@@ -314,9 +344,9 @@ export default async function TicketsStaffListPage(props: PageProps) {
               <TableHead>
                 <SortHeader
                   {...sortHeaderProps}
-                  sortKey="status"
+                  sortKey={view === "suspended" ? "suspended" : "status"}
                   defaultDirection="asc"
-                  label="Statut"
+                  label={view === "suspended" ? "En suspens depuis" : "Statut"}
                 />
               </TableHead>
               <TableHead className="hidden md:table-cell">
@@ -430,13 +460,27 @@ export default async function TicketsStaffListPage(props: PageProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
-                        {ticket.status === "PENDING_STAFF"
-                          ? "Staff"
-                          : ticket.status === "PENDING_PLAYER"
-                            ? "Joueur"
-                            : "Archivé"}
-                      </Badge>
+                      {ticket.suspendedAt ? (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "gap-1 text-xs whitespace-nowrap",
+                            getTicketSuspendedBadgeClasses(getDaysSince(ticket.suspendedAt))
+                          )}
+                          title={`Mis en suspens le ${formatDate(ticket.suspendedAt, { style: "prefix-long", withTime: true })}`}
+                        >
+                          <Clock className="size-3 shrink-0" />
+                          <span>En suspens · {formatDaysSince(ticket.suspendedAt)}</span>
+                        </Badge>
+                      ) : (
+                        <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
+                          {ticket.status === "PENDING_STAFF"
+                            ? "Staff"
+                            : ticket.status === "PENDING_PLAYER"
+                              ? "Joueur"
+                              : "Archivé"}
+                        </Badge>
+                      )}
                     </TableCell>
                     <TableCell className="text-muted-foreground hidden whitespace-nowrap md:table-cell">
                       {formatDate(ticket.lastMessageAt, { style: "compact" })}
@@ -448,6 +492,7 @@ export default async function TicketsStaffListPage(props: PageProps) {
                       <TicketRowActions
                         ticketId={ticket.id}
                         status={ticket.status}
+                        isSuspended={Boolean(ticket.suspendedAt)}
                         isUnread={isUnread}
                         isAdmin={isAdmin}
                       />

@@ -41,10 +41,10 @@ export const metadata: Metadata = {
 const staffRoles = allStaffRoles;
 const atlasRoles = staffAtlasItem.roles;
 const waitlistRoles: Role[] = [Role.ADMIN];
-const interviewSlotRoles: Role[] = [Role.ADMIN];
+const interviewSlotRoles: Role[] = allStaffRoles;
 const distributionRoles = rpManagementRoles;
 const rpTrackingRoles = rpTrackingStaffRoles;
-const bdaRoles: Role[] = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
+const bdaRoles: Role[] = [Role.ADMIN];
 const backlogAccessRoles = backlogRoles;
 const adminOnlyRoles: Role[] = [Role.ADMIN];
 
@@ -86,7 +86,7 @@ export default async function StaffDashboardPage() {
     pendingGalleryCount,
   ] = await Promise.all([
     prisma.ticket.count({
-      where: { AND: [ticketWhereBase, { status: TicketStatus.PENDING_STAFF }] },
+      where: { AND: [ticketWhereBase, { status: TicketStatus.PENDING_STAFF, suspendedAt: null }] },
     }),
     prisma.ticket.count({
       where: { AND: [ticketWhereBase, { status: { not: TicketStatus.ARCHIVED } }] },

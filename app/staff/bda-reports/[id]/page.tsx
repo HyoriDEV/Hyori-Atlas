@@ -35,7 +35,7 @@ import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { BdaReportActions } from "@/components/dashboard/bda-report-actions";
 import { BdaAttachmentsGallery } from "@/components/dashboard/bda-attachments-gallery";
 
-const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
+const bdaRoles = [Role.ADMIN];
 
 export default async function BdaReportDetailPage(props: { params: Promise<{ id: string }> }) {
   await requireRole(bdaRoles);
