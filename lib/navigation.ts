@@ -284,7 +284,7 @@ export const staffRpTrackingItem: StaffNavItem = {
   fullWidth: true,
 };
 
-export const waitlistRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const waitlistRoles: Role[] = [Role.ADMIN];
 export const whitelistRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 
 export const staffWaitlistItem: StaffNavItem = {
