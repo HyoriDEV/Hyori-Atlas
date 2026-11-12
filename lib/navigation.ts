@@ -269,13 +269,6 @@ export const staffDistributionItem: StaffNavItem = {
   fullWidth: true,
 };
 
-export const staffWritingItem: StaffNavItem = {
-  label: "Lore des joueurs",
-  href: "/staff/writing",
-  iconKey: "pen",
-  roles: allStaffRoles,
-};
-
 export const staffRpTrackingItem: StaffNavItem = {
   label: "Suivi RP",
   href: "/staff/rp-tracking",
@@ -352,7 +345,6 @@ export const staffNavItems: StaffNavItem[] = [
   staffSanctionsItem,
   staffRpGroupsItem,
   staffDistributionItem,
-  staffWritingItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
   staffInterviewGuideItem,
@@ -385,7 +377,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpGroupsItem, staffDistributionItem, staffWritingItem],
+        items: [staffRpGroupsItem, staffDistributionItem],
       },
       {
         title: "Admission",
@@ -415,7 +407,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     {
       title: "Gestion RP",
       iconKey: "users",
-      items: [staffRpGroupsItem, staffDistributionItem, staffWritingItem],
+      items: [staffRpGroupsItem, staffDistributionItem],
     },
     {
       title: "Admission",
@@ -438,7 +430,6 @@ export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
 
 export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
-export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
 export const rpTrackingStaffRoles: Role[] = allStaffRoles;
 export const rpTrackingDeleteRoles: Role[] = [Role.ADMIN];
 export const rpManagementRoles: Role[] = allStaffRoles;

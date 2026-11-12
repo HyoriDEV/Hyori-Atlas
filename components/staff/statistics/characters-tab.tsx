@@ -109,10 +109,10 @@ export async function CharactersTab({ range }: { range: StatisticsRange }) {
                     <TableRow key={author.playerId}>
                       <TableCell>
                         <Link
-                          href={`/staff/writing/${author.playerId}`}
+                          href={`/staff/rp-tracking/${author.playerId}`}
                           prefetch={false}
                           className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
-                          title={`Lire la trame de ${author.name}`}
+                          title={`Voir le suivi RP et la trame de ${author.name}`}
                         >
                           <SkinHead size="sm" username={author.minecraftUsername ?? author.name} />
                           <span className="font-medium hover:underline">{author.name}</span>
