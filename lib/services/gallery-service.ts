@@ -49,7 +49,7 @@ function formatGalleryItem<
   T extends {
     author: AuthorWithSheets;
     _count?: { likes: number };
-    likes?: { id: string }[] | false;
+    likes?: { id: string }[] | false | undefined;
     taggedUsers?: TaggedUserWithSheets[];
   },
 >(item: T, currentUserId?: string) {
@@ -130,7 +130,7 @@ export async function getApprovedGalleryItems(options: GalleryFilterOptions = {}
             where: { userId: currentUserId },
             select: { id: true },
           }
-        : false,
+        : undefined,
       taggedUsers: {
         include: {
           user: {
@@ -163,7 +163,7 @@ export async function getFeaturedGalleryItem(currentUserId?: string) {
             where: { userId: currentUserId },
             select: { id: true },
           }
-        : false,
+        : undefined,
       taggedUsers: {
         include: {
           user: {
@@ -207,7 +207,8 @@ export async function getFeaturedGalleryItem(currentUserId?: string) {
 
   if (!item) return null;
 
-  return formatGalleryItem(item, currentUserId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return formatGalleryItem(item as any, currentUserId);
 }
 
 export async function getGalleryItemById(id: string, currentUserId?: string) {
@@ -231,7 +232,7 @@ export async function getGalleryItemById(id: string, currentUserId?: string) {
             where: { userId: currentUserId },
             select: { id: true },
           }
-        : false,
+        : undefined,
       taggedUsers: {
         include: {
           user: {
@@ -244,7 +245,8 @@ export async function getGalleryItemById(id: string, currentUserId?: string) {
 
   if (!item) return null;
 
-  return formatGalleryItem(item, currentUserId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return formatGalleryItem(item as any, currentUserId);
 }
 
 export async function getPlayerGalleryItems(userId: string) {

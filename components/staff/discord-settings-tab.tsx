@@ -75,9 +75,7 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
     initialMap[key] = {
       id: key,
       enabled: existing ? existing.enabled : true,
-      channelId: isAdmission
-        ? initialAdmissionsChannel
-        : existing?.channelId?.trim() ?? "",
+      channelId: isAdmission ? initialAdmissionsChannel : (existing?.channelId?.trim() ?? ""),
       roleId: existing?.roleId?.trim() ?? "",
     };
   }
@@ -153,15 +151,17 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-semibold">Salons & Notifications Discord Staff</span>
+                  <span className="text-base font-semibold">
+                    Salons & Notifications Discord Staff
+                  </span>
                   <Badge variant="outline" className="text-[11px]">
                     Alertes Staff
                   </Badge>
                 </div>
                 <span className="text-muted-foreground text-xs leading-relaxed">
                   Configurez les salons Discord et les rôles notifiés pour les tickets support et
-                  l&apos;ensemble du processus d&apos;admission. Ces identifiants sont gérés ici et non
-                  dans le code du bot.
+                  l&apos;ensemble du processus d&apos;admission. Ces identifiants sont gérés ici et
+                  non dans le code du bot.
                 </span>
               </div>
             </div>
@@ -185,7 +185,8 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
           <div className="flex flex-col">
             <h2 className="text-sm font-semibold">Support & Assistance (Tickets)</h2>
             <p className="text-muted-foreground text-xs">
-              Les tickets sont notifiés dans deux salons textuels distincts selon leur nature (RP ou Technique).
+              Les tickets sont notifiés dans deux salons textuels distincts selon leur nature (RP ou
+              Technique).
             </p>
           </div>
         </div>
@@ -287,7 +288,8 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
               </Badge>
             </div>
             <p className="text-muted-foreground text-xs">
-              Salon unique regroupant les 3 étapes d&apos;admission : liste d&apos;attente, fiches RP soumises et réservations d&apos;entretien.
+              Salon unique regroupant les 3 étapes d&apos;admission : liste d&apos;attente, fiches
+              RP soumises et réservations d&apos;entretien.
             </p>
           </div>
         </div>
@@ -304,8 +306,8 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
                   </Badge>
                 </div>
                 <p className="text-muted-foreground text-xs leading-relaxed">
-                  Renseignez ici l&apos;identifiant Discord du salon <strong>#admissions</strong>. Les 3 alertes
-                  ci-dessous seront automatiquement transmises dans ce même salon.
+                  Renseignez ici l&apos;identifiant Discord du salon <strong>#admissions</strong>.
+                  Les 3 alertes ci-dessous seront automatiquement transmises dans ce même salon.
                 </p>
               </div>
 
@@ -339,7 +341,7 @@ export function DiscordSettingsTab({ initialTemplates = [] }: DiscordSettingsTab
               return (
                 <div
                   key={tmplId}
-                  className="flex flex-col gap-4 p-4 transition-colors hover:bg-muted/10 sm:flex-row sm:items-center sm:justify-between"
+                  className="hover:bg-muted/10 flex flex-col gap-4 p-4 transition-colors sm:flex-row sm:items-center sm:justify-between"
                 >
                   <div className="flex items-start gap-3">
                     <div className="bg-muted text-primary mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md border">

@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { CharacterStatus, MessageAuthorType } from "@/lib/generated/prisma/enums";
 import { serializeConversationMessage } from "@/lib/conversation";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
-import type { ChapterItem } from "@/components/dashboard/chapter-reader";
 
 export interface RpTrackingGroupMemberInfo {
   userId: string;
@@ -32,7 +31,6 @@ export interface RpTrackingGroupSummary {
   createdByName: string | null;
   members: RpTrackingGroupMemberInfo[];
   memberCount: number;
-  chapterCount: number;
   messageCount: number;
   lastActivityAt: Date | null;
   isPending: boolean;
@@ -42,7 +40,6 @@ export interface RpTrackingGroupSummary {
 }
 
 export interface RpTrackingGroupDetail extends RpTrackingGroupSummary {
-  chapters: ChapterItem[];
   messages: SerializedConversationMessage[];
 }
 
@@ -117,11 +114,6 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
           },
         },
       },
-      _count: {
-        select: {
-          chapters: true,
-        },
-      },
     },
   });
 
@@ -173,7 +165,6 @@ export async function getAllRpTrackingGroups(): Promise<RpTrackingGroupSummary[]
       createdByName: g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
       members,
       memberCount: members.length,
-      chapterCount: g._count.chapters,
       messageCount: g.conversation._count.messages,
       lastActivityAt,
       isPending,
@@ -268,16 +259,6 @@ export async function getRpTrackingGroupDetail(
           },
         },
       },
-      chapters: {
-        orderBy: { order: "asc" },
-        select: {
-          id: true,
-          title: true,
-          content: true,
-          order: true,
-          updatedAt: true,
-        },
-      },
     },
   });
 
@@ -340,7 +321,6 @@ export async function getRpTrackingGroupDetail(
       group.createdBy?.minecraftUsername ?? group.createdBy?.discordDisplayName ?? null,
     members,
     memberCount: members.length,
-    chapterCount: group.chapters.length,
     messageCount: group.conversation._count.messages,
     lastActivityAt: messages[0]?.createdAt ?? group.createdAt,
     isPending,
@@ -350,7 +330,6 @@ export async function getRpTrackingGroupDetail(
       group.conversation.lastHandledBy?.discordDisplayName ??
       null,
     unreadCount,
-    chapters: group.chapters,
     messages: serializedMessages,
   };
 }
@@ -441,11 +420,6 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
           },
         },
       },
-      _count: {
-        select: {
-          chapters: true,
-        },
-      },
     },
   });
 
@@ -487,7 +461,6 @@ export async function getUserRpTrackingGroups(userId: string): Promise<RpTrackin
       createdByName: g.createdBy?.minecraftUsername ?? g.createdBy?.discordDisplayName ?? null,
       members,
       memberCount: members.length,
-      chapterCount: g._count.chapters,
       messageCount: g.conversation._count.messages,
       lastActivityAt: lastMsg?.createdAt ?? g.createdAt,
       isPending: false,

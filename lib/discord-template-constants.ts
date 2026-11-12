@@ -18,7 +18,8 @@ export const DEFAULT_DISCORD_TEMPLATES: Record<DiscordTemplateId, DefaultTemplat
   TICKET_RP_CREATED: {
     id: "TICKET_RP_CREATED",
     label: "Tickets RP (Intrigues & Projets)",
-    description: "Notification transmise dans le salon staff dédié lors de la création d'un ticket RP.",
+    description:
+      "Notification transmise dans le salon staff dédié lors de la création d'un ticket RP.",
     isChannelNotification: true,
     channelGroup: "tickets",
     channelDefaultName: "#tickets-rp",

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ChatCircle,
-  BookOpen,
   MagnifyingGlass,
   ArrowSquareOut,
   Trash,
@@ -166,11 +165,10 @@ export function GroupTrackingTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[30%]">Groupe RP</TableHead>
-              <TableHead className="w-[30%]">
+              <TableHead className="w-[35%]">Groupe RP</TableHead>
+              <TableHead className="w-[35%]">
                 Membres ({groups.reduce((acc, g) => acc + g.memberCount, 0)} au total)
               </TableHead>
-              <TableHead className="text-center">Narration</TableHead>
               <TableHead className="text-center">Échanges</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead className="text-right">Actions</TableHead>
@@ -179,7 +177,7 @@ export function GroupTrackingTable({
           <TableBody>
             {filteredGroups.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-muted-foreground h-32 text-center text-sm">
+                <TableCell colSpan={5} className="text-muted-foreground h-32 text-center text-sm">
                   {groups.length === 0
                     ? "Aucun groupe de suivi RP n'a encore été créé."
                     : "Aucun groupe ne correspond à votre recherche."}
@@ -241,14 +239,6 @@ export function GroupTrackingTable({
                         )}
                       </div>
                     )}
-                  </TableCell>
-
-                  {/* Chapitres */}
-                  <TableCell className="text-center">
-                    <Badge variant="secondary" className="gap-1 font-normal">
-                      <BookOpen className="size-3.5" />
-                      <span>{group.chapterCount} chap.</span>
-                    </Badge>
                   </TableCell>
 
                   {/* Messages */}
@@ -315,8 +305,8 @@ export function GroupTrackingTable({
               Êtes-vous sûr de vouloir supprimer définitivement le groupe{" "}
               <strong>« {deletingGroup?.name} »</strong> ?
               <br />
-              Cette action supprimera également tous les échanges et chapitres associés pour
-              l&apos;ensemble des membres.
+              Cette action supprimera également tous les échanges associés pour l&apos;ensemble des
+              membres.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

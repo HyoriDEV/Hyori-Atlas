@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, Users, ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
+import { BookOpen } from "@phosphor-icons/react/dist/ssr";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   title: "Écriture de trame",
 };
 import { getPlayerCharacters } from "@/lib/services/character-service";
-import { getUserRpTrackingGroups } from "@/lib/services/group-rp-tracking-service";
 import {
   CharacterSheetStatus,
   CharacterStatus,
@@ -17,7 +16,6 @@ import {
 } from "@/lib/generated/prisma/enums";
 import { isRegistrationStatusAtLeast } from "@/lib/navigation";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { ChapterWorkspace } from "@/components/player/chapter-workspace";
@@ -44,10 +42,7 @@ export default async function WritingPage(props: {
     );
   }
 
-  const [allCharacters, userGroups] = await Promise.all([
-    getPlayerCharacters(user.id),
-    getUserRpTrackingGroups(user.id),
-  ]);
+  const allCharacters = await getPlayerCharacters(user.id);
 
   // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
   let selectedCharacter = allCharacters.find((c) => c.id === searchParams.characterId);
@@ -70,7 +65,7 @@ export default async function WritingPage(props: {
   const canWrite = settings.chapterWritingEnabled && isCharacterActive && isSheetValidated;
 
   const chapters = await prisma.chapter.findMany({
-    where: { playerId: user.id, characterSheetId: selectedCharacter.id, rpTrackingGroupId: null },
+    where: { playerId: user.id, characterSheetId: selectedCharacter.id },
     orderBy: { order: "asc" },
   });
 
@@ -110,28 +105,6 @@ export default async function WritingPage(props: {
             }))}
             selectedCharacterId={selectedCharacter.id}
           />
-        </div>
-      )}
-
-      {userGroups.length > 0 && (
-        <div className="bg-muted/40 flex flex-wrap items-center gap-2 rounded-lg border p-2.5 text-xs">
-          <span className="text-muted-foreground font-medium">Vos trames de groupe :</span>
-          {userGroups.map((group) => (
-            <Button
-              key={group.id}
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1.5 text-xs"
-              render={<Link href={`/player/rp-tracking?groupId=${group.id}&tab=narration`} />}
-            >
-              <Users className="text-primary size-3.5" />
-              <span>{group.name}</span>
-              <Badge variant="secondary" className="px-1 py-0 text-[10px]">
-                {group.chapterCount} chap.
-              </Badge>
-              <ArrowSquareOut className="text-muted-foreground size-3" />
-            </Button>
-          ))}
         </div>
       )}
 

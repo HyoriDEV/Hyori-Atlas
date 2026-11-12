@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RpTrackingPage(props: {
-  searchParams: Promise<{ groupId?: string; tab?: string }>;
+  searchParams: Promise<{ groupId?: string }>;
 }) {
   const user = await requireActivePlayer();
   const searchParams = await props.searchParams;
@@ -128,8 +128,6 @@ export default async function RpTrackingPage(props: {
         (m) => m.authorId !== user.id && m.createdAt > personalThreshold
       );
 
-      const initialTab = searchParams.tab === "narration" ? "narration" : "chat";
-
       return (
         <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
           <PlayerRpSwitcher
@@ -139,7 +137,7 @@ export default async function RpTrackingPage(props: {
             activeCharacterName={activeCharacter?.name}
             activeCharacterId={activeCharacter?.id}
           />
-          <PlayerGroupView group={groupDetail} viewerId={user.id} initialTab={initialTab} />
+          <PlayerGroupView group={groupDetail} viewerId={user.id} />
         </div>
       );
     }
