@@ -33,8 +33,8 @@ function revalidatePlayerAndStaff(playerId: string) {
   revalidatePath(`/staff/atlas/${playerId}/evaluation`);
   revalidatePath(`/staff/atlas/${playerId}/edit`);
   revalidatePath("/staff/distribution");
-  revalidatePath("/staff/writing");
-  revalidatePath(`/staff/writing/${playerId}`);
+  revalidatePath("/staff/rp-tracking");
+  revalidatePath(`/staff/rp-tracking/${playerId}`);
   revalidatePath("/player");
   revalidatePath("/player", "layout");
   revalidatePath("/player/character-sheet");

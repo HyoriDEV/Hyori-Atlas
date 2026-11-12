@@ -11,10 +11,11 @@ import {
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
+import { waitlistRoles } from "@/lib/navigation";
 import { notifyPlayerRegistrationStatus } from "@/lib/services/discord-bot-service";
 
 export async function acceptWaitlistPlayer(userId: string) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(waitlistRoles);
 
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
@@ -100,7 +101,7 @@ export async function acceptWaitlistPlayer(userId: string) {
 }
 
 export async function rejectWaitlistPlayer(userId: string) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(waitlistRoles);
 
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
@@ -129,7 +130,7 @@ export async function rejectWaitlistPlayer(userId: string) {
 }
 
 export async function restoreWaitlistPlayer(userId: string) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(waitlistRoles);
 
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },

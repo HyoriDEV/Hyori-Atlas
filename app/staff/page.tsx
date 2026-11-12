@@ -24,6 +24,7 @@ import {
   rpTrackingStaffRoles,
   staffAtlasItem,
   staffRoleLabels,
+  waitlistRoles,
   type NavIconKey,
 } from "@/lib/navigation";
 import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
 
 const staffRoles = allStaffRoles;
 const atlasRoles = staffAtlasItem.roles;
-const waitlistRoles: Role[] = [Role.ADMIN];
+const waitlistAccessRoles = waitlistRoles;
 const interviewSlotRoles: Role[] = allStaffRoles;
 const distributionRoles = rpManagementRoles;
 const rpTrackingRoles = rpTrackingStaffRoles;
@@ -52,7 +53,7 @@ export default async function StaffDashboardPage() {
   const user = await requireRole(staffRoles);
 
   const canAccessAtlas = atlasRoles.includes(user.role);
-  const canAccessWaitlist = waitlistRoles.includes(user.role);
+  const canAccessWaitlist = waitlistAccessRoles.includes(user.role);
   const canAccessInterviewSlots = interviewSlotRoles.includes(user.role);
   const canAccessDistribution = distributionRoles.includes(user.role);
   const canAccessRpTracking = rpTrackingRoles.includes(user.role);

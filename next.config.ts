@@ -7,6 +7,20 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "11mb",
     },
   },
+  async redirects() {
+    return [
+      {
+        source: "/staff/writing",
+        destination: "/staff/rp-tracking",
+        permanent: false,
+      },
+      {
+        source: "/staff/writing/:playerId",
+        destination: "/staff/rp-tracking/:playerId",
+        permanent: false,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

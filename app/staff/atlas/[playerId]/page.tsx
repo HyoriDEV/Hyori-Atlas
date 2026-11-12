@@ -48,6 +48,7 @@ import {
   interviewBookingStatusLabels,
   registrationStatusLabels,
   staffNavItems,
+  whitelistRoles,
 } from "@/lib/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -228,16 +229,20 @@ export default async function AtlasPlayerPage({
     (entry) => entry.status === RegistrationStatus.WHITELISTED
   )?.createdAt;
 
+  const canManageWhitelist = whitelistRoles.includes(staffUser.role);
   const canPromote =
+    canManageWhitelist &&
     sheet?.reviewStatus === CharacterSheetStatus.VALIDATED &&
     player.registrationStatus !== RegistrationStatus.WHITELISTED;
   const isAdmin = staffUser.role === Role.ADMIN;
   const canRefuse =
-    isAdmin && player.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS;
+    canManageWhitelist && player.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
   const canManageCharacters =
     staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
   const canSanction = isAdmin && player.role === Role.PLAYER;
+  const canRevokeWhitelist =
+    canManageWhitelist && player.registrationStatus === RegistrationStatus.WHITELISTED;
 
   const now = new Date();
   const sanctionHistory: AtlasSanctionHistoryItem[] = sanctions.map((sanction) => {
@@ -384,7 +389,7 @@ export default async function AtlasPlayerPage({
           {registrationStatusLabels[player.registrationStatus]}
         </Badge>
         {canRefuse && <AtlasRejectWhitelistButton playerId={player.id} pseudo={playerName} />}
-        {isAdmin && canPromote && (
+        {canPromote && (
           <AtlasPromoteButton
             playerId={player.id}
             pseudo={playerName}
@@ -533,13 +538,12 @@ export default async function AtlasPlayerPage({
         </div>
 
         <div className="flex flex-col gap-4">
-          {canSanction && (
+          {(canSanction || canRevokeWhitelist) && (
             <AtlasSanctionCard
               playerId={player.id}
               pseudo={playerName}
-              canRevokeWhitelist={
-                isAdmin && player.registrationStatus === RegistrationStatus.WHITELISTED
-              }
+              canRevokeWhitelist={canRevokeWhitelist}
+              canSanction={canSanction}
               activeBan={
                 activeBan
                   ? {
