@@ -14,7 +14,7 @@ import {
   resolvePageSize,
 } from "@/lib/table-preferences";
 import { formatDate } from "@/lib/date";
-import { sanctionSourceLabels, sanctionTypeLabels } from "@/lib/navigation";
+import { allStaffRoles, sanctionSourceLabels, sanctionTypeLabels } from "@/lib/navigation";
 import { sanctionStatusBadgeVariant, sanctionTypeBadgeVariant } from "@/lib/atlas-status";
 
 import { Badge } from "@/components/ui/badge";
@@ -70,8 +70,9 @@ type PageProps = {
 };
 
 export default async function SanctionsPage(props: PageProps) {
-  // Page accessible UNIQUEMENT aux administrateurs
-  await requireRole([Role.ADMIN]);
+  // Page consultable par tout le staff (seuls les admins peuvent lever/sanctionner)
+  const currentUser = await requireRole(allStaffRoles);
+  const isAdmin = currentUser.role === Role.ADMIN;
 
   const searchParams = await props.searchParams;
   const cookieStore = await cookies();
@@ -461,7 +462,7 @@ export default async function SanctionsPage(props: PageProps) {
 
                     {/* Actions */}
                     <TableCell className="pr-6 text-right">
-                      <SanctionRowActions sanction={sanction} />
+                      <SanctionRowActions sanction={sanction} canRevoke={isAdmin} />
                     </TableCell>
                   </TableRow>
                 );

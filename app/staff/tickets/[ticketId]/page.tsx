@@ -9,7 +9,9 @@ import { backlogManagerRoles, backlogRoles } from "@/lib/navigation";
 import { backlogStatusDotClasses, backlogStatusLabels } from "@/lib/backlog";
 import { serializeBacklogUser } from "@/lib/services/backlog-service";
 import { ticketAccessWhere } from "@/lib/ticket-access";
-import { formatDate } from "@/lib/date";
+import { Clock } from "@phosphor-icons/react/dist/ssr";
+import { formatDaysSince, formatDate } from "@/lib/date";
+import { Badge } from "@/components/ui/badge";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { sendStaffTicketMessage } from "@/lib/actions/ticket-actions";
 import { getTicketConfigData } from "@/lib/actions/ticket-config-actions";
@@ -183,6 +185,18 @@ export default async function TicketStaffDetailPage({
               availableCategories={availableCategories}
             />{" "}
             · {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+            {ticket.suspendedAt && (
+              <>
+                {" "}·{" "}
+                <Badge
+                  variant="outline"
+                  className="gap-1 border-amber-500/40 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-600 dark:text-amber-400"
+                >
+                  <Clock className="size-2.5" />
+                  <span>En suspens ({formatDaysSince(ticket.suspendedAt)})</span>
+                </Badge>
+              </>
+            )}
           </span>
           <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
           {canUseBacklog && ticket.backlogTasks.length > 0 && (
@@ -222,6 +236,7 @@ export default async function TicketStaffDetailPage({
           <TicketStatusActions
             ticketId={ticket.id}
             status={ticket.status}
+            isSuspended={Boolean(ticket.suspendedAt)}
             isAdmin={staffUser.role === Role.ADMIN}
           />
         </div>

@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  addRpTrackingGroupMemberAction,
+  addRpTrackingGroupMembersAction,
   removeRpTrackingGroupMemberAction,
 } from "@/lib/actions/group-rp-tracking-actions";
 
@@ -49,7 +49,7 @@ export function GroupMembersManager({
   className?: string;
 }) {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
   const [memberToRemove, setMemberToRemove] = useState<RpTrackingGroupMemberInfo | null>(null);
 
   const [isAdding, startAddTransition] = useTransition();
@@ -57,18 +57,22 @@ export function GroupMembersManager({
 
   const currentMemberIds = members.map((m) => m.userId);
 
-  function handleAddMember() {
-    if (!selectedPlayerId || readOnly) return;
+  function handleAddMembers() {
+    if (selectedPlayerIds.length === 0 || readOnly) return;
 
     startAddTransition(async () => {
-      const res = await addRpTrackingGroupMemberAction(groupId, selectedPlayerId);
+      const res = await addRpTrackingGroupMembersAction(groupId, selectedPlayerIds);
       if (!res.success) {
-        toast.error(res.error || "Échec de l'ajout du membre.");
+        toast.error(res.error || "Échec de l'ajout des membres.");
         return;
       }
 
-      toast.success("Joueur ajouté au groupe de suivi.");
-      setSelectedPlayerId(null);
+      toast.success(
+        res.count && res.count > 1
+          ? `${res.count} joueurs ajoutés au groupe de suivi.`
+          : "Joueur ajouté au groupe de suivi."
+      );
+      setSelectedPlayerIds([]);
       setAddDialogOpen(false);
     });
   }
@@ -198,12 +202,18 @@ export function GroupMembersManager({
       </div>
 
       {/* Dialog d'ajout de joueur */}
-      <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+      <Dialog
+        open={addDialogOpen}
+        onOpenChange={(open) => {
+          setAddDialogOpen(open);
+          if (!open) setSelectedPlayerIds([]);
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Ajouter un joueur au groupe</DialogTitle>
+            <DialogTitle>Ajouter des joueurs au groupe</DialogTitle>
             <DialogDescription>
-              Sélectionnez un joueur whitelisté pour l&apos;intégrer à ce groupe de suivi RP.
+              Sélectionnez un ou plusieurs joueurs whitelistés pour les intégrer à ce groupe de suivi RP.
             </DialogDescription>
           </DialogHeader>
 
@@ -211,25 +221,37 @@ export function GroupMembersManager({
             <PlayerSelect
               players={availablePlayers}
               excludedIds={currentMemberIds}
-              value={selectedPlayerId}
-              onChange={(id) => setSelectedPlayerId(id)}
-              placeholder="Rechercher un joueur à ajouter..."
+              multiple={true}
+              value={selectedPlayerIds}
+              onChange={(ids) => setSelectedPlayerIds(ids)}
+              placeholder="Rechercher des joueurs à ajouter..."
               triggerClassName="w-full"
             />
           </div>
 
           <DialogFooter className="gap-2 pt-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setAddDialogOpen(false)} disabled={isAdding}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSelectedPlayerIds([]);
+                setAddDialogOpen(false);
+              }}
+              disabled={isAdding}
+            >
               Annuler
             </Button>
-            <Button onClick={handleAddMember} disabled={!selectedPlayerId || isAdding}>
+            <Button onClick={handleAddMembers} disabled={selectedPlayerIds.length === 0 || isAdding}>
               {isAdding ? (
                 <>
                   <CircleNotch className="size-4 animate-spin" />
                   <span>Ajout...</span>
                 </>
               ) : (
-                <span>Ajouter au groupe</span>
+                <span>
+                  {selectedPlayerIds.length > 1
+                    ? `Ajouter les joueurs (${selectedPlayerIds.length})`
+                    : "Ajouter au groupe"}
+                </span>
               )}
             </Button>
           </DialogFooter>

@@ -1,7 +1,7 @@
 // Valeurs des paramètres d'URL de la liste des tickets staff, partagées entre la page (serveur)
 // et ses contrôles (client).
 
-export const TICKET_VIEWS = ["active", "archived"] as const;
+export const TICKET_VIEWS = ["active", "suspended", "archived"] as const;
 
 export type TicketView = (typeof TICKET_VIEWS)[number];
 

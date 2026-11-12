@@ -9,7 +9,7 @@ import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
 import { BdaReportForm } from "@/components/dashboard/bda-report-form";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 
-const bdaRoles = [Role.ADMIN, Role.CONFLICT_MANAGEMENT];
+const bdaRoles = [Role.ADMIN];
 
 export default async function NewBdaReportPage() {
   const currentUser = await requireRole(bdaRoles);

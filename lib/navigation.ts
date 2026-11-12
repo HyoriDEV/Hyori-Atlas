@@ -200,7 +200,7 @@ export const staffStatisticsItem: StaffNavItem = {
   label: "Statistiques",
   href: "/staff/statistics",
   iconKey: "chart",
-  roles: [Role.ADMIN],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -219,8 +219,8 @@ export const staffTicketsItem: StaffNavItem = {
   fullWidth: true,
 };
 
-export const backlogRoles: Role[] = [Role.ADMIN, Role.DEVELOPER, Role.HELPER];
-export const backlogManagerRoles: Role[] = [Role.ADMIN, Role.DEVELOPER];
+export const backlogRoles: Role[] = [Role.ADMIN];
+export const backlogManagerRoles: Role[] = [Role.ADMIN];
 
 export const staffBacklogItem: StaffNavItem = {
   label: "Backlog",
@@ -234,14 +234,14 @@ export const staffBdaReportsItem: StaffNavItem = {
   label: "Rapports GC",
   href: "/staff/bda-reports",
   iconKey: "shield",
-  roles: [Role.ADMIN, Role.CONFLICT_MANAGEMENT],
+  roles: [Role.ADMIN],
 };
 
 export const staffSanctionsItem: StaffNavItem = {
   label: "Sanctions",
   href: "/staff/sanctions",
   iconKey: "gavel",
-  roles: [Role.ADMIN],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -257,7 +257,7 @@ export const staffRpGroupsItem: StaffNavItem = {
   label: "Groupes RP",
   href: "/staff/groups",
   iconKey: "users",
-  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -265,7 +265,7 @@ export const staffDistributionItem: StaffNavItem = {
   label: "Distribution",
   href: "/staff/distribution",
   iconKey: "scales",
-  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -273,14 +273,14 @@ export const staffWritingItem: StaffNavItem = {
   label: "Lore des joueurs",
   href: "/staff/writing",
   iconKey: "pen",
-  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
+  roles: allStaffRoles,
 };
 
 export const staffRpTrackingItem: StaffNavItem = {
   label: "Suivi RP",
   href: "/staff/rp-tracking",
   iconKey: "chat",
-  roles: [Role.ADMIN, Role.RP_TRACKING, Role.EVENT],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -295,7 +295,7 @@ export const staffInterviewSlotsItem: StaffNavItem = {
   label: "Créneaux d'entretien",
   href: "/staff/interview-slots",
   iconKey: "calendar",
-  roles: [Role.ADMIN],
+  roles: allStaffRoles,
   fullWidth: true,
 };
 
@@ -303,7 +303,7 @@ export const staffInterviewGuideItem: StaffNavItem = {
   label: "Guide d'entretien",
   href: "/staff/interview-guide",
   iconKey: "scroll",
-  roles: [Role.ADMIN],
+  roles: allStaffRoles,
 };
 
 export const staffNewsItem: StaffNavItem = {
@@ -321,7 +321,7 @@ export const staffRulesItem: StaffNavItem = {
   fullWidth: true,
 };
 
-export const galleryRoles: Role[] = [Role.ADMIN, Role.EVENT, Role.RP_TRACKING];
+export const galleryRoles: Role[] = [Role.ADMIN];
 
 export const staffGalleryItem: StaffNavItem = {
   label: "Galerie",
@@ -349,6 +349,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffSanctionsItem,
   staffRpGroupsItem,
   staffDistributionItem,
+  staffWritingItem,
   staffWaitlistItem,
   staffInterviewSlotsItem,
   staffInterviewGuideItem,
@@ -381,7 +382,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Gestion RP",
         iconKey: "users",
-        items: [staffRpGroupsItem, staffDistributionItem],
+        items: [staffRpGroupsItem, staffDistributionItem, staffWritingItem],
       },
       {
         title: "Admission",
@@ -401,42 +402,29 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     ];
   }
 
-  if (role === Role.CONFLICT_MANAGEMENT) {
-    return [
-      overviewGroup,
-      {
-        title: "Modération",
-        iconKey: "shield",
-        items: [staffBdaReportsItem],
-      },
-    ];
-  }
-
-  if (role === Role.HELPER) {
-    return [overviewGroup, backlogStandaloneGroup];
-  }
-
-  if (role === Role.RP_TRACKING || role === Role.EVENT) {
-    return [
-      overviewGroup,
-      {
-        title: "Gestion RP",
-        iconKey: "users",
-        items: [staffRpGroupsItem, staffDistributionItem],
-      },
-      {
-        title: "Contenu",
-        iconKey: "newspaper",
-        items: [staffGalleryItem],
-      },
-    ];
-  }
-
-  if (role === Role.DEVELOPER) {
-    return [overviewGroup, backlogStandaloneGroup];
-  }
-
-  return [overviewGroup];
+  return [
+    overviewGroup,
+    {
+      title: "Modération",
+      iconKey: "shield",
+      items: [staffSanctionsItem],
+    },
+    {
+      title: "Gestion RP",
+      iconKey: "users",
+      items: [staffRpGroupsItem, staffDistributionItem, staffWritingItem],
+    },
+    {
+      title: "Admission",
+      iconKey: "clock",
+      items: [staffInterviewSlotsItem, staffInterviewGuideItem],
+    },
+    {
+      title: "Administration",
+      iconKey: "gear",
+      items: [staffStatisticsItem],
+    },
+  ];
 }
 
 export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
@@ -444,8 +432,8 @@ export const staffNavGroups: StaffNavGroup[] = getStaffNavGroups(Role.ADMIN);
 export const characterSheetReviewerRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
 export const characterSheetViewerRoles: Role[] = staffAtlasItem.roles;
 export const writingReviewerRoles: Role[] = staffAtlasItem.roles;
-export const rpTrackingStaffRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
-export const rpManagementRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING, Role.EVENT];
+export const rpTrackingStaffRoles: Role[] = allStaffRoles;
+export const rpManagementRoles: Role[] = allStaffRoles;
 export const secretTicketStaffRoles: Role[] = [Role.ADMIN];
 export const ticketStaffRoles: Role[] = allStaffRoles;
 

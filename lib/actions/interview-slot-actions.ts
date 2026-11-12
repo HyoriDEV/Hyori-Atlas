@@ -4,19 +4,22 @@ import { revalidatePath } from "next/cache";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
+import { allStaffRoles } from "@/lib/navigation";
 import {
   CharacterSheetStatus,
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
+
+const interviewSlotAllowedRoles = allStaffRoles;
 import {
   sendInterviewReminders,
   type InterviewReminderResult,
 } from "@/lib/services/discord-bot-service";
 
 export async function createInterviewSlot(startsAt: Date) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const targetDate = new Date(startsAt);
   if (isNaN(targetDate.getTime()) || targetDate < new Date()) {
@@ -38,7 +41,7 @@ export async function createInterviewSlot(startsAt: Date) {
 }
 
 export async function createBatchInterviewSlots(startsAtList: Date[]) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   if (!startsAtList || startsAtList.length === 0) {
     throw new Error("Aucun créneau à créer.");
@@ -81,7 +84,7 @@ export async function createBatchInterviewSlots(startsAtList: Date[]) {
 }
 
 export async function deleteInterviewSlot(slotId: string) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const slot = await prisma.interviewSlot.findUnique({
     where: { id: slotId },
@@ -101,7 +104,7 @@ export async function deleteInterviewSlot(slotId: string) {
 }
 
 export async function deleteBatchInterviewSlots(slotIds: string[]) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   if (!slotIds || slotIds.length === 0) {
     return { deletedCount: 0 };
@@ -134,7 +137,7 @@ export async function deleteBatchInterviewSlots(slotIds: string[]) {
 }
 
 export async function deletePastUnbookedSlots() {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const now = new Date();
   const result = await prisma.interviewSlot.deleteMany({
@@ -151,7 +154,7 @@ export async function deletePastUnbookedSlots() {
 }
 
 export async function cancelInterviewBooking(bookingId: string, deleteSlot = false) {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const booking = await prisma.interviewBooking.findUnique({
     where: { id: bookingId },
@@ -187,7 +190,7 @@ export async function updateInterviewBookingStatus(
   bookingId: string,
   status: InterviewBookingStatus
 ) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(interviewSlotAllowedRoles);
 
   const booking = await prisma.interviewBooking.update({
     where: { id: bookingId },
@@ -218,7 +221,7 @@ export interface EligibleInterviewReminderCandidate {
 export async function getEligibleInterviewReminderCandidatesAction(): Promise<
   EligibleInterviewReminderCandidate[]
 > {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const candidates = await prisma.user.findMany({
     where: {
@@ -308,7 +311,7 @@ export async function getEligibleInterviewReminderCandidatesAction(): Promise<
 export async function sendInterviewRemindersAction(
   targetUserIds?: string[]
 ): Promise<InterviewReminderResult> {
-  await requireRole([Role.ADMIN]);
+  await requireRole(interviewSlotAllowedRoles);
 
   const candidates = await getEligibleInterviewReminderCandidatesAction();
   if (candidates.length === 0) {

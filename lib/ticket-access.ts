@@ -12,6 +12,12 @@ export interface TicketAccessUser {
 
 const NO_TICKET: Prisma.TicketWhereInput = { id: { in: [] } };
 
+export const technicalTicketRoles: Role[] = [Role.ADMIN, Role.DEVELOPER];
+
+export function hasTechnicalTicketAccess(role: Role): boolean {
+  return technicalTicketRoles.includes(role);
+}
+
 /**
  * Seuls les administrateurs ont un accès global à tous les tickets sans restriction de catégorie.
  */
@@ -38,7 +44,8 @@ export function isTicketSecret(): boolean {
  * Filtre Prisma des tickets visibles par un membre du staff :
  * - Non-staff : aucun ticket.
  * - ADMIN : tous les tickets.
- * - Autres rôles du staff : tickets des catégories autorisant leur rôle.
+ * - DEVELOPER : tickets techniques + tickets dont la catégorie autorise le rôle.
+ * - Autres rôles du staff : uniquement les tickets non techniques dont la catégorie autorise le rôle.
  */
 export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInput {
   if (!allStaffRoles.includes(user.role)) {
@@ -48,21 +55,48 @@ export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInp
     return {};
   }
 
-  const categoryMatchesRole: Prisma.TicketWhereInput = {
-    OR: [
-      { categoryRef: { allowedRoles: { has: user.role } } },
-      {
+  const isDev = user.role === Role.DEVELOPER;
+
+  // Si l'utilisateur n'est pas ADMIN ni DEVELOPER, exclusion stricte de tout ticket technique
+  const nonTechFilter: Prisma.TicketWhereInput = isDev
+    ? {}
+    : {
         AND: [
-          { categoryRef: null },
-          // Repli sur categoryName pour les tickets sans référence
-          user.role === Role.DEVELOPER
-            ? {}
-            : {
-                AND: [
-                  { category: { not: TicketCategory.TECHNIQUE } },
-                  { categoryName: { notIn: ["Technique", "Ticket technique"] } },
-                ],
+          { category: { not: TicketCategory.TECHNIQUE } },
+          { categoryName: { notIn: ["Technique", "Ticket technique"] } },
+          {
+            OR: [
+              { categoryRef: null },
+              {
+                categoryRef: {
+                  slug: { notIn: ["technique", "tech", "dev"] },
+                },
               },
+            ],
+          },
+        ],
+      };
+
+  const categoryMatchesRole: Prisma.TicketWhereInput = {
+    AND: [
+      nonTechFilter,
+      {
+        OR: [
+          { categoryRef: { allowedRoles: { has: user.role } } },
+          {
+            AND: [
+              { categoryRef: null },
+              // Repli sur categoryName pour les tickets sans référence
+              isDev
+                ? {}
+                : {
+                    AND: [
+                      { category: { not: TicketCategory.TECHNIQUE } },
+                      { categoryName: { notIn: ["Technique", "Ticket technique"] } },
+                    ],
+                  },
+            ],
+          },
         ],
       },
     ],

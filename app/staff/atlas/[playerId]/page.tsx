@@ -235,7 +235,8 @@ export default async function AtlasPlayerPage({
   const canRefuse =
     isAdmin && player.registrationStatus === RegistrationStatus.WHITELIST_IN_PROGRESS;
   const canReviewSheet = characterSheetReviewerRoles.includes(staffUser.role);
-  const canManageCharacters = staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
+  const canManageCharacters =
+    staffUser.role === Role.ADMIN || staffUser.role === Role.RP_TRACKING;
   const canSanction = isAdmin && player.role === Role.PLAYER;
 
   const now = new Date();

@@ -114,7 +114,7 @@ export async function getSupportStats(range: StatisticsRange): Promise<SupportSt
     bdaCreatedInPeriod,
   ] = await Promise.all([
     prisma.ticket.count({ where: { status: { not: TicketStatus.ARCHIVED } } }),
-    prisma.ticket.count({ where: { status: TicketStatus.PENDING_STAFF } }),
+    prisma.ticket.count({ where: { status: TicketStatus.PENDING_STAFF, suspendedAt: null } }),
     prisma.ticket.findMany({
       where: { createdAt: createdInPeriod },
       select: {

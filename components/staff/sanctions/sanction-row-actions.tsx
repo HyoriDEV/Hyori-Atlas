@@ -69,9 +69,10 @@ export interface SanctionRowData {
 
 interface SanctionRowActionsProps {
   sanction: SanctionRowData;
+  canRevoke?: boolean;
 }
 
-export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
+export function SanctionRowActions({ sanction, canRevoke = false }: SanctionRowActionsProps) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [revokeOpen, setRevokeOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
@@ -112,7 +113,7 @@ export function SanctionRowActions({ sanction }: SanctionRowActionsProps) {
   return (
     <>
       <div className="flex items-center justify-end gap-1.5">
-        {isActive && (
+        {isActive && canRevoke && (
           <Button
             type="button"
             variant="destructive"

@@ -142,9 +142,11 @@ export async function getStaffBadgeCounts(
     pendingGalleryCount,
   ] = await Promise.all([
     getUnreadTickets({ id: userId, role }),
-    prisma.bdaReport.count({
-      where: { status: BdaReportStatus.UNREAD },
-    }),
+    role === Role.ADMIN
+      ? prisma.bdaReport.count({
+          where: { status: BdaReportStatus.UNREAD },
+        })
+      : 0,
     prisma.user.count({
       where: {
         registrationStatus: {

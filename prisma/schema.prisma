@@ -324,6 +324,7 @@ model Ticket {
 
   subject        String
   status         TicketStatus   @default(PENDING_STAFF)
+  suspendedAt    DateTime?
   conversationId String         @unique
   lastMessageAt  DateTime       @default(now())
   createdAt      DateTime       @default(now())
@@ -337,6 +338,7 @@ model Ticket {
 
   @@index([categoryId, status, lastMessageAt])
   @@index([status, lastMessageAt])
+  @@index([suspendedAt])
   @@map("tickets")
 }
 

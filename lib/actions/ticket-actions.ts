@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireActivePlayer, requireRole, requireUser } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { allStaffRoles, formatTicketCategoryName, isTechniqueCategory } from "@/lib/navigation";
-import { getUnreadTickets, ticketAccessWhere } from "@/lib/ticket-access";
+import { getUnreadTickets, hasTechnicalTicketAccess, ticketAccessWhere } from "@/lib/ticket-access";
 import { serializeConversationMessage } from "@/lib/conversation";
 import { publish } from "@/lib/services/conversation-events";
 import {
@@ -257,6 +257,10 @@ export async function createStaffTicket(input: {
 
   const isTechnique =
     input.category === TicketCategory.TECHNIQUE || isTechniqueCategory(categoryConfig);
+
+  if (isTechnique && !hasTechnicalTicketAccess(staffUser.role)) {
+    throw new Error("Seuls les administrateurs et les développeurs peuvent ouvrir un ticket technique.");
+  }
   const categoryName = categoryConfig?.name
     ? formatTicketCategoryName(categoryConfig.name)
     : isTechnique
@@ -371,7 +375,11 @@ export async function sendTicketMessage(
 
     await tx.ticket.update({
       where: { id: ticketId },
-      data: { status: TicketStatus.PENDING_STAFF, lastMessageAt: newMessage.createdAt },
+      data: {
+        status: TicketStatus.PENDING_STAFF,
+        suspendedAt: null,
+        lastMessageAt: newMessage.createdAt,
+      },
     });
 
     await tx.conversationMember.updateMany({
@@ -490,7 +498,7 @@ export async function archiveTicket(ticketId: string) {
 
   await prisma.ticket.update({
     where: { id: ticketId },
-    data: { status: TicketStatus.ARCHIVED },
+    data: { status: TicketStatus.ARCHIVED, suspendedAt: null },
   });
 
   // Archiver automatiquement les éventuels sujets staff Discord actifs liés
@@ -530,12 +538,58 @@ export async function reopenTicket(ticketId: string) {
 
   await prisma.ticket.update({
     where: { id: ticketId },
-    data: { status: TicketStatus.PENDING_STAFF },
+    data: { status: TicketStatus.PENDING_STAFF, suspendedAt: null },
   });
 
   publish(ticket.conversationId, {
     type: "STATUS_CHANGE",
     status: TicketStatus.PENDING_STAFF,
+    conversationId: ticket.conversationId,
+  });
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+  revalidatePath(`/player/tickets/${ticketId}`);
+  revalidatePath("/player/tickets");
+}
+
+export async function suspendTicket(ticketId: string) {
+  const { ticket } = await findAccessibleTicket(ticketId);
+  if (!ticket) throw new Error("Ticket introuvable.");
+  if (ticket.status === TicketStatus.ARCHIVED) {
+    throw new Error("Impossible de suspendre un ticket archivé.");
+  }
+
+  const now = new Date();
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { suspendedAt: now },
+  });
+
+  publish(ticket.conversationId, {
+    type: "STATUS_CHANGE",
+    status: ticket.status,
+    conversationId: ticket.conversationId,
+  });
+
+  revalidatePath(`/staff/tickets/${ticketId}`);
+  revalidatePath("/staff/tickets");
+  revalidatePath(`/player/tickets/${ticketId}`);
+  revalidatePath("/player/tickets");
+}
+
+export async function unsuspendTicket(ticketId: string) {
+  const { ticket } = await findAccessibleTicket(ticketId);
+  if (!ticket) throw new Error("Ticket introuvable.");
+
+  await prisma.ticket.update({
+    where: { id: ticketId },
+    data: { suspendedAt: null },
+  });
+
+  publish(ticket.conversationId, {
+    type: "STATUS_CHANGE",
+    status: ticket.status,
     conversationId: ticket.conversationId,
   });
 

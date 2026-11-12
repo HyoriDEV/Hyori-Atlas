@@ -33,7 +33,7 @@ export default async function StaffGroupRpTrackingDetailPage(props: {
   const staffUser = await requireRole(rpTrackingStaffRoles);
 
   const [group, rawUsers] = await Promise.all([
-    getRpTrackingGroupDetail(groupId, staffUser.id),
+    getRpTrackingGroupDetail(groupId, staffUser.id, true),
     prisma.user.findMany({
       where: {
         registrationStatus: RegistrationStatus.WHITELISTED,

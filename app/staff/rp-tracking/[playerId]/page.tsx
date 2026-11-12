@@ -184,7 +184,7 @@ export default async function RpTrackingStaffDetailPage(props: {
   return (
     <RpTrackingWorkspace
       conversationId={conversation.id}
-      initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true))}
+      initialMessages={messages.reverse().map((m) => serializeConversationMessage(m, true, staffUser.id))}
       viewerId={staffUser.id}
       player={{
         id: player.id,

@@ -191,17 +191,17 @@ export async function deleteRpTrackingGroupAction(
   }
 }
 
-export async function addRpTrackingGroupMemberAction(
+export async function addRpTrackingGroupMembersAction(
   groupId: string,
-  userId: string
-): Promise<{ success: boolean; error?: string }> {
+  userIds: string[]
+): Promise<{ success: boolean; count?: number; error?: string }> {
   try {
     await requireRole(rpTrackingStaffRoles);
 
     const group = await prisma.rpTrackingGroup.findUnique({
       where: { id: groupId },
       include: {
-        members: { where: { userId } },
+        members: { select: { userId: true } },
       },
     });
 
@@ -209,13 +209,21 @@ export async function addRpTrackingGroupMemberAction(
       return { success: false, error: "Groupe introuvable." };
     }
 
-    if (group.members.length > 0) {
-      return { success: false, error: "Ce joueur est déjà membre du groupe." };
+    const currentMemberIds = new Set(group.members.map((m) => m.userId));
+    const targetUserIds = Array.from(new Set(userIds)).filter(
+      (id) => Boolean(id) && !currentMemberIds.has(id)
+    );
+
+    if (targetUserIds.length === 0) {
+      return {
+        success: false,
+        error: "Tous les joueurs sélectionnés sont déjà membres du groupe.",
+      };
     }
 
-    const player = await prisma.user.findFirst({
+    const validPlayers = await prisma.user.findMany({
       where: {
-        id: userId,
+        id: { in: targetUserIds },
         registrationStatus: RegistrationStatus.WHITELISTED,
         sanctions: {
           none: {
@@ -233,43 +241,50 @@ export async function addRpTrackingGroupMemberAction(
       },
     });
 
-    if (!player) {
-      return { success: false, error: "Joueur non whitelisté ou introuvable." };
+    if (validPlayers.length === 0) {
+      return { success: false, error: "Aucun joueur whitelisté valide à ajouter." };
     }
 
-    const playerName = player.minecraftUsername ?? player.discordDisplayName;
-
     await prisma.$transaction(async (tx) => {
-      // 1. Ajouter comme membre du groupe
-      await tx.rpTrackingGroupMember.create({
-        data: {
+      // 1. Ajouter comme membres du groupe
+      await tx.rpTrackingGroupMember.createMany({
+        data: validPlayers.map((player) => ({
           groupId,
-          userId,
+          userId: player.id,
           characterSheetId: player.characterSheets[0]?.id ?? null,
-        },
+        })),
+        skipDuplicates: true,
       });
 
-      // 2. Ajouter comme membre de la conversation
-      await tx.conversationMember.upsert({
-        where: {
-          conversationId_userId: {
-            conversationId: group.conversationId,
-            userId,
+      // 2. Ajouter comme membres de la conversation
+      for (const player of validPlayers) {
+        await tx.conversationMember.upsert({
+          where: {
+            conversationId_userId: {
+              conversationId: group.conversationId,
+              userId: player.id,
+            },
           },
-        },
-        create: {
-          conversationId: group.conversationId,
-          userId,
-        },
-        update: {},
-      });
+          create: {
+            conversationId: group.conversationId,
+            userId: player.id,
+          },
+          update: {},
+        });
+      }
 
       // 3. Message système
+      const names = validPlayers.map((p) => p.minecraftUsername ?? p.discordDisplayName);
+      const text =
+        names.length === 1
+          ? `${names[0]} a rejoint le groupe de suivi RP.`
+          : `${names.join(", ")} ont rejoint le groupe de suivi RP.`;
+
       const sysMsg = await tx.conversationMessage.create({
         data: {
           conversationId: group.conversationId,
           authorType: MessageAuthorType.SYSTEM,
-          body: `${playerName} a rejoint le groupe de suivi RP.`,
+          body: text,
         },
         include: { author: true },
       });
@@ -281,14 +296,21 @@ export async function addRpTrackingGroupMemberAction(
     revalidatePath(`/staff/rp-tracking/groups/${groupId}`);
     revalidatePath("/player/rp-tracking");
 
-    return { success: true };
+    return { success: true, count: validPlayers.length };
   } catch (error) {
-    console.error("[addRpTrackingGroupMemberAction] Erreur:", error);
+    console.error("[addRpTrackingGroupMembersAction] Erreur:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Erreur inattendue",
     };
   }
+}
+
+export async function addRpTrackingGroupMemberAction(
+  groupId: string,
+  userId: string
+): Promise<{ success: boolean; error?: string }> {
+  return await addRpTrackingGroupMembersAction(groupId, [userId]);
 }
 
 export async function removeRpTrackingGroupMemberAction(

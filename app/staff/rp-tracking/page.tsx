@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ChatCircle, User, Users } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +10,7 @@ import { CharacterStatus, RegistrationStatus, SanctionType } from "@/lib/generat
 import { getAllRpTrackingGroups } from "@/lib/services/group-rp-tracking-service";
 import { GroupTrackingTable } from "@/components/staff/rp-tracking/group-tracking-table";
 import { GroupTrackingFilters } from "@/components/staff/rp-tracking/group-tracking-filters";
+import { RpTrackingViewSelector } from "@/components/staff/rp-tracking/rp-tracking-view-selector";
 import type { PlayerOption } from "@/components/player-select";
 
 export const metadata: Metadata = {
@@ -87,60 +88,6 @@ export default async function RpTrackingStaffListPage(props: {
 }) {
   const staffUser = await requireRole(rpTrackingStaffRoles);
   const searchParams = await props.searchParams;
-  const cookieStore = await cookies();
-
-  const rawSavedPrefs = getServerPagePrefs(cookieStore, "/staff/rp-tracking");
-  const savedPrefs: PagePreferences = {};
-  if (rawSavedPrefs.tab && RP_TRACKING_TABS.includes(rawSavedPrefs.tab as RpTrackingTab)) {
-    savedPrefs.tab = rawSavedPrefs.tab;
-  }
-  if (
-    rawSavedPrefs.writingEdited &&
-    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
-      rawSavedPrefs.writingEdited as RpTrackingWritingEditedFilter
-    )
-  ) {
-    savedPrefs.writingEdited = rawSavedPrefs.writingEdited;
-  }
-  if (rawSavedPrefs.sort && RP_TRACKING_SORTS.includes(rawSavedPrefs.sort as RpTrackingSort)) {
-    savedPrefs.sort = rawSavedPrefs.sort;
-  }
-  if (rawSavedPrefs.pageSize) {
-    savedPrefs.pageSize = rawSavedPrefs.pageSize;
-  }
-
-  const redirectUrl = checkRedirectWithSavedPrefs("/staff/rp-tracking", searchParams, savedPrefs);
-  if (redirectUrl) {
-    redirect(redirectUrl);
-  }
-
-  const query = searchParams.q?.trim() ?? "";
-  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
-  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
-
-  const tab: RpTrackingTab = RP_TRACKING_TABS.includes(searchParams.tab as RpTrackingTab)
-    ? (searchParams.tab as RpTrackingTab)
-    : RP_TRACKING_TABS.includes(savedPrefs.tab as RpTrackingTab)
-      ? (savedPrefs.tab as RpTrackingTab)
-      : DEFAULT_RP_TRACKING_TAB;
-
-  const writingEditedFilter: RpTrackingWritingEditedFilter =
-    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
-      searchParams.writingEdited as RpTrackingWritingEditedFilter
-    )
-      ? (searchParams.writingEdited as RpTrackingWritingEditedFilter)
-      : RP_TRACKING_WRITING_EDITED_FILTERS.includes(
-            savedPrefs.writingEdited as RpTrackingWritingEditedFilter
-          )
-        ? (savedPrefs.writingEdited as RpTrackingWritingEditedFilter)
-        : DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
-
-  const sortOption: RpTrackingSort = RP_TRACKING_SORTS.includes(searchParams.sort as RpTrackingSort)
-    ? (searchParams.sort as RpTrackingSort)
-    : RP_TRACKING_SORTS.includes(savedPrefs.sort as RpTrackingSort)
-      ? (savedPrefs.sort as RpTrackingSort)
-      : DEFAULT_RP_TRACKING_SORT;
-
   const view = searchParams.view === "groups" ? "groups" : "players";
 
   const [{ players, counts }, allGroups, rawUsers] = await Promise.all([
@@ -174,6 +121,79 @@ export default async function RpTrackingStaffListPage(props: {
     }),
   ]);
 
+  const pendingGroupsCount = allGroups.filter((g) => g.isPending).length;
+  const pendingPlayersCount = counts.pending;
+  const isPendingListEmpty =
+    view === "groups" ? pendingGroupsCount === 0 : pendingPlayersCount === 0;
+
+  const defaultTabForCurrentView: RpTrackingTab = isPendingListEmpty
+    ? "handled"
+    : DEFAULT_RP_TRACKING_TAB;
+
+  const cookieStore = await cookies();
+  const rawSavedPrefs = getServerPagePrefs(cookieStore, "/staff/rp-tracking");
+  const savedPrefs: PagePreferences = {};
+  if (rawSavedPrefs.tab && RP_TRACKING_TABS.includes(rawSavedPrefs.tab as RpTrackingTab)) {
+    savedPrefs.tab = rawSavedPrefs.tab;
+  }
+  // Si la liste "À traiter" est vide, basculer vers "handled" pour éviter un clic superflu
+  if ((!savedPrefs.tab || savedPrefs.tab === "pending") && isPendingListEmpty) {
+    savedPrefs.tab = "handled";
+  }
+  if (
+    rawSavedPrefs.writingEdited &&
+    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+      rawSavedPrefs.writingEdited as RpTrackingWritingEditedFilter
+    )
+  ) {
+    savedPrefs.writingEdited = rawSavedPrefs.writingEdited;
+  }
+  if (rawSavedPrefs.sort && RP_TRACKING_SORTS.includes(rawSavedPrefs.sort as RpTrackingSort)) {
+    savedPrefs.sort = rawSavedPrefs.sort;
+  }
+  if (rawSavedPrefs.pageSize) {
+    savedPrefs.pageSize = rawSavedPrefs.pageSize;
+  }
+
+  const redirectUrl = checkRedirectWithSavedPrefs("/staff/rp-tracking", searchParams, savedPrefs);
+  if (redirectUrl) {
+    redirect(redirectUrl);
+  }
+
+  const query = searchParams.q?.trim() ?? "";
+  const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
+  const pageSize = resolvePageSize(searchParams.pageSize, savedPrefs.pageSize, DEFAULT_PAGE_SIZE);
+
+  const rawTab: RpTrackingTab = RP_TRACKING_TABS.includes(searchParams.tab as RpTrackingTab)
+    ? (searchParams.tab as RpTrackingTab)
+    : RP_TRACKING_TABS.includes(savedPrefs.tab as RpTrackingTab)
+      ? (savedPrefs.tab as RpTrackingTab)
+      : defaultTabForCurrentView;
+
+  // Si on est sur "pending" mais que la liste à traiter est vide, basculer instantanément sur "handled"
+  const resolvedTab: RpTrackingTab =
+    rawTab === "pending" && isPendingListEmpty ? "handled" : rawTab;
+
+  const activeTab: RpTrackingTab =
+    view === "groups" && resolvedTab === "none" ? defaultTabForCurrentView : resolvedTab;
+
+  const writingEditedFilter: RpTrackingWritingEditedFilter =
+    RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+      searchParams.writingEdited as RpTrackingWritingEditedFilter
+    )
+      ? (searchParams.writingEdited as RpTrackingWritingEditedFilter)
+      : RP_TRACKING_WRITING_EDITED_FILTERS.includes(
+            savedPrefs.writingEdited as RpTrackingWritingEditedFilter
+          )
+        ? (savedPrefs.writingEdited as RpTrackingWritingEditedFilter)
+        : DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER;
+
+  const sortOption: RpTrackingSort = RP_TRACKING_SORTS.includes(searchParams.sort as RpTrackingSort)
+    ? (searchParams.sort as RpTrackingSort)
+    : RP_TRACKING_SORTS.includes(savedPrefs.sort as RpTrackingSort)
+      ? (savedPrefs.sort as RpTrackingSort)
+      : DEFAULT_RP_TRACKING_SORT;
+
   const availablePlayers: PlayerOption[] = rawUsers.map((u) => ({
     id: u.id,
     minecraftUsername: u.minecraftUsername,
@@ -185,8 +205,6 @@ export default async function RpTrackingStaffListPage(props: {
     characterName: u.characterSheets[0]?.name ?? null,
     characterSheets: u.characterSheets,
   }));
-
-  const pendingGroupsCount = allGroups.filter((g) => g.isPending).length;
 
   const normalizedQuery = query.toLocaleLowerCase("fr");
   let filteredPlayers = players;
@@ -201,13 +219,13 @@ export default async function RpTrackingStaffListPage(props: {
   }
 
   // Filtrage par onglet (À traiter, Traités, Sans suivi)
-  if (tab === "pending") {
+  if (activeTab === "pending") {
     filteredPlayers = filteredPlayers.filter((player) => player.state === "pending");
-  } else if (tab === "handled") {
+  } else if (activeTab === "handled") {
     filteredPlayers = filteredPlayers.filter(
       (player) => player.state === "recent" || player.state === "dormant"
     );
-  } else if (tab === "none") {
+  } else if (activeTab === "none") {
     filteredPlayers = filteredPlayers.filter((player) => player.state === "none");
   }
 
@@ -243,8 +261,6 @@ export default async function RpTrackingStaffListPage(props: {
   const pagePlayers = filteredPlayers.slice((page - 1) * pageSize, page * pageSize);
 
   // Filtrage et pagination des groupes
-  const activeTab: RpTrackingTab =
-    view === "groups" && tab === "none" ? DEFAULT_RP_TRACKING_TAB : tab;
   const handledGroupsCount = allGroups.length - pendingGroupsCount;
   let filteredGroups = allGroups;
 
@@ -281,22 +297,6 @@ export default async function RpTrackingStaffListPage(props: {
         ])
       : [new Map(), new Map()];
 
-  function buildViewUrl(targetView: "players" | "groups") {
-    const params = new URLSearchParams();
-    if (targetView === "groups") {
-      params.set("view", "groups");
-    }
-    if (activeTab && activeTab !== DEFAULT_RP_TRACKING_TAB) {
-      if (targetView === "groups" && activeTab === "none") {
-        // pas d'onglet "none" pour les groupes
-      } else {
-        params.set("tab", activeTab);
-      }
-    }
-    const qs = params.toString();
-    return qs ? `/staff/rp-tracking?${qs}` : "/staff/rp-tracking";
-  }
-
   return (
     <div className="flex flex-col gap-6">
       {/* En-tête avec titre et sélecteur de vue */}
@@ -309,39 +309,18 @@ export default async function RpTrackingStaffListPage(props: {
         </div>
 
         {/* Sélecteur de vue : Individuels vs Groupes */}
-        <div className="bg-muted inline-flex items-center rounded-lg p-1 text-xs">
-          <Link
-            href={buildViewUrl("players")}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
-              view === "players"
-                ? "bg-background text-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <User className="size-3.5" />
-            <span>Suivis individuels</span>
-          </Link>
-          <Link
-            href={buildViewUrl("groups")}
-            className={cn(
-              "flex items-center gap-1.5 rounded-md px-3 py-1.5 font-medium transition-colors",
-              view === "groups"
-                ? "bg-background text-foreground shadow-xs"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            <Users className="size-3.5" />
-            <span>Suivis de groupe</span>
-          </Link>
-        </div>
+        <RpTrackingViewSelector
+          currentView={view}
+          pendingGroupsCount={pendingGroupsCount}
+          pendingPlayersCount={pendingPlayersCount}
+        />
       </div>
 
       {/* Onglets de statut (ViewTabs) uniformes */}
       <ViewTabs
         mobileSelect
         activeView={activeTab}
-        defaultView={DEFAULT_RP_TRACKING_TAB}
+        defaultView={defaultTabForCurrentView}
         tabs={
           view === "groups"
             ? [
@@ -403,9 +382,9 @@ export default async function RpTrackingStaffListPage(props: {
                     writingEditedFilter !== DEFAULT_RP_TRACKING_WRITING_EDITED_FILTER ||
                     sortOption !== DEFAULT_RP_TRACKING_SORT
                       ? "Aucun joueur ne correspond aux filtres sélectionnés."
-                      : tab === "pending"
+                      : activeTab === "pending"
                         ? "Aucun suivi à traiter actuellement."
-                        : tab === "handled"
+                        : activeTab === "handled"
                           ? "Aucun suivi traité."
                           : "Aucun joueur sans suivi."}
                   </TableCell>
