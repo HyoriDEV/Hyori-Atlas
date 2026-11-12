@@ -66,7 +66,7 @@ export function ViewTabs<T extends string>({
     <Tabs
       value={activeView}
       onValueChange={handleValueChange}
-      className={cn("max-w-full min-w-0 overflow-x-auto", className)}
+      className={cn("max-w-full min-w-0", className)}
     >
       <TabsList variant="line">
         {tabs.map((tab) => (
