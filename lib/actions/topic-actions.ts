@@ -105,17 +105,12 @@ export async function createStaffTopicAction(input: CreateStaffTopicInput) {
       const channelLink = botResult.channelUrl
         ? `[#${topic.slug}](${botResult.channelUrl})`
         : `#${topic.slug}`;
-      const staffName =
-        staffUser.minecraftUsername ||
-        staffUser.discordDisplayName ||
-        staffUser.discordUsername ||
-        "Un membre du staff";
 
       const systemMsg = await prisma.conversationMessage.create({
         data: {
           conversationId: ticket.conversationId,
           authorType: MessageAuthorType.SYSTEM,
-          body: `💬 **Sujet staff ouvert sur Discord :** ${channelLink} (par ${staffName}).`,
+          body: `💬 Sujet ouvert · ${channelLink}`,
         },
         include: { author: true },
       });
@@ -177,17 +172,11 @@ export async function archiveStaffTopicAction(topicId: string) {
   // 3. Message système dans le ticket si lié
   if (topic.ticket) {
     try {
-      const staffName =
-        staffUser.minecraftUsername ||
-        staffUser.discordDisplayName ||
-        staffUser.discordUsername ||
-        "Le staff";
-
       const systemMsg = await prisma.conversationMessage.create({
         data: {
           conversationId: topic.ticket.conversationId,
           authorType: MessageAuthorType.SYSTEM,
-          body: `🔒 Le sujet staff Discord associé (\`#${topic.slug}\`) a été archivé (par ${staffName}).`,
+          body: `🔒 Sujet fermé · #${topic.slug}`,
         },
         include: { author: true },
       });
