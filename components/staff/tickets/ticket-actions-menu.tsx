@@ -13,12 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { CreateTaskFromTicketDialog } from "@/components/staff/backlog/create-task-from-ticket-dialog";
 import { CreateStaffTopicDialog } from "@/components/staff/topics/create-staff-topic-dialog";
+import { cn } from "@/lib/utils";
 
 interface TicketActionsMenuProps {
   ticketId: string;
   ticketSubject: string;
   canUseBacklog: boolean;
   backlogAssignees: BacklogUserRef[];
+  className?: string;
 }
 
 /**
@@ -30,6 +32,7 @@ export function TicketActionsMenu({
   ticketSubject,
   canUseBacklog,
   backlogAssignees,
+  className,
 }: TicketActionsMenuProps) {
   const [taskDialogOpen, setTaskDialogOpen] = useState(false);
   const [topicDialogOpen, setTopicDialogOpen] = useState(false);
@@ -43,7 +46,7 @@ export function TicketActionsMenu({
             <Button
               variant="outline"
               size="default"
-              className="h-8 gap-1.5 px-3 text-xs font-medium"
+              className={cn("h-8 gap-1 px-2 text-xs font-medium sm:gap-1.5 sm:px-3", className)}
             >
               <Plus className="size-3.5" />
               <span className="hidden sm:inline">Créer</span>

@@ -22,6 +22,7 @@ import {
 } from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,11 +46,13 @@ export function TicketStatusActions({
   status,
   isSuspended = false,
   isAdmin = false,
+  className,
 }: {
   ticketId: string;
   status: TicketStatus;
   isSuspended?: boolean;
   isAdmin?: boolean;
+  className?: string;
 }) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -134,7 +137,7 @@ export function TicketStatusActions({
             <Button
               variant="outline"
               size="default"
-              className="h-8 gap-1.5 px-3 text-xs font-medium"
+              className={cn("h-8 gap-1 px-2 text-xs font-medium sm:gap-1.5 sm:px-3", className)}
               disabled={isPending}
             >
               <ArrowsClockwise className="size-3.5" />

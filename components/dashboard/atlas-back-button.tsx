@@ -7,7 +7,13 @@ import { CaretLeft } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { canGoBack } from "@/components/navigation-tracker";
 
-export function AtlasBackButton({ href = "/staff/atlas" }: { href?: string }) {
+export function AtlasBackButton({
+  href = "/staff/atlas",
+  className,
+}: {
+  href?: string;
+  className?: string;
+}) {
   const router = useRouter();
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -26,6 +32,7 @@ export function AtlasBackButton({ href = "/staff/atlas" }: { href?: string }) {
       render={<Link href={href} aria-label="Retour" onClick={handleClick} />}
       variant="outline"
       size="icon"
+      className={className}
     >
       <CaretLeft />
     </Button>

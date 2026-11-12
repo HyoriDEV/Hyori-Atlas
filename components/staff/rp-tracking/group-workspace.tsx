@@ -23,17 +23,37 @@ export function GroupWorkspace({
   viewerId: string;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* En-tête du groupe */}
-      <div className="flex shrink-0 flex-wrap items-center gap-3">
-        <AtlasBackButton href="/staff/rp-tracking?view=groups" />
-        <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
-          <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2.5 sm:flex-nowrap">
+        <AtlasBackButton href="/staff/rp-tracking?view=groups" className="order-1 shrink-0" />
+
+        <div className="order-2 flex items-center gap-1.5 shrink-0 sm:order-3">
+          <GroupMembersSheet
+            groupId={group.id}
+            members={group.members}
+            availablePlayers={availablePlayers}
+            className="lg:hidden"
+          />
+          <MarkHandledButton
+            conversationId={group.conversationId}
+            isHandled={!group.isPending}
+            playerName={group.name}
+            variant="header"
+          />
+          <EditGroupDialog group={group} />
+        </div>
+
+        <div className="order-3 flex min-w-0 w-full flex-1 flex-col gap-1 sm:order-2 sm:w-auto">
+          <h1 className="font-heading text-lg font-semibold break-words leading-tight sm:text-xl">
+            {group.name}
+          </h1>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <span className="text-foreground/80 flex items-center gap-1 font-medium">
-              <Users className="text-primary size-3.5" />
+              <Users className="text-primary size-3.5 shrink-0" />
               <span>Groupe RP</span>
             </span>
-            <span>·</span>
+            <span className="text-muted-foreground/50">·</span>
             {group.isPending ? (
               <Badge variant="default" className="px-1.5 py-0 text-[10px] font-normal">
                 À traiter
@@ -46,28 +66,13 @@ export function GroupWorkspace({
                 Traité
               </Badge>
             )}
-          </span>
-          <span className="font-heading text-lg font-semibold break-words">{group.name}</span>
-          {group.description && (
-            <p className="text-muted-foreground text-xs">{group.description}</p>
-          )}
-        </div>
-
-        <GroupMembersSheet
-          groupId={group.id}
-          members={group.members}
-          availablePlayers={availablePlayers}
-          className="lg:hidden"
-        />
-
-        <div className="flex items-center gap-2">
-          <MarkHandledButton
-            conversationId={group.conversationId}
-            isHandled={!group.isPending}
-            playerName={group.name}
-            variant="header"
-          />
-          <EditGroupDialog group={group} />
+            {group.description && (
+              <>
+                <span className="text-muted-foreground/50">·</span>
+                <span className="line-clamp-1">{group.description}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

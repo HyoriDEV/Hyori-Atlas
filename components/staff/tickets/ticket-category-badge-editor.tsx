@@ -129,16 +129,18 @@ export function TicketCategoryBadgeEditor({
         type="button"
         onClick={() => handleOpen(true)}
         className={cn(
-          "group border-border/80 bg-muted/30 text-foreground hover:border-primary/50 hover:bg-muted/70 inline-flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs transition-all",
+          "group border-border/80 bg-muted/30 text-foreground hover:border-primary/50 hover:bg-muted/70 inline-flex max-w-full cursor-pointer items-center gap-1.5 rounded-md border px-2 py-0.5 text-xs transition-all",
           className
         )}
         title="Modifier les catégories du ticket"
       >
-        <span className="font-normal">{displayCategory}</span>
+        <span className="shrink-0 font-normal">{displayCategory}</span>
         {subcategoryName && (
-          <span className="text-foreground/85 font-medium">· {subcategoryName}</span>
+          <span className="text-foreground/85 max-w-[180px] truncate font-medium sm:max-w-none">
+            · {subcategoryName}
+          </span>
         )}
-        <PencilSimple className="text-muted-foreground/70 group-hover:text-primary size-3 transition-colors" />
+        <PencilSimple className="text-muted-foreground/70 group-hover:text-primary size-3 shrink-0 transition-colors" />
       </button>
 
       <Dialog open={open} onOpenChange={handleOpen}>

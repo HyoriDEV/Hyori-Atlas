@@ -162,19 +162,44 @@ export default async function TicketStaffDetailPage({
     }));
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 flex-wrap items-center gap-3">
-        <AtlasBackButton href="/staff/tickets" />
-        <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
-          <span className="text-muted-foreground flex items-center gap-1 text-xs">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2.5 sm:flex-nowrap">
+        <AtlasBackButton href="/staff/tickets" className="order-1 shrink-0" />
+
+        <div className="order-2 flex items-center gap-1.5 shrink-0 sm:order-3">
+          <TicketMembersSheet
+            ticketId={ticket.id}
+            members={membersData}
+            availablePlayers={allPlayers}
+            className="lg:hidden"
+          />
+          <TicketActionsMenu
+            ticketId={ticket.id}
+            ticketSubject={ticket.subject}
+            canUseBacklog={canUseBacklog}
+            backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
+          />
+          <TicketStatusActions
+            ticketId={ticket.id}
+            status={ticket.status}
+            isSuspended={Boolean(ticket.suspendedAt)}
+            isAdmin={staffUser.role === Role.ADMIN}
+          />
+        </div>
+
+        <div className="order-3 flex min-w-0 w-full flex-1 flex-col gap-1 sm:order-2 sm:w-auto">
+          <h1 className="font-heading text-lg font-semibold break-words leading-tight sm:text-xl">
+            {ticket.subject}
+          </h1>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <Link
               href={`/staff/atlas/${ticket.playerId}`}
               className="hover:text-foreground font-medium underline-offset-4 hover:underline"
               title={`Voir la fiche Atlas de ${playerName}`}
             >
               {playerName}
-            </Link>{" "}
-            ·{" "}
+            </Link>
+            <span className="text-muted-foreground/50">·</span>
             <TicketCategoryBadgeEditor
               ticketId={ticket.id}
               categoryId={ticket.categoryId}
@@ -183,22 +208,26 @@ export default async function TicketStaffDetailPage({
               subcategoryName={ticket.subcategoryName}
               category={ticket.category}
               availableCategories={availableCategories}
-            />{" "}
-            · {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+            />
+            <span className="text-muted-foreground/50">·</span>
+            <span className="whitespace-nowrap">
+              {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+            </span>
             {ticket.suspendedAt && (
               <>
-                {" "}·{" "}
+                <span className="text-muted-foreground/50">·</span>
                 <Badge
                   variant="outline"
                   className="gap-1 border-amber-500/40 bg-amber-500/10 px-1.5 py-0 text-[10px] font-medium text-amber-600 dark:text-amber-400"
                 >
-                  <Clock className="size-2.5" />
-                  <span>En suspens ({formatDaysSince(ticket.suspendedAt)})</span>
+                  <Clock className="size-2.5 shrink-0" />
+                  <span className="whitespace-nowrap">
+                    En suspens ({formatDaysSince(ticket.suspendedAt)})
+                  </span>
                 </Badge>
               </>
             )}
-          </span>
-          <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
+          </div>
           {canUseBacklog && ticket.backlogTasks.length > 0 && (
             <div className="mt-1 flex flex-wrap gap-1.5">
               {ticket.backlogTasks.map((task) => (
@@ -219,26 +248,6 @@ export default async function TicketStaffDetailPage({
               ))}
             </div>
           )}
-        </div>
-        <TicketMembersSheet
-          ticketId={ticket.id}
-          members={membersData}
-          availablePlayers={allPlayers}
-          className="lg:hidden"
-        />
-        <div className="flex items-center gap-2">
-          <TicketActionsMenu
-            ticketId={ticket.id}
-            ticketSubject={ticket.subject}
-            canUseBacklog={canUseBacklog}
-            backlogAssignees={backlogAssignees.map(serializeBacklogUser)}
-          />
-          <TicketStatusActions
-            ticketId={ticket.id}
-            status={ticket.status}
-            isSuspended={Boolean(ticket.suspendedAt)}
-            isAdmin={staffUser.role === Role.ADMIN}
-          />
         </div>
       </div>
 
