@@ -321,17 +321,6 @@ export default async function RpTrackingStaffListPage(props: {
           >
             <User className="size-3.5" />
             <span>Suivis individuels</span>
-            <Badge
-              variant={view === "players" ? "secondary" : "outline"}
-              className="h-4.5 px-1.5 text-[10px]"
-            >
-              {counts.all}
-            </Badge>
-            {counts.pending > 0 && (
-              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
-                {counts.pending}
-              </Badge>
-            )}
           </Link>
           <Link
             href={buildViewUrl("groups")}
@@ -344,17 +333,6 @@ export default async function RpTrackingStaffListPage(props: {
           >
             <Users className="size-3.5" />
             <span>Suivis de groupe</span>
-            <Badge
-              variant={view === "groups" ? "secondary" : "outline"}
-              className="h-4.5 px-1.5 text-[10px]"
-            >
-              {allGroups.length}
-            </Badge>
-            {pendingGroupsCount > 0 && (
-              <Badge variant="default" className="h-4.5 px-1.5 text-[10px]">
-                {pendingGroupsCount}
-              </Badge>
-            )}
           </Link>
         </div>
       </div>
