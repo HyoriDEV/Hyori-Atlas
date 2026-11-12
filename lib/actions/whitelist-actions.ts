@@ -10,6 +10,7 @@ import {
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
+import { whitelistRoles } from "@/lib/navigation";
 import { syncPlayerWhitelistClassRole } from "@/lib/services/discord-bot-service";
 import { enqueuePluginAction } from "@/lib/services/plugin-action-service";
 
@@ -19,7 +20,7 @@ import { enqueuePluginAction } from "@/lib/services/plugin-action-service";
  * unless they are also in the plugin's local whitelist.
  */
 export async function revokeWhitelist(userId: string) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(whitelistRoles);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

@@ -12,7 +12,7 @@ import {
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
-import { characterSheetReviewerRoles } from "@/lib/navigation";
+import { characterSheetReviewerRoles, whitelistRoles } from "@/lib/navigation";
 import {
   excludePlayerOnDiscord,
   notifyPlayerCharacterSheetStatus,
@@ -188,7 +188,7 @@ export async function promoteToWhitelisted(
   assignedClass: CharacterClass,
   characterSheetId?: string
 ): Promise<PromoteToWhitelistedResult> {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(whitelistRoles);
 
   if (!assignedClass || !Object.values(CharacterClass).includes(assignedClass)) {
     throw new Error("Une classe RP valide doit obligatoirement être attribuée au joueur.");
@@ -288,7 +288,7 @@ export async function promoteToWhitelisted(
  * - Envoi d'une notification MP de refus identique à celle de la liste d'attente.
  */
 export async function rejectWhitelistPlayer(userId: string) {
-  const staffUser = await requireRole([Role.ADMIN]);
+  const staffUser = await requireRole(whitelistRoles);
 
   const user = await prisma.user.findUnique({
     where: { id: userId },

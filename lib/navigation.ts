@@ -284,11 +284,14 @@ export const staffRpTrackingItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const waitlistRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+export const whitelistRoles: Role[] = [Role.ADMIN, Role.RP_TRACKING];
+
 export const staffWaitlistItem: StaffNavItem = {
   label: "Liste d'attente",
   href: "/staff/waitlist",
   iconKey: "clock",
-  roles: [Role.ADMIN],
+  roles: waitlistRoles,
 };
 
 export const staffInterviewSlotsItem: StaffNavItem = {
@@ -417,7 +420,11 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     {
       title: "Admission",
       iconKey: "clock",
-      items: [staffInterviewSlotsItem, staffInterviewGuideItem],
+      items: [
+        ...(staffWaitlistItem.roles.includes(role) ? [staffWaitlistItem] : []),
+        staffInterviewSlotsItem,
+        staffInterviewGuideItem,
+      ],
     },
     {
       title: "Administration",

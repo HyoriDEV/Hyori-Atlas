@@ -263,11 +263,13 @@ export function AtlasSanctionCard({
   pseudo,
   activeBan,
   canRevokeWhitelist,
+  canSanction = true,
 }: {
   playerId: string;
   pseudo: string;
   activeBan: AtlasActiveBan | null;
   canRevokeWhitelist?: boolean;
+  canSanction?: boolean;
 }) {
   return (
     <Card className="flex flex-col gap-4">
@@ -285,16 +287,20 @@ export function AtlasSanctionCard({
             </span>
             <span className="text-muted-foreground text-xs">Raison : {activeBan.reason}</span>
           </div>
-          <RevokeBanButton playerId={playerId} pseudo={pseudo} sanctionId={activeBan.id} />
+          {canSanction && <RevokeBanButton playerId={playerId} pseudo={pseudo} sanctionId={activeBan.id} />}
         </div>
       )}
 
       {!activeBan && (
         <div className="flex flex-wrap gap-2">
           {canRevokeWhitelist && <AtlasRevokeWhitelistButton playerId={playerId} pseudo={pseudo} />}
-          <SanctionDialog kind="warning" playerId={playerId} pseudo={pseudo} />
-          <SanctionDialog kind="suspension" playerId={playerId} pseudo={pseudo} />
-          <SanctionDialog kind="exclusion" playerId={playerId} pseudo={pseudo} />
+          {canSanction && (
+            <>
+              <SanctionDialog kind="warning" playerId={playerId} pseudo={pseudo} />
+              <SanctionDialog kind="suspension" playerId={playerId} pseudo={pseudo} />
+              <SanctionDialog kind="exclusion" playerId={playerId} pseudo={pseudo} />
+            </>
+          )}
         </div>
       )}
     </Card>

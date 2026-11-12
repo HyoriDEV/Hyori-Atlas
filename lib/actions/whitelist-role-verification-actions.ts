@@ -9,6 +9,7 @@ import {
   RegistrationStatus,
   Role,
 } from "@/lib/generated/prisma/enums";
+import { whitelistRoles } from "@/lib/navigation";
 import {
   fetchDiscordBatchRoles,
   syncPlayerWhitelistClassRole,
@@ -63,7 +64,7 @@ const CLASS_LABELS: Record<CharacterClass, string> = {
 };
 
 export async function getWhitelistedPlayersRoleAuditAction(): Promise<WhitelistRoleAuditResult> {
-  await requireRole([Role.ADMIN]);
+  await requireRole(whitelistRoles);
 
   try {
     const users = await prisma.user.findMany({
@@ -207,7 +208,7 @@ export async function resyncSingleWhitelistedPlayerRolesAction(userId: string): 
   updatedPlayer?: WhitelistedPlayerRoleAuditItem;
   error?: string;
 }> {
-  await requireRole([Role.ADMIN]);
+  await requireRole(whitelistRoles);
 
   try {
     const user = await prisma.user.findUnique({
