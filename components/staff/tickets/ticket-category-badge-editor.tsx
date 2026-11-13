@@ -136,7 +136,7 @@ export function TicketCategoryBadgeEditor({
       >
         <span className="shrink-0 font-normal">{displayCategory}</span>
         {subcategoryName && (
-          <span className="text-foreground/85 max-w-[180px] truncate font-medium sm:max-w-none">
+          <span className="text-foreground/85 max-w-xs truncate font-medium sm:max-w-none">
             · {subcategoryName}
           </span>
         )}

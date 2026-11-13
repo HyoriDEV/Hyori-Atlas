@@ -25,10 +25,44 @@ export function GroupWorkspace({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* En-tête du groupe */}
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2.5 sm:flex-nowrap">
-        <AtlasBackButton href="/staff/rp-tracking?view=groups" className="order-1 shrink-0" />
+      <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        {/* Informations principales (retour + titre + métadonnées) */}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <AtlasBackButton href="/staff/rp-tracking?view=groups" className="mt-0.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h1 className="font-heading text-base font-semibold break-words leading-snug sm:text-lg">
+              {group.name}
+            </h1>
+            <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <span className="text-foreground/80 flex items-center gap-1 font-medium">
+                <Users className="text-primary size-3.5 shrink-0" />
+                <span>Groupe RP</span>
+              </span>
+              <span className="text-muted-foreground/50">·</span>
+              {group.isPending ? (
+                <Badge variant="default" className="px-1.5 py-0 text-[10px] font-normal">
+                  À traiter
+                </Badge>
+              ) : (
+                <Badge
+                  variant="secondary"
+                  className="text-muted-foreground px-1.5 py-0 text-[10px] font-normal"
+                >
+                  Traité
+                </Badge>
+              )}
+              {group.description && (
+                <>
+                  <span className="text-muted-foreground/50">·</span>
+                  <span className="line-clamp-1">{group.description}</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
 
-        <div className="order-2 flex items-center gap-1.5 shrink-0 sm:order-3">
+        {/* Actions : une ligne sous les informations sur mobile, à droite sur grand écran */}
+        <div className="flex items-center gap-2 pl-11 shrink-0 sm:pl-0">
           <GroupMembersSheet
             groupId={group.id}
             members={group.members}
@@ -42,37 +76,6 @@ export function GroupWorkspace({
             variant="header"
           />
           <EditGroupDialog group={group} />
-        </div>
-
-        <div className="order-3 flex min-w-0 w-full flex-1 flex-col gap-1 sm:order-2 sm:w-auto">
-          <h1 className="font-heading text-lg font-semibold break-words leading-tight sm:text-xl">
-            {group.name}
-          </h1>
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-            <span className="text-foreground/80 flex items-center gap-1 font-medium">
-              <Users className="text-primary size-3.5 shrink-0" />
-              <span>Groupe RP</span>
-            </span>
-            <span className="text-muted-foreground/50">·</span>
-            {group.isPending ? (
-              <Badge variant="default" className="px-1.5 py-0 text-[10px] font-normal">
-                À traiter
-              </Badge>
-            ) : (
-              <Badge
-                variant="secondary"
-                className="text-muted-foreground px-1.5 py-0 text-[10px] font-normal"
-              >
-                Traité
-              </Badge>
-            )}
-            {group.description && (
-              <>
-                <span className="text-muted-foreground/50">·</span>
-                <span className="line-clamp-1">{group.description}</span>
-              </>
-            )}
-          </div>
         </div>
       </div>
 
