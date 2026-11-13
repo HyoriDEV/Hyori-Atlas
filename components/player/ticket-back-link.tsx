@@ -3,9 +3,16 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "@phosphor-icons/react";
+import { cn } from "@/lib/utils";
 import { canGoBack } from "@/components/navigation-tracker";
 
-export function TicketBackLink({ href = "/player/tickets" }: { href?: string }) {
+export function TicketBackLink({
+  href = "/player/tickets",
+  className,
+}: {
+  href?: string;
+  className?: string;
+}) {
   const router = useRouter();
 
   function handleClick(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -24,7 +31,10 @@ export function TicketBackLink({ href = "/player/tickets" }: { href?: string }) 
       href={href}
       aria-label="Retour"
       onClick={handleClick}
-      className="bg-card border-border hover:bg-input/50 flex size-8 items-center justify-center rounded-md border transition-colors"
+      className={cn(
+        "bg-card border-border hover:bg-input/50 flex size-8 items-center justify-center rounded-md border transition-colors",
+        className
+      )}
     >
       <ArrowLeft className="size-4" />
     </Link>

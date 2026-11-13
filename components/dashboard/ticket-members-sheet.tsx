@@ -42,7 +42,10 @@ export function TicketMembersSheet({
           <Button
             variant="outline"
             size="sm"
-            className={cn("h-8 shrink-0 gap-1.5 px-2.5 text-xs font-medium shadow-2xs", className)}
+            className={cn(
+              "h-8 shrink-0 gap-1 px-2 text-xs font-medium shadow-2xs sm:gap-1.5 sm:px-2.5",
+              className
+            )}
             title="Voir les membres du ticket"
           >
             <UsersThree className="text-muted-foreground size-4 shrink-0" />

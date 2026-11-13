@@ -101,28 +101,34 @@ export default async function TicketDetailPage({
     }));
 
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 flex-wrap items-center gap-3">
-        <TicketBackLink />
-        <div className="flex min-w-0 flex-1 basis-56 flex-col gap-0.5">
-          <span className="text-muted-foreground flex items-center gap-1.5 text-xs">
+    <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2.5 sm:flex-nowrap">
+        <TicketBackLink className="order-1 shrink-0" />
+        <div className="order-2 flex items-center gap-1.5 shrink-0 sm:order-3">
+          <TicketMembersSheet
+            ticketId={ticket.id}
+            members={membersData}
+            readOnly
+            className="lg:hidden"
+          />
+        </div>
+        <div className="order-3 flex min-w-0 w-full flex-1 flex-col gap-1 sm:order-2 sm:w-auto">
+          <h1 className="font-heading text-lg font-semibold break-words leading-tight sm:text-xl">
+            {ticket.subject}
+          </h1>
+          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
             <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
               {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
             </Badge>
             {ticket.subcategoryName && (
               <span className="text-foreground/80 font-medium">{ticket.subcategoryName}</span>
             )}
-            <span>·</span>
-            <span>{formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}</span>
-          </span>
-          <span className="font-heading text-lg font-semibold break-words">{ticket.subject}</span>
+            <span className="text-muted-foreground/50">·</span>
+            <span className="whitespace-nowrap">
+              {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+            </span>
+          </div>
         </div>
-        <TicketMembersSheet
-          ticketId={ticket.id}
-          members={membersData}
-          readOnly
-          className="lg:hidden"
-        />
       </div>
 
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
