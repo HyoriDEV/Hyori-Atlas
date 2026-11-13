@@ -102,32 +102,37 @@ export default async function TicketDetailPage({
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-3 gap-y-2.5 sm:flex-nowrap">
-        <TicketBackLink className="order-1 shrink-0" />
-        <div className="order-2 flex items-center gap-1.5 shrink-0 sm:order-3">
+      <div className="flex shrink-0 flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+        {/* Informations principales (retour + titre + métadonnées) */}
+        <div className="flex min-w-0 flex-1 items-start gap-3">
+          <TicketBackLink className="mt-0.5 shrink-0" />
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h1 className="font-heading text-base font-semibold break-words leading-snug sm:text-lg">
+              {ticket.subject}
+            </h1>
+            <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
+                {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
+              </Badge>
+              {ticket.subcategoryName && (
+                <span className="text-foreground/80 font-medium">{ticket.subcategoryName}</span>
+              )}
+              <span className="text-muted-foreground/50">·</span>
+              <span className="whitespace-nowrap">
+                {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Actions : une ligne sous les informations sur mobile, à droite sur grand écran */}
+        <div className="flex items-center gap-2 pl-11 shrink-0 sm:pl-0">
           <TicketMembersSheet
             ticketId={ticket.id}
             members={membersData}
             readOnly
             className="lg:hidden"
           />
-        </div>
-        <div className="order-3 flex min-w-0 w-full flex-1 flex-col gap-1 sm:order-2 sm:w-auto">
-          <h1 className="font-heading text-lg font-semibold break-words leading-tight sm:text-xl">
-            {ticket.subject}
-          </h1>
-          <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
-            <Badge variant="outline" className="px-1.5 py-0 text-[10px] font-normal">
-              {formatTicketCategoryName(ticket.categoryName) || "Ticket"}
-            </Badge>
-            {ticket.subcategoryName && (
-              <span className="text-foreground/80 font-medium">{ticket.subcategoryName}</span>
-            )}
-            <span className="text-muted-foreground/50">·</span>
-            <span className="whitespace-nowrap">
-              {formatDate(ticket.createdAt, { style: "prefix-long", withTime: true })}
-            </span>
-          </div>
         </div>
       </div>
 
