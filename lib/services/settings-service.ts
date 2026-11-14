@@ -53,6 +53,11 @@ export const getGlobalSettings = cache(async () => {
     gallerySubmissionsEnabled?: boolean;
     galleryAutoApprove?: boolean;
     galleryMaxDailyUploads?: number;
+    retentionGhostDays?: number;
+    retentionEstablishedHours?: number;
+    retentionDropPercentage?: number;
+    retentionAbsenceDays?: number;
+    retentionInactiveDays?: number;
   };
 
   const s = settings as ExtendedSettings;
@@ -77,6 +82,11 @@ export const getGlobalSettings = cache(async () => {
     gallerySubmissionsEnabled: s.gallerySubmissionsEnabled ?? true,
     galleryAutoApprove: s.galleryAutoApprove ?? false,
     galleryMaxDailyUploads: s.galleryMaxDailyUploads ?? 5,
+    retentionGhostDays: s.retentionGhostDays ?? 7,
+    retentionEstablishedHours: s.retentionEstablishedHours ?? 10,
+    retentionDropPercentage: s.retentionDropPercentage ?? 50,
+    retentionAbsenceDays: s.retentionAbsenceDays ?? 7,
+    retentionInactiveDays: s.retentionInactiveDays ?? 14,
   };
 });
 

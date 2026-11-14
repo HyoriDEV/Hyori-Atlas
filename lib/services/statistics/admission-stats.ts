@@ -55,6 +55,12 @@ export interface AdmissionStats {
     averageReviewRounds: number | null;
     validatedCount: number;
   };
+  postAdmission: {
+    whitelistedTotal: number;
+    connectedCount: number;
+    neverConnectedCount: number;
+    conversionRate: number | null;
+  };
 }
 
 const FUNNEL_ORDER: RegistrationStatus[] = [
@@ -90,9 +96,10 @@ export async function getAdmissionStats(range: StatisticsRange): Promise<Admissi
     bookingCounts,
     sheetStatusCounts,
     validatedSheets,
+    connectedSessions,
   ] = await Promise.all([
     prisma.user.groupBy({ by: ["registrationStatus"], _count: { _all: true } }),
-    prisma.user.findMany({ select: { id: true, createdAt: true } }),
+    prisma.user.findMany({ select: { id: true, createdAt: true, registrationStatus: true } }),
     prisma.registrationStatusHistory.findMany({
       orderBy: { createdAt: "asc" },
       select: { userId: true, status: true, createdAt: true },
@@ -123,6 +130,11 @@ export async function getAdmissionStats(range: StatisticsRange): Promise<Admissi
           },
         },
       },
+    }),
+    prisma.gameSession.findMany({
+      where: { userId: { not: null } },
+      select: { userId: true },
+      distinct: ["userId"],
     }),
   ]);
 
@@ -188,6 +200,20 @@ export async function getAdmissionStats(range: StatisticsRange): Promise<Admissi
 
   const reviewRounds = validatedSheets.map((sheet) => sheet._count.reviewHistory);
 
+  const whitelistedUsers = users.filter(
+    (u) => u.registrationStatus === RegistrationStatus.WHITELISTED
+  );
+  const connectedUserSet = new Set(connectedSessions.map((s) => s.userId).filter(Boolean));
+  let connectedWhitelisted = 0;
+  for (const u of whitelistedUsers) {
+    if (connectedUserSet.has(u.id)) {
+      connectedWhitelisted += 1;
+    }
+  }
+  const neverConnectedWhitelisted = Math.max(0, whitelistedUsers.length - connectedWhitelisted);
+  const conversionRate =
+    whitelistedUsers.length > 0 ? connectedWhitelisted / whitelistedUsers.length : null;
+
   return {
     totals: {
       registered: users.length,
@@ -234,6 +260,12 @@ export async function getAdmissionStats(range: StatisticsRange): Promise<Admissi
           ? reviewRounds.reduce((sum, value) => sum + value, 0) / reviewRounds.length
           : null,
       validatedCount: reviewRounds.length,
+    },
+    postAdmission: {
+      whitelistedTotal: whitelistedUsers.length,
+      connectedCount: connectedWhitelisted,
+      neverConnectedCount: neverConnectedWhitelisted,
+      conversionRate,
     },
   };
 }

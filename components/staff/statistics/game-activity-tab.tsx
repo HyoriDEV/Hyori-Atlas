@@ -1,26 +1,11 @@
-import Link from "next/link";
-
 import { formatDate } from "@/lib/date";
 import { getGameActivityStats } from "@/lib/services/statistics/game-activity-stats";
 import { describeGranularity, type StatisticsRange } from "@/lib/services/statistics/timeline";
 import { formatNumber } from "@/lib/statistics-format";
-import { formatDuration } from "@/lib/text-stats";
-import { SkinHead } from "@/components/ui/skin-head";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { StatTile } from "@/components/dashboard/stat-tile";
-import {
-  ChartCard,
-  ChartEmptyState,
-  StatisticsSection,
-} from "@/components/staff/statistics/chart-card";
+import { ChartCard, StatisticsSection } from "@/components/staff/statistics/chart-card";
 import { TimeSeriesChart } from "@/components/staff/statistics/time-series-chart";
+import { ActivityHeatmap } from "@/components/staff/statistics/activity-heatmap";
 
 export async function GameActivityTab({ range }: { range: StatisticsRange }) {
   const stats = await getGameActivityStats(range);
@@ -28,30 +13,8 @@ export async function GameActivityTab({ range }: { range: StatisticsRange }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="grid grid-cols-2 gap-3.5 lg:grid-cols-5">
-        <StatTile
-          label="Heures jouées"
-          value={`${formatNumber(totals.hoursPlayed, totals.hoursPlayed < 100 ? 1 : 0)} h`}
-          hint="tous joueurs confondus"
-        />
-        <StatTile
-          label="Joueurs uniques"
-          value={formatNumber(totals.uniquePlayers)}
-          hint="connectés au moins une fois"
-        />
-        <StatTile
-          label="Sessions"
-          value={formatNumber(totals.sessions)}
-          hint={
-            totals.uniquePlayers > 0
-              ? `${formatNumber(totals.sessions / totals.uniquePlayers, 1)} par joueur`
-              : undefined
-          }
-        />
-        <StatTile
-          label="Durée moyenne d'une session"
-          value={formatDuration(totals.meanSessionMs)}
-        />
+      {/* KPIs épurés */}
+      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3">
         <StatTile
           label="Pic de joueurs simultanés"
           value={formatNumber(totals.peakConcurrent)}
@@ -61,78 +24,53 @@ export async function GameActivityTab({ range }: { range: StatisticsRange }) {
               : undefined
           }
         />
+        <StatTile
+          label="Joueurs uniques connectés"
+          value={formatNumber(totals.uniquePlayers)}
+          hint="sur la période sélectionnée"
+        />
+        <StatTile
+          label="Volume d'heures jouées"
+          value={`${formatNumber(totals.hoursPlayed, totals.hoursPlayed < 100 ? 1 : 0)} h`}
+          hint="cumulé tous joueurs confondus"
+        />
       </div>
 
-      <StatisticsSection title="Fréquentation">
+      {/* Courbes temporelles de fréquentation */}
+      <StatisticsSection title="Fréquentation et Dynamique">
         <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-          <ChartCard title={`Heures jouées ${describeGranularity(stats.granularity)}`}>
+          <ChartCard
+            title={`Affluence de joueurs ${describeGranularity(stats.granularity)}`}
+            description="Nombre de joueurs distincts connectés par tranche temporelle."
+          >
             <TimeSeriesChart
               data={stats.timeline}
-              series={[{ key: "hours", label: "Heures jouées", color: "var(--chart-1)" }]}
-              allowDecimals
+              series={[{ key: "players", label: "Joueurs distincts", color: "var(--chart-1)" }]}
+              kind="line"
             />
           </ChartCard>
-          <ChartCard title={`Joueurs uniques ${describeGranularity(stats.granularity)}`}>
+
+          <ChartCard
+            title={`Heures-joueurs ${describeGranularity(stats.granularity)}`}
+            description="Volume total d'heures passées en jeu."
+          >
             <TimeSeriesChart
               data={stats.timeline}
-              series={[{ key: "players", label: "Joueurs uniques", color: "var(--chart-1)" }]}
-              kind="line"
+              series={[{ key: "hours", label: "Heures jouées", color: "var(--chart-2)" }]}
+              allowDecimals
             />
           </ChartCard>
         </div>
       </StatisticsSection>
 
-      <StatisticsSection title="Joueurs">
-        <div className="flex flex-col gap-4">
-          <ChartCard
-            title="Temps de jeu le plus élevé"
-            description="Les dix joueurs les plus présents sur la période."
-          >
-            {stats.topPlayers.length === 0 ? (
-              <ChartEmptyState />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Joueur</TableHead>
-                    <TableHead className="text-right">Temps de jeu</TableHead>
-                    <TableHead className="text-right">Sessions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats.topPlayers.map((player) => (
-                    <TableRow key={player.key}>
-                      <TableCell>
-                        {player.userId ? (
-                          <Link
-                            href={`/staff/atlas/${player.userId}`}
-                            className="inline-flex items-center gap-2 transition-opacity hover:opacity-80"
-                            title={`Voir la fiche Atlas de ${player.name}`}
-                          >
-                            <SkinHead size="sm" username={player.minecraftUsername} />
-                            <span className="font-medium hover:underline">{player.name}</span>
-                          </Link>
-                        ) : (
-                          <span className="inline-flex items-center gap-2">
-                            <SkinHead size="sm" username={player.minecraftUsername} />
-                            <span className="font-medium">{player.name}</span>
-                            <span className="text-muted-foreground text-xs">(compte non lié)</span>
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {formatNumber(player.hours, 1)} h
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-right tabular-nums">
-                        {formatNumber(player.sessions)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </ChartCard>
-        </div>
+      {/* Heatmap hebdomadaire des créneaux actifs */}
+      <StatisticsSection title="Habitudes de jeu et Créneaux actifs">
+        <ChartCard
+          title="Affluence moyenne hebdomadaire"
+          description="Présence moyenne par jour de la semaine et tranche horaire (heure de Paris). Idéal pour caler vos scènes RP et animations."
+        >
+          <ActivityHeatmap values={stats.heatmap} />
+        </ChartCard>
       </StatisticsSection>
     </div>
   );

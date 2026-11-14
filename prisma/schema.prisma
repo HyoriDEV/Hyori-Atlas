@@ -747,6 +747,11 @@ model GlobalSettings {
   gallerySubmissionsEnabled  Boolean   @default(true)
   galleryAutoApprove         Boolean   @default(false)
   galleryMaxDailyUploads     Int       @default(5)
+  retentionGhostDays         Int       @default(7)
+  retentionEstablishedHours  Int       @default(10)
+  retentionDropPercentage    Int       @default(50)
+  retentionAbsenceDays       Int       @default(7)
+  retentionInactiveDays      Int       @default(14)
   updatedAt                  DateTime  @updatedAt
   updatedById                String?
 
