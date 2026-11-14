@@ -5,14 +5,11 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
 import { allStaffRoles } from "@/lib/navigation";
-import { MessageAuthorType } from "@/lib/generated/prisma/enums";
 import {
   archiveDiscordTopic,
   createDiscordTopic,
   getAtlasBaseUrl,
 } from "@/lib/services/discord-bot-service";
-import { publish } from "@/lib/services/conversation-events";
-import { serializeConversationMessage } from "@/lib/conversation";
 import { slugifyTopic } from "@/lib/topic-constants";
 
 export interface CreateStaffTopicInput {
@@ -99,30 +96,7 @@ export async function createStaffTopicAction(input: CreateStaffTopicInput) {
     },
   });
 
-  // 3. Si le sujet est lié à un ticket, publier un message système dans la conversation du ticket
   if (ticket) {
-    try {
-      const channelLink = botResult.channelUrl
-        ? `[#${topic.slug}](${botResult.channelUrl})`
-        : `#${topic.slug}`;
-
-      const systemMsg = await prisma.conversationMessage.create({
-        data: {
-          conversationId: ticket.conversationId,
-          authorType: MessageAuthorType.SYSTEM,
-          body: `💬 Sujet ouvert · ${channelLink}`,
-        },
-        include: { author: true },
-      });
-
-      publish(ticket.conversationId, serializeConversationMessage(systemMsg, true));
-    } catch (err) {
-      console.warn(
-        "[StaffTopic] Impossible d'envoyer le message système de sujet dans le ticket:",
-        err
-      );
-    }
-
     revalidatePath(`/staff/tickets/${ticket.id}`);
   }
 
@@ -169,23 +143,7 @@ export async function archiveStaffTopicAction(topicId: string) {
     },
   });
 
-  // 3. Message système dans le ticket si lié
   if (topic.ticket) {
-    try {
-      const systemMsg = await prisma.conversationMessage.create({
-        data: {
-          conversationId: topic.ticket.conversationId,
-          authorType: MessageAuthorType.SYSTEM,
-          body: `🔒 Sujet fermé · #${topic.slug}`,
-        },
-        include: { author: true },
-      });
-
-      publish(topic.ticket.conversationId, serializeConversationMessage(systemMsg, true));
-    } catch (err) {
-      console.warn("[StaffTopic] Échec de l'envoi du message d'archivage:", err);
-    }
-
     revalidatePath(`/staff/tickets/${topic.ticket.id}`);
   }
 
