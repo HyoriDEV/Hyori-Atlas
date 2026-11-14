@@ -104,3 +104,58 @@ export function sanctionStatusBadgeVariant(status: "ACTIVE" | "EXPIRED" | "REVOK
       return "outline";
   }
 }
+
+export type RetentionAlertStatus =
+  | "GHOST"
+  | "SEVERE_DROP"
+  | "ABNORMAL_ABSENCE"
+  | "CONFIRMED_INACTIVE"
+  | "HEALTHY";
+
+export const retentionAlertLabels: Record<RetentionAlertStatus, string> = {
+  GHOST: "Nouveau fantôme",
+  SEVERE_DROP: "Décrochage sévère",
+  ABNORMAL_ABSENCE: "Absence anormale",
+  CONFIRMED_INACTIVE: "Inactif confirmé",
+  HEALTHY: "Actif régulier",
+};
+
+export function retentionAlertBadgeConfig(status: RetentionAlertStatus): {
+  label: string;
+  variant: BadgeVariant;
+  className?: string;
+} {
+  switch (status) {
+    case "GHOST":
+      return {
+        label: "Nouveau fantôme",
+        variant: "outline",
+        className:
+          "border-purple-500/40 bg-purple-500/10 text-purple-700 dark:text-purple-300 font-medium",
+      };
+    case "SEVERE_DROP":
+      return {
+        label: "Décrochage sévère",
+        variant: "destructive",
+        className: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/30 font-semibold",
+      };
+    case "ABNORMAL_ABSENCE":
+      return {
+        label: "Absence anormale",
+        variant: "outline",
+        className:
+          "border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-300 font-medium",
+      };
+    case "CONFIRMED_INACTIVE":
+      return {
+        label: "Inactif confirmé",
+        variant: "secondary",
+        className: "text-muted-foreground",
+      };
+    case "HEALTHY":
+      return {
+        label: "Actif régulier",
+        variant: "inverted",
+      };
+  }
+}

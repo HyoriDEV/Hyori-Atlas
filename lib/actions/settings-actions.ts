@@ -57,6 +57,24 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   const rawMaxDaily = formData.get("galleryMaxDailyUploads");
   const galleryMaxDailyUploads = rawMaxDaily ? parseInt(rawMaxDaily as string, 10) || 5 : 5;
 
+  // Alertes de Rétention & Décrochage
+  const rawGhostDays = formData.get("retentionGhostDays");
+  const retentionGhostDays = rawGhostDays ? parseInt(rawGhostDays as string, 10) || 7 : 7;
+  const rawEstablishedHours = formData.get("retentionEstablishedHours");
+  const retentionEstablishedHours = rawEstablishedHours
+    ? parseInt(rawEstablishedHours as string, 10) || 10
+    : 10;
+  const rawDropPercentage = formData.get("retentionDropPercentage");
+  const retentionDropPercentage = rawDropPercentage
+    ? parseInt(rawDropPercentage as string, 10) || 50
+    : 50;
+  const rawAbsenceDays = formData.get("retentionAbsenceDays");
+  const retentionAbsenceDays = rawAbsenceDays ? parseInt(rawAbsenceDays as string, 10) || 7 : 7;
+  const rawInactiveDays = formData.get("retentionInactiveDays");
+  const retentionInactiveDays = rawInactiveDays
+    ? parseInt(rawInactiveDays as string, 10) || 14
+    : 14;
+
   await updateGlobalSettings(
     {
       registrationEnabled,
@@ -75,6 +93,11 @@ export async function saveGlobalSettingsAction(formData: FormData) {
       gallerySubmissionsEnabled,
       galleryAutoApprove,
       galleryMaxDailyUploads,
+      retentionGhostDays,
+      retentionEstablishedHours,
+      retentionDropPercentage,
+      retentionAbsenceDays,
+      retentionInactiveDays,
       ...({
         countdownEnabled,
         countdownBadgeText,
@@ -95,6 +118,7 @@ export async function saveGlobalSettingsAction(formData: FormData) {
   revalidatePath("/lore");
   revalidatePath("/gallery");
   revalidatePath("/staff/settings");
+  revalidatePath("/staff/statistics");
 
   return { success: true };
 }

@@ -41,6 +41,11 @@ interface SettingsFormProps {
     gallerySubmissionsEnabled?: boolean;
     galleryAutoApprove?: boolean;
     galleryMaxDailyUploads?: number;
+    retentionGhostDays?: number;
+    retentionEstablishedHours?: number;
+    retentionDropPercentage?: number;
+    retentionAbsenceDays?: number;
+    retentionInactiveDays?: number;
   };
   initialDiscordTemplates?: DiscordTemplateData[];
   initialGalleryCategories?: GalleryCategoryItemConfig[];
@@ -196,6 +201,7 @@ export function SettingsForm({
           <TabsTrigger value="pages">Pages</TabsTrigger>
           <TabsTrigger value="countdown">Accueil</TabsTrigger>
           <TabsTrigger value="minecraft">Minecraft</TabsTrigger>
+          <TabsTrigger value="retention">Rétention & Alertes</TabsTrigger>
           <TabsTrigger value="tickets">Tickets</TabsTrigger>
           <TabsTrigger value="discord">Discord</TabsTrigger>
         </TabsList>
@@ -726,6 +732,126 @@ export function SettingsForm({
         {/* 6. TICKETS */}
         <TabsContent value="tickets" keepMounted={true}>
           <TicketsSettingsTab initialCategories={initialTicketCategories} />
+        </TabsContent>
+
+        {/* 7. RÉTENTION & ALERTES JOUEURS */}
+        <TabsContent value="retention" keepMounted={true}>
+          <Card>
+            <CardHeader>
+              <CardTitle>Seuils de Détection du Décrochage Joueur</CardTitle>
+              <CardDescription>
+                Ces critères globaux déterminent l&apos;attribution automatique des badges d&apos;alerte sur les profils et l&apos;alimentation du tableau d&apos;intervention prioritaire des statistiques.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <label htmlFor="retentionGhostDays" className="text-xs font-medium">
+                    👻 Nouveau fantôme (jours sans connexion)
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Nombre de jours consécutifs après validation de la whitelist sans aucune session pour classer le joueur comme fantôme.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="retentionGhostDays"
+                      name="retentionGhostDays"
+                      min={1}
+                      max={60}
+                      defaultValue={defaultValues.retentionGhostDays ?? 7}
+                      className="border-input bg-background focus:ring-ring w-32 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <span className="text-muted-foreground text-xs">jours</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="retentionEstablishedHours" className="text-xs font-medium">
+                    ⭐ Joueur établi (heures historiques minimales)
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Volume minimum d&apos;heures de jeu cumulées pour être considéré comme un joueur régulier suivi pour absence ou déclin.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="retentionEstablishedHours"
+                      name="retentionEstablishedHours"
+                      min={1}
+                      max={500}
+                      defaultValue={defaultValues.retentionEstablishedHours ?? 10}
+                      className="border-input bg-background focus:ring-ring w-32 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <span className="text-muted-foreground text-xs">heures</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="retentionDropPercentage" className="text-xs font-medium">
+                    🔻 Décrochage sévère (chute d&apos;activité minimale)
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Pourcentage de baisse du temps de jeu sur les 7 derniers jours comparé aux 7 jours précédents pour un joueur établi.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="retentionDropPercentage"
+                      name="retentionDropPercentage"
+                      min={10}
+                      max={95}
+                      defaultValue={defaultValues.retentionDropPercentage ?? 50}
+                      className="border-input bg-background focus:ring-ring w-32 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <span className="text-muted-foreground text-xs">% de baisse</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="retentionAbsenceDays" className="text-xs font-medium">
+                    ⚠️ Absence anormale (jours d&apos;absence)
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Jours sans aucune connexion pour un joueur établi avant déclenchement de l&apos;alerte d&apos;absence.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="retentionAbsenceDays"
+                      name="retentionAbsenceDays"
+                      min={1}
+                      max={90}
+                      defaultValue={defaultValues.retentionAbsenceDays ?? 7}
+                      className="border-input bg-background focus:ring-ring w-32 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <span className="text-muted-foreground text-xs">jours</span>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="retentionInactiveDays" className="text-xs font-medium">
+                    💤 Inactif confirmé (délai de churn)
+                  </label>
+                  <p className="text-muted-foreground text-xs">
+                    Nombre de jours consécutifs sans connexion pour catégoriser un joueur whitelisté comme inactif confirmé.
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      id="retentionInactiveDays"
+                      name="retentionInactiveDays"
+                      min={7}
+                      max={365}
+                      defaultValue={defaultValues.retentionInactiveDays ?? 14}
+                      className="border-input bg-background focus:ring-ring w-32 rounded-md border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+                    />
+                    <span className="text-muted-foreground text-xs">jours</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 

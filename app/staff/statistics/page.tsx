@@ -20,9 +20,9 @@ import {
 import { resolveStatisticsRange } from "@/lib/services/statistics/timeline";
 import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
 import { ViewTabs } from "@/components/dashboard/view-tabs";
-import { AdmissionTab } from "@/components/staff/statistics/admission-tab";
-import { CharactersTab } from "@/components/staff/statistics/characters-tab";
+import { RetentionTab } from "@/components/staff/statistics/retention-tab";
 import { GameActivityTab } from "@/components/staff/statistics/game-activity-tab";
+import { PlayerJourneyTab } from "@/components/staff/statistics/player-journey-tab";
 import { PeriodSelect } from "@/components/staff/statistics/period-select";
 import { SupportTab } from "@/components/staff/statistics/support-tab";
 
@@ -66,9 +66,9 @@ export default async function StatisticsStaffPage(props: {
       />
 
       {/* Seul l'onglet affiché calcule ses statistiques. */}
-      {tab === "communaute" && <AdmissionTab range={range} />}
+      {tab === "retention" && <RetentionTab />}
       {tab === "activite" && <GameActivityTab range={range} />}
-      {tab === "ecriture" && <CharactersTab range={range} />}
+      {tab === "parcours" && <PlayerJourneyTab range={range} />}
       {tab === "staff" && <SupportTab range={range} />}
     </div>
   );

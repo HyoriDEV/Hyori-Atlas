@@ -26,7 +26,9 @@ import { formatDate } from "@/lib/date";
 import {
   characterSheetStatusBadgeVariant,
   registrationStatusBadgeVariant,
+  retentionAlertBadgeConfig,
 } from "@/lib/atlas-status";
+import { getPlayerRetentionStatus } from "@/lib/services/statistics/retention-stats";
 import {
   CharacterSheetStatus,
   CharacterStatus,
@@ -100,7 +102,7 @@ export default async function AtlasPlayerPage({
   const item = staffNavItems.find((i) => i.href === "/staff/atlas")!;
   const staffUser = await requireRole(item.roles);
 
-  const [player, allGroups, sanctions, activeBan, sessionStats, rpTrackingConv, chapterCount] =
+  const [player, allGroups, sanctions, activeBan, sessionStats, rpTrackingConv, chapterCount, retentionStatus] =
     await Promise.all([
       prisma.user.findUnique({
         where: { id: playerId },
@@ -189,6 +191,7 @@ export default async function AtlasPlayerPage({
           playerId,
         },
       }),
+      getPlayerRetentionStatus(playerId),
     ]);
 
   if (!player || player.registrationStatus === RegistrationStatus.REJECTED) {
@@ -388,6 +391,14 @@ export default async function AtlasPlayerPage({
         <Badge variant={registrationStatusBadgeVariant(player.registrationStatus)}>
           {registrationStatusLabels[player.registrationStatus]}
         </Badge>
+        {retentionStatus !== "HEALTHY" && (() => {
+          const cfg = retentionAlertBadgeConfig(retentionStatus);
+          return (
+            <Badge variant={cfg.variant} className={cn("text-xs", cfg.className)}>
+              {cfg.label}
+            </Badge>
+          );
+        })()}
         {canRefuse && <AtlasRejectWhitelistButton playerId={player.id} pseudo={playerName} />}
         {canPromote && (
           <AtlasPromoteButton

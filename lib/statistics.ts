@@ -1,17 +1,17 @@
 // Valeurs des paramètres d'URL de la page Statistiques, partagées entre la page (serveur)
 // et ses contrôles (client).
 
-export const STATISTICS_TABS = ["communaute", "activite", "ecriture", "staff"] as const;
+export const STATISTICS_TABS = ["retention", "activite", "parcours", "staff"] as const;
 
 export type StatisticsTab = (typeof STATISTICS_TABS)[number];
 
-export const DEFAULT_STATISTICS_TAB: StatisticsTab = "communaute";
+export const DEFAULT_STATISTICS_TAB: StatisticsTab = "retention";
 
 export const statisticsTabLabels: Record<StatisticsTab, string> = {
-  communaute: "Communauté",
-  activite: "Activité",
-  ecriture: "Écriture",
-  staff: "Staff",
+  retention: "Santé & Rétention",
+  activite: "Fréquentation & Serveur",
+  parcours: "Parcours Joueur",
+  staff: "Pilotage Staff",
 };
 
 export const STATISTICS_PERIODS = ["7", "30", "90", "all"] as const;
