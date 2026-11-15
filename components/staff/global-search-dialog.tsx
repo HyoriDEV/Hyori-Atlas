@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Command as CommandPrimitive } from "cmdk";
-import { MagnifyingGlass, Ticket, X, CircleNotch } from "@phosphor-icons/react";
+import { MagnifyingGlass, Ticket, X, CircleNotch, Users } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -18,6 +18,7 @@ import {
   globalSearchAction,
   type GlobalSearchPlayerResult,
   type GlobalSearchTicketResult,
+  type GlobalSearchRpTrackingGroupResult,
 } from "@/lib/actions/search-actions";
 
 const QUERY_DEBOUNCE_MS = 400;
@@ -32,6 +33,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
   const [query, setQuery] = useState("");
   const [players, setPlayers] = useState<GlobalSearchPlayerResult[]>([]);
   const [tickets, setTickets] = useState<GlobalSearchTicketResult[]>([]);
+  const [rpTrackingGroups, setRpTrackingGroups] = useState<GlobalSearchRpTrackingGroupResult[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [, startTransition] = useTransition();
@@ -47,6 +49,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
       setQuery("");
       setPlayers([]);
       setTickets([]);
+      setRpTrackingGroups([]);
       setHasSearched(false);
       setIsLoading(false);
     }
@@ -73,6 +76,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
     if (trimmed.length < 3) {
       setPlayers([]);
       setTickets([]);
+      setRpTrackingGroups([]);
       setHasSearched(false);
       setIsLoading(false);
       return;
@@ -87,12 +91,14 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
         if (currentRequestId === requestIdRef.current) {
           setPlayers(results.players);
           setTickets(results.tickets);
+          setRpTrackingGroups(results.rpTrackingGroups);
           setHasSearched(true);
         }
       } catch {
         if (currentRequestId === requestIdRef.current) {
           setPlayers([]);
           setTickets([]);
+          setRpTrackingGroups([]);
           setHasSearched(true);
         }
       } finally {
@@ -121,6 +127,13 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
     });
   }
 
+  function handleSelectGroup(id: string) {
+    handleOpenChange(false);
+    startTransition(() => {
+      router.push(`/staff/rp-tracking/groups/${id}`);
+    });
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent
@@ -130,7 +143,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
         <DialogHeader className="sr-only">
           <DialogTitle>Recherche générale</DialogTitle>
           <DialogDescription>
-            Recherche de joueurs dans l&apos;atlas et de tickets staff
+            Recherche de joueurs dans l&apos;atlas, de tickets staff et de suivis RP de groupe
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +157,7 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             <CommandPrimitive.Input
               value={query}
               onValueChange={handleQueryChange}
-              placeholder="Rechercher un joueur ou un ticket..."
+              placeholder="Rechercher un joueur, un ticket ou un suivi RP..."
               className="placeholder:text-muted-foreground text-foreground flex w-full bg-transparent text-sm outline-none"
               autoFocus
             />
@@ -172,11 +185,15 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
             )}
 
             {/* Aucun résultat tous types confondus */}
-            {!isLoading && hasSearched && players.length === 0 && tickets.length === 0 && (
-              <div className="text-muted-foreground py-8 text-center text-sm select-none">
-                Aucun résultat.
-              </div>
-            )}
+            {!isLoading &&
+              hasSearched &&
+              players.length === 0 &&
+              tickets.length === 0 &&
+              rpTrackingGroups.length === 0 && (
+                <div className="text-muted-foreground py-8 text-center text-sm select-none">
+                  Aucun résultat.
+                </div>
+              )}
 
             {/* Groupe Joueurs */}
             {players.length > 0 && (
@@ -211,11 +228,51 @@ export function GlobalSearchDialog({ open, onOpenChange }: GlobalSearchDialogPro
               </CommandPrimitive.Group>
             )}
 
+            {/* Groupe Suivis RP de groupe */}
+            {rpTrackingGroups.length > 0 && (
+              <CommandPrimitive.Group
+                heading={undefined}
+                className={cn("overflow-hidden", players.length > 0 && "mt-3")}
+              >
+                <div className="mb-1.5 flex items-center px-2.5 py-1 select-none">
+                  <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+                    Suivis RP de groupe
+                  </span>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  {rpTrackingGroups.map((group) => (
+                    <CommandPrimitive.Item
+                      key={group.id}
+                      value={`group-${group.id}-${group.label}`}
+                      onSelect={() => handleSelectGroup(group.id)}
+                      onClick={() => handleSelectGroup(group.id)}
+                      className="data-selected:bg-muted data-selected:text-foreground hover:bg-muted/80 text-foreground flex cursor-pointer items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors outline-none select-none"
+                    >
+                      <div className="bg-muted text-muted-foreground border-border relative flex size-8 shrink-0 items-center justify-center rounded-lg border select-none">
+                        <Users className="size-4 shrink-0" />
+                      </div>
+                      <div className="flex min-w-0 flex-1 flex-col">
+                        <span className="truncate text-sm font-medium">{group.name}</span>
+                        {group.sublabel && (
+                          <span className="text-muted-foreground truncate text-xs">
+                            {group.sublabel}
+                          </span>
+                        )}
+                      </div>
+                    </CommandPrimitive.Item>
+                  ))}
+                </div>
+              </CommandPrimitive.Group>
+            )}
+
             {/* Groupe Tickets */}
             {tickets.length > 0 && (
               <CommandPrimitive.Group
                 heading={undefined}
-                className={cn("overflow-hidden", players.length > 0 && "mt-3")}
+                className={cn(
+                  "overflow-hidden",
+                  (players.length > 0 || rpTrackingGroups.length > 0) && "mt-3"
+                )}
               >
                 <div className="mb-1.5 flex items-center px-2.5 py-1 select-none">
                   <span className="text-muted-foreground text-xs font-medium tracking-wide uppercase">

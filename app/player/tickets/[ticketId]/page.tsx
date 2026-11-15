@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { requireActivePlayer } from "@/lib/dal";
 import { prisma } from "@/lib/prisma";
-import { formatTicketCategoryName } from "@/lib/navigation";
+import { formatTicketCategoryName, isTechniqueCategory } from "@/lib/navigation";
 
 export async function generateMetadata({
   params,
@@ -50,6 +50,7 @@ export default async function TicketDetailPage({
     where: { id: ticketId },
     include: {
       player: true,
+      categoryRef: true,
       conversation: {
         include: {
           messages: {
@@ -77,6 +78,16 @@ export default async function TicketDetailPage({
     notFound();
   }
 
+  // Si c'est un ticket technique / DEV et que l'utilisateur est staff (non créateur),
+  // il y a été ajouté en tant que staff : le rediriger vers son interface staff.
+  if (
+    isStaff &&
+    ticket.playerId !== user.id &&
+    isTechniqueCategory(ticket.categoryRef, ticket.category)
+  ) {
+    redirect(`/staff/tickets/${ticketId}`);
+  }
+
   // Marquer immédiatement la conversation comme lue pour ce membre
   await prisma.conversationMember.updateMany({
     where: {
@@ -90,15 +101,13 @@ export default async function TicketDetailPage({
 
   const messages = ticket.conversation.messages || [];
 
-  const membersData = ticket.conversation.members
-    .filter((m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId)
-    .map((m) => ({
-      userId: m.userId,
-      minecraftUsername: m.user.minecraftUsername,
-      discordDisplayName: m.user.discordDisplayName,
-      discordAvatarUrl: m.user.discordAvatarUrl,
-      isCreator: m.userId === ticket.playerId,
-    }));
+  const membersData = ticket.conversation.members.map((m) => ({
+    userId: m.userId,
+    minecraftUsername: m.user.minecraftUsername,
+    discordDisplayName: m.user.discordDisplayName,
+    discordAvatarUrl: m.user.discordAvatarUrl,
+    isCreator: m.userId === ticket.playerId,
+  }));
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
@@ -107,7 +116,7 @@ export default async function TicketDetailPage({
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <TicketBackLink className="mt-0.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h1 className="font-heading text-base font-semibold break-words leading-snug sm:text-lg">
+            <h1 className="font-heading text-base leading-snug font-semibold break-words sm:text-lg">
               {ticket.subject}
             </h1>
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
@@ -126,7 +135,7 @@ export default async function TicketDetailPage({
         </div>
 
         {/* Actions : une ligne sous les informations sur mobile, à droite sur grand écran */}
-        <div className="flex items-center gap-2 pl-11 shrink-0 sm:pl-0">
+        <div className="flex shrink-0 items-center gap-2 pl-11 sm:pl-0">
           <TicketMembersSheet
             ticketId={ticket.id}
             members={membersData}

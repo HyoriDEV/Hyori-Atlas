@@ -15,6 +15,7 @@ import {
   InterviewBookingStatus,
   RegistrationStatus,
   Role,
+  TicketCategory,
   TicketStatus,
 } from "@/lib/generated/prisma/enums";
 
@@ -38,10 +39,19 @@ export async function getPlayerBadgeCounts(userId: string): Promise<Record<strin
               members: {
                 some: {
                   userId,
-                  user: { role: Role.PLAYER },
                 },
               },
             },
+            category: { not: TicketCategory.TECHNIQUE },
+            categoryName: { notIn: ["Technique", "Ticket technique"] },
+            OR: [
+              { categoryRef: null },
+              {
+                categoryRef: {
+                  slug: { notIn: ["technique", "tech", "dev"] },
+                },
+              },
+            ],
           },
         ],
         status: { not: TicketStatus.ARCHIVED },

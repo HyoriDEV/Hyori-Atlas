@@ -10,7 +10,8 @@ export const metadata: Metadata = {
   title: "Tickets",
 };
 import { getServerPagePrefs, checkRedirectWithSavedPrefs } from "@/lib/table-preferences";
-import { Role, TicketStatus } from "@/lib/generated/prisma/enums";
+import { Role, TicketCategory, TicketStatus } from "@/lib/generated/prisma/enums";
+import type { Prisma } from "@/lib/generated/prisma/client";
 import {
   formatTicketCategoryName,
   ticketCategoryLabels,
@@ -159,7 +160,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
 
   const activeTab = searchParams.tab === "archived" ? "archived" : "active";
 
-  const userFilter = {
+  const userFilter: Prisma.TicketWhereInput = {
     OR: [
       { playerId: user.id },
       {
@@ -167,10 +168,19 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
           members: {
             some: {
               userId: user.id,
-              user: { role: Role.PLAYER },
             },
           },
         },
+        category: { not: TicketCategory.TECHNIQUE },
+        categoryName: { notIn: ["Technique", "Ticket technique"] },
+        OR: [
+          { categoryRef: null },
+          {
+            categoryRef: {
+              slug: { notIn: ["technique", "tech", "dev"] },
+            },
+          },
+        ],
       },
     ],
   };
@@ -259,9 +269,7 @@ export default async function TicketsPage(props: { searchParams: Promise<{ tab?:
         conversation: ticket.conversation
           ? {
               ...ticket.conversation,
-              members: ticket.conversation.members.filter(
-                (m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId
-              ),
+              members: ticket.conversation.members,
             }
           : null,
       };

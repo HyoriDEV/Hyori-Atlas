@@ -21,9 +21,18 @@ export interface GlobalSearchTicketResult {
   createdAt: string;
 }
 
+export interface GlobalSearchRpTrackingGroupResult {
+  id: string;
+  name: string;
+  label: string;
+  sublabel: string | null;
+  membersCount: number;
+}
+
 export interface GlobalSearchResults {
   players: GlobalSearchPlayerResult[];
   tickets: GlobalSearchTicketResult[];
+  rpTrackingGroups: GlobalSearchRpTrackingGroupResult[];
 }
 
 export async function globalSearchAction(query: string): Promise<GlobalSearchResults> {
@@ -31,10 +40,10 @@ export async function globalSearchAction(query: string): Promise<GlobalSearchRes
 
   const term = query.trim();
   if (term.length < 3) {
-    return { players: [], tickets: [] };
+    return { players: [], tickets: [], rpTrackingGroups: [] };
   }
 
-  const [rawPlayers, rawTickets] = await Promise.all([
+  const [rawPlayers, rawTickets, rawGroups] = await Promise.all([
     // Atlas des joueurs : Recherche sur le pseudo et UUID Minecraft,
     // sur le nom d'affichage, pseudo et ID Discord, et le nom RP, le tout à la fois.
     prisma.user.findMany({
@@ -105,6 +114,51 @@ export async function globalSearchAction(query: string): Promise<GlobalSearchRes
       orderBy: { createdAt: "desc" },
       take: 40,
     }),
+
+    // Suivis RP de groupe : Recherche sur le nom, la description et les membres du groupe
+    prisma.rpTrackingGroup.findMany({
+      where: {
+        OR: [
+          { name: { contains: term, mode: "insensitive" } },
+          { description: { contains: term, mode: "insensitive" } },
+          {
+            members: {
+              some: {
+                OR: [
+                  { user: { minecraftUsername: { contains: term, mode: "insensitive" } } },
+                  { user: { discordDisplayName: { contains: term, mode: "insensitive" } } },
+                  { user: { discordUsername: { contains: term, mode: "insensitive" } } },
+                  { characterSheet: { name: { contains: term, mode: "insensitive" } } },
+                ],
+              },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        members: {
+          select: {
+            user: {
+              select: {
+                minecraftUsername: true,
+                discordDisplayName: true,
+                discordUsername: true,
+              },
+            },
+            characterSheet: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+      take: 40,
+    }),
   ]);
 
   // Format des résultats joueurs : Nom RP — Pseudo Minecraft — Pseudo Discord.
@@ -154,8 +208,42 @@ export async function globalSearchAction(query: string): Promise<GlobalSearchRes
     };
   });
 
+  // Format des résultats suivis RP de groupe : Nom du groupe et liste des membres
+  const rpTrackingGroups: GlobalSearchRpTrackingGroupResult[] = rawGroups
+    .map((group) => {
+      const memberNames = group.members
+        .map((m) => {
+          return (
+            m.characterSheet?.name?.trim() ||
+            m.user.minecraftUsername?.trim() ||
+            m.user.discordDisplayName?.trim() ||
+            m.user.discordUsername?.trim() ||
+            null
+          );
+        })
+        .filter((n): n is string => Boolean(n));
+
+      const count = group.members.length;
+      const countLabel = `${count} membre${count > 1 ? "s" : ""}`;
+      const membersSummary =
+        memberNames.slice(0, 3).join(", ") + (memberNames.length > 3 ? "..." : "");
+
+      const label = membersSummary ? `${group.name} — ${membersSummary}` : group.name;
+      const sublabel = membersSummary ? `${countLabel} · ${membersSummary}` : countLabel;
+
+      return {
+        id: group.id,
+        name: group.name,
+        label,
+        sublabel,
+        membersCount: count,
+      };
+    })
+    .sort((a, b) => a.name.localeCompare(b.name, "fr", { sensitivity: "base" }));
+
   return {
     players,
     tickets,
+    rpTrackingGroups,
   };
 }

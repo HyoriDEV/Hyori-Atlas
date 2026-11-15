@@ -151,15 +151,13 @@ export default async function TicketStaffDetailPage({
   const messages = ticket.conversation.messages || [];
   const playerName = ticket.player.minecraftUsername ?? ticket.player.discordDisplayName;
 
-  const membersData = ticket.conversation.members
-    .filter((m) => m.user.role === Role.PLAYER || m.userId === ticket.playerId)
-    .map((m) => ({
-      userId: m.userId,
-      minecraftUsername: m.user.minecraftUsername,
-      discordDisplayName: m.user.discordDisplayName,
-      discordAvatarUrl: m.user.discordAvatarUrl,
-      isCreator: m.userId === ticket.playerId,
-    }));
+  const membersData = ticket.conversation.members.map((m) => ({
+    userId: m.userId,
+    minecraftUsername: m.user.minecraftUsername,
+    discordDisplayName: m.user.discordDisplayName,
+    discordAvatarUrl: m.user.discordAvatarUrl,
+    isCreator: m.userId === ticket.playerId,
+  }));
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
@@ -168,7 +166,7 @@ export default async function TicketStaffDetailPage({
         <div className="flex min-w-0 flex-1 items-start gap-3">
           <AtlasBackButton href="/staff/tickets" className="mt-0.5 shrink-0" />
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h1 className="font-heading text-base font-semibold break-words leading-snug sm:text-lg">
+            <h1 className="font-heading text-base leading-snug font-semibold break-words sm:text-lg">
               {ticket.subject}
             </h1>
             <div className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
@@ -232,7 +230,7 @@ export default async function TicketStaffDetailPage({
         </div>
 
         {/* Actions : une ligne sous les informations sur mobile, à droite sur grand écran */}
-        <div className="flex items-center gap-2 pl-11 shrink-0 sm:pl-0">
+        <div className="flex shrink-0 items-center gap-2 pl-11 sm:pl-0">
           <TicketMembersSheet
             ticketId={ticket.id}
             members={membersData}

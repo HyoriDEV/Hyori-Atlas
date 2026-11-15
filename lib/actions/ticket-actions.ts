@@ -19,6 +19,7 @@ import {
 import { getGlobalSettings } from "@/lib/services/settings-service";
 import {
   archiveDiscordTopic,
+  getAtlasBaseUrl,
   notifyPlayerTicketMessage,
   notifyTicketCreated,
 } from "@/lib/services/discord-bot-service";
@@ -228,7 +229,7 @@ export async function createStaffTicket(input: {
     where: { id: input.playerId },
     select: { id: true, role: true, registrationStatus: true, discordId: true },
   });
-  if (!player || player.role !== Role.PLAYER) {
+  if (!player) {
     throw new Error("Joueur introuvable.");
   }
   if (player.registrationStatus === RegistrationStatus.REJECTED) {
@@ -259,7 +260,9 @@ export async function createStaffTicket(input: {
     input.category === TicketCategory.TECHNIQUE || isTechniqueCategory(categoryConfig);
 
   if (isTechnique && !hasTechnicalTicketAccess(staffUser.role)) {
-    throw new Error("Seuls les administrateurs et les développeurs peuvent ouvrir un ticket technique.");
+    throw new Error(
+      "Seuls les administrateurs et les développeurs peuvent ouvrir un ticket technique."
+    );
   }
   const categoryName = categoryConfig?.name
     ? formatTicketCategoryName(categoryConfig.name)
@@ -408,7 +411,6 @@ export async function sendTicketMessage(
     newMessageId: message.id,
     messageBody: message.body,
     hasImage: Boolean(message.imageUrl),
-    ticketPlayerId: ticket.playerId,
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
@@ -483,7 +485,6 @@ export async function sendStaffTicketMessage(
     newMessageId: message.id,
     messageBody: message.body,
     hasImage: Boolean(message.imageUrl),
-    ticketPlayerId: ticket.playerId,
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
@@ -675,7 +676,6 @@ async function dispatchTicketMessageNotifications({
   newMessageId,
   messageBody,
   hasImage,
-  ticketPlayerId,
 }: {
   ticketId: string;
   ticketSubject: string;
@@ -685,25 +685,30 @@ async function dispatchTicketMessageNotifications({
   newMessageId: string;
   messageBody?: string | null;
   hasImage?: boolean;
-  ticketPlayerId?: string;
 }): Promise<void> {
   try {
-    // Trouver tous les membres de la conversation qui sont soit le créateur du ticket (même s'il est staff),
-    // soit des joueurs, et qui ne sont pas l'auteur du message courant
+    const ticket = await prisma.ticket.findUnique({
+      where: { id: ticketId },
+      select: {
+        category: true,
+        categoryName: true,
+        categoryRef: { select: { slug: true, name: true } },
+      },
+    });
+    const isTech = ticket ? isTechniqueCategory(ticket.categoryRef, ticket.category) : false;
+
+    // Trouver tous les membres de la conversation (joueurs ou staff ajoutés) qui ne sont pas l'auteur du message courant
     const candidateMembers = await prisma.conversationMember.findMany({
       where: {
         conversationId,
         userId: { not: authorId },
-        OR: [
-          ...(ticketPlayerId ? [{ userId: ticketPlayerId }] : []),
-          { user: { role: Role.PLAYER } },
-        ],
       },
       include: {
         user: {
           select: {
             id: true,
             discordId: true,
+            role: true,
           },
         },
       },
@@ -735,12 +740,19 @@ async function dispatchTicketMessageNotifications({
       // Si priorUnreadMessage est null, le membre avait tout lu jusqu'alors : ce message est son premier non-lu !
       // On déclenche donc une notification Discord unique en MP.
       if (!priorUnreadMessage) {
+        const isStaffUser = member.user.role !== Role.PLAYER;
+        const customTicketUrl =
+          isTech && isStaffUser
+            ? `${getAtlasBaseUrl()}/staff/tickets/${ticketId}`
+            : `${getAtlasBaseUrl()}/player/tickets/${ticketId}`;
+
         notifyPlayerTicketMessage({
           discordId: member.user.discordId,
           ticketId,
           ticketSubject,
           authorName,
           messagePreview: previewText,
+          customTicketUrl,
         }).catch((err) => {
           console.warn(
             `[TicketNotification] Échec lors de la notification Discord pour ${member.userId}:`,
