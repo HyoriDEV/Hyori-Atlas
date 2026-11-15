@@ -200,83 +200,92 @@ export default async function TicketsStaffListPage(props: PageProps) {
 
   const hasActiveFilters = Boolean(query || categoryParam);
 
-  const [
-    activeCount,
-    suspendedCount,
-    archivedCount,
-    tickets,
-    contactablePlayers,
-    categoryConfigs,
-  ] = await Promise.all([
-    prisma.ticket.count({
-      where: { AND: [...filters, getViewFilter("active")] },
-    }),
-    prisma.ticket.count({
-      where: { AND: [...filters, getViewFilter("suspended")] },
-    }),
-    prisma.ticket.count({
-      where: { AND: [...filters, getViewFilter("archived")] },
-    }),
-    prisma.ticket.findMany({
-      where: { AND: [...filters, getViewFilter(view)] },
-      include: {
-        player: true,
-        conversation: {
-          select: {
-            members: {
-              where: { user: { role: Role.PLAYER } },
-              select: { userId: true },
-            },
-            messages: {
-              where: { deletedAt: null, authorType: { not: MessageAuthorType.SYSTEM } },
-              orderBy: { createdAt: "desc" },
-              take: 1,
-              select: {
-                body: true,
-                imageUrl: true,
-                authorId: true,
-                author: { select: { minecraftUsername: true, discordDisplayName: true } },
+  const hasTechAccess =
+    hasTechnicalTicketAccess(staffUser.role) ||
+    (await prisma.ticket.count({
+      where: {
+        AND: [
+          { conversation: { members: { some: { userId: staffUser.id } } } },
+          {
+            OR: [
+              { category: TicketCategory.TECHNIQUE },
+              { categoryName: { in: ["Technique", "Ticket technique"] } },
+              { categoryRef: { slug: { in: ["technique", "tech", "dev"] } } },
+            ],
+          },
+        ],
+      },
+    })) > 0;
+
+  const [activeCount, suspendedCount, archivedCount, tickets, contactablePlayers, categoryConfigs] =
+    await Promise.all([
+      prisma.ticket.count({
+        where: { AND: [...filters, getViewFilter("active")] },
+      }),
+      prisma.ticket.count({
+        where: { AND: [...filters, getViewFilter("suspended")] },
+      }),
+      prisma.ticket.count({
+        where: { AND: [...filters, getViewFilter("archived")] },
+      }),
+      prisma.ticket.findMany({
+        where: { AND: [...filters, getViewFilter(view)] },
+        include: {
+          player: true,
+          conversation: {
+            select: {
+              members: {
+                select: { userId: true },
+              },
+              messages: {
+                where: { deletedAt: null, authorType: { not: MessageAuthorType.SYSTEM } },
+                orderBy: { createdAt: "desc" },
+                take: 1,
+                select: {
+                  body: true,
+                  imageUrl: true,
+                  authorId: true,
+                  author: { select: { minecraftUsername: true, discordDisplayName: true } },
+                },
               },
             },
           },
         },
-      },
-      orderBy: buildOrderBy(sortKey, sortDir, view),
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    canOpenTicket
-      ? prisma.user.findMany({
-          where: {
-            role: Role.PLAYER,
-            registrationStatus: { not: RegistrationStatus.REJECTED },
-          },
-          select: {
-            id: true,
-            minecraftUsername: true,
-            discordDisplayName: true,
-            discordUsername: true,
-            discordAvatarUrl: true,
-            role: true,
-            registrationStatus: true,
-            characterSheets: { select: { name: true, status: true } },
-          },
-          orderBy: { discordDisplayName: "asc" },
-        })
-      : Promise.resolve([]),
-    prisma.ticketCategoryConfig.findMany({
-      where: {
-        enabled: true,
-        ...(!hasTechnicalTicketAccess(staffUser.role)
-          ? {
-              slug: { notIn: ["technique", "tech", "dev"] },
-            }
-          : {}),
-      },
-      select: { slug: true, name: true },
-      orderBy: { order: "asc" },
-    }),
-  ]);
+        orderBy: buildOrderBy(sortKey, sortDir, view),
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+      canOpenTicket
+        ? prisma.user.findMany({
+            where: {
+              registrationStatus: { not: RegistrationStatus.REJECTED },
+            },
+            select: {
+              id: true,
+              minecraftUsername: true,
+              discordDisplayName: true,
+              discordUsername: true,
+              discordAvatarUrl: true,
+              role: true,
+              registrationStatus: true,
+              characterSheets: { select: { name: true, status: true } },
+            },
+            orderBy: { discordDisplayName: "asc" },
+          })
+        : Promise.resolve([]),
+      prisma.ticketCategoryConfig.findMany({
+        where: {
+          enabled: true,
+          ...(!hasTechAccess
+            ? {
+                slug: { notIn: ["technique", "tech", "dev"] },
+              }
+            : {}),
+        },
+        select: { slug: true, name: true },
+        orderBy: { order: "asc" },
+      }),
+    ]);
 
   const viewCounts: Record<TicketView, number> = {
     active: activeCount,
@@ -473,7 +482,10 @@ export default async function TicketsStaffListPage(props: PageProps) {
                           <span>En suspens · {formatDaysSince(ticket.suspendedAt)}</span>
                         </Badge>
                       ) : (
-                        <Badge variant={ticketStatusBadgeVariant(ticket.status)} className="text-xs">
+                        <Badge
+                          variant={ticketStatusBadgeVariant(ticket.status)}
+                          className="text-xs"
+                        >
                           {ticket.status === "PENDING_STAFF"
                             ? "Staff"
                             : ticket.status === "PENDING_PLAYER"

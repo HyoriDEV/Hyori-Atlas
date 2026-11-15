@@ -45,7 +45,8 @@ export function isTicketSecret(): boolean {
  * - Non-staff : aucun ticket.
  * - ADMIN : tous les tickets.
  * - DEVELOPER : tickets techniques + tickets dont la catégorie autorise le rôle.
- * - Autres rôles du staff : uniquement les tickets non techniques dont la catégorie autorise le rôle.
+ * - Autres rôles du staff : uniquement les tickets non techniques dont la catégorie autorise le rôle,
+ *   OU tout ticket auquel le membre du staff a été explicitement ajouté en tant que membre (ex: ticket DEV avec un staff non-dev).
  */
 export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInput {
   if (!allStaffRoles.includes(user.role)) {
@@ -102,7 +103,20 @@ export function ticketAccessWhere(user: TicketAccessUser): Prisma.TicketWhereInp
     ],
   };
 
-  return categoryMatchesRole;
+  return {
+    OR: [
+      categoryMatchesRole,
+      {
+        conversation: {
+          members: {
+            some: {
+              userId: user.id,
+            },
+          },
+        },
+      },
+    ],
+  };
 }
 
 export async function canAccessTicket(user: TicketAccessUser, ticketId: string): Promise<boolean> {
