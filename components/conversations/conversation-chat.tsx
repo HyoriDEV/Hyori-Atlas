@@ -68,6 +68,7 @@ export function ConversationChat({
   viewerId,
   viewerIsStaff,
   sendAction,
+  refreshOnNewMessage = false,
   disabled = false,
   disabledMessage,
   emptyBadge,
@@ -84,6 +85,7 @@ export function ConversationChat({
     body?: string,
     imageUrl?: string
   ) => Promise<{ success?: boolean; error?: string } | void>;
+  refreshOnNewMessage?: boolean;
   disabled?: boolean;
   disabledMessage?: string;
   emptyBadge?: string;
@@ -241,13 +243,16 @@ export function ConversationChat({
           if (typeof document !== "undefined" && document.visibilityState === "visible") {
             markConversationAsRead(conversationId, viewerIsStaff).catch(() => {});
           }
+          if (refreshOnNewMessage && rawMessage.authorType !== MessageAuthorType.SYSTEM) {
+            router.refresh();
+          }
         }
       } catch (err) {
         console.error("[ConversationChat] Erreur lors de la réception d'un événement SSE:", err);
       }
     };
     return () => eventSource.close();
-  }, [conversationId, viewerIsStaff, router]);
+  }, [conversationId, viewerId, viewerIsStaff, refreshOnNewMessage, router]);
 
   useEffect(() => {
     function handleVisibilityOrFocus() {

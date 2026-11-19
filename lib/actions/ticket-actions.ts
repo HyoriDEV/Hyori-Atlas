@@ -414,6 +414,7 @@ export async function sendTicketMessage(
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
+  revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath("/staff/tickets");
 
   return { success: true };
@@ -451,7 +452,11 @@ export async function sendStaffTicketMessage(
 
     await tx.ticket.update({
       where: { id: ticketId },
-      data: { status: TicketStatus.PENDING_PLAYER, lastMessageAt: newMessage.createdAt },
+      data: {
+        status: TicketStatus.PENDING_PLAYER,
+        suspendedAt: null,
+        lastMessageAt: newMessage.createdAt,
+      },
     });
 
     await tx.conversationRead.upsert({
@@ -488,6 +493,7 @@ export async function sendStaffTicketMessage(
   }).catch(() => {});
 
   revalidatePath("/player/tickets");
+  revalidatePath(`/staff/tickets/${ticketId}`);
   revalidatePath("/staff/tickets");
 
   return { success: true };
