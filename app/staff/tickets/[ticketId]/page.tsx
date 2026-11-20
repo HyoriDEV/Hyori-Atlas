@@ -259,6 +259,7 @@ export default async function TicketStaffDetailPage({
             initialMessages={messages.map((m) => serializeConversationMessage(m, true))}
             viewerId={staffUser.id}
             viewerIsStaff
+            refreshOnNewMessage={Boolean(ticket.suspendedAt)}
             unreadSince={previousReadAt?.toISOString() ?? null}
             sendAction={async (cId, body, imageUrl) => {
               "use server";
