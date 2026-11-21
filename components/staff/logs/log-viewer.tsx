@@ -33,6 +33,9 @@ import {
 } from "@/components/ui/select";
 
 type LogFileInfo = { name: string; size: number; modifiedAt: string };
+type LogServerOption = { key: string; label: string };
+
+const SERVER_STORAGE_KEY = "hyori-atlas:logs:server";
 
 const LIVE_FILE = "latest.log";
 const LIVE_INTERVAL_MS = 5000;
@@ -129,7 +132,8 @@ function StatTile({ label, value, className }: { label: string; value: string; c
   );
 }
 
-export function LogViewer() {
+export function LogViewer({ servers }: { servers: LogServerOption[] }) {
+  const [server, setServer] = useState<string>(servers[0]?.key ?? "");
   const [files, setFiles] = useState<LogFileInfo[]>([]);
   const [file, setFile] = useState<string>(LIVE_FILE);
   const [text, setText] = useState("");
@@ -149,23 +153,46 @@ export function LogViewer() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
 
+  useEffect(() => {
+    try {
+      const saved = window.localStorage.getItem(SERVER_STORAGE_KEY);
+      if (saved && servers.some((item) => item.key === saved)) setServer(saved);
+    } catch {
+      // stockage indisponible : on garde le premier serveur
+    }
+  }, [servers]);
+
+  function selectServer(key: string) {
+    setServer(key);
+    setFile(LIVE_FILE);
+    setSource(ALL_SOURCES);
+    try {
+      window.localStorage.setItem(SERVER_STORAGE_KEY, key);
+    } catch {
+      // ignoré
+    }
+  }
+
   const loadFiles = useCallback(async () => {
     try {
-      const response = await fetch("/api/staff/logs", { cache: "no-store" });
+      const response = await fetch(`/api/staff/logs?server=${encodeURIComponent(server)}`, {
+        cache: "no-store",
+      });
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? "Erreur");
       setFiles(json.files);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erreur");
     }
-  }, []);
+  }, [server]);
 
   const loadFile = useCallback(async (name: string, silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const response = await fetch(`/api/staff/logs?file=${encodeURIComponent(name)}`, {
-        cache: "no-store",
-      });
+      const response = await fetch(
+        `/api/staff/logs?server=${encodeURIComponent(server)}&file=${encodeURIComponent(name)}`,
+        { cache: "no-store" }
+      );
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? "Erreur");
       setText(json.text);
@@ -177,7 +204,7 @@ export function LogViewer() {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, []);
+  }, [server]);
 
   useEffect(() => {
     void loadFiles();
@@ -271,7 +298,7 @@ export function LogViewer() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = file.replace(/\.gz$/, "");
+    link.download = `${server}-${file.replace(/\.gz$/, "")}`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -286,6 +313,19 @@ export function LogViewer() {
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
+      {servers.length > 1 ? (
+        <div className="flex flex-wrap gap-2">
+          {servers.map((item) => (
+            <Button
+              key={item.key}
+              variant={item.key === server ? "default" : "outline"}
+              onClick={() => selectServer(item.key)}
+            >
+              {item.label}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile label="Lignes" value={stats.total.toLocaleString("fr-FR")} />
         <StatTile

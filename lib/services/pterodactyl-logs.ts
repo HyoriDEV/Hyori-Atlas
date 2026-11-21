@@ -15,30 +15,54 @@ const FILE_NAME_PATTERN = /^[\w.-]+\.log(\.gz)?$/;
 // On ne renvoie que la fin des gros fichiers pour garder la page fluide.
 const MAX_BYTES = 4 * 1024 * 1024;
 
+export type LogServer = { key: string; label: string; id: string };
+
+// Serveurs par défaut (ids non secrets). Surcharge possible : PTERO_SERVERS="prod:uuid,build:uuid".
+const DEFAULT_SERVERS = "prod:c244534d-784f-4727-ac88-03460643e7b0,build:d6ac9900-fd12-4d55-b3e0-4ba236d5b060,auth:336a38a4-c718-46a6-bd44-44c1d12bc400";
+const DEFAULT_URL = "https://admin.hyori-rp.fr";
+
+const serverLabels: Record<string, string> = { prod: "Prod", build: "Build", auth: "Auth" };
+
+export function getLogServers(): LogServer[] {
+  return (process.env.PTERO_SERVERS || DEFAULT_SERVERS)
+    .split(",")
+    .map((pair) => pair.trim().split(":"))
+    .filter(([key, id]) => key && id)
+    .map(([key, id]) => ({ key, id, label: serverLabels[key] ?? key }));
+}
+
 function getConfig() {
-  const url = process.env.PTERO_URL?.replace(/\/+$/, "");
-  const serverId = process.env.PTERO_SERVER_ID;
+  const url = (process.env.PTERO_URL || DEFAULT_URL).replace(/\/+$/, "");
   const apiKey = process.env.PTERO_API_KEY;
-  if (!url || !serverId || !apiKey) {
+  if (!apiKey) {
     return null;
   }
-  return { url, serverId, apiKey };
+  return { url, apiKey };
 }
 
 export function isPterodactylConfigured() {
-  return getConfig() !== null;
+  return getConfig() !== null && getLogServers().length > 0;
 }
 
 export function isValidLogFileName(name: string) {
   return FILE_NAME_PATTERN.test(name) && !name.includes("..");
 }
 
-async function pteroFetch(path: string) {
+function resolveServerId(serverKey: string) {
+  const server = getLogServers().find((item) => item.key === serverKey);
+  if (!server) {
+    throw new Error("Serveur inconnu");
+  }
+  return server.id;
+}
+
+async function pteroFetch(serverKey: string, path: string) {
   const config = getConfig();
   if (!config) {
-    throw new Error("Pterodactyl non configuré (PTERO_URL, PTERO_SERVER_ID, PTERO_API_KEY)");
+    throw new Error("Pterodactyl non configuré (PTERO_API_KEY)");
   }
-  const response = await fetch(`${config.url}/api/client/servers/${config.serverId}${path}`, {
+  const serverId = resolveServerId(serverKey);
+  const response = await fetch(`${config.url}/api/client/servers/${serverId}${path}`, {
     headers: {
       Authorization: `Bearer ${config.apiKey}`,
       Accept: "application/json",
@@ -51,8 +75,8 @@ async function pteroFetch(path: string) {
   return response;
 }
 
-export async function listLogFiles(): Promise<LogFileInfo[]> {
-  const response = await pteroFetch(`/files/list?directory=${encodeURIComponent(LOGS_DIR)}`);
+export async function listLogFiles(serverKey: string): Promise<LogFileInfo[]> {
+  const response = await pteroFetch(serverKey, `/files/list?directory=${encodeURIComponent(LOGS_DIR)}`);
   const json = (await response.json()) as {
     data: { attributes: { name: string; size: number; is_file: boolean; modified_at: string } }[];
   };
@@ -76,19 +100,22 @@ function keepTail(text: string) {
   return { text: firstNewline >= 0 ? cut.slice(firstNewline + 1) : cut, truncated: true };
 }
 
-export async function readLogFile(name: string): Promise<{ text: string; truncated: boolean }> {
+export async function readLogFile(
+  serverKey: string,
+  name: string
+): Promise<{ text: string; truncated: boolean }> {
   if (!isValidLogFileName(name)) {
     throw new Error("Nom de fichier invalide");
   }
   const filePath = `${LOGS_DIR}/${name}`;
 
   if (!name.endsWith(".gz")) {
-    const response = await pteroFetch(`/files/contents?file=${encodeURIComponent(filePath)}`);
+    const response = await pteroFetch(serverKey, `/files/contents?file=${encodeURIComponent(filePath)}`);
     return keepTail(await response.text());
   }
 
   // Archives : lien de téléchargement signé (Wings), puis décompression ici.
-  const response = await pteroFetch(`/files/download?file=${encodeURIComponent(filePath)}`);
+  const response = await pteroFetch(serverKey, `/files/download?file=${encodeURIComponent(filePath)}`);
   const json = (await response.json()) as { attributes: { url: string } };
   const download = await fetch(json.attributes.url, { cache: "no-store" });
   if (!download.ok) {
