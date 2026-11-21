@@ -126,3 +126,66 @@ export function parseLog(text: string): LogEntry[] {
 
   return entries;
 }
+
+// --- Présence des joueurs (connexions / déconnexions) ---
+
+export type PresenceEvent = {
+  time: string;
+  type: "join" | "leave" | "reset";
+  name: string;
+};
+
+export type OnlinePlayer = { name: string; since: string };
+
+const JOIN_PATTERN = /^([A-Za-z0-9_]{2,16})(?:\[[^\]]*\])? (?:logged in with entity id|joined the game)/;
+const LEAVE_PATTERN = /^([A-Za-z0-9_]{2,16}) (?:lost connection:|left the game)/;
+const RESET_PATTERN = /^(Stopping server|Starting minecraft server|Done \()/;
+
+export function extractPresence(entries: LogEntry[]): PresenceEvent[] {
+  const events: PresenceEvent[] = [];
+  for (const entry of entries) {
+    if (!entry.time) continue;
+    if (entry.source === SERVER_SOURCE && RESET_PATTERN.test(entry.message)) {
+      events.push({ time: entry.time, type: "reset", name: "" });
+      continue;
+    }
+    const join = JOIN_PATTERN.exec(entry.message);
+    if (join) {
+      events.push({ time: entry.time, type: "join", name: join[1] });
+      continue;
+    }
+    const leave = LEAVE_PATTERN.exec(entry.message);
+    if (leave) {
+      events.push({ time: entry.time, type: "leave", name: leave[1] });
+    }
+  }
+  return events;
+}
+
+// Joueurs connectés à l'heure donnée (hh:mm:ss), en rejouant les événements.
+export function onlineAt(events: PresenceEvent[], time: string): OnlinePlayer[] {
+  const online = new Map<string, string>();
+  for (const event of events) {
+    if (event.time > time) break;
+    if (event.type === "reset") online.clear();
+    else if (event.type === "join") {
+      if (!online.has(event.name)) online.set(event.name, event.time);
+    } else online.delete(event.name);
+  }
+  return [...online.entries()]
+    .map(([name, since]) => ({ name, since }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// Pic de joueurs connectés et son heure.
+export function peakOnline(events: PresenceEvent[]): { count: number; time: string } {
+  const online = new Set<string>();
+  let peak = { count: 0, time: "" };
+  for (const event of events) {
+    if (event.type === "reset") online.clear();
+    else if (event.type === "join") online.add(event.name);
+    else online.delete(event.name);
+    if (online.size > peak.count) peak = { count: online.size, time: event.time };
+  }
+  return peak;
+}

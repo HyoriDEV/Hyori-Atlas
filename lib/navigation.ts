@@ -332,7 +332,7 @@ export const staffLogsItem: StaffNavItem = {
   label: "Logs serveur",
   href: "/staff/logs",
   iconKey: "terminal",
-  roles: [Role.ADMIN, Role.DEVELOPER],
+  roles: [Role.ADMIN, Role.DEVELOPER, Role.RP_TRACKING],
   fullWidth: true,
 };
 
