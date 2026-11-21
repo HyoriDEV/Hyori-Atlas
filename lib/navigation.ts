@@ -32,7 +32,8 @@ export type NavIconKey =
   | "chart"
   | "gavel"
   | "kanban"
-  | "image";
+  | "image"
+  | "terminal";
 
 export const registrationStatusRank: Record<RegistrationStatus, number> = {
   [RegistrationStatus.REJECTED]: -1,
@@ -327,6 +328,14 @@ export const staffGalleryItem: StaffNavItem = {
   fullWidth: true,
 };
 
+export const staffLogsItem: StaffNavItem = {
+  label: "Logs serveur",
+  href: "/staff/logs",
+  iconKey: "terminal",
+  roles: [Role.ADMIN, Role.DEVELOPER],
+  fullWidth: true,
+};
+
 export const staffStaffTeamItem: StaffNavItem = {
   label: "Équipe staff",
   href: "/staff/staff-team",
@@ -353,6 +362,7 @@ export const staffNavItems: StaffNavItem[] = [
   staffRulesItem,
   staffStaffTeamItem,
   staffStatisticsItem,
+  staffLogsItem,
   staffSettingsItem,
 ];
 
@@ -392,7 +402,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
       {
         title: "Administration",
         iconKey: "gear",
-        items: [staffStaffTeamItem, staffStatisticsItem, staffSettingsItem],
+        items: [staffStaffTeamItem, staffStatisticsItem, staffLogsItem, staffSettingsItem],
       },
     ];
   }
@@ -421,7 +431,7 @@ export function getStaffNavGroups(role: Role): StaffNavGroup[] {
     {
       title: "Administration",
       iconKey: "gear",
-      items: [staffStatisticsItem],
+      items: [staffStatisticsItem, ...(staffLogsItem.roles.includes(role) ? [staffLogsItem] : [])],
     },
   ];
 }

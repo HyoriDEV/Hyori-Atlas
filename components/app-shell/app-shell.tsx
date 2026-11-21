@@ -29,6 +29,7 @@ import {
   Gavel,
   Kanban,
   MagnifyingGlass,
+  TerminalWindow,
   Image as PhosphorImage,
 } from "@phosphor-icons/react";
 
@@ -92,6 +93,7 @@ const iconMap: Record<NavIconKey, typeof Flag> = {
   gavel: Gavel,
   kanban: Kanban,
   image: PhosphorImage,
+  terminal: TerminalWindow,
 };
 
 export interface AppShellNavEntry {
