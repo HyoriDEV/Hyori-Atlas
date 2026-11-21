@@ -1,5 +1,5 @@
 import "server-only";
-import { gunzipSync } from "node:zlib";
+import { constants, gunzipSync } from "node:zlib";
 
 // Lecture des logs du serveur Minecraft via l'API client Pterodactyl.
 // Clé client en lecture seule (FILE read + read-content), ex. compte hyori_backup.
@@ -114,13 +114,22 @@ export async function readLogFile(
     return keepTail(await response.text());
   }
 
-  // Archives : lien de téléchargement signé (Wings), puis décompression ici.
-  const response = await pteroFetch(serverKey, `/files/download?file=${encodeURIComponent(filePath)}`);
-  const json = (await response.json()) as { attributes: { url: string } };
-  const download = await fetch(json.attributes.url, { cache: "no-store" });
-  if (!download.ok) {
-    throw new Error(`Téléchargement ${download.status} pour ${name}`);
+  // Archives : lien de téléchargement signé (Wings, usage unique), puis décompression ici.
+  // Wings renvoie parfois un 500 passager : on redemande un lien neuf jusqu'à 3 fois.
+  let lastStatus = 0;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (attempt > 0) await new Promise((resolve) => setTimeout(resolve, 800 * attempt));
+    const response = await pteroFetch(serverKey, `/files/download?file=${encodeURIComponent(filePath)}`);
+    const json = (await response.json()) as { attributes: { url: string } };
+    const download = await fetch(json.attributes.url, { cache: "no-store" });
+    if (!download.ok) {
+      lastStatus = download.status;
+      continue;
+    }
+    const buffer = Buffer.from(await download.arrayBuffer());
+    // finishFlush : accepte une archive coupée (serveur arrêté pendant la compression).
+    const text = gunzipSync(buffer, { finishFlush: constants.Z_SYNC_FLUSH }).toString("utf8");
+    return keepTail(text);
   }
-  const buffer = Buffer.from(await download.arrayBuffer());
-  return keepTail(gunzipSync(buffer).toString("utf8"));
+  throw new Error(`Téléchargement ${lastStatus} pour ${name}`);
 }
