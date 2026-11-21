@@ -24,8 +24,10 @@ export default async function StaffLogsPage() {
         <LogViewer servers={servers} />
       ) : (
         <Card className="text-muted-foreground p-6 text-sm">
+          <p>
           Accès Pterodactyl non configuré. Ajouter <code>PTERO_API_KEY</code> dans
           l&apos;environnement du site.
+          </p>
         </Card>
       )}
     </div>

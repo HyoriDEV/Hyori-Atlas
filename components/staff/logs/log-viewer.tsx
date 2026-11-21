@@ -3,18 +3,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowsClockwise,
+  ArrowsDownUp,
   Broadcast,
   CaretDown,
   CaretRight,
   DownloadSimple,
   MagnifyingGlass,
+  UsersThree,
   X,
 } from "@phosphor-icons/react";
 
 import { cn } from "@/lib/utils";
 import {
   SERVER_SOURCE,
+  extractPresence,
+  onlineAt,
   parseLog,
+  peakOnline,
   type LogCategory,
   type LogEntry,
   type LogLevel,
@@ -149,6 +154,10 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
   const [query, setQuery] = useState("");
   const [expanded, setExpanded] = useState<Set<number>>(new Set());
   const [limit, setLimit] = useState(PAGE_SIZE);
+  const [newestFirst, setNewestFirst] = useState(false);
+  const [fromTime, setFromTime] = useState("");
+  const [toTime, setToTime] = useState("");
+  const [presenceTime, setPresenceTime] = useState<string | null>(null);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -212,6 +221,7 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
 
   useEffect(() => {
     stickToBottom.current = true;
+    setPresenceTime(null);
     setExpanded(new Set());
     setLimit(PAGE_SIZE);
     void loadFile(file);
@@ -243,6 +253,18 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
   }, [entries]);
 
   const normalizedQuery = query.trim().toLowerCase();
+  const fromBound = fromTime ? fromTime.padEnd(8, ":00").slice(0, 8) : "";
+  const toBound = toTime ? (toTime.length === 5 ? `${toTime}:59` : toTime) : "";
+
+  const presenceEvents = useMemo(() => extractPresence(entries), [entries]);
+  const lastTime = entries.length ? entries[entries.length - 1].time : "";
+  const effectivePresenceTime = presenceTime ?? lastTime;
+  const onlinePlayers = useMemo(
+    () => (effectivePresenceTime ? onlineAt(presenceEvents, effectivePresenceTime) : []),
+    [presenceEvents, effectivePresenceTime]
+  );
+  const peak = useMemo(() => peakOnline(presenceEvents), [presenceEvents]);
+  const serverLabel = servers.find((item) => item.key === server)?.label ?? server;
 
   const filtered = useMemo(
     () =>
@@ -250,24 +272,27 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
         if (!levels.has(entry.level)) return false;
         if (category !== "all" && entry.category !== category) return false;
         if (source !== ALL_SOURCES && entry.source !== source) return false;
+        if (fromBound && entry.time && entry.time < fromBound) return false;
+        if (toBound && entry.time && entry.time > toBound) return false;
         if (normalizedQuery) {
           const haystack = `${entry.source} ${entry.message} ${entry.extra.join("\n")}`.toLowerCase();
           if (!haystack.includes(normalizedQuery)) return false;
         }
         return true;
       }),
-    [entries, levels, category, source, normalizedQuery]
+    [entries, levels, category, source, normalizedQuery, fromBound, toBound]
   );
 
-  const visible = filtered.slice(Math.max(0, filtered.length - limit));
+  const lastPage = filtered.slice(Math.max(0, filtered.length - limit));
+  const visible = newestFirst ? [...lastPage].reverse() : lastPage;
   const hiddenCount = filtered.length - visible.length;
 
   useEffect(() => {
     const element = scrollRef.current;
-    if (element && stickToBottom.current) {
+    if (element && stickToBottom.current && !newestFirst) {
       element.scrollTop = element.scrollHeight;
     }
-  }, [visible.length, text]);
+  }, [visible.length, text, newestFirst]);
 
   function handleScroll() {
     const element = scrollRef.current;
@@ -450,15 +475,63 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
             </button>
           ))}
         </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">De</span>
+          <Input
+            type="time"
+            step={1}
+            value={fromTime}
+            onChange={(event) => setFromTime(event.target.value)}
+            className="w-32"
+          />
+          <span className="text-muted-foreground">à</span>
+          <Input
+            type="time"
+            step={1}
+            value={toTime}
+            onChange={(event) => setToTime(event.target.value)}
+            className="w-32"
+          />
+          {fromTime || toTime ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setFromTime("");
+                setToTime("");
+              }}
+            >
+              Toute la journée
+            </Button>
+          ) : null}
+          <Button
+            variant="outline"
+            size="sm"
+            className="ml-auto"
+            onClick={() => {
+              setNewestFirst((current) => !current);
+              const element = scrollRef.current;
+              if (element) element.scrollTop = newestFirst ? element.scrollHeight : 0;
+            }}
+          >
+            <ArrowsDownUp />
+            {newestFirst ? "Plus récent en haut" : "Plus récent en bas"}
+          </Button>
+        </div>
       </Card>
 
       {error ? (
         <Card className="text-destructive p-4 text-sm">{error}</Card>
       ) : null}
 
-      <Card className="gap-0 overflow-hidden p-0">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1fr)_18rem]">
+      <Card className="min-w-0 gap-0 overflow-hidden p-0">
         <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-xs">
-          <span>
+          <span className="flex flex-wrap items-center gap-2">
+            <Badge variant="inverted">Serveur {serverLabel}</Badge>
+            <span className="font-mono">{file}</span>
+            <span>·</span>
             {filtered.length.toLocaleString("fr-FR")} entrées affichées
             {truncated ? " · fichier coupé (fin seulement)" : ""}
           </span>
@@ -491,10 +564,72 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
               expanded={expanded.has(entry.id)}
               onToggle={() => toggleExpanded(entry.id)}
               onSource={() => setSource(entry.source)}
+              onTime={() => setPresenceTime(entry.time)}
             />
           ))}
         </div>
       </Card>
+
+      <Card className="h-fit gap-3 p-4">
+        <div className="flex items-center gap-2 font-semibold">
+          <UsersThree className="size-5" />
+          Joueurs connectés
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">À</span>
+          <Input
+            type="time"
+            step={1}
+            value={effectivePresenceTime}
+            onChange={(event) => setPresenceTime(event.target.value.padEnd(8, ":00").slice(0, 8))}
+            className="w-32"
+          />
+          {presenceTime ? (
+            <Button variant="ghost" size="sm" onClick={() => setPresenceTime(null)}>
+              Maintenant
+            </Button>
+          ) : null}
+        </div>
+        <div className="text-3xl font-semibold tabular-nums">
+          {onlinePlayers.length}
+          <span className="text-muted-foreground ml-2 text-sm font-normal">
+            {onlinePlayers.length > 1 ? "joueurs" : "joueur"}
+          </span>
+        </div>
+        {peak.count > 0 ? (
+          <button
+            type="button"
+            onClick={() => setPresenceTime(peak.time)}
+            className="text-muted-foreground hover:text-foreground cursor-pointer text-left text-xs"
+          >
+            Pic : {peak.count} à {peak.time}
+          </button>
+        ) : null}
+        <div className="flex max-h-[45vh] flex-col gap-1 overflow-auto">
+          {onlinePlayers.map((player) => (
+            <div key={player.name} className="flex items-center justify-between gap-2 text-sm">
+              <button
+                type="button"
+                onClick={() => setQuery(player.name)}
+                className="cursor-pointer truncate hover:underline"
+                title="Voir ses logs"
+              >
+                {player.name}
+              </button>
+              <span className="text-muted-foreground shrink-0 font-mono text-xs">
+                depuis {player.since}
+              </span>
+            </div>
+          ))}
+          {onlinePlayers.length === 0 ? (
+            <span className="text-muted-foreground text-sm">Personne.</span>
+          ) : null}
+        </div>
+        <p className="text-muted-foreground text-xs">
+          Clique l&apos;heure d&apos;une ligne de log pour voir qui était là.
+        </p>
+      </Card>
+      </div>
     </div>
   );
 }
@@ -505,18 +640,27 @@ function LogRow({
   expanded,
   onToggle,
   onSource,
+  onTime,
 }: {
   entry: LogEntry;
   query: string;
   expanded: boolean;
   onToggle: () => void;
   onSource: () => void;
+  onTime: () => void;
 }) {
   const hasExtra = entry.extra.length > 0;
   return (
     <div className={cn("hover:bg-muted/50 border-b border-border/40 px-3 py-0.5", levelRowStyles[entry.level])}>
       <div className="flex min-w-0 items-start gap-2">
-        <span className="text-muted-foreground shrink-0 tabular-nums">{entry.time}</span>
+        <button
+          type="button"
+          onClick={onTime}
+          title="Qui était connecté à cette heure ?"
+          className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer tabular-nums hover:underline"
+        >
+          {entry.time}
+        </button>
         <span className={cn("w-12 shrink-0 font-semibold", levelStyles[entry.level])}>
           {entry.level}
         </span>
