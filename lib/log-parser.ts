@@ -6,6 +6,8 @@ export type LogCategory = "chat" | "command" | "connection" | "other";
 
 export type LogEntry = {
   id: number;
+  // Jour du fichier (AAAA-MM-JJ), vide si inconnu.
+  date: string;
   time: string;
   level: LogLevel;
   thread: string | null;
@@ -56,9 +58,9 @@ export function cleanLogLine(line: string) {
   return line.replace(ANSI_PATTERN, "").replace(MC_COLOR_PATTERN, "").replace(/\r$/, "");
 }
 
-export function parseLog(text: string): LogEntry[] {
+export function parseLog(text: string, date = "", firstId = 0): LogEntry[] {
   const entries: LogEntry[] = [];
-  let nextId = 0;
+  let nextId = firstId;
 
   for (const rawLine of text.split("\n")) {
     const line = cleanLogLine(rawLine);
@@ -73,6 +75,7 @@ export function parseLog(text: string): LogEntry[] {
       } else {
         entries.push({
           id: nextId++,
+          date,
           time: "",
           level: "INFO",
           thread: null,
@@ -113,6 +116,7 @@ export function parseLog(text: string): LogEntry[] {
 
     entries.push({
       id: nextId++,
+      date,
       time,
       level,
       thread: thread ?? null,
@@ -128,6 +132,11 @@ export function parseLog(text: string): LogEntry[] {
 }
 
 // --- Présence des joueurs (connexions / déconnexions) ---
+
+// Moment = "AAAA-MM-JJ hh:mm:ss" (ou "hh:mm:ss" sans date), comparable en texte.
+export function entryMoment(entry: Pick<LogEntry, "date" | "time">) {
+  return entry.date ? `${entry.date} ${entry.time}` : entry.time;
+}
 
 export type PresenceEvent = {
   time: string;
@@ -146,23 +155,23 @@ export function extractPresence(entries: LogEntry[]): PresenceEvent[] {
   for (const entry of entries) {
     if (!entry.time) continue;
     if (entry.source === SERVER_SOURCE && RESET_PATTERN.test(entry.message)) {
-      events.push({ time: entry.time, type: "reset", name: "" });
+      events.push({ time: entryMoment(entry), type: "reset", name: "" });
       continue;
     }
     const join = JOIN_PATTERN.exec(entry.message);
     if (join) {
-      events.push({ time: entry.time, type: "join", name: join[1] });
+      events.push({ time: entryMoment(entry), type: "join", name: join[1] });
       continue;
     }
     const leave = LEAVE_PATTERN.exec(entry.message);
     if (leave) {
-      events.push({ time: entry.time, type: "leave", name: leave[1] });
+      events.push({ time: entryMoment(entry), type: "leave", name: leave[1] });
     }
   }
   return events;
 }
 
-// Joueurs connectés à l'heure donnée (hh:mm:ss), en rejouant les événements.
+// Joueurs connectés au moment donné (format entryMoment), en rejouant les événements.
 export function onlineAt(events: PresenceEvent[], time: string): OnlinePlayer[] {
   const online = new Map<string, string>();
   for (const event of events) {
