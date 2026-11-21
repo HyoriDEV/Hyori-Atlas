@@ -16,6 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import {
   SERVER_SOURCE,
+  entryMoment,
   extractPresence,
   onlineAt,
   parseLog,
@@ -108,6 +109,24 @@ function fileLabel(file: LogFileInfo) {
   return `${file.name.replace(/\.log(\.gz)?$/, "")} · ${formatSize(file.size)}`;
 }
 
+// Jour couvert par un fichier : AAAA-MM-JJ-N.log.gz, ou date de modif pour latest.log.
+function fileDate(file: LogFileInfo) {
+  const match = /^(\d{4}-\d{2}-\d{2})-(\d+)\.log/.exec(file.name);
+  if (match) return match[1];
+  if (!file.modifiedAt) return "";
+  return new Date(file.modifiedAt).toLocaleDateString("sv-SE");
+}
+
+function fileIndex(file: LogFileInfo) {
+  if (file.name === LIVE_FILE) return Number.MAX_SAFE_INTEGER;
+  const match = /-(\d+)\.log/.exec(file.name);
+  return match ? Number(match[1]) : 0;
+}
+
+function formatDay(date: string) {
+  return date ? `${date.slice(8, 10)}/${date.slice(5, 7)}` : "";
+}
+
 function Highlight({ text, query }: { text: string; query: string }) {
   if (!query) return <>{text}</>;
   const lower = text.toLowerCase();
@@ -158,6 +177,11 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
   const [fromTime, setFromTime] = useState("");
   const [toTime, setToTime] = useState("");
   const [presenceTime, setPresenceTime] = useState<string | null>(null);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [rangeChunks, setRangeChunks] = useState<{ date: string; text: string }[]>([]);
+  const [rangeProgress, setRangeProgress] = useState<{ done: number; total: number } | null>(null);
+  const rangeMode = Boolean(dateFrom && dateTo);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -175,6 +199,7 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
     setServer(key);
     setFile(LIVE_FILE);
     setSource(ALL_SOURCES);
+    setRangeChunks([]);
     try {
       window.localStorage.setItem(SERVER_STORAGE_KEY, key);
     } catch {
@@ -195,15 +220,23 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
     }
   }, [server]);
 
-  const loadFile = useCallback(async (name: string, silent = false) => {
-    if (!silent) setLoading(true);
-    try {
+  const fetchFile = useCallback(
+    async (name: string) => {
       const response = await fetch(
         `/api/staff/logs?server=${encodeURIComponent(server)}&file=${encodeURIComponent(name)}`,
         { cache: "no-store" }
       );
       const json = await response.json();
       if (!response.ok) throw new Error(json.error ?? "Erreur");
+      return json as { text: string; truncated: boolean; fetchedAt: string };
+    },
+    [server]
+  );
+
+  const loadFile = useCallback(async (name: string, silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const json = await fetchFile(name);
       setText(json.text);
       setTruncated(json.truncated);
       setFetchedAt(json.fetchedAt);
@@ -213,7 +246,7 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
     } finally {
       if (!silent) setLoading(false);
     }
-  }, [server]);
+  }, [fetchFile]);
 
   useEffect(() => {
     void loadFiles();
@@ -224,10 +257,54 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
     setPresenceTime(null);
     setExpanded(new Set());
     setLimit(PAGE_SIZE);
-    void loadFile(file);
-  }, [file, loadFile]);
+    if (!rangeMode) void loadFile(file);
+  }, [file, loadFile, rangeMode]);
 
-  const isLive = live && file === LIVE_FILE;
+  // Plage de dates : charge tous les fichiers des jours choisis, dans l'ordre.
+  useEffect(() => {
+    if (!rangeMode) {
+      setRangeChunks([]);
+      setRangeProgress(null);
+      return;
+    }
+    const [start, end] = dateFrom <= dateTo ? [dateFrom, dateTo] : [dateTo, dateFrom];
+    const selected = files
+      .map((item) => ({ item, date: fileDate(item) }))
+      .filter(({ date }) => date && date >= start && date <= end)
+      .sort((a, b) => a.date.localeCompare(b.date) || fileIndex(a.item) - fileIndex(b.item));
+    let cancelled = false;
+    stickToBottom.current = true;
+    setPresenceTime(null);
+    setExpanded(new Set());
+    setLimit(PAGE_SIZE);
+    setRangeChunks([]);
+    setRangeProgress({ done: 0, total: selected.length });
+    void (async () => {
+      const chunks: { date: string; text: string }[] = [];
+      let anyTruncated = false;
+      for (const { item, date } of selected) {
+        if (cancelled) return;
+        try {
+          const json = await fetchFile(item.name);
+          chunks.push({ date, text: json.text });
+          anyTruncated ||= json.truncated;
+          setError(null);
+        } catch (err) {
+          setError(err instanceof Error ? `${item.name} : ${err.message}` : "Erreur");
+        }
+        if (cancelled) return;
+        setRangeProgress({ done: chunks.length, total: selected.length });
+      }
+      setRangeChunks(chunks);
+      setTruncated(anyTruncated);
+      setFetchedAt(new Date().toISOString());
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [rangeMode, dateFrom, dateTo, files, fetchFile]);
+
+  const isLive = live && file === LIVE_FILE && !rangeMode;
 
   useEffect(() => {
     if (!isLive) return;
@@ -237,7 +314,19 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
     return () => window.clearInterval(timer);
   }, [isLive, loadFile]);
 
-  const entries = useMemo(() => parseLog(text), [text]);
+  const currentFileDate = useMemo(() => {
+    const info = files.find((item) => item.name === file);
+    return info ? fileDate(info) : "";
+  }, [files, file]);
+
+  const entries = useMemo(() => {
+    if (!rangeMode) return parseLog(text, currentFileDate);
+    const all: LogEntry[] = [];
+    for (const chunk of rangeChunks) {
+      all.push(...parseLog(chunk.text, chunk.date, all.length ? all[all.length - 1].id + 1 : 0));
+    }
+    return all;
+  }, [rangeMode, text, currentFileDate, rangeChunks]);
 
   const stats = useMemo(() => {
     const byLevel: Record<LogLevel, number> = { INFO: 0, WARN: 0, ERROR: 0, DEBUG: 0 };
@@ -256,9 +345,15 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
   const fromBound = fromTime ? fromTime.padEnd(8, ":00").slice(0, 8) : "";
   const toBound = toTime ? (toTime.length === 5 ? `${toTime}:59` : toTime) : "";
 
+  // Heure de fin incluse ; « à 00:00 » = jusqu'à minuit. Si fin < début, la plage passe minuit.
+  const endBound = toBound === "00:00:59" || toBound === "00:00:00" ? "23:59:59" : toBound;
+  const wrapsMidnight = Boolean(fromBound && endBound && endBound < fromBound);
+
   const presenceEvents = useMemo(() => extractPresence(entries), [entries]);
-  const lastTime = entries.length ? entries[entries.length - 1].time : "";
-  const effectivePresenceTime = presenceTime ?? lastTime;
+  const lastMoment = entries.length ? entryMoment(entries[entries.length - 1]) : "";
+  const effectivePresenceTime = presenceTime ?? lastMoment;
+  const presenceDay = effectivePresenceTime.length > 8 ? effectivePresenceTime.slice(0, 10) : "";
+  const presenceClock = effectivePresenceTime.slice(-8);
   const onlinePlayers = useMemo(
     () => (effectivePresenceTime ? onlineAt(presenceEvents, effectivePresenceTime) : []),
     [presenceEvents, effectivePresenceTime]
@@ -272,15 +367,18 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
         if (!levels.has(entry.level)) return false;
         if (category !== "all" && entry.category !== category) return false;
         if (source !== ALL_SOURCES && entry.source !== source) return false;
-        if (fromBound && entry.time && entry.time < fromBound) return false;
-        if (toBound && entry.time && entry.time > toBound) return false;
+        if (entry.time && (fromBound || endBound)) {
+          const afterStart = !fromBound || entry.time >= fromBound;
+          const beforeEnd = !endBound || entry.time <= endBound;
+          if (wrapsMidnight ? !(afterStart || beforeEnd) : !(afterStart && beforeEnd)) return false;
+        }
         if (normalizedQuery) {
           const haystack = `${entry.source} ${entry.message} ${entry.extra.join("\n")}`.toLowerCase();
           if (!haystack.includes(normalizedQuery)) return false;
         }
         return true;
       }),
-    [entries, levels, category, source, normalizedQuery, fromBound, toBound]
+    [entries, levels, category, source, normalizedQuery, fromBound, endBound, wrapsMidnight]
   );
 
   const lastPage = filtered.slice(Math.max(0, filtered.length - limit));
@@ -319,11 +417,16 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
   }
 
   function downloadRaw() {
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const raw = rangeMode
+      ? rangeChunks.map((chunk) => `===== ${chunk.date} =====\n${chunk.text}`).join("\n")
+      : text;
+    const blob = new Blob([raw], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `${server}-${file.replace(/\.gz$/, "")}`;
+    link.download = rangeMode
+      ? `${server}-${dateFrom}_${dateTo}.log`
+      : `${server}-${file.replace(/\.gz$/, "")}`;
     link.click();
     URL.revokeObjectURL(url);
   }
@@ -375,9 +478,10 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
           <Select
             items={fileItems}
             value={file}
+            disabled={rangeMode}
             onValueChange={(value) => value && setFile(value as string)}
           >
-            <SelectTrigger className="w-full sm:w-64">
+            <SelectTrigger className="w-full sm:w-64" title={rangeMode ? "Plage de dates active" : undefined}>
               <SelectValue placeholder="Fichier">
                 {fileItems.find((item) => item.value === file)?.label ?? file}
               </SelectValue>
@@ -431,7 +535,7 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            {file === LIVE_FILE ? (
+            {file === LIVE_FILE && !rangeMode ? (
               <label className="flex items-center gap-2 text-sm">
                 <Switch checked={live} onCheckedChange={(checked) => setLive(checked)} />
                 <span className="flex items-center gap-1">
@@ -445,13 +549,13 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
               size="icon"
               onClick={() => {
                 void loadFiles();
-                void loadFile(file);
+                if (!rangeMode) void loadFile(file);
               }}
               title="Recharger"
             >
               <ArrowsClockwise className={cn(loading && "animate-spin")} />
             </Button>
-            <Button variant="outline" size="icon" onClick={downloadRaw} title="Télécharger" disabled={!text}>
+            <Button variant="outline" size="icon" onClick={downloadRaw} title="Télécharger" disabled={rangeMode ? rangeChunks.length === 0 : !text}>
               <DownloadSimple />
             </Button>
           </div>
@@ -474,6 +578,44 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
               <Badge variant={category === key ? "default" : "outline"}>{categoryLabels[key]}</Badge>
             </button>
           ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Du</span>
+          <Input
+            type="date"
+            value={dateFrom}
+            onChange={(event) => setDateFrom(event.target.value)}
+            className="w-40"
+          />
+          <span className="text-muted-foreground">au</span>
+          <Input
+            type="date"
+            value={dateTo}
+            onChange={(event) => setDateTo(event.target.value)}
+            className="w-40"
+          />
+          {dateFrom || dateTo ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setDateFrom("");
+                setDateTo("");
+              }}
+            >
+              Fichier seul
+            </Button>
+          ) : null}
+          {rangeProgress && rangeProgress.done < rangeProgress.total ? (
+            <span className="text-muted-foreground text-xs">
+              Chargement {rangeProgress.done}/{rangeProgress.total} fichiers…
+            </span>
+          ) : rangeProgress && rangeMode ? (
+            <span className="text-muted-foreground text-xs">
+              {rangeProgress.total} fichier{rangeProgress.total > 1 ? "s" : ""}
+            </span>
+          ) : null}
         </div>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -530,7 +672,9 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
         <div className="text-muted-foreground flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2 text-xs">
           <span className="flex flex-wrap items-center gap-2">
             <Badge variant="inverted">Serveur {serverLabel}</Badge>
-            <span className="font-mono">{file}</span>
+            <span className="font-mono">
+              {rangeMode ? `${formatDay(dateFrom)} → ${formatDay(dateTo)}` : file}
+            </span>
             <span>·</span>
             {filtered.length.toLocaleString("fr-FR")} entrées affichées
             {truncated ? " · fichier coupé (fin seulement)" : ""}
@@ -564,7 +708,8 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
               expanded={expanded.has(entry.id)}
               onToggle={() => toggleExpanded(entry.id)}
               onSource={() => setSource(entry.source)}
-              onTime={() => setPresenceTime(entry.time)}
+              showDate={rangeMode}
+              onTime={() => setPresenceTime(entryMoment(entry))}
             />
           ))}
         </div>
@@ -576,12 +721,15 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
           Joueurs connectés
         </div>
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground">À</span>
+          <span className="text-muted-foreground">{presenceDay ? `Le ${formatDay(presenceDay)} à` : "À"}</span>
           <Input
             type="time"
             step={1}
-            value={effectivePresenceTime}
-            onChange={(event) => setPresenceTime(event.target.value.padEnd(8, ":00").slice(0, 8))}
+            value={presenceClock}
+            onChange={(event) => {
+              const clock = event.target.value.padEnd(8, ":00").slice(0, 8);
+              setPresenceTime(presenceDay ? `${presenceDay} ${clock}` : clock);
+            }}
             className="w-32"
           />
           {presenceTime ? (
@@ -602,7 +750,8 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
             onClick={() => setPresenceTime(peak.time)}
             className="text-muted-foreground hover:text-foreground cursor-pointer text-left text-xs"
           >
-            Pic : {peak.count} à {peak.time}
+            Pic : {peak.count} le {formatDay(peak.time.length > 8 ? peak.time.slice(0, 10) : "")}{" "}
+            à {peak.time.slice(-8)}
           </button>
         ) : null}
         <div className="flex max-h-[45vh] flex-col gap-1 overflow-auto">
@@ -617,7 +766,11 @@ export function LogViewer({ servers }: { servers: LogServerOption[] }) {
                 {player.name}
               </button>
               <span className="text-muted-foreground shrink-0 font-mono text-xs">
-                depuis {player.since}
+                depuis{" "}
+                {player.since.length > 8 && player.since.slice(0, 10) !== presenceDay
+                  ? `${formatDay(player.since.slice(0, 10))} `
+                  : ""}
+                {player.since.slice(-8)}
               </span>
             </div>
           ))}
@@ -641,6 +794,7 @@ function LogRow({
   onToggle,
   onSource,
   onTime,
+  showDate,
 }: {
   entry: LogEntry;
   query: string;
@@ -648,6 +802,7 @@ function LogRow({
   onToggle: () => void;
   onSource: () => void;
   onTime: () => void;
+  showDate: boolean;
 }) {
   const hasExtra = entry.extra.length > 0;
   return (
@@ -659,6 +814,7 @@ function LogRow({
           title="Qui était connecté à cette heure ?"
           className="text-muted-foreground hover:text-foreground shrink-0 cursor-pointer tabular-nums hover:underline"
         >
+          {showDate && entry.date ? `${formatDay(entry.date)} ` : ""}
           {entry.time}
         </button>
         <span className={cn("w-12 shrink-0 font-semibold", levelStyles[entry.level])}>
