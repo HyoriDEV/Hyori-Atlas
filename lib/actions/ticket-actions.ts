@@ -40,7 +40,7 @@ async function findAccessibleTicket(ticketId: string) {
   return { staffUser, ticket };
 }
 
-import { TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
+import { TICKET_ARCHIVE_REASON_MAX_LENGTH, TICKET_SUBJECT_MAX_LENGTH } from "@/lib/ticket-constants";
 
 export interface CreatePlayerTicketInput {
   categoryId?: string;
@@ -499,14 +499,62 @@ export async function sendStaffTicketMessage(
   return { success: true };
 }
 
-export async function archiveTicket(ticketId: string) {
-  const { ticket } = await findAccessibleTicket(ticketId);
+export async function archiveTicket(ticketId: string, reason: string) {
+  const { staffUser, ticket } = await findAccessibleTicket(ticketId);
   if (!ticket) throw new Error("Ticket introuvable.");
 
-  await prisma.ticket.update({
-    where: { id: ticketId },
-    data: { status: TicketStatus.ARCHIVED, suspendedAt: null },
-  });
+  const trimmedReason = typeof reason === "string" ? reason.trim() : "";
+  if (trimmedReason.length < 3) {
+    throw new Error("Indique la raison de l'archivage (3 caractères minimum).");
+  }
+  if (trimmedReason.length > TICKET_ARCHIVE_REASON_MAX_LENGTH) {
+    throw new Error(
+      `La raison ne doit pas dépasser ${TICKET_ARCHIVE_REASON_MAX_LENGTH} caractères.`
+    );
+  }
+
+  const now = new Date();
+  const systemBody = `Ticket archivé par l'équipe staff. Raison : ${trimmedReason}`;
+
+  const [, systemMessage] = await prisma.$transaction([
+    prisma.ticket.update({
+      where: { id: ticketId },
+      data: { status: TicketStatus.ARCHIVED, suspendedAt: null, lastMessageAt: now },
+    }),
+    prisma.conversationMessage.create({
+      data: {
+        conversationId: ticket.conversationId,
+        authorId: staffUser.id,
+        authorType: MessageAuthorType.SYSTEM,
+        body: systemBody,
+        createdAt: now,
+      },
+      include: { author: true },
+    }),
+  ]);
+
+  publish(ticket.conversationId, serializeConversationMessage(systemMessage, true));
+
+  // MP Discord au joueur avec la raison (même gabarit qu'une réponse staff).
+  try {
+    const player = await prisma.user.findUnique({
+      where: { id: ticket.playerId },
+      select: { discordId: true },
+    });
+    if (player?.discordId) {
+      notifyPlayerTicketMessage({
+        discordId: player.discordId,
+        ticketId: ticket.id,
+        ticketSubject: ticket.subject,
+        authorName: "L'équipe staff",
+        messagePreview: systemBody,
+      }).catch((err) => {
+        console.warn("[TicketNotification] Échec de la notification d'archivage:", err);
+      });
+    }
+  } catch (err) {
+    console.warn("[TicketNotification] Erreur lors de la notification d'archivage:", err);
+  }
 
   // Archiver automatiquement les éventuels sujets staff Discord actifs liés
   try {

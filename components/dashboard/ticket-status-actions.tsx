@@ -22,6 +22,8 @@ import {
 } from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { TICKET_ARCHIVE_REASON_MAX_LENGTH } from "@/lib/ticket-constants";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -56,6 +58,7 @@ export function TicketStatusActions({
 }) {
   const router = useRouter();
   const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archiveReason, setArchiveReason] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -90,9 +93,10 @@ export function TicketStatusActions({
   function handleConfirmArchive() {
     startTransition(async () => {
       try {
-        await archiveTicket(ticketId);
+        await archiveTicket(ticketId, archiveReason);
         toast.success("Ticket archivé.", { id: "ticket-status" });
         setArchiveOpen(false);
+        setArchiveReason("");
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Une erreur est survenue.", {
           id: "ticket-status",
@@ -235,15 +239,24 @@ export function TicketStatusActions({
             <AlertDialogTitle>Archiver le ticket</AlertDialogTitle>
             <AlertDialogDescription>
               Le ticket ne sera plus modifiable par le joueur, mais restera consultable par tous
-              ses membres.
+              ses membres. La raison est envoyée au joueur (ticket et MP Discord).
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Textarea
+            rows={3}
+            value={archiveReason}
+            onChange={(e) => setArchiveReason(e.target.value)}
+            maxLength={TICKET_ARCHIVE_REASON_MAX_LENGTH}
+            placeholder="Raison de l'archivage (obligatoire)..."
+            className="resize-none text-xs"
+            disabled={isPending}
+          />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction
               variant="default"
               onClick={handleConfirmArchive}
-              disabled={isPending}
+              disabled={isPending || archiveReason.trim().length < 3}
             >
               Archiver
             </AlertDialogAction>
