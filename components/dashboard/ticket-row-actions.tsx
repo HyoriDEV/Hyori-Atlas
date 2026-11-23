@@ -24,6 +24,8 @@ import {
 } from "@/lib/actions/ticket-actions";
 import { TicketStatus } from "@/lib/generated/prisma/enums";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { TICKET_ARCHIVE_REASON_MAX_LENGTH } from "@/lib/ticket-constants";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +59,7 @@ export function TicketRowActions({
 }) {
   const router = useRouter();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [archiveReason, setArchiveReason] = useState("");
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -104,9 +107,10 @@ export function TicketRowActions({
   function handleConfirmStatus() {
     startTransition(async () => {
       try {
-        await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId));
+        await (isArchived ? reopenTicket(ticketId) : archiveTicket(ticketId, archiveReason));
         toast.success(isArchived ? "Ticket rouvert." : "Ticket archivé.");
         setConfirmOpen(false);
+        setArchiveReason("");
         router.refresh();
       } catch (error) {
         toast.error(error instanceof Error ? error.message : "Une erreur est survenue.");
@@ -194,15 +198,26 @@ export function TicketRowActions({
             <AlertDialogDescription>
               {isArchived
                 ? "Le ticket redeviendra modifiable."
-                : "Le ticket ne sera plus modifiable par le joueur, mais restera consultable par tous ses membres."}
+                : "Le ticket ne sera plus modifiable par le joueur, mais restera consultable par tous ses membres. La raison est envoyée au joueur (ticket et MP Discord)."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {!isArchived && (
+            <Textarea
+              rows={3}
+              value={archiveReason}
+              onChange={(e) => setArchiveReason(e.target.value)}
+              maxLength={TICKET_ARCHIVE_REASON_MAX_LENGTH}
+              placeholder="Raison de l'archivage (obligatoire)..."
+              className="resize-none text-xs"
+              disabled={isPending}
+            />
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isPending}>Annuler</AlertDialogCancel>
             <AlertDialogAction
               variant={isArchived ? "destructive" : "default"}
               onClick={handleConfirmStatus}
-              disabled={isPending}
+              disabled={isPending || (!isArchived && archiveReason.trim().length < 3)}
             >
               {isArchived ? "Désarchiver" : "Archiver"}
             </AlertDialogAction>
