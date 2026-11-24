@@ -43,7 +43,7 @@ import {
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
+import { ChatCircle, DownloadSimple } from "@phosphor-icons/react/dist/ssr";
 import {
   characterSheetReviewerRoles,
   characterSheetStatusLabels,
@@ -445,6 +445,19 @@ export default async function AtlasPlayerPage({
                     <span>UUID: {player.minecraftUuid ?? "—"}</span>
                     {player.minecraftUuid && <CopyButton value={player.minecraftUuid} />}
                   </div>
+                  {(player.minecraftUuid || player.minecraftSkinUrl) && (
+                    <a
+                      href={`/api/staff/skins/${player.id}`}
+                      download
+                      className={cn(
+                        buttonVariants({ variant: "outline", size: "xs" }),
+                        "mt-1 w-fit gap-1"
+                      )}
+                    >
+                      <DownloadSimple className="size-3" />
+                      <span>Télécharger le skin</span>
+                    </a>
+                  )}
                 </div>
               </div>
             </Card>
