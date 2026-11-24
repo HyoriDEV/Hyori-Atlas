@@ -302,15 +302,183 @@ export function ConversationChat({
     return linkHref;
   }
 
+  /**
+   * Mise en forme façon Discord.
+   * Blocs (début de ligne) : # / ## / ### titres, -# petit texte, > citation, >>> citation jusqu'à
+   * la fin, - ou * liste, 1. liste numérotée, ``` bloc de code ```.
+   * En ligne : voir renderInlineContent.
+   * Les messages système restent sur une ligne (en ligne seulement).
+   */
   function renderFormattedContent(
     content: string | null | undefined,
     variant: "system" | "default" | "own" = "default"
   ): React.ReactNode {
     if (!content) return null;
+    if (variant === "system") return renderInlineContent(content, variant);
 
-    // Découpe le texte sur les liens markdown [label](url), URLs directes, gras (** ou __), code (`...`) et italique (*...*)
+    const lines = content.split("\n");
+    const hasBlockSyntax = lines.some((line) =>
+      /^(#{1,3} |-# |>( |$)|>>>( |$)|\s*[-*] |\s*\d+\. |```)/.test(line)
+    );
+    if (!hasBlockSyntax) return renderInlineContent(content, variant);
+
+    const quoteBorder =
+      variant === "own" ? "border-primary-foreground/40" : "border-foreground/25";
+    const blocks: React.ReactNode[] = [];
+    let textBuffer: string[] = [];
+    let i = 0;
+
+    const flushText = () => {
+      // Retire les lignes vides collées aux blocs (les blocs ont déjà leur marge).
+      while (textBuffer.length && textBuffer[0].trim() === "") textBuffer.shift();
+      while (textBuffer.length && textBuffer[textBuffer.length - 1].trim() === "") textBuffer.pop();
+      if (textBuffer.length) {
+        blocks.push(
+          <div key={`t${blocks.length}`}>{renderInlineContent(textBuffer.join("\n"), variant)}</div>
+        );
+      }
+      textBuffer = [];
+    };
+
+    while (i < lines.length) {
+      const line = lines[i];
+
+      // Bloc de code ```...```
+      if (line.startsWith("```")) {
+        const codeLines: string[] = [];
+        i++;
+        while (i < lines.length && !lines[i].startsWith("```")) {
+          codeLines.push(lines[i]);
+          i++;
+        }
+        i++; // saute la fermeture (ou la fin du message)
+        flushText();
+        blocks.push(
+          <pre
+            key={`c${blocks.length}`}
+            className={cn(
+              "my-1 overflow-x-auto rounded-md border px-2.5 py-2 font-mono text-[11px] whitespace-pre",
+              variant === "own"
+                ? "bg-primary-foreground/15 border-primary-foreground/25"
+                : "bg-background/80 border-border/50"
+            )}
+          >
+            <code>{codeLines.join("\n")}</code>
+          </pre>
+        );
+        continue;
+      }
+
+      // Citation jusqu'à la fin : >>> texte
+      if (/^>>>( |$)/.test(line)) {
+        flushText();
+        const rest = [line.replace(/^>>> ?/, ""), ...lines.slice(i + 1)].join("\n");
+        blocks.push(
+          <div key={`q${blocks.length}`} className={cn("my-1 border-l-4 pl-2.5", quoteBorder)}>
+            {renderInlineContent(rest, variant)}
+          </div>
+        );
+        break;
+      }
+
+      // Citation : lignes consécutives qui commencent par >
+      if (/^>( |$)/.test(line)) {
+        const quoteLines: string[] = [];
+        while (i < lines.length && /^>( |$)/.test(lines[i])) {
+          quoteLines.push(lines[i].replace(/^> ?/, ""));
+          i++;
+        }
+        flushText();
+        blocks.push(
+          <div key={`q${blocks.length}`} className={cn("my-1 border-l-4 pl-2.5", quoteBorder)}>
+            {renderInlineContent(quoteLines.join("\n"), variant)}
+          </div>
+        );
+        continue;
+      }
+
+      // Titres # ## ###
+      const headingMatch = line.match(/^(#{1,3}) (.+)$/);
+      if (headingMatch) {
+        flushText();
+        const level = headingMatch[1].length;
+        const headingClass =
+          level === 1
+            ? "text-lg font-bold"
+            : level === 2
+              ? "text-base font-bold"
+              : "text-sm font-bold";
+        blocks.push(
+          <div key={`h${blocks.length}`} className={cn("mt-1.5 mb-0.5 leading-snug", headingClass)}>
+            {renderInlineContent(headingMatch[2], variant)}
+          </div>
+        );
+        i++;
+        continue;
+      }
+
+      // Petit texte : -# texte
+      const subtextMatch = line.match(/^-# (.+)$/);
+      if (subtextMatch) {
+        flushText();
+        blocks.push(
+          <div key={`s${blocks.length}`} className="text-[11px] opacity-70">
+            {renderInlineContent(subtextMatch[1], variant)}
+          </div>
+        );
+        i++;
+        continue;
+      }
+
+      // Listes : - / * ou 1.
+      if (/^\s*([-*]|\d+\.) /.test(line)) {
+        const ordered = /^\s*\d+\. /.test(line);
+        const items: { text: string; nested: boolean }[] = [];
+        while (
+          i < lines.length &&
+          (ordered ? /^\s*\d+\. /.test(lines[i]) : /^\s*[-*] /.test(lines[i]))
+        ) {
+          items.push({
+            text: lines[i].replace(/^\s*([-*]|\d+\.) /, ""),
+            nested: /^\s{2,}/.test(lines[i]),
+          });
+          i++;
+        }
+        flushText();
+        const ListTag = ordered ? "ol" : "ul";
+        blocks.push(
+          <ListTag
+            key={`l${blocks.length}`}
+            className={cn("my-0.5 pl-5", ordered ? "list-decimal" : "list-disc")}
+          >
+            {items.map((item, itemIndex) => (
+              <li key={itemIndex} className={cn(item.nested && "ml-4")}>
+                {renderInlineContent(item.text, variant)}
+              </li>
+            ))}
+          </ListTag>
+        );
+        continue;
+      }
+
+      textBuffer.push(line);
+      i++;
+    }
+    flushText();
+
+    return blocks;
+  }
+
+  function renderInlineContent(
+    content: string,
+    variant: "system" | "default" | "own" = "default"
+  ): React.ReactNode {
+    if (!content) return null;
+
+    // Découpe le texte sur les liens markdown [label](url), URLs directes, gras (**), souligné (__),
+    // barré (~~), spoiler (||), code (`...`) et italique (*...* ou _..._)
     const pattern =
-      /(\[[^\]]+\]\([^\s)]+\)|https?:\/\/[^\s<]+|\*\*[^*]+\*\*|__[^_]+__|`[^`]+`|\*[^*]+\*)/g;
+      /(\[[^\]]+\]\([^\s)]+\)|https?:\/\/[^\s<]+|\*\*[^*]+\*\*|__[^_]+__|~~[^~]+~~|\|\|[^|]+\|\||`[^`]+`|\*[^*\s][^*]*\*)/g;
     const parts = content.split(pattern);
 
     return parts.map((part, index) => {
@@ -362,8 +530,8 @@ export function ConversationChat({
         );
       }
 
-      // 3. Gras: **texte** ou __texte__
-      const boldMatch = part.match(/^(\*\*|__)(.+?)\1$/);
+      // 3. Gras: **texte**
+      const boldMatch = part.match(/^(\*\*)(.+?)\1$/);
       if (boldMatch) {
         return (
           <strong
@@ -375,6 +543,41 @@ export function ConversationChat({
           >
             {boldMatch[2]}
           </strong>
+        );
+      }
+
+      // 3b. Souligné (Discord): __texte__
+      const underlineMatch = part.match(/^__(.+)__$/);
+      if (underlineMatch) {
+        return (
+          <span key={index} className="underline underline-offset-2">
+            {underlineMatch[1]}
+          </span>
+        );
+      }
+
+      // 3c. Barré: ~~texte~~
+      const strikeMatch = part.match(/^~~(.+)~~$/);
+      if (strikeMatch) {
+        return (
+          <s key={index} className="opacity-80">
+            {strikeMatch[1]}
+          </s>
+        );
+      }
+
+      // 3d. Spoiler: ||texte|| (révélé au survol ou au clic)
+      const spoilerMatch = part.match(/^\|\|(.+)\|\|$/);
+      if (spoilerMatch) {
+        return (
+          <span
+            key={index}
+            tabIndex={0}
+            title="Spoiler"
+            className="bg-foreground/80 hover:text-inherit focus:text-inherit rounded px-0.5 text-transparent transition-colors outline-none hover:bg-transparent focus:bg-transparent"
+          >
+            {spoilerMatch[1]}
+          </span>
         );
       }
 
@@ -1063,9 +1266,9 @@ export function ConversationChat({
                                       </div>
 
                                       {message.body && (
-                                        <p className="text-foreground/90 break-words whitespace-pre-wrap italic">
+                                        <div className="text-foreground/90 break-words whitespace-pre-wrap italic">
                                           {renderFormattedContent(message.body, "default")}
-                                        </p>
+                                        </div>
                                       )}
                                       {message.imageUrl && (
                                         <img
@@ -1130,12 +1333,12 @@ export function ConversationChat({
                                                         : ""}
                                                     </span>
                                                   </div>
-                                                  <p className="text-foreground/85 text-xs leading-relaxed break-words whitespace-pre-wrap italic">
+                                                  <div className="text-foreground/85 text-xs leading-relaxed break-words whitespace-pre-wrap italic">
                                                     {renderFormattedContent(
                                                       version.body,
                                                       "default"
                                                     )}
-                                                  </p>
+                                                  </div>
                                                 </div>
                                               ))}
                                             </div>
@@ -1154,12 +1357,12 @@ export function ConversationChat({
                                     )}
                                   >
                                     {message.body && (
-                                      <p>
+                                      <div>
                                         {renderFormattedContent(
                                           message.body,
                                           group.isOwn ? "own" : "default"
                                         )}
-                                      </p>
+                                      </div>
                                     )}
                                     {message.imageUrl && (
                                       <img
