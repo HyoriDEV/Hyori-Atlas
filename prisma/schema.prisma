@@ -562,8 +562,25 @@ model RpTrackingGroup {
   conversation   Conversation            @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   createdBy      User?                   @relation("RpTrackingGroupCreator", fields: [createdById], references: [id], onDelete: SetNull)
   members        RpTrackingGroupMember[]
+  chapters       RpTrackingGroupChapter[]
 
   @@map("rp_tracking_groups")
+}
+
+/// Narration de groupe : chapitres écrits par les membres du groupe (et le staff).
+model RpTrackingGroupChapter {
+  id        String   @id @default(cuid())
+  groupId   String
+  title     String   @db.VarChar(120)
+  content   String
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group RpTrackingGroup @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@index([groupId])
+  @@map("rp_tracking_group_chapters")
 }
 
 model RpTrackingGroupMember {
