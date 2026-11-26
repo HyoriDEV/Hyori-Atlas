@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { CharacterStatus, MessageAuthorType } from "@/lib/generated/prisma/enums";
 import { serializeConversationMessage } from "@/lib/conversation";
 import type { SerializedConversationMessage } from "@/lib/services/conversation-events";
+import type { ChapterItem } from "@/components/dashboard/chapter-reader";
 
 export interface RpTrackingGroupMemberInfo {
   userId: string;
@@ -51,6 +52,8 @@ export interface RpTrackingGroupSummary {
 
 export interface RpTrackingGroupDetail extends RpTrackingGroupSummary {
   messages: SerializedConversationMessage[];
+  /** Narration de groupe (chapitres écrits par les membres). */
+  chapters: ChapterItem[];
 }
 
 /**
@@ -340,6 +343,10 @@ export async function getRpTrackingGroupDetail(
           },
         },
       },
+      chapters: {
+        orderBy: { order: "asc" },
+        select: { id: true, title: true, content: true, order: true, updatedAt: true },
+      },
     },
   });
 
@@ -438,6 +445,7 @@ export async function getRpTrackingGroupDetail(
       null,
     unreadCount,
     messages: serializedMessages,
+    chapters: group.chapters,
     hasWriting,
     writingUpdatedAt,
   };

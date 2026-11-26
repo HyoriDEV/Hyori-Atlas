@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 export default async function RpTrackingPage(props: {
-  searchParams: Promise<{ groupId?: string }>;
+  searchParams: Promise<{ groupId?: string; tab?: string }>;
 }) {
   const user = await requireActivePlayer();
   const searchParams = await props.searchParams;
@@ -137,7 +137,12 @@ export default async function RpTrackingPage(props: {
             activeCharacterName={activeCharacter?.name}
             activeCharacterId={activeCharacter?.id}
           />
-          <PlayerGroupView group={groupDetail} viewerId={user.id} />
+          <PlayerGroupView
+            group={groupDetail}
+            viewerId={user.id}
+            initialTab={searchParams.tab === "narration" ? "narration" : "chat"}
+            canWrite={settings.chapterWritingEnabled}
+          />
         </div>
       );
     }
