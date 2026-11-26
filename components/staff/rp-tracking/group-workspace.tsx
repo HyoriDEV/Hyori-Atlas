@@ -1,17 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { Users } from "@phosphor-icons/react";
 
 import type { RpTrackingGroupDetail } from "@/lib/services/group-rp-tracking-service";
 import type { PlayerOption } from "@/components/player-select";
 import { AtlasBackButton } from "@/components/dashboard/atlas-back-button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ConversationChat } from "@/components/conversations/conversation-chat";
 import { sendStaffConversationMessage } from "@/lib/actions/rp-tracking-actions";
 import { MarkHandledButton } from "@/components/staff/rp-tracking/mark-handled-button";
 import { EditGroupDialog } from "@/components/staff/rp-tracking/edit-group-dialog";
 import { GroupMembersManager } from "@/components/staff/rp-tracking/group-members-manager";
 import { GroupMembersSheet } from "@/components/staff/rp-tracking/group-members-sheet";
+import { GroupChapterWorkspace } from "@/components/staff/rp-tracking/group-chapter-workspace";
 
 export function GroupWorkspace({
   group,
@@ -22,6 +25,8 @@ export function GroupWorkspace({
   availablePlayers: PlayerOption[];
   viewerId: string;
 }) {
+  const [activeTab, setActiveTab] = useState<"chat" | "narration">("chat");
+
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3 sm:gap-4">
       {/* En-tête du groupe */}
@@ -79,7 +84,28 @@ export function GroupWorkspace({
         </div>
       </div>
 
-      {/* Contenu principal identique aux tickets : chat à gauche, membres à droite */}
+      {/* Onglets Discussion / Narration de groupe */}
+      <Tabs
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as "chat" | "narration")}
+        className="shrink-0"
+      >
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="chat" className="flex-1 sm:flex-none">
+            Discussion
+          </TabsTrigger>
+          <TabsTrigger value="narration" className="flex-1 sm:flex-none">
+            Narration de groupe ({group.chapters.length})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      {activeTab === "narration" ? (
+        <div className="bg-card min-h-0 flex-1 overflow-hidden rounded-lg border">
+          <GroupChapterWorkspace groupId={group.id} initialChapters={group.chapters} />
+        </div>
+      ) : (
+      /* Contenu principal identique aux tickets : chat à gauche, membres à droite */
       <div className="grid min-h-0 flex-1 gap-6 lg:grid-cols-7">
         <div className="flex min-h-0 flex-1 flex-col lg:col-span-5">
           <ConversationChat
@@ -101,6 +127,7 @@ export function GroupWorkspace({
           />
         </div>
       </div>
+      )}
     </div>
   );
 }
