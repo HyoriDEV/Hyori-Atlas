@@ -74,6 +74,22 @@ export const playerRejectedNavItem: PlayerNavItem = {
   requiredStatus: RegistrationStatus.REJECTED,
 };
 
+const personalWritingNavItem: PlayerNavItem = {
+  label: "Écriture de trame",
+  href: "/player/writing",
+  iconKey: "pen",
+  requiredStatus: RegistrationStatus.NEW,
+  fullWidth: true,
+};
+
+const sharedTramesNavItem: PlayerNavItem = {
+  label: "Trames partagées",
+  href: "/player/shared-trames",
+  iconKey: "book-bookmark",
+  requiredStatus: RegistrationStatus.NEW,
+  fullWidth: true,
+};
+
 export const playerPendingNavGroups: PlayerNavGroup[] = [
   {
     title: "Inscription",
@@ -105,6 +121,10 @@ export const playerPendingNavGroups: PlayerNavGroup[] = [
       },
     ],
   },
+  {
+    title: "Roleplay",
+    items: [personalWritingNavItem, sharedTramesNavItem],
+  },
 ];
 
 export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
@@ -129,13 +149,8 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         requiredStatus: RegistrationStatus.WHITELIST_IN_PROGRESS,
         fullWidth: true,
       },
-      {
-        label: "Écriture de trame",
-        href: "/player/writing",
-        iconKey: "pen",
-        requiredStatus: RegistrationStatus.WHITELISTED,
-        fullWidth: true,
-      },
+      personalWritingNavItem,
+      sharedTramesNavItem,
       {
         label: "Mes captures",
         href: "/player/gallery",

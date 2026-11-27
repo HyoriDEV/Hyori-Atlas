@@ -45,32 +45,39 @@ export default async function PlayerLayout({ children }: { children: React.React
     );
   }
 
-  const [characterSheet, badgeMap] = await Promise.all([
+  const isWhitelisted = user.registrationStatus === RegistrationStatus.WHITELISTED;
+  const [characterSheet, badgeMap, existingTrame] = await Promise.all([
     prisma.characterSheet.findFirst({
       where: { playerId: user.id },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
       select: { reviewStatus: true },
     }),
     getPlayerBadgeCounts(user.id),
+    isWhitelisted
+      ? null
+      : prisma.characterSheet.findFirst({
+          where: {
+            playerId: user.id,
+            OR: [{ chapters: { some: { playerId: user.id } } }, { trameShares: { some: {} } }],
+          },
+          select: { id: true },
+        }),
   ]);
 
   const staffCommentsCount = badgeMap["/player/character-sheet"] ?? 0;
   const unreadTicketsCount = badgeMap["/player/tickets"] ?? 0;
 
   const isSheetValidated =
-    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED ||
-    user.registrationStatus === RegistrationStatus.WHITELISTED;
+    characterSheet?.reviewStatus === CharacterSheetStatus.VALIDATED || isWhitelisted;
 
-  const baseGroups =
-    user.registrationStatus === RegistrationStatus.WHITELISTED
-      ? playerWhitelistedNavGroups
-      : playerPendingNavGroups;
+  const baseGroups = isWhitelisted ? playerWhitelistedNavGroups : playerPendingNavGroups;
 
   const navGroups: AppShellNavGroup[] = baseGroups
     .map((group) => ({
       title: group.title,
       iconKey: group.iconKey,
       items: group.items
+        .filter((item) => item.href !== "/player/writing" || isWhitelisted || existingTrame)
         .filter(
           (item) =>
             !item.hiddenFromStatus ||
