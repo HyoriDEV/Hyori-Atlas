@@ -19,7 +19,7 @@ export async function getPlayerCharacters(playerId: string) {
     include: {
       comments: { orderBy: { createdAt: "asc" }, include: { author: true } },
       reviewHistory: { orderBy: { createdAt: "desc" }, include: { author: true } },
-      _count: { select: { chapters: true, comments: true } },
+      _count: { select: { chapters: true, comments: true, trameShares: true } },
     },
   });
 }

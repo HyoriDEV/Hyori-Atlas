@@ -20,6 +20,7 @@ import { Card } from "@/components/ui/card";
 import { LockedFeatureCard } from "@/components/locked-feature-card";
 import { ChapterWorkspace } from "@/components/player/chapter-workspace";
 import { CharacterSwitcher } from "@/components/player/character-switcher";
+import { PersonalTrameShareDialog } from "@/components/player/personal-trame-share-dialog";
 import { getGlobalSettings } from "@/lib/services/settings-service";
 
 export default async function WritingPage(props: {
@@ -33,7 +34,12 @@ export default async function WritingPage(props: {
     RegistrationStatus.WHITELISTED
   );
 
-  if (!isWhitelisted) {
+  const characters = await getPlayerCharacters(user.id);
+  const allCharacters = isWhitelisted
+    ? characters
+    : characters.filter(({ _count }) => _count.chapters > 0 || _count.trameShares > 0);
+
+  if (!isWhitelisted && allCharacters.length === 0) {
     return (
       <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
         <h1 className="font-heading text-2xl font-semibold">Écriture de trame</h1>
@@ -41,8 +47,6 @@ export default async function WritingPage(props: {
       </div>
     );
   }
-
-  const allCharacters = await getPlayerCharacters(user.id);
 
   // Trouver le personnage cible : soit via searchParams, soit le personnage ACTIVE, soit le premier
   let selectedCharacter = allCharacters.find((c) => c.id === searchParams.characterId);
@@ -62,7 +66,8 @@ export default async function WritingPage(props: {
 
   const isSheetValidated = selectedCharacter.reviewStatus === CharacterSheetStatus.VALIDATED;
   const isCharacterActive = selectedCharacter.status === CharacterStatus.ACTIVE;
-  const canWrite = settings.chapterWritingEnabled && isCharacterActive && isSheetValidated;
+  const canWrite =
+    isWhitelisted && settings.chapterWritingEnabled && isCharacterActive && isSheetValidated;
 
   const chapters = await prisma.chapter.findMany({
     where: { playerId: user.id, characterSheetId: selectedCharacter.id },
@@ -80,16 +85,25 @@ export default async function WritingPage(props: {
             </span>
           )}
         </div>
-        {chapters.length > 0 && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8.5 gap-2 text-xs font-medium shadow-xs sm:text-sm"
-            render={<Link href={`/player/writing/preview?characterId=${selectedCharacter.id}`} />}
-          >
-            <BookOpen className="text-primary size-4" />
-            <span>Prévisualiser</span>
-          </Button>
+        {(chapters.length > 0 || selectedCharacter._count.trameShares > 0) && (
+          <div className="flex flex-wrap items-center gap-2">
+            <PersonalTrameShareDialog
+              key={selectedCharacter.id}
+              characterSheetId={selectedCharacter.id}
+            />
+            {chapters.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                render={
+                  <Link href={`/player/writing/preview?characterId=${selectedCharacter.id}`} />
+                }
+              >
+                <BookOpen className="text-primary size-4" />
+                <span>Prévisualiser</span>
+              </Button>
+            )}
+          </div>
         )}
       </div>
 
