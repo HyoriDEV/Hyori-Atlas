@@ -165,9 +165,8 @@ export function ConversationChat({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const isInitialMount = useRef(true);
+  const previousMessageCount = useRef(messages.length);
 
   const [prevDisabled, setPrevDisabled] = useState(disabled);
   if (disabled !== prevDisabled) {
@@ -271,19 +270,10 @@ export function ConversationChat({
   }, [conversationId, viewerIsStaff]);
 
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-      }
-    } else {
-      if (messagesContainerRef.current) {
-        messagesContainerRef.current.scrollTo({
-          top: messagesContainerRef.current.scrollHeight,
-          behavior: "smooth",
-        });
-      }
-    }
+    if (previousMessageCount.current === messages.length) return;
+    previousMessageCount.current = messages.length;
+    // The bottom of the reversed scroll container is at scrollTop = 0.
+    messagesContainerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
   }, [messages.length]);
 
   useEffect(() => {
@@ -941,12 +931,9 @@ export function ConversationChat({
     return items;
   }, [messages, viewerId, viewerIsStaff, firstUnreadMessageId]);
 
-  return (
-    <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
-      <div
-        ref={messagesContainerRef}
-        className="bg-card/30 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto rounded-xl border p-4"
-      >
+  function renderMessageList() {
+    return (
+      <div className="flex shrink-0 grow flex-col gap-4 p-4">
         {emptyBadge && (
           <div className="text-muted-foreground bg-muted/70 border-border/50 mx-auto my-1.5 inline-flex max-w-[92%] flex-wrap items-center justify-center gap-1.5 rounded-full border px-3.5 py-1 text-center text-xs leading-relaxed font-medium shadow-2xs">
             <span className="inline-flex flex-wrap items-center justify-center gap-1">
@@ -1596,7 +1583,17 @@ export function ConversationChat({
             );
           })
         )}
-        <div ref={bottomRef} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={cn("flex h-full min-h-0 flex-1 flex-col gap-3", className)}>
+      <div
+        ref={messagesContainerRef}
+        className="bg-card/30 flex min-h-0 flex-1 flex-col-reverse overflow-y-auto rounded-xl border"
+      >
+        {renderMessageList()}
       </div>
 
       {error && (
