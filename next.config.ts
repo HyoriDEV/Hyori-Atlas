@@ -7,6 +7,18 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "11mb",
     },
   },
+  async headers() {
+    return [
+      {
+        source: "/trame/:token",
+        headers: [
+          { key: "Cache-Control", value: "private, no-store" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+    ];
+  },
   async redirects() {
     return [
       {

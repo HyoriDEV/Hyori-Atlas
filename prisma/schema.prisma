@@ -163,7 +163,6 @@ model User {
   staffNotes              StaffNote[]                 @relation("StaffNotePlayer")
   authoredStaffNotes      StaffNote[]                 @relation("StaffNoteAuthor")
   chapters                Chapter[]
-  receivedTrameShares     PersonalTrameShare[]
 
   authoredStatusChanges     RegistrationStatusHistory[] @relation("RegistrationStatusHistoryAuthor")
   reviewedInterviewBookings InterviewBooking[]          @relation("InterviewBookingReviewer")
@@ -420,7 +419,7 @@ model CharacterSheet {
   comments      CharacterSheetComment[]
   reviewHistory CharacterSheetReviewHistory[]
   chapters      Chapter[]
-  trameShares   PersonalTrameShare[]
+  tramePublication PersonalTramePublication?
   rpTrackingGroupMemberships RpTrackingGroupMember[]
 
   @@index([playerId])
@@ -531,16 +530,14 @@ model Chapter {
   @@map("chapters")
 }
 
-model PersonalTrameShare {
-  characterSheetId String
-  recipientId      String
+model PersonalTramePublication {
+  characterSheetId String  @id
+  token            String  @unique @db.VarChar(43)
+  enabled          Boolean @default(false)
 
   characterSheet CharacterSheet @relation(fields: [characterSheetId], references: [id], onDelete: Cascade)
-  recipient      User           @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
-  @@id([characterSheetId, recipientId])
-  @@index([recipientId])
-  @@map("personal_trame_shares")
+  @@map("personal_trame_publications")
 }
 
 model Conversation {

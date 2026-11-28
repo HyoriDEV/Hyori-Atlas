@@ -58,7 +58,10 @@ export default async function PlayerLayout({ children }: { children: React.React
       : prisma.characterSheet.findFirst({
           where: {
             playerId: user.id,
-            OR: [{ chapters: { some: { playerId: user.id } } }, { trameShares: { some: {} } }],
+            OR: [
+              { chapters: { some: { playerId: user.id } } },
+              { tramePublication: { enabled: true } },
+            ],
           },
           select: { id: true },
         }),
