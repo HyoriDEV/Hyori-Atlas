@@ -48,11 +48,11 @@ export default async function WritingPlayerPreviewPage(props: {
   });
 
   const playerName = user.minecraftUsername ?? user.discordDisplayName;
+  const characterLabel = character?.name ? ` — ${character.name}` : "";
   return (
     <PersonalTrameReader
       backHref={character ? `/player/writing?characterId=${character.id}` : "/player/writing"}
-      playerName={playerName}
-      characterName={character?.name}
+      title={`Trame écrite de ${playerName}${characterLabel}`}
       chapters={chapters}
     />
   );

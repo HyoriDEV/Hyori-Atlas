@@ -34,10 +34,7 @@ export default async function WritingPage(props: {
     RegistrationStatus.WHITELISTED
   );
 
-  const characters = await getPlayerCharacters(user.id);
-  const allCharacters = isWhitelisted
-    ? characters
-    : characters.filter(({ _count }) => _count.chapters > 0 || _count.trameShares > 0);
+  const allCharacters = await getPlayerCharacters(user.id, { onlyWithTrame: !isWhitelisted });
 
   if (!isWhitelisted && allCharacters.length === 0) {
     return (
@@ -69,10 +66,20 @@ export default async function WritingPage(props: {
   const canWrite =
     isWhitelisted && settings.chapterWritingEnabled && isCharacterActive && isSheetValidated;
 
-  const chapters = await prisma.chapter.findMany({
-    where: { playerId: user.id, characterSheetId: selectedCharacter.id },
-    orderBy: { order: "asc" },
-  });
+  const [chapters, publication] = await Promise.all([
+    prisma.chapter.findMany({
+      where: { playerId: user.id, characterSheetId: selectedCharacter.id },
+      orderBy: { order: "asc" },
+    }),
+    prisma.personalTramePublication.findFirst({
+      where: {
+        characterSheetId: selectedCharacter.id,
+        characterSheet: { playerId: user.id },
+        enabled: true,
+      },
+      select: { token: true },
+    }),
+  ]);
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
@@ -85,11 +92,12 @@ export default async function WritingPage(props: {
             </span>
           )}
         </div>
-        {(chapters.length > 0 || selectedCharacter._count.trameShares > 0) && (
+        {(chapters.length > 0 || publication) && (
           <div className="flex flex-wrap items-center gap-2">
             <PersonalTrameShareDialog
               key={selectedCharacter.id}
               characterSheetId={selectedCharacter.id}
+              token={publication?.token ?? null}
             />
             {chapters.length > 0 && (
               <Button

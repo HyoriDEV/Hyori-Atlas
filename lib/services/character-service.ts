@@ -12,14 +12,21 @@ export async function getActiveCharacter(playerId: string) {
   });
 }
 
-export async function getPlayerCharacters(playerId: string) {
+export async function getPlayerCharacters(playerId: string, { onlyWithTrame = false } = {}) {
   return await prisma.characterSheet.findMany({
-    where: { playerId },
+    where: {
+      playerId,
+      ...(onlyWithTrame
+        ? {
+            OR: [{ chapters: { some: { playerId } } }, { tramePublication: { enabled: true } }],
+          }
+        : {}),
+    },
     orderBy: { createdAt: "desc" },
     include: {
       comments: { orderBy: { createdAt: "asc" }, include: { author: true } },
       reviewHistory: { orderBy: { createdAt: "desc" }, include: { author: true } },
-      _count: { select: { chapters: true, comments: true, trameShares: true } },
+      _count: { select: { chapters: true, comments: true } },
     },
   });
 }

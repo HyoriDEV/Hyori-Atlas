@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Users } from "@phosphor-icons/react";
+import { useId, useState, useTransition } from "react";
+import { Copy, LinkSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 
-import { PlayerSelect, type PlayerOption } from "@/components/player-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -15,113 +14,113 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  getPersonalTrameShareOptions,
-  savePersonalTrameShares,
-} from "@/lib/actions/personal-trame-share-actions";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { setPersonalTramePublication } from "@/lib/actions/personal-trame-publication-actions";
 
-export function PersonalTrameShareDialog({ characterSheetId }: { characterSheetId: string }) {
+export function PersonalTrameShareDialog({
+  characterSheetId,
+  token,
+}: {
+  characterSheetId: string;
+  token: string | null;
+}) {
+  const consentId = useId();
+  const linkId = useId();
   const [open, setOpen] = useState(false);
-  const [players, setPlayers] = useState<PlayerOption[] | null>(null);
-  const [recipientIds, setRecipientIds] = useState<string[]>([]);
-  const [loadError, setLoadError] = useState<string>();
-  const [loading, startLoading] = useTransition();
+  const [origin, setOrigin] = useState("");
+  const [enabled, setEnabled] = useState(Boolean(token));
   const [saving, startSaving] = useTransition();
-
-  function loadPlayers() {
-    setPlayers(null);
-    setLoadError(undefined);
-    startLoading(async () => {
-      try {
-        const result = await getPersonalTrameShareOptions(characterSheetId);
-        if (result.error) {
-          setLoadError(result.error);
-          return;
-        }
-        setPlayers(result.players ?? []);
-        setRecipientIds(result.recipientIds ?? []);
-      } catch {
-        setLoadError("Impossible de charger la liste de joueurs.");
-      }
-    });
-  }
+  const shareUrl = token ? `${origin}/trame/${token}` : null;
 
   function handleOpenChange(nextOpen: boolean) {
-    if (saving || loading) return;
+    if (saving) return;
+    if (nextOpen) {
+      setOrigin(window.location.origin);
+      setEnabled(Boolean(token));
+    }
     setOpen(nextOpen);
-    if (nextOpen) loadPlayers();
   }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!players || saving) return;
+    if (saving || enabled === Boolean(token)) return;
 
     startSaving(async () => {
       try {
-        const result = await savePersonalTrameShares(characterSheetId, recipientIds);
-        if (result.error) {
+        const result = await setPersonalTramePublication(characterSheetId, enabled);
+        if ("error" in result) {
           toast.error(result.error);
           return;
         }
-        toast.success("Les accès à ta trame ont été mis à jour.");
-        setOpen(false);
+        toast.success(result.token ? "Partage public activé." : "Partage public désactivé.");
       } catch {
-        toast.error("Impossible d’enregistrer les accès à ta trame.");
+        toast.error("Impossible d’enregistrer le réglage de partage.");
       }
     });
+  }
+
+  async function copyLink() {
+    if (!shareUrl) return;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      toast.success("Lien copié.");
+    } catch {
+      toast.error("Tu peux sélectionner et copier le lien manuellement.");
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button variant="outline" size="sm" />}>
-        <Users className="text-primary size-4" />
-        Partager la trame
+        <LinkSimple className="text-primary size-4" />
+        {token ? "Partage public activé" : "Partager la trame"}
       </DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Partager la trame</DialogTitle>
+            <DialogTitle>Partager la trame par lien</DialogTitle>
             <DialogDescription>
-              Les joueurs sélectionnés pourront lire les chapitres de ce personnage. Pour retirer un
-              accès, désélectionne le joueur puis enregistre.
+              Toute personne qui possède le lien pourra lire les chapitres de ce personnage, même
+              sans compte. Si tu désactives puis réactives le partage, le même lien fonctionnera de
+              nouveau.
             </DialogDescription>
           </DialogHeader>
 
-          {loading ? (
-            <p role="status" className="text-muted-foreground text-sm">
-              Chargement des joueurs…
-            </p>
-          ) : loadError ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <p role="alert" className="text-destructive text-sm">
-                {loadError}
-              </p>
-              <Button type="button" variant="outline" size="sm" onClick={loadPlayers}>
-                Réessayer
-              </Button>
-            </div>
-          ) : players ? (
-            <PlayerSelect
-              multiple
-              players={players}
-              value={recipientIds}
-              onChange={setRecipientIds}
-              searchPlaceholder="Rechercher par pseudo…"
-              placeholder="Sélectionner les joueurs"
+          <div className="border-border flex items-center justify-between gap-3 rounded-lg border p-3">
+            <Label id={consentId}>Autoriser la lecture publique via le lien</Label>
+            <Switch
+              aria-labelledby={consentId}
+              checked={enabled}
+              onCheckedChange={setEnabled}
               disabled={saving}
             />
-          ) : null}
+          </div>
+
+          {shareUrl && enabled && (
+            <div className="flex flex-col gap-2">
+              <Label htmlFor={linkId}>Lien permanent</Label>
+              <div className="flex items-center gap-2">
+                <Input id={linkId} value={shareUrl} readOnly />
+                <Button type="button" variant="outline" onClick={copyLink}>
+                  <Copy className="size-4" />
+                  Copier
+                </Button>
+              </div>
+            </div>
+          )}
 
           <DialogFooter>
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
-              disabled={saving || loading}
+              disabled={saving}
             >
-              Annuler
+              Fermer
             </Button>
-            <Button type="submit" disabled={!players || loading || saving}>
+            <Button type="submit" disabled={saving || enabled === Boolean(token)}>
               {saving ? "Enregistrement…" : "Enregistrer"}
             </Button>
           </DialogFooter>

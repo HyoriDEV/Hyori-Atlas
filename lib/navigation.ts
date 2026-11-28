@@ -82,14 +82,6 @@ const personalWritingNavItem: PlayerNavItem = {
   fullWidth: true,
 };
 
-const sharedTramesNavItem: PlayerNavItem = {
-  label: "Trames partagées",
-  href: "/player/shared-trames",
-  iconKey: "book-bookmark",
-  requiredStatus: RegistrationStatus.NEW,
-  fullWidth: true,
-};
-
 export const playerPendingNavGroups: PlayerNavGroup[] = [
   {
     title: "Inscription",
@@ -123,7 +115,7 @@ export const playerPendingNavGroups: PlayerNavGroup[] = [
   },
   {
     title: "Roleplay",
-    items: [personalWritingNavItem, sharedTramesNavItem],
+    items: [personalWritingNavItem],
   },
 ];
 
@@ -150,7 +142,6 @@ export const playerWhitelistedNavGroups: PlayerNavGroup[] = [
         fullWidth: true,
       },
       personalWritingNavItem,
-      sharedTramesNavItem,
       {
         label: "Mes captures",
         href: "/player/gallery",
